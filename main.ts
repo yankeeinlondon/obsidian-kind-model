@@ -1,13 +1,13 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { getAPI } from "obsidian-dataview";
 
-// Remember to rename these classes and interfaces!
 
 interface MyPluginSettings {
-	mySetting: string;
+	folder: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	folder: "kind"
 }
 
 export default class MyPlugin extends Plugin {
@@ -15,6 +15,40 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		this.dv = getAPI(this.api);
+		
+		// plugin.registerEvent(plugin.app.metadataCache.on("dataview:index-ready", () => {
+		// 	this.registerEvent(this.app.vault.on('create', (f) => {
+		// 		console.log('a new file has entered the arena', f)
+		// 	}));
+
+		// 	console.log("Kind Model ready (now that dataview is ready)");
+
+		// });
+
+		this.addCommand({
+			id: "create-new-kinded-page",
+			name: "Create a new Kinded page",
+			callback: () => {
+				console.log("Hey, you!");
+			},
+		});
+		this.addCommand({
+			id: "update-kinded-page",
+			name: "Update this page using Kind models",
+			callback: (evt) => {
+				// const pages = (globalThis.app as any).plugins["obsidian-dataview"].index.pages;
+				console.log("Kind Page (update):", evt, this.dv.page("kind/Kind.md"));
+			},
+		});
+
+
+
+
+		this.registerEvent(this.app.vault.on('delete', (f) => {
+      console.log('a file has been recklessly thrown to the stern', f);
+			new MessageModal(this.app, `a file has been recklessly thrown to the stern: ${f.name}`).open();
+    }));
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
@@ -26,12 +60,13 @@ export default class MyPlugin extends Plugin {
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		statusBarItemEl.setText('Kind Models');
+		statusBarItemEl.addClass("clickable");
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
+			name: 'Open sample modal (simple)', 
 			callback: () => {
 				new SampleModal(this.app).open();
 			}
@@ -91,6 +126,24 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
+
+class MessageModal extends Modal {
+	private msg;
+	constructor(app:App, msg: string) {
+		super(app);
+		this.msg = msg;
+	}
+
+	onOpen() {
+		const {contentEl} = this;
+		contentEl.setText(this.msg);
+	}
+	onClose() {
+		const {contentEl} = this;
+		contentEl.empty();
+	}
+}
+
 class SampleModal extends Modal {
 	constructor(app: App) {
 		super(app);
@@ -121,14 +174,27 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('Kind Folder')
+			.setDesc('this is the folder your Kind Models will go')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('Enter a folder name')
+				.setValue(this.plugin.settings.folder || "kind")
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.folder = value;
 					await this.plugin.saveSettings();
 				}));
+
+
+
+		// new Setting(containerEl)
+		// 		.setName('Foobar')
+		// 		.addDropdown(c => c
+		// 			.addOption("kind", "kind")
+		// 			.addOption("model", "model")
+		// 			.setValue(this.plugin.settings.folder || "kind")
+		// 			.onChange(async (value) => {
+		// 				this.plugin.settings.mySetting = value;
+		// 				await this.plugin.saveSettings();
+		// 			}));
 	}
 }

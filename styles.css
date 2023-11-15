@@ -6,3 +6,14 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.clickable {
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.clickable:hover {
+    background-color: aliceblue;
+    color: blue;
+    cursor: pointer;
+}
