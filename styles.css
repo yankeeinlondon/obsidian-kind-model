@@ -17,3 +17,62 @@ If your plugin does not need CSS, delete this file.
     color: blue;
     cursor: pointer;
 }
+
+.settings-desc {
+    /* color: rgba(255,255,255,0.85); */
+    /* font-style: italic; */
+    font-weight:200;
+}
+
+button {
+    transition-duration: 200ms;
+    background-color: rgb(var(--interactive-accent));
+    color: var(--text-on-accent);
+    cursor: pointer;
+}
+button:hover {
+    background-color: oklch(from rgb(var(--interactive-accent)) calc(l + 25) c h);;
+}
+
+button.bg-green {
+    background-color: rgba(34,197,94,.8);
+}
+button.bg-green:hover {
+    background-color: rgba(34,197,94,1);
+}
+
+button.bg-red {
+    background-color: rgba(200,0,0,.82);
+}
+button.bg-red:hover {
+    background-color: rgba(200,0,0,.82);
+}
+
+button.bg-sky {
+    background-color: rgba(14, 165, 233, .8);
+}
+button.bg-sky:hover {
+    background-color: rgba(14, 165, 233, 1);
+}
+
+button.bg-blue {
+    background-color: rgb(59, 130, 246, .8);
+}
+button.bg-blue:hover {
+    background-color: rgb(59, 130, 246, 1);
+}
+
+button.bg-indigo {
+    background-color: rgb(99, 102, 241, .8);
+}
+button.bg-indigo:hover {
+    background-color: rgb(99, 102, 241, 1);
+}
+
+button.bg-purple {
+    color: rgba(188, 85, 247, 0.8);
+}
+button.bg-purple:hover {
+    background-color: rgba(188, 85, 247, 1);
+}
+
