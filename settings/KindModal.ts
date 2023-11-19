@@ -1,5 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
-import { Kind, KindClassification, LogLevel, classification } from "./Settings";
+import { Kind, KindClassification, LogLevel, classification } from "./SettingsTab";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "utils/Constants";
 import { UiBuilder } from "helpers/UiBuilder";
 import { logger } from "utils/logging";
@@ -111,6 +111,18 @@ export class KindModal extends Modal {
         ).addDropdown(UOM_TYPES)
       }
 
+      const auto = ui.sectionHeading("Auto Aliases", "When you're working on a kind page -- or any classification of a kind page -- you configure whether the `aliases` assigned to that page are automatically added to in smart ways.");
+
+      auto(
+        "Plural/Singular",
+        "Ensure that both the singular and plural versions of a Kind page are available",
+        "aliases_plural"
+      ).addToggleSwitch()
+      auto(
+        "Casing",
+        "Ensure that the page's name is available in lowercase as well as capitalized",
+        "aliases_casing"
+      ).addToggleSwitch()
 	}
 	onClose() {
 		const {contentEl} = this;

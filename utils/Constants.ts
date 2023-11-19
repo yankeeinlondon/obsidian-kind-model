@@ -1,4 +1,5 @@
-import { Kind, PluginSettings } from "settings/Settings";
+import { Kind, PluginSettings } from "types/settings-types";
+
 
 export const CLASSIFICATION = [
   "category",

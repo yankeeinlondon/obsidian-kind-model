@@ -1,7 +1,8 @@
 
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, setIcon } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
-import { SettingsTab, PluginSettings} from 'settings/Settings';
+import { SettingsTab} from 'settings/SettingsTab';
+import { PluginSettings } from 'types/settings-types';
 import { DEFAULT_SETTINGS } from 'utils/Constants'
 import { logger } from 'utils/logging';
 
@@ -34,7 +35,7 @@ export default class KindModel extends Plugin {
 			},
 		});
 		this.addCommand({
-			id: "create-new-classification",
+			id: "create-new-kinded-classification-page",
 			name: "add a classification for a (kinded) page",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const content = view.getViewData();

@@ -1,4 +1,4 @@
-import { LogLevel } from "settings/Settings";
+import { LogLevel } from "settings/SettingsTab";
 
 
 
