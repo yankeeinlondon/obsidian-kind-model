@@ -1,18 +1,21 @@
 import { App, Modal, Setting } from "obsidian";
-import { Kind, KindClassification, classification } from "./Settings";
+import { Kind, KindClassification, LogLevel, classification } from "./Settings";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "utils/Constants";
 import { UiBuilder } from "helpers/UiBuilder";
+import { logger } from "utils/logging";
 
 export class KindModal extends Modal {
 	private kind: Kind;
-	constructor(app:App, kind: Kind) {
+  private log_level: LogLevel;
+
+	constructor(app:App, kind: Kind, log_level: LogLevel) {
 		super(app);
 		this.kind = kind;
+    this.log_level = log_level;
 	}
 
 	onOpen() {
-    const ui = UiBuilder(this.contentEl, this.kind, {h1: "New Kind model"});
-
+    const ui = UiBuilder(this.contentEl, this.kind, this.log_level, {h1: "New Kind model"});
     const core = ui.sectionHeading("Core Config");
 
     core("Name", "the unique name for this Kind", "name")
@@ -23,22 +26,6 @@ export class KindModal extends Modal {
       "the tag which will be used to identify this Kind; no need to include \'#\' symbol though you're free to.", 
       "tag"
     ).addTextInput();
-
-
-      // const class_strategy = new Setting(c)
-      //   .setName("Classification")
-      //   .setDesc(classification(this.kind.classification_type).desc)
-      //   .addDropdown(d => {
-      //     for (const opt of CLASSIFICATION) {
-      //       d.addOption(opt, opt)
-      //     }
-
-      //     d.setValue(this.kind.classification_type)
-      //     d.onChange(v => {
-      //       this.kind.classification_type = v as KindClassification;
-      //       class_strategy.setDesc(classification(this.kind.classification_type).desc)
-      //     })
-      //   })
 
       core(
           "Classification", 
@@ -67,14 +54,17 @@ export class KindModal extends Modal {
         "Current Directory", 
         "whether to allow current directory to be a valid location", 
         "folder_include_cwd"
-      ).addToggleSwitch();
+      ).addToggleSwitch({
+        refreshDomOnChange: true
+      });
 
-      filesAndFolders(
-        "Default Directory",
-        "whether the current directory or the favorite dir should be the default", 
-        "classification_type"
-      ).addDropdown(FOLDER_DEFAULT);
-
+      if (this.kind.folder_include_cwd) {
+        filesAndFolders(
+          "Default Directory",
+          "whether the current directory or the favorite dir should be the default", 
+          "classification_type"
+        ).addDropdown(FOLDER_DEFAULT);
+      }
 
       filesAndFolders(
         "Filename Date Prefix", 

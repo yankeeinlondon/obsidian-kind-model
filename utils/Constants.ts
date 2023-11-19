@@ -13,6 +13,13 @@ export const TAG_HANDLING = [
   "Do not Change"
 ] as const;
 
+export const LOG_LEVELS = [
+  "debug",
+  "info",
+  "warn",
+  "error",
+] as const;
+
 export const DEFAULT_SETTINGS: PluginSettings = {
   kinds: {},
   types: {},
@@ -22,7 +29,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   default_classification: "category and subcategory",
   page_blocks: [],
   url_patterns: [],
-  url_props: []
+  url_props: [],
+  log_level: "warn"
 };
 
 export const DEFAULT_KIND: Kind = {

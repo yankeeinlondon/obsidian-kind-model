@@ -55,7 +55,7 @@ export interface FolderSearchOptions extends BaseInputOptions {
 };
 
 export interface UiBuilderComponentApi<
-  TBase extends Record<PropertyKey,any>, 
+  TBase extends Record<string,any>, 
   TProp extends keyof TBase | null,
   TGlobalOpt extends UiBuilderOptions
 > {
@@ -70,7 +70,7 @@ export interface UiBuilderComponentApi<
 
 
 export interface UiBuilderContextApi<
-  TBase extends Record<PropertyKey,any>,
+  TBase extends Record<string,any>,
   TGlobalOpt extends UiBuilderOptions
 > {
   /**
@@ -145,7 +145,7 @@ export interface UiBuilderOptions {
   h1?: string;
   style?: string;
   app?: App;
-  autoSavePlugin?: boolean;
+  saveState?: () => Promise<unknown>;
 }
 
 /**

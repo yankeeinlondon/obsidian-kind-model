@@ -1,9 +1,10 @@
 import KindModel from "main";
 import { App, PluginSettingTab } from "obsidian";
-import { CARDINALITY_TYPES, CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING, UOM_TYPES } from "utils/Constants";
+import { LOG_LEVELS, CARDINALITY_TYPES, CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING, UOM_TYPES } from "utils/Constants";
 import { Mutable, TupleToUnion } from "utils/type-utils";
 import { KindModal } from "./KindModal";
 import { UiBuilder } from "helpers/UiBuilder";
+import { logger } from "utils/logging";
 
 export type KindClassification = TupleToUnion<Mutable<typeof CLASSIFICATION>>;
 export interface ClassificationMeta {
@@ -156,6 +157,8 @@ export interface PageBlock {
 
 }
 
+export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
+
 export interface PluginSettings {
 	kinds: Record<string, Kind>;
 	kind_folder: string;
@@ -166,22 +169,31 @@ export interface PluginSettings {
   url_props: UrlProp[];
   url_patterns: UrlPattern[];
   page_blocks: PageBlock[];
+  log_level: LogLevel;
 }
 
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: KindModel;
+  app: App;
+  saveSettings: (() => Promise<unknown>) | undefined;
 
 	constructor(app: App, plugin: KindModel) {
 		super(app, plugin);
+    this.app = app;
 		this.plugin = plugin;
 	}
 
 	display(): void {
+    const { info, debug } = logger(this.plugin.settings.log_level)
+    debug(`The settings menu has been brought up and we start in this state: `, this.plugin.settings);
+
     const ui = UiBuilder(
       this.containerEl, 
-      this.plugin.settings, 
-      { h1: "Kind Models", app: this.app, autoSavePlugin: true});
+      this.plugin.settings,
+      this.plugin.settings.log_level, 
+      { h1: "Kind Models", saveState: this.plugin.saveSettings.bind(this.plugin)}
+  );
 
     ui(
       "Handle Tags", 
@@ -193,7 +205,7 @@ export class SettingsTab extends PluginSettingTab {
       "Folder Location", 
       "All 'kind', and 'type' definitions will be located here", 
       "kind_folder"
-    ).addFolderSearch("");
+    ).addFolderSearch();
   
     const kinds = ui.sectionHeading(
       "Kinds", 
@@ -213,7 +225,7 @@ export class SettingsTab extends PluginSettingTab {
     ).addButton({
       icon: "package-plus",
       onClick: () => {
-        new KindModal(this.app, DEFAULT_KIND).open();
+        new KindModal(this.app, DEFAULT_KIND, this.plugin.settings.log_level).open();
       }
     })
 
@@ -224,14 +236,14 @@ export class SettingsTab extends PluginSettingTab {
     );
 
     types(
-      "Create Other Type",
+      "Create \"Other\" Type",
       "All kind models without a \"type\" will be assigned to type of Other",
       "other_type"
     ).addToggleSwitch();
 
     types(
       "List of Types",
-      "Add a new \"type\" to group kinds.",
+      "Add a new \"type\" by pressing button or manually by creating a file in `${}.",
       "types"
     ).addButton({
       icon: "plus-circle",
@@ -278,10 +290,10 @@ export class SettingsTab extends PluginSettingTab {
       icon: "file-plus"
     });
 
-    const bulk = ui.sectionHeading("Bulk Operations")
+    const ops = ui.sectionHeading("Operations")
 
-    bulk(
-      "Operations", 
+    ops(
+      "Bulk Operations", 
       "Use buttons to take desired action: sync, snapshot, restore, reset.",
       null
     ).addButton({
@@ -297,6 +309,12 @@ export class SettingsTab extends PluginSettingTab {
       tooltip: "Save current configuration as a Snapshot (which can be restored later)"
     })
     .addButton({
+      icon: "clipboard-copy",
+      buttonText: "Clipboard",
+      backgroundColor: "blue",
+      tooltip: "Copy your current configuration to the clipboard"
+    })
+    .addButton({
       icon: "upload",
       buttonText: "Restore",
       backgroundColor: "blue",
@@ -305,8 +323,15 @@ export class SettingsTab extends PluginSettingTab {
     .addButton({
       icon: "reset",
       buttonText: "Reset",
+      onClick: () => info("reset clicked"),
       backgroundColor: "red",
       tooltip: "Restore configuration to Plugin Default"
     });
+
+    ops(
+      "Log Level",
+      "if you're experiencing problems you think could be related to this plugin you can change the log level to get more info sent to the developer console.",
+      "log_level"
+    ).addDropdown(LOG_LEVELS)
   }
 }

@@ -1,10 +1,9 @@
 
-import { App, Editor, MarkdownView, Modal, Notice, Plugin } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, setIcon } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
 import { SettingsTab, PluginSettings} from 'settings/Settings';
 import { DEFAULT_SETTINGS } from 'utils/Constants'
-
-
+import { logger } from 'utils/logging';
 
 export default class KindModel extends Plugin {
 	settings: PluginSettings;
@@ -13,6 +12,7 @@ export default class KindModel extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		const { debug, info, warn, error } = logger(this.settings.log_level);
 		this.dv = getAPI(this.app);
 		
 		// plugin.registerEvent(plugin.app.metadataCache.on("dataview:index-ready", () => {
@@ -145,7 +145,6 @@ export default class KindModel extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
-
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
@@ -165,6 +164,13 @@ export default class KindModel extends Plugin {
 	}
 
 	async saveSettings() {
+		const { debug, info, warn, error } = logger(this.settings.log_level);
+		if(typeof this.saveData !== "function") {
+			error("the 'this' context appear to have been lost when trying to call saveSettings()", this)
+			return
+		} else {
+			debug("saving settings", this.settings);
+		}
 		await this.saveData(this.settings);
 	}
 }

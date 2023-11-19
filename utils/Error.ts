@@ -1,4 +1,4 @@
-import { log_error } from "./Log";
+import { error } from "./logging";
 
 export class KindModelError extends Error {
     constructor(msg: string, public console_msg?: string) {
@@ -16,9 +16,9 @@ export async function errorWrapper<T>(
         return await fn();
     } catch (e) {
         if (!(e instanceof KindModelError)) {
-            log_error(new KindModelError(msg, e.message));
+            error(new KindModelError(msg, e.message));
         } else {
-            log_error(e);
+            error(e);
         }
         return null as T;
     }
@@ -28,7 +28,7 @@ export function errorWrapperSync<T>(fn: () => T, msg: string): T {
     try {
         return fn();
     } catch (e) {
-        log_error(new KindModelError(msg, e.message));
+        error(new KindModelError(msg, e.message));
         return null as T;
     }
 }

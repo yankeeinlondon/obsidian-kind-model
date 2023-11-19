@@ -1,6 +1,10 @@
 import { ButtonComponent, Setting } from "obsidian";
 import { FolderSuggest } from "./FolderSuggest";
 import { MaybeLazy, UiBuilderContextApi, UiBuilderComponentApi, UiBuilderOptions, UiBuilderApi } from "types/ui-builder-types";
+import { logger } from "utils/logging";
+import { LogLevel } from "settings/Settings";
+
+// [Reference Docs](https://docs.obsidian.md/Plugins/User+interface/Settings)
 
 type Methods = {
   TextComponent: {
@@ -28,8 +32,10 @@ type Methods = {
   }
 }
 
-const isNotNull = <T extends unknown>(val: T): val is Exclude<T, null> => {
-  return val !== null;
+const isNotNull = <T extends PropertyKey | null, B extends Record<PropertyKey, any>>(prop: T, base: B): prop is Exclude<T, null> & keyof B & string => {
+  return prop === null
+    ? false
+    : prop in base ? true : false;
 }
 
 /**
@@ -39,29 +45,15 @@ const resolve = <
   T extends MaybeLazy<any>
 >(val: T): string => typeof val === "function" ? val() : val;
 
-const log = (...args: unknown[]) => {
-  console.groupCollapsed("obsidian-kind-model");
-  for (const w of args) {
-    console.log(w)
-  }
-  console.groupEnd();
- }
-
- const warn = (...args: unknown[]) => {
-  console.group("obsidian-kind-model");
-  for (const w of args) {
-    console.warn(w)
-  }
-  console.groupEnd();
- }
 
 const contextApi = <
-  TBase extends Record<PropertyKey,any>,
+  TBase extends Record<string,any>,
   TGlobalOpt extends UiBuilderOptions
 >(
   el: HTMLElement, 
   base: TBase,
-  global_opt: TGlobalOpt
+  global_opt: TGlobalOpt,
+  log_level: LogLevel
 ): UiBuilderContextApi<TBase,TGlobalOpt> => ({
   sectionHeading: (heading, sub_text) => {
     const color = "rgba(15, 117, 224, .75) "
@@ -101,7 +93,7 @@ const contextApi = <
 
     el.appendChild(sectionInput);
 
-    const fn: any = inputRow(sectionInput,base, global_opt)
+    const fn: any = inputRow(sectionInput, base, global_opt, log_level)
     fn["section"] = heading;
     return fn;
   },
@@ -115,131 +107,178 @@ const contextApi = <
   }
 });
 const componentApi = <
-  TBase extends Record<PropertyKey,any>,
+  TBase extends Record<string,any>,
   TGlobalOpt extends UiBuilderOptions
 >(
   el: HTMLElement, 
   base: TBase,
-  global_opt: TGlobalOpt
+  global_opt: TGlobalOpt,
+  log_level: LogLevel
 ) => <
   TProp extends keyof TBase | null
 >(
   name: MaybeLazy<string>, 
   desc: MaybeLazy<string>,
   prop: TProp
-) => (s: Setting): UiBuilderComponentApi<TBase, TProp, TGlobalOpt> => ({
+) => (s: Setting): UiBuilderComponentApi<TBase, TProp, TGlobalOpt> => {
+  const {debug,info,warn,error} = logger(log_level);
+  return {
     addDropdown(choices) {
       s.addDropdown(dd => {
-          const isLookup = Array.isArray(choices);
-          for (const opt of isLookup 
+          const isKeyValueDict = !Array.isArray(choices);
+          for (const opt of isKeyValueDict 
             ? Object.keys(choices) as string[] 
             : choices as string[]
           ) {
-            dd.addOption(
-              opt, 
-              isLookup ? choices[opt as keyof typeof choices] : opt
-            );
-          }
-          if (prop) {
-            dd.setValue(base[prop]);
-          }
-          dd.onChange( v => {
-            if(isNotNull(v)) {
-              log(
-                `updating dropdown[${String(prop)}] to index[${v}]:`, 
-                isLookup 
-                  ? choices[v as keyof typeof choices]
-                  : choices[v] 
-              );
+            const value = isKeyValueDict ? String(choices[opt as keyof typeof choices]) : opt;
+            dd.addOption(value,opt);
 
-              base = isLookup
-              ? {...base, [v]: choices[v as keyof typeof choices]}
-              : {...base, [v]: v };
+            if (
+              isNotNull(prop,base) && 
+              value === base[prop as NonNullable<TProp>]
+            ) {
+              dd.setValue(value);
             }
-            
-            s.setName(resolve(name));
-            s.setDesc(resolve(desc));
-            
-            if(global_opt?.autoSavePlugin) {
-              if (global_opt?.app) {
-                const app = global_opt.app;
+          }
+          
+          
+          dd.onChange( v => {
+            if(isNotNull(prop, base)) {
+              const prior_value = base[prop];
+
+              // debug(
+              //   `updating dropdown[${prop}] to: \n  [ idx: ${v}, val: "${isKeyValueDict 
+              //     ? choices[v as keyof typeof choices]
+              //     : choices[v]}" ]`,
+              //   `Prior value was '${base[prop]}'.`
+              // );
+
+              base[prop as NonNullable<TProp>] = (
+                isKeyValueDict
+                  ? choices[v as keyof typeof choices]
+                  : v
+              ) as TBase[NonNullable<TProp>];
+
+              debug(`Updating ${name} dropdown`, `new value is:\n${JSON.stringify(v,null,2)}`, `prior value was:\n${JSON.stringify(prior_value, null, 2)}`);
+
+              if(global_opt?.saveState && prop !== null) {
+                if (typeof global_opt?.saveState !== "function") {
+                  error(`saveState property was passed into UiBuilder but it's type is "${typeof global_opt?.saveState}" instead of being a function!`);
+                } else {
+                  info(`auto save`, `the dropdown "${String(prop)}" triggered saving state`, `the current state is: \n${JSON.stringify(base,null, 2)}`);
+                  global_opt.saveState();
+                }
+              } else {
+                debug(`no auto save: state changed on "${name}" property but state is not automatically save after state changes`);
               }
+
+              s.setName(resolve(name));
+              s.setDesc(resolve(desc));
+            } else {
+              debug(`the dropdown "${name}" changed state but no property was set to record this.`, "this may be ok but is typically an error", `the new state is now: ${v}`)
             }
 
           })
         });
   
-      return componentApi(el,base,global_opt)(name,desc,prop)(s);
+      return componentApi(el,base,global_opt, log_level)(name,desc,prop)(s);
     },
     addToggleSwitch(opt = {}) {
       s.addToggle(t => {
-        if (isNotNull(prop)) {
+        if (isNotNull(prop, base)) {
           t.setValue(base[prop])
         }
         t.onChange( v => {
-          if(isNotNull(prop)) {
-            base = { ...base, [prop]: v}
+          if(isNotNull(prop, base)) {
+            s.setName(resolve(name));
+            s.setDesc(resolve(desc));
+            base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];
+
+            if(global_opt?.saveState && prop !== null) {
+              if (typeof global_opt?.saveState !== "function") {
+                error(`saveState property was passed into UiBuilder but it's type is "${typeof global_opt?.saveState}" instead of being a function!`)
+              }
+  
+              info("auto save", `the toggle switch for "${prop}" detected a change`, `the new value for "${prop}" is: ${v}`);
+              global_opt.saveState();
+            } else {
+              debug(`no auto save: state changed on "${name}" on property`);
+            }         
           }
-          s.setName(resolve(name));
-          s.setDesc(resolve(desc));
           if (opt.refreshDomOnChange) {
             warn("do not know how to refresh DOM yet")
-          }
-          if (opt.savePluginOnChange) {
-            warn("need app for this feature")
           }
         })
       });
         
-      return componentApi(el,base,global_opt)(name,desc,prop)(s);
+      return componentApi(el,base,global_opt, log_level)(name,desc,prop)(s);
     },
     addTextInput(opt = {}) {
       s.addText(t => {
-        if (isNotNull(prop)) {
+        if (isNotNull(prop,base)) {
           t.setValue(base[prop])
         }
         t.onChange( v => {
-          if(isNotNull(prop)) {
-            base = { ...base, [prop]: v}
+          if(isNotNull(prop,base)) {
+            base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];           
+          } else {
+            debug(`state changed on the property "${name}" but because "prop" was null it will not be recorded.`);
           }
           s.setName(resolve(name));
           s.setDesc(resolve(desc));
           if (opt.refreshDomOnChange) {
             warn("do not know how to refresh DOM yet")
           }
-          if (opt.savePluginOnChange) {
-            warn("need app for this feature")
-          }
+          if(global_opt?.saveState && prop !== null) {
+            if (typeof global_opt?.saveState !== "function") {
+              error(`saveState property was passed into UiBuilder but it's type is "${typeof global_opt?.saveState}" instead of being a function!`)
+            }
+
+            debug(`toggle switch for "${String(prop)}" saving state`);
+            global_opt.saveState();
+          } else {
+            debug(`no auto save: state changed on "${name}" on property`);
+          }         
         })
       });
 
-      return componentApi(el,base,global_opt)(name,desc,prop)(s);
+      return componentApi(el,base,global_opt, log_level)(name,desc,prop)(s);
     },
     addFolderSearch(opt = {}) {
         s.addSearch(t => {
           new FolderSuggest(t.inputEl);
           t.setPlaceholder(opt.placeholder || "Example: folder1/folder2")
 
-          if (isNotNull(prop)) {
+          if (isNotNull(prop,base)) {
             t.setValue(base[prop])
           }
 
           t.onChange( v => {
-            if(isNotNull(prop)) {
-              base = { ...base, [prop]: v}
-            }
             s.setName(resolve(name));
             s.setDesc(resolve(desc));
+            if(isNotNull(prop,base)) {
+              base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];
+              
+              if(global_opt?.saveState) {
+                if (typeof global_opt?.saveState !== "function") {
+                  error(`saveState property was passed into UiBuilder but it's type is "${typeof global_opt?.saveState}" instead of being a function!`)
+                } else {
+                  info(`auto save`, `folder prop ${name} [${prop}] changed state to:`, v);
+                  global_opt.saveState();
+                }
+    
+              } else {
+                debug(`no auto save: state changed on "${name}" on property`);
+              }
+            }
+
             if (opt.refreshDomOnChange) {
               warn("do not know how to refresh DOM yet")
-            }
-            if (opt.savePluginOnChange) {
-              warn("need app for this feature")
             }
           })
         });
 
-        return componentApi(el,base,global_opt)(name,desc,prop)(s);
+        return componentApi(el,base,global_opt, log_level)(name,desc,prop)(s);
     },
 
     addButton: (o) =>  {
@@ -247,7 +286,8 @@ const componentApi = <
         b.setTooltip(o?.tooltip || resolve(desc))
          .setButtonText(o?.buttonText || "+")
          .setCta()
-         .onClick(o?.onClick ? o.onClick : () => console.log(`onClick not handled for property ${name}`))  
+         .onClick(o?.onClick ? o.onClick : () => warn(`${name} button for "${String(o?.buttonText)}" does not have a click handler`));
+        
 
         if (o?.backgroundColor) {
           b.setClass(`bg-${o.backgroundColor}`)
@@ -257,23 +297,25 @@ const componentApi = <
         }
       });
 
-      return componentApi(el,base,global_opt)(name,desc,prop)(s);
+      return componentApi(el,base,global_opt,log_level)(name,desc,prop)(s);
     },
 
     done: () => s
-});
+  }
+};
 
 /**
  * The main API surface provided by the `UiBuilder` which involves
  * picking a `Setting` from **Obsidian** and configuring it.
  */
 const inputRow = <
-  TBase extends Record<PropertyKey,any>,
+  TBase extends Record<string,any>,
   TGlobalOpt extends UiBuilderOptions
 >(
   el: HTMLElement, 
   base: TBase,
-  global_opt: TGlobalOpt
+  global_opt: TGlobalOpt,
+  log_level: LogLevel
 ) => <
   TProp extends keyof TBase | null
 >(
@@ -285,7 +327,7 @@ const inputRow = <
     .setName(resolve(name))
     .setDesc(resolve(desc));
 
-  return componentApi(el,base,global_opt)(name,desc,prop)(s);
+  return componentApi(el,base,global_opt, log_level)(name,desc,prop)(s);
 }
 
 /**
@@ -302,16 +344,17 @@ const inputRow = <
  * ```
  */
 export const UiBuilder = <
-  TBase extends Record<PropertyKey,any>,
+  TBase extends Record<string,any>,
   TGlobalOpt extends UiBuilderOptions
 >(
   el: HTMLElement, 
   base: TBase,
+  log_level: LogLevel,
   global_opt: UiBuilderOptions = {} as UiBuilderOptions
 ): UiBuilderApi<TBase, TGlobalOpt> => {
   const { h1, style } = global_opt;
-  const context = contextApi(el,base,global_opt);
-  const settings: any = inputRow(el,base,global_opt);
+  const context = contextApi(el,base,global_opt, log_level);
+  const settings: any = inputRow(el,base,global_opt, log_level);
   el.empty();
   for (const prop of Object.keys(context)) {
     settings[prop] = context[prop as keyof typeof context];
