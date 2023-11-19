@@ -1,96 +1,47 @@
-# Obsidian Sample Plugin
+# Kind Model Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+> `obsidian-kind-model`
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+## Overview
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+This repo is a plugin for the popular [Obsidian](https://obsidian.md) editor and extends it's functionality to produce "kinded models" of entities you want to represent in your PKM.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+The **kind** definitions are nothing more than markdown files in your vault which conform to a particular naming convention for Frontmatter properties. Knowing this convention is actually unimportant to start as you can design your ken entities using the configuration tab in Obsidian:
 
-## First time developing plugins?
+![modal config](./kind-model-config.png)
 
-Quick starting guide for new plugin devs:
+## What's so good about a Kind?
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Ok so I can define a **kind**. Why should I care? What does it do? Before we lose you -- ye of little faith -- let's cover a couple of the top benefits:
 
-## Releasing new releases
+- **Classification**
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+  You can classify any _kinded_ page with a few different classification schemes. The default is category/subcategory which allows you to associate each kinded page with a "category" and a more specific "sub-category".
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+  A _kinded_ entity doesn't need to classify itself but by doing so it creates a link to a page which then shows the aggregation of all pages which share this classification. This _abstracted_ relationship is often more powerful than just a direct relationship as it not only helps contextualize in it's own right it provides an easily navigable solution for discovery (aka, what things are related to my current thing).
 
-## Adding your plugin to the community plugin list
+- **Direct Relationships**
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+  While classification provides a nice way to contextualize a _kinded page_ and identify peers of that entity, it's often important to draw out direct relationships between one entity and another. Importantly, a direct relationship can be between two pages of _the same kind_ but often it is a means to map one kind of page to another.
 
-## How to use
+- **Metrics**
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+  Metrics are data points which we capture in life. They are always _numeric_ and they always relate to some sort of _unit of measure_(UOM). With this plugin, you can express which metrics a particular kind can capture and what UOM should be assumed. What's nice about this is that not only are authors of a given page able to be reminded of the precise metrics that are available to the page but when you are looking at a query across an aggregation of this kind you can see the same metrics reported back to you.
 
-## Manually installing the plugin
+All three of these are covered in greater detail in the sections below.
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## Classification
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+TBD
 
-## Funding URL
+## Direct Relationships
 
-You can include funding URLs where people who use your plugin can financially support it.
+TBD
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Metrics
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+TBD
 
-If you have multiple URLs, you can also do:
+## Other Features
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+TBD

@@ -2,12 +2,12 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, setIcon } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
 import { SettingsTab} from 'settings/SettingsTab';
-import { PluginSettings } from 'types/settings-types';
+import { KindModelPlugin } from 'types/settings-types';
 import { DEFAULT_SETTINGS } from 'utils/Constants'
 import { logger } from 'utils/logging';
 
 export default class KindModel extends Plugin {
-	settings: PluginSettings;
+	settings: KindModelPlugin;
 
 	private dv: ReturnType<typeof getAPI>;
 

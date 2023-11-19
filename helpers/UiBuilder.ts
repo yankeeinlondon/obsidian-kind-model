@@ -2,35 +2,35 @@ import { ButtonComponent, Setting } from "obsidian";
 import { FolderSuggest } from "./FolderSuggest";
 import { MaybeLazy, UiBuilderContextApi, UiBuilderComponentApi, UiBuilderOptions, UiBuilderApi } from "types/ui-builder-types";
 import { logger } from "utils/logging";
-import { LogLevel } from "settings/SettingsTab";
+import { LogLevel } from "types/settings-types";
 
 // [Reference Docs](https://docs.obsidian.md/Plugins/User+interface/Settings)
 
-type Methods = {
-  TextComponent: {
-    setDisabled(disabled: boolean): Methods["TextComponent"];
-    /**
-     * @public
-     */
-    getValue(): string;
-    /**
-     * @public
-     */
-    setValue(value: string): Methods["TextComponent"];
-    /**
-     * @public
-     */
-    setPlaceholder(placeholder: string): Methods["TextComponent"];
-    /**
-     * @public
-     */
-    onChanged(): void;
-    /**
-     * @public
-     */
-    onChange(callback: (value: string) => any): Methods["TextComponent"];
-  }
-}
+// type Methods = {
+//   TextComponent: {
+//     setDisabled(disabled: boolean): Methods["TextComponent"];
+//     /**
+//      * @public
+//      */
+//     getValue(): string;
+//     /**
+//      * @public
+//      */
+//     setValue(value: string): Methods["TextComponent"];
+//     /**
+//      * @public
+//      */
+//     setPlaceholder(placeholder: string): Methods["TextComponent"];
+//     /**
+//      * @public
+//      */
+//     onChanged(): void;
+//     /**
+//      * @public
+//      */
+//     onChange(callback: (value: string) => any): Methods["TextComponent"];
+//   }
+// }
 
 const isNotNull = <T extends PropertyKey | null, B extends Record<PropertyKey, any>>(prop: T, base: B): prop is Exclude<T, null> & keyof B & string => {
   return prop === null

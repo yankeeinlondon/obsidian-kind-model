@@ -3,7 +3,7 @@ import { App, PluginSettingTab } from "obsidian";
 import { LOG_LEVELS,  CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING } from "utils/Constants";
 import { KindModal } from "./KindModal";
 import { UiBuilder } from "helpers/UiBuilder";
-import { logger } from "utils/logging";
+import { Logger, logger } from "utils/logging";
 import { ClassificationMeta, KindClassification } from "types/settings-types";
 
 
@@ -40,9 +40,13 @@ export const classification = (c: KindClassification): ClassificationMeta => ({
 
 
 export class SettingsTab extends PluginSettingTab {
-	plugin: KindModel;
   app: App;
+	plugin: KindModel;
   saveSettings: (() => Promise<unknown>) | undefined;
+  private debug: Logger["debug"];
+  private info: Logger["info"];
+  private warn: Logger["warn"];
+  private error: Logger["error"];
 
 	constructor(app: App, plugin: KindModel) {
 		super(app, plugin);

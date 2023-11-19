@@ -1,5 +1,4 @@
-import { LogLevel } from "settings/SettingsTab";
-
+import { LogLevel } from "types/settings-types";
 
 
 const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") as string | undefined;
@@ -65,3 +64,5 @@ export const logger = (level: LogLevel) => ({
   /** **error** logger */
   error: error(level)
 })
+
+export type Logger = ReturnType<typeof logger>;

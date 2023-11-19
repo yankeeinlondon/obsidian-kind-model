@@ -1,10 +1,12 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
 import { TAbstractFile, TFile } from "obsidian";
-import { TextInputSuggest } from "./suggest";
+import { TextInputSuggest } from "./Suggest";
 import { get_tfiles_from_folder } from "utils/Utils";
 import TemplaterPlugin from "main";
 import { errorWrapperSync } from "utils/Error";
+import { KindModelPlugin } from "types/settings-types";
+import { Logger, logger } from "utils/logging";
 
 export enum FileSuggestMode {
     TemplateFiles,
@@ -12,22 +14,29 @@ export enum FileSuggestMode {
 }
 
 export class FileSuggest extends TextInputSuggest<TFile> {
+    private debug: Logger["debug"];
+    private info: Logger["info"];
+    private warn: Logger["warn"];
+    private error: Logger["error"];
+    
     constructor(
         public inputEl: HTMLInputElement,
-        private plugin: TemplaterPlugin,
-        private mode: FileSuggestMode
+        private plugin: KindModelPlugin,
+        private folders: string[],
+        
     ) {
+        const {warn, error, debug, info} = logger(plugin.log_level);
         super(inputEl);
     }
 
-    get_folder(mode: FileSuggestMode): string {
-        switch (mode) {
-            case FileSuggestMode.TemplateFiles:
-                return this.plugin.settings.templates_folder;
-            case FileSuggestMode.ScriptFiles:
-                return this.plugin.settings.user_scripts_folder;
-        }
-    }
+    // get_folder(mode: FileSuggestMode): string {
+    //     switch (mode) {
+    //         case FileSuggestMode.TemplateFiles:
+    //             return this.plugin.settings.templates_folder;
+    //         case FileSuggestMode.ScriptFiles:
+    //             return this.plugin.settings.user_scripts_folder;
+    //     }
+    // }
 
     get_error_msg(mode: FileSuggestMode): string {
         switch (mode) {
@@ -39,13 +48,16 @@ export class FileSuggest extends TextInputSuggest<TFile> {
     }
 
     getSuggestions(input_str: string): TFile[] {
-        const all_files = errorWrapperSync(
-            () => get_tfiles_from_folder(this.get_folder(this.mode)),
-            this.get_error_msg(this.mode)
-        );
-        if (!all_files) {
-            return [];
-        }
+        const all_files = [
+            ...this.folders.map(f => {
+                try {
+                    return get_tfiles_from_folder(f);
+                } catch {
+                    this.warn(`Folder missing!`, `the folder "${f}" was request from the FileSuggest class but this file does not exist!`)
+                    return [];
+                }
+            }).flat()
+        ];
 
         const files: TFile[] = [];
         const lower_input_str = input_str.toLowerCase();

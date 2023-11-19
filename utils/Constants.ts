@@ -1,4 +1,4 @@
-import { Kind, PluginSettings } from "types/settings-types";
+import { Kind, KindModelPlugin } from "types/settings-types";
 
 
 export const CLASSIFICATION = [
@@ -21,7 +21,7 @@ export const LOG_LEVELS = [
   "error",
 ] as const;
 
-export const DEFAULT_SETTINGS: PluginSettings = {
+export const DEFAULT_SETTINGS: KindModelPlugin = {
   kinds: {},
   types: {},
 	kind_folder: "kind",
