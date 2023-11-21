@@ -5,7 +5,7 @@ import { TextInputSuggest } from "./Suggest";
 import { get_tfiles_from_folder } from "utils/Utils";
 import TemplaterPlugin from "main";
 import { errorWrapperSync } from "utils/Error";
-import { KindModelPlugin } from "types/settings-types";
+import { KindModelSettings } from "types/settings-types";
 import { Logger, logger } from "utils/logging";
 
 export enum FileSuggestMode {
@@ -21,7 +21,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
     
     constructor(
         public inputEl: HTMLInputElement,
-        private plugin: KindModelPlugin,
+        private plugin: KindModelSettings,
         private folders: string[],
         
     ) {

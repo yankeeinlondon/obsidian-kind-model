@@ -125,7 +125,7 @@ export interface PageBlock {
 export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
 
 
-export interface KindModelPlugin {
+export interface KindModelSettings {
 	kinds: Record<string, Kind>;
 	kind_folder: string;
   handle_tags: TagHandler;

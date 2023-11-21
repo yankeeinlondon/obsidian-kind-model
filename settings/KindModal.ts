@@ -1,8 +1,9 @@
 import { App, Modal, Setting } from "obsidian";
-import { Kind, KindClassification, LogLevel, classification } from "./SettingsTab";
+import {  classification } from "./SettingsTab";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "utils/Constants";
 import { UiBuilder } from "helpers/UiBuilder";
 import { logger } from "utils/logging";
+import { Kind, LogLevel } from "types/settings-types";
 
 export class KindModal extends Modal {
 	private kind: Kind;

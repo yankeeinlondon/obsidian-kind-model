@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/mdast": "^4.0.3",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
@@ -23,6 +24,10 @@
 		"typescript": "^5.2.2"
 	},
 	"dependencies": {
-		"@popperjs/core": "^2.11.8"
+		"@markdoc/markdoc": "^0.3.5",
+		"@popperjs/core": "^2.11.8",
+		"gray-matter": "^4.0.3",
+		"mdast": "^3.0.0",
+		"yaml": "^2.3.4"
 	}
 }

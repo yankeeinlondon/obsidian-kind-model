@@ -1,4 +1,4 @@
-import KindModel from "main";
+import KindModelPlugin from "main";
 import { App, PluginSettingTab } from "obsidian";
 import { LOG_LEVELS,  CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING } from "utils/Constants";
 import { KindModal } from "./KindModal";
@@ -41,14 +41,14 @@ export const classification = (c: KindClassification): ClassificationMeta => ({
 
 export class SettingsTab extends PluginSettingTab {
   app: App;
-	plugin: KindModel;
+	plugin: KindModelPlugin;
   saveSettings: (() => Promise<unknown>) | undefined;
   private debug: Logger["debug"];
   private info: Logger["info"];
   private warn: Logger["warn"];
   private error: Logger["error"];
 
-	constructor(app: App, plugin: KindModel) {
+	constructor(app: App, plugin: KindModelPlugin) {
 		super(app, plugin);
     this.app = app;
 		this.plugin = plugin;

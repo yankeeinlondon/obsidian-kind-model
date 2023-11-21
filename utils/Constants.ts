@@ -1,4 +1,4 @@
-import { Kind, KindModelPlugin } from "types/settings-types";
+import { Kind, KindModelSettings } from "types/settings-types";
 
 
 export const CLASSIFICATION = [
@@ -21,7 +21,7 @@ export const LOG_LEVELS = [
   "error",
 ] as const;
 
-export const DEFAULT_SETTINGS: KindModelPlugin = {
+export const DEFAULT_SETTINGS: KindModelSettings = {
   kinds: {},
   types: {},
 	kind_folder: "kind",
@@ -68,4 +68,8 @@ export const UOM_TYPES = [
 export const CARDINALITY_TYPES = [
   "0:1",
   "0:M"
+] as const;
+
+export const HEADING_LEVELS = [
+  1,2,3,4,5,6
 ] as const;

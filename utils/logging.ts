@@ -9,21 +9,25 @@ const trunc = (s: string | undefined) => typeof s === "string"
     : `${s}`
   : "";
 
-const debug = (level: LogLevel) =>(...args: unknown[]) => {
+const debug = <TLevel extends LogLevel>(level: TLevel) =>(...args: unknown[]) => {
   if (level !== "debug") {
     return;
   }
 
   console.groupCollapsed(`obsidian-kind-model (dbg: ${trunc(msg(args))})`);
   args.forEach(a => {
-    console.log(a);
+    if (typeof a === "function") {
+      console.log(a());
+    } else {
+      console.log(a);
+    }
   })
   console.groupEnd();
 }
 
-const info = (level: LogLevel) => 
+const info = <TLevel extends LogLevel>(level: TLevel) => 
 (...args: unknown[]) => {
-  if (!["error","warn","info"].includes(level)) {
+  if (["debug"].includes(level)) {
     return;
   }
   console.groupCollapsed(`obsidian-kind-model (info: ${trunc(msg(args))})`);
@@ -38,31 +42,72 @@ const info = (level: LogLevel) =>
  * 
  * Note: _the message will be expanded by default_.
  */
-const warn = (level: LogLevel) => (...args: unknown[]) => {
+const warn = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) => {
   if (["error"].includes(level)) {
     return;
   }
   console.group("obsidian-kind-model");
-  console.warn(...args);
+  args.forEach(a => {
+    console.warn(a);
+  })
   console.groupEnd();
 }
-const error = (level: LogLevel) => (...args: unknown[]) => {
+const error = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) => {
   const trunc = (s: string | undefined) => typeof s === "string"
   console.group("obsidian-kind-model (error)");
-  console.error(...args);
+  args.forEach(a => {
+    console.error(a);
+  })
   console.groupEnd();
   new Notification(`obsidian-kind-model (Error): ${msg(args) || ""}`, {body: "see developer console for more details"});
+
+
+  class KindModelError extends Error {
+    kind: "KindModel Error";
+
+    constructor(msg: string) {
+      super(msg);
+    }
+  }
+
+  throw new KindModelError(msg(args)|| "Kind Model error");
+}
+
+export interface Logger<TLevel extends LogLevel = LogLevel> {
+  level: TLevel;
+  /** **debug** logger */
+  debug: ReturnType<typeof debug>;
+  /** **info** logger */
+  info: ReturnType<typeof debug>,
+  /** **warn** logger */
+  warn: ReturnType<typeof debug>,
+  /** **error** logger */
+  error: ReturnType<typeof error>
 }
   
-export const logger = (level: LogLevel) => ({
-  /** **debug** logger */
-  debug: debug(level),
-  /** **info** logger */
-  info: info(level),
-  /** **warn** logger */
-  warn: warn(level),
-  /** **error** logger */
-  error: error(level)
-})
+export const logger = <
+  TLevel extends LogLevel, 
+  TReturn extends Omit<Logger<TLevel>, "level"> | undefined
+>(
+  level: LogLevel, 
+  context?: TReturn
+): Logger<LogLevel> => {
+  const api: Logger<LogLevel> = {
+    level,
+    debug: debug(level),
+    info: info(level),
+    warn: warn(level),
+    error: error(level)
+  };
 
-export type Logger = ReturnType<typeof logger>;
+  if (context) {
+    for (const k of Object.keys(api)) {
+      if(k !== "level" && Object.keys(context).includes(k) ) {
+        (context as any)[k as keyof Omit<Logger<TLevel>, "level">] = api[k as keyof typeof api];
+      }
+    }
+  }
+
+  return api;
+};
+

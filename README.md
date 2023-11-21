@@ -10,15 +10,26 @@ The **kind** definitions are nothing more than markdown files in your vault whic
 
 ![modal config](./kind-model-config.png)
 
-## What's so good about a Kind?
+### What's so good about a Kind?
 
-Ok so I can define a **kind**. Why should I care? What does it do? Before we lose you -- ye of little faith -- let's cover a couple of the top benefits:
+Ok so I can define a **kind**. Why should I care? What does it do? Before we lose you -- _ye of little faith_ -- let's cover a couple of the top benefits:
 
 - **Classification**
 
-  You can classify any _kinded_ page with a few different classification schemes. The default is category/subcategory which allows you to associate each kinded page with a "category" and a more specific "sub-category".
+  You can classify any _kinded_ page with a few different classification schemes. The default scheme is **category/subcategory** which allows you to associate each kinded page with a "category" and a more specific "sub-category" (should you want).
 
   A _kinded_ entity doesn't need to classify itself but by doing so it creates a link to a page which then shows the aggregation of all pages which share this classification. This _abstracted_ relationship is often more powerful than just a direct relationship as it not only helps contextualize in it's own right it provides an easily navigable solution for discovery (aka, what things are related to my current thing).
+
+  Ideas are sometimes hard to follow without concrete examples, so let's imagine we've defined a **kind** called `Software Product` and that we have two pages which _implement_ this kind:
+
+  - Adobe Lightroom
+    - category: "[[Audio Visual]]",
+    - sub_category: "[[Photo Mgmt]]"
+  - Apple's Final Cut
+    - category: "[[Audio Visual]]",
+    - sub_category: "[[Video Production]]"
+
+  Now since both products have been given the same category, you can click through to the _category page_ and it will automatically (via a dataview query) show both products. This means you can focus on the individual items but also get the _aggregation_ for free. The same applies to the sub-category too but in our example here, they vary and so what you'd see is a more fine grained aggregation of the software that matches both the category and subcategory.
 
 - **Direct Relationships**
 
