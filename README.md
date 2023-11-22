@@ -6,7 +6,7 @@
 
 This repo is a plugin for the popular [Obsidian](https://obsidian.md) editor and extends it's functionality to produce "kinded models" of entities you want to represent in your PKM.
 
-The **kind** definitions are nothing more than markdown files in your vault which conform to a particular naming convention for Frontmatter properties. Knowing this convention is actually unimportant to start as you can design your ken entities using the configuration tab in Obsidian:
+The **kind** definitions are nothing more than markdown files in your vault which conform to a particular naming convention for Frontmatter properties. Knowing this convention is actually unimportant to start as you can design your entities using the configuration tab in Obsidian:
 
 ![modal config](./kind-model-config.png)
 
