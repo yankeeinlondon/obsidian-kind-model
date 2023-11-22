@@ -1,6 +1,6 @@
 # Kind Model Plugin
 
-![banner image](../kind-model-banner-1024.png)
+![banner image](./kind-model-banner-1024.png)
 
 ## Overview
 
