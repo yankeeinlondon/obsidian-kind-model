@@ -1,4 +1,4 @@
-import { KindModelError } from "./Error";
+
 import {
     App,
     normalizePath,
@@ -29,10 +29,10 @@ export function resolve_tfolder(folder_str: string): TFolder {
 
     const folder = app.vault.getAbstractFileByPath(folder_str);
     if (!folder) {
-        throw new KindModelError(`Folder "${folder_str}" doesn't exist`);
+        throw new Error(`Folder "${folder_str}" doesn't exist`);
     }
     if (!(folder instanceof TFolder)) {
-        throw new KindModelError(`${folder_str} is a file, not a folder`);
+        throw new Error(`${folder_str} is a file, not a folder`);
     }
 
     return folder;
@@ -43,10 +43,10 @@ export function resolve_tfile(file_str: string): TFile {
 
     const file = app.vault.getAbstractFileByPath(file_str);
     if (!file) {
-        throw new KindModelError(`File "${file_str}" doesn't exist`);
+        throw new Error(`File "${file_str}" doesn't exist`);
     }
     if (!(file instanceof TFile)) {
-        throw new KindModelError(`${file_str} is a folder, not a file`);
+        throw new Error(`${file_str} is a folder, not a file`);
     }
 
     return file;

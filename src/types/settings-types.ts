@@ -92,6 +92,9 @@ export interface Kind {
   default_icon?: string | undefined;
 
   default_cover?: string | undefined;
+
+  aliases_plural: boolean;
+  aliases_casing: boolean;
 }
 
 export type TagHandler = TupleToUnion<typeof TAG_HANDLING>;

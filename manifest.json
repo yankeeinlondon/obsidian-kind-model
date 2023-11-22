@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-kind-model",
 	"name": "Kind Models",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Allows for modeling 'kinds' of data quickly.",
 	"author": "Ken Snyder <ken@ken.net>",

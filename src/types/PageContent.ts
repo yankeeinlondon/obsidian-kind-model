@@ -1,8 +1,8 @@
 import { MarkdownView } from "obsidian";
 import { DateTime, Link } from "obsidian-dataview";
 import { DataviewSettings } from "./dataview-types";
-import { Node } from "@markdoc/markdoc";
-import { Frontmatter } from "./frontmatter";
+import { Node, RenderableTreeNode } from "@markdoc/markdoc";
+import { Frontmatter, HeadingTag } from "./frontmatter";
 
 export interface PageContext {
   /**

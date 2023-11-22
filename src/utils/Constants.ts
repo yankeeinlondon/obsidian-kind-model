@@ -46,6 +46,8 @@ export const DEFAULT_KIND: Kind = {
   tag: "",
   metric_props: [],
   class_inside_kind: false,
+  aliases_casing: false,
+  aliases_plural: false
 };
 
 export const FOLDER_DEFAULT = [

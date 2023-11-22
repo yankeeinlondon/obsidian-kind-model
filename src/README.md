@@ -1,6 +1,6 @@
 # Kind Model Plugin
 
-> `obsidian-kind-model`
+![banner image](../kind-model-banner-1024.png)
 
 ## Overview
 

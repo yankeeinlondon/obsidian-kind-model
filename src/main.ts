@@ -17,7 +17,7 @@ export default class KindModelPlugin extends Plugin {
   public info: Logger["info"];
   public warn: Logger["warn"];
   public error: Logger["error"];
-
+	
 	async kinds(): Promise<DataArray<PageRef>> {
 		if(!this.dv) {
 			this.warn("Call to dataview API before it was ready!", "Will wait 100ms and try again");
