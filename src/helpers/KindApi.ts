@@ -1,7 +1,8 @@
 import KindModelPlugin from "main";
+import { PageContext } from "types/PageContent";
 import { DataArray, PageRef } from "types/dataview-types";
 import { Tag } from "types/general";
-import { PageContext } from "utils/getPageContext";
+
 
 export interface KindApi {
   pages: DataArray<PageRef>;

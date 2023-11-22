@@ -15,7 +15,7 @@ export interface DataArray<T> {
   /** The total number of elements in the array. */
   length: number;
 
-  value: T[];
+  values: T[];
 
   /** Filter the data array down to just elements which match the given predicate. */
   where(predicate: ArrayFunc<T, boolean>): DataArray<T>;

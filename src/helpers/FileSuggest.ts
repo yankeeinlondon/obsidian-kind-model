@@ -3,10 +3,7 @@
 import { TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "./Suggest";
 import { get_tfiles_from_folder } from "utils/Utils";
-import TemplaterPlugin from "main";
-import { errorWrapperSync } from "utils/Error";
-import { KindModelSettings } from "types/settings-types";
-import { Logger, logger } from "utils/logging";
+import KindModelPlugin from "main";
 
 export enum FileSuggestMode {
     TemplateFiles,
@@ -14,18 +11,13 @@ export enum FileSuggestMode {
 }
 
 export class FileSuggest extends TextInputSuggest<TFile> {
-    private debug: Logger["debug"];
-    private info: Logger["info"];
-    private warn: Logger["warn"];
-    private error: Logger["error"];
     
     constructor(
         public inputEl: HTMLInputElement,
-        private plugin: KindModelSettings,
+        public plugin: KindModelPlugin,
         private folders: string[],
         
     ) {
-        const {warn, error, debug, info} = logger(plugin.log_level);
         super(inputEl);
     }
 
@@ -53,7 +45,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
                 try {
                     return get_tfiles_from_folder(f);
                 } catch {
-                    this.warn(`Folder missing!`, `the folder "${f}" was request from the FileSuggest class but this file does not exist!`)
+                    this.plugin.warn(`Folder missing!`, `the folder "${f}" was request from the FileSuggest class but this file does not exist!`)
                     return [];
                 }
             }).flat()
