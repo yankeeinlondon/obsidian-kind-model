@@ -10,8 +10,10 @@
 		}
 	},
 	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"dev": "vite build --watch",
+		"build": "vite",
+		"dev:old": "node esbuild.config.mjs",
+		"build:old": "npx tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"bump": "bumpp"
 	},
 	"keywords": [
@@ -20,21 +22,31 @@
 	"author": "Ken Snyder <ken@ken.net>",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "^16.18.63",
-		"@typescript-eslint/eslint-plugin": "^6.12.0",
-		"@typescript-eslint/parser": "^6.12.0",
+		"@types/node": "^16.18.68",
+		"@typescript-eslint/eslint-plugin": "^6.15.0",
+		"@typescript-eslint/parser": "^6.15.0",
+		"@vitejs/plugin-vue": "^4.5.2",
+		"@vue/compiler-sfc": "^3.3.13",
 		"builtin-modules": "^3.3.0",
-		"bumpp": "^9.2.0",
+		"bumpp": "^9.2.1",
+		"esbuild": "^0.19.10",
+		"pathe": "^1.1.1",
 		"tslib": "2.6.2",
-		"tsup": "^8.0.1",
-		"typescript": "^5.3.2",
-		"vitest": "^0.34.6"
+		"typescript": "^5.3.3",
+		"unplugin-auto-import": "^0.17.2",
+		"unplugin-vue-components": "^0.26.0",
+		"unplugin-vue-macros": "^2.7.5",
+		"vite": "^5.0.10",
+		"vitest": "^1.1.0"
 	},
 	"dependencies": {
-		"@markdoc/markdoc": "^0.3.5",
+		"@markdoc/markdoc": "^0.4.0",
 		"@popperjs/core": "^2.11.8",
+		"luxon": "^3.4.4",
 		"obsidian": "latest",
 		"obsidian-dataview": "^0.5.64",
+		"vue": "^3.3.13",
+		"xxhash-wasm": "^1.0.2",
 		"yaml": "^2.3.4"
 	}
 }

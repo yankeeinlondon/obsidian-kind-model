@@ -1,9 +1,9 @@
 import KindModelPlugin from "main";
 import { App, PluginSettingTab } from "obsidian";
-import { LOG_LEVELS,  CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING } from "utils/Constants";
+import { LOG_LEVELS,  CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING } from "../utils/Constants";
 import { KindModal } from "./KindModal";
-import { UiBuilder } from "helpers/UiBuilder";
-import { Logger, logger } from "utils/logging";
+import { UiBuilder } from "../helpers/UiBuilder";
+import { Logger, logger } from "../utils/logging";
 import { ClassificationMeta, KindClassification } from "types/settings-types";
 
 

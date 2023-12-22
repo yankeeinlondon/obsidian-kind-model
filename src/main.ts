@@ -1,12 +1,14 @@
 
 import {  Editor, MarkdownView,  Notice, Plugin } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
-import { SettingsTab} from 'settings/SettingsTab';
-import { DataArray, DataViewApi, PageRef } from 'types/dataview-types';
+import { SettingsTab} from './settings/SettingsTab';
+import { DataArray, DataViewApi, PageRef } from './types/dataview-types';
 import { KindModelSettings } from 'types/settings-types';
-import { DEFAULT_SETTINGS } from 'utils/Constants'
-import { Logger, logger } from 'utils/logging';
-import { update_kinded_page } from 'commands/update_kinded_page';
+import { DEFAULT_SETTINGS } from './utils/Constants'
+import { Logger, logger } from './utils/logging';
+import { update_kinded_page } from './commands/update_kinded_page';
+import App from "./App.vue";
+import {createApp} from "vue"
 
 export default class KindModelPlugin extends Plugin {
 	settings: KindModelSettings;
@@ -52,15 +54,15 @@ export default class KindModelPlugin extends Plugin {
 			name: "create a new (kinded) page",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const content = view.getViewData();
-
+				info("create-new-kinded-page", {content})
 			},
 		});
 		this.addCommand({
-			id: "create-new-kinded-classification-page",
+			id: "create-new-classification-page",
 			name: "add a classification for a (kinded) page",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const content = view.getViewData();
-
+				info("create-new-classification-page", {content});
 			},
 		});
 
@@ -69,7 +71,7 @@ export default class KindModelPlugin extends Plugin {
 			name: "add links to (kinded) page",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const content = view.getViewData();
-
+				info("add-url-props-for-kinded-page", {content})
 			},
 		});
 
@@ -108,7 +110,15 @@ export default class KindModelPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
+		
+		this.mount();
 	}
+
+	mount() {
+    createApp(App, {
+      app: this.app
+    }).mount(document.body.createDiv())
+  }
 
 	onunload() {
 
@@ -119,7 +129,7 @@ export default class KindModelPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		const { debug, info, warn, error } = logger(this.settings.log_level);
+		const { debug,  error } = logger(this.settings.log_level);
 		if(typeof this.saveData !== "function") {
 			error("the 'this' context appear to have been lost when trying to call saveSettings()", this)
 			return

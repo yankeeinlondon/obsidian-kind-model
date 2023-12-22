@@ -3,8 +3,10 @@ import { DateTime, Link } from "obsidian-dataview";
 import { DataviewSettings } from "./dataview-types";
 import { Node, RenderableTreeNode } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
+import { KindApi } from "helpers/KindApi";
 
 export interface PageContext {
+  kind: KindApi,
   /**
    * meta data _about_ the page
    */
@@ -54,21 +56,21 @@ export interface PageContext {
      * A list of all explicit tags in the note; unlike `tags`, 
      * does not break sub-tags down, i.e. [#Tag/1/A]
      */
-    etags: any[];
+    etags: string[];
     /**
      * **tags**
      * 
      * A list of all unique tags in the note. Sub-tags are broken down by each level, 
      * so `#Tag/1/A` will be stored in the list as [#Tag, #Tag/1, #Tag/1/A].
      */
-    tags: any[];
+    tags: string[];
 
     isCategoryPage: boolean;
     isSubcategoryPage: boolean;
     isKindDefinitionPage: boolean;
 
     /** A list of all tasks (I.e., | [ ] some task) in this file. */
-    tasks: any[];
+    tasks: string[];
 
     /**
      * A list of all list elements in the file (including tasks); these 

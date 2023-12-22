@@ -1,14 +1,14 @@
-import { MarkdownView, TFile } from "obsidian";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { MarkdownView } from "obsidian";
 import Markdoc from "@markdoc/markdoc";
 import { splitContent } from "./splitContent";
-import KindModelPlugin from "main";
+import KindModelPlugin from "../main";
 import { getHeadingLevel } from "./getHeadingLevel";
-import { PageContext } from "types/PageContent";
+import { PageContext } from "../types/PageContent";
 import { isTFile } from "./isTFile";
+import { KindApi } from "../helpers/KindApi";
 
-
-
-export const getPageContext = (view: MarkdownView, plugin: KindModelPlugin): PageContext => {
+export const  getPageContext = async (view: MarkdownView, plugin: KindModelPlugin): Promise<PageContext> => {
   const file = view.file;
   let context: Partial<PageContext> = {};
 
@@ -19,8 +19,10 @@ export const getPageContext = (view: MarkdownView, plugin: KindModelPlugin): Pag
         const {yaml, body, blocks, h1, preH1, postH1} = splitContent(content);
         const ast = Markdoc.parse(content || "");
         const renderableTree = Markdoc.transform(ast);
+        const kind = KindApi(plugin)(await plugin.kinds());
 
         context = {
+          kind,
           meta: {
             dv: {
               ...page.file.tags.settings
