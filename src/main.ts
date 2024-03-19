@@ -1,43 +1,87 @@
 
 import {  Editor, MarkdownView,  Notice, Plugin } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
-import { SettingsTab} from './settings/SettingsTab';
-import { DataArray, DataViewApi, PageRef } from './types/dataview-types';
-import { KindModelSettings } from 'types/settings-types';
+import { SettingsTab} from './config-ui/SettingsTab';
+import {  DataViewQueryApi } from './types/dataview_types';
+import {  KindModelSettings } from './types/settings_types';
 import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
 import { update_kinded_page } from './commands/update_kinded_page';
 import App from "./App.vue";
 import {createApp} from "vue"
+import { api } from './utils/base_api/api';
+import { KindDefinition, KindPage } from './types/PageContext';
+import { initialize_cache } from './utils/on_load/initialize_cache';
+import { Tag } from "./types/general";
+
+export interface KindCache {
+	/**
+	 * Kind definitions
+	 */
+	kinds: Map<string, KindDefinition>,
+	/** 
+	 * **pages**
+	 * 
+	 * A dictionary of `KindedPage` types for each relevant page which
+	 * Kind Model is aware of. The dictionaries keys represent the
+	 * fully qualified path to the page.
+	 */
+	pages: Map<string, KindPage>,
+	/**
+	 * **tag_lookup**
+	 * 
+	 * A dictionary where any tag being used in **Kind Model** can be
+	 * looked up and an array of _paths_ to pages will be returned.
+	 * 
+	 * **Note:** the tag's name is the index for the lookup and _should not_ contain
+	 * a leading `#` symbol.
+	 */
+	tag_lookup: Map<string, Set<string>>,
+
+	kind_lookup: Map<string, Set<string>>,
+
+	/**
+	 *  **name_lookup**
+	 * 
+	 * Provides the ability to provide just the "name" of a page and
+	 * a Set of fully qualified paths will be returned (note: typically 
+	 * this should just be one).
+	 */
+	name_lookup: Map<string, Set<string>>,
+
+	kind_tags: Set<Tag>
+}
+
 
 export default class KindModelPlugin extends Plugin {
 	settings: KindModelSettings;
 	/** the Dataview API surface */
-	public dv: DataViewApi;
+	public dv: DataViewQueryApi;
+	public api: ReturnType<typeof api>;
 
-  public debug: Logger["debug"];
-  public info: Logger["info"];
-  public warn: Logger["warn"];
-  public error: Logger["error"];
-	
-	async kinds(): Promise<DataArray<PageRef>> {
-		if(!this.dv) {
-			this.warn("Call to dataview API before it was ready!", "Will wait 100ms and try again");
-			await sleep(100);
-			if (this.dv) {
-				this.info(`Dataview API is now available after wait.`);
-			} else {
-				this.error(`Problem using Dataview API while getting kinds!`)
-				throw new Error(`Problem using Dataview API while getting kinds!`)
-			}
-		}
+	public debug: Logger["debug"];
+	public info: Logger["info"];
+	public warn: Logger["warn"];
+	public error: Logger["error"];
 
-		const pages = this.dv.pages(`#kind AND !#category AND !#sub-category AND "${this.settings.kind_folder}"`)
-			.sort(p => p.file.name );
-			
-			return pages;
+	public get_cache(): KindCache | null {
+		return this.settings.cache?.pages
+			? this.settings.cache
+			: null;
 	}
 
+	/**
+	 * provides a boolean flag which indicates whether this plugin's 
+	 * cache is complete and therefore other operations which depend
+	 * on this can proceed.
+	 */
+	public get ready() {
+		return this.settings.cache && this.settings.cache?.pages !== null
+	}
+
+	/**
+	 * Setup this plugin on the "onload" event from Obsidian
+	 */
 	async onload() {
 		await this.loadSettings();
 		const log = logger(this.settings.log_level);
@@ -47,7 +91,12 @@ export default class KindModelPlugin extends Plugin {
 		this.warn = warn;
 		this.error = error;
 
+		// expose the Dataview API
 		this.dv = getAPI(this.app);
+		// expose Kind Model API
+		this.api = api(this);
+
+		initialize_cache(this);
 
 		this.addCommand({
 			id: "create-new-kinded-page",
@@ -83,7 +132,7 @@ export default class KindModelPlugin extends Plugin {
 
 		this.registerEvent(this.app.vault.on('delete', evt => {
 			const kind_folder = this.settings.kind_folder;
-			const find = new RegExp(`^${kind_folder}\$`);
+			const find = new RegExp(`^${kind_folder}$`);
 			if (find.test(evt.path)) {
 				new Notice('Kind file deleted');
 			}
@@ -97,7 +146,7 @@ export default class KindModelPlugin extends Plugin {
 		}));
 		this.registerEvent(this.app.vault.on('create', evt => {
 			const kind_folder = this.settings.kind_folder;
-			const find = new RegExp(`^${kind_folder}\$`);
+			const find = new RegExp(`^${kind_folder}$`);
 			if (find.test(evt.path)) {
 				new Notice('Kind file added');
 			}
@@ -110,6 +159,8 @@ export default class KindModelPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
+
+		this.info(`Kind Model has reloaded`);
 		
 		this.mount();
 	}

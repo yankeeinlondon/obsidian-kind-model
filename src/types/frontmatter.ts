@@ -1,20 +1,58 @@
 import { Tag } from "@markdoc/markdoc";
-import { HEADING_LEVELS } from "utils/Constants";
-import { TupleToUnion } from "utils/type-utils";
 import { Link } from "obsidian-dataview";
+import { HEADING_LEVELS } from "../utils/Constants";
+import { TupleToUnion } from "../utils/type-utils";
+import { DataArray } from "./dataview_types";
+import { Relationship } from "./settings_types";
 
 
-export interface FrontmatterDefaults extends Record<string, unknown | undefined> {
-  kind?: string;
-  type?: string;
-  category?: any;
-  sub_category?: any;
-  parent?: any;
-  siblings?: any[];
-  date?: any;
+export type FmPropSuggestions = {
+	kind?: Link  | string | null;
+	type?: Link | string | null;
+	category?: Link | string | null;
+	categories?: DataArray<Link | string> | null;
+	subcategory?: Link | string | null;
+	website?: Link | string | null;
+	company?: Link | string | null; 
+	[key: string]: unknown
 }
 
-export type Frontmatter<T extends Record<string, unknown> = FrontmatterDefaults> = Record<string, unknown> & T;
+/**
+ * **LinkedAsset**
+ * 
+ * Allows pointer to a page's property
+ */
+export type LinkedAsset = { page: Link, prop: string };
+
+
+export type PropertyType = "string" | "string[]" | "number" | "number[]" | "boolean" | "boolean[]" | "metric";
+
+/**
+ * A string which describes a property in a Kind model as being:
+ * 
+ * 1. of a particular type (defined by `PropertyType` union)
+ * 2. of a given name
+ */
+export type PropertyDefn = `${string}::${PropertyType}`
+
+export type FmPropMetaSuggestions = {
+	/**
+	 * The cover image to display at the top of the page
+	 */
+	_cover?: string | LinkedAsset;
+	_icon?: string | LinkedAsset;
+	_favicon?: string;
+	_relationships?: Relationship[];
+	_required_props?: string[];
+	_optional_props?: string[];
+
+}
+
+
+
+export type Frontmatter = {
+	[key: string]: string | number | boolean | unknown[] | Record<string, unknown>
+} & FmPropSuggestions & FmPropMetaSuggestions;
 
 export interface CommonAttrs {
   /** found on code blocks */
@@ -56,3 +94,4 @@ export interface HeadingTag<
    */
   children: Tag[];
 }
+

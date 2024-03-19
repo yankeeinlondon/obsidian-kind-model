@@ -1,4 +1,4 @@
-import { KindModelSettings } from "types/settings-types";
+import { KindModelSettings } from "types/settings_types";
 
 const strip_leading_spaces = (query: string) => {
   return query.split("\n").map(line => line.trim()).join("\n");

@@ -1,4 +1,4 @@
-import { ObsidianLink } from "./ObsidianLink";
+import { FileLink } from "./dataview_types";
 import { Position } from "./Position";
 
 export interface ObsidianTask {
@@ -7,17 +7,17 @@ export interface ObsidianTask {
   children: unknown[];
   completed: boolean;
   fullyCompleted: boolean;
-  header: ObsidianLink;
+  header: FileLink;
   line: number;
-  link: ObsidianLink;
-  outlinks: ObsidianLink[];
+  link: FileLink;
+  outlinks: FileLink[];
   path: string;
   position: {
     start: Position;
     end: Position;
   };
   real: boolean;
-  section: ObsidianLink;
+  section: FileLink;
   status: string;
   subtasks: ObsidianTask[];
   symbol: string;

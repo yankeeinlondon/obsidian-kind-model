@@ -1,11 +1,15 @@
 import KindModelPlugin from "main";
-import { PageContext } from "types/PageContent";
-import { DataArray, PageRef } from "types/dataview-types";
+import { BasePageContext, KindPage } from "types/PageContext";
+import { DataArray, DvPage } from "types/dataview_types";
 import { Tag } from "types/general";
 
-
+/**
+ * **KindApi**
+ * 
+ * 
+ */
 export interface KindApi {
-  pages: DataArray<PageRef>;
+  pages: DataArray<DvPage>;
   exists: (kind: string) => boolean;
   /**
    * A list of all the **kind** names
@@ -22,15 +26,15 @@ export interface KindApi {
 
   /**
    * Given the `PageContext`, this function will determine the **kind**
-   * of category page this is. If it is _not_ a category page it will
-   * throw an error.
+   * of category page this is. If it is _not_ a category page it will return
+   * null.
    */
-  get_category_tag: (ctx: PageContext) => Tag;
+  get_category_tag: (ctx: BasePageContext) => Tag;
 
-  lookup_kind_by_tag: (tag: string) => PageRef | null;
+  lookup_kind_by_tag: (tag: string) => DvPage | null;
 }
 
-export const KindApi = (plugin: KindModelPlugin) => (pages: DataArray<PageRef>): KindApi => ({
+export const KindApi = (plugin: KindModelPlugin) => (pages: KindDefinition[]): KindApi => ({
   pages,
   exists: (kind) => {
     const found = pages.find(i => i?.kind?.file?.name === kind);

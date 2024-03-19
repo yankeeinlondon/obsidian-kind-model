@@ -1,11 +1,11 @@
-import KindModelPlugin from "main";
+
 import { App, PluginSettingTab } from "obsidian";
 import { LOG_LEVELS,  CLASSIFICATION, DEFAULT_KIND, TAG_HANDLING } from "../utils/Constants";
 import { KindModal } from "./KindModal";
 import { UiBuilder } from "../helpers/UiBuilder";
 import { Logger, logger } from "../utils/logging";
-import { ClassificationMeta, KindClassification } from "types/settings-types";
-
+import { ClassificationMeta, KindClassification } from "types/settings_types";
+import KindModelPlugin from "../main";
 
 const ClassificationLookup: Record<KindClassification, [string[], Record<string,string>, string]> = {
   category: [
@@ -37,16 +37,14 @@ export const classification = (c: KindClassification): ClassificationMeta => ({
 	desc: ClassificationLookup[c][2] 
 });
 
-
-
 export class SettingsTab extends PluginSettingTab {
-  app: App;
+	app: App;
 	plugin: KindModelPlugin;
-  saveSettings: (() => Promise<unknown>) | undefined;
-  private debug: Logger["debug"];
-  private info: Logger["info"];
-  private warn: Logger["warn"];
-  private error: Logger["error"];
+	saveSettings: (() => Promise<unknown>) | undefined;
+	private debug: Logger["debug"];
+	private info: Logger["info"];
+	private warn: Logger["warn"];
+	private error: Logger["error"];
 
 	constructor(app: App, plugin: KindModelPlugin) {
 		super(app, plugin);
@@ -59,11 +57,13 @@ export class SettingsTab extends PluginSettingTab {
     debug(`The settings menu has been brought up and we start in this state: `, this.plugin.settings);
 
     const ui = UiBuilder(
-      this.containerEl, 
-      this.plugin.settings,
-      this.plugin.settings.log_level, 
-      { h1: "Kind Models", saveState: this.plugin.saveSettings.bind(this.plugin)}
-  );
+		this.containerEl, 
+		this.plugin.settings,
+		this.plugin.settings.log_level, 
+		{ h1: "Kind Models", saveState: this.plugin.saveSettings.bind(this.plugin)}
+	);
+
+	
 
     ui(
       "Handle Tags", 
@@ -90,7 +90,7 @@ export class SettingsTab extends PluginSettingTab {
 
     kinds(
       "List of Kind Models",
-      "Add new kinded type",
+      "Existing kinds are listed below; use button to add another",
       "kinds"
     ).addButton({
       icon: "package-plus",
@@ -98,6 +98,8 @@ export class SettingsTab extends PluginSettingTab {
         new KindModal(this.app, DEFAULT_KIND, this.plugin.settings.log_level).open();
       }
     })
+
+	
 
 
     const types = ui.sectionHeading(
@@ -122,8 +124,6 @@ export class SettingsTab extends PluginSettingTab {
         
       }
     });
-
-
 
     const urls = ui.sectionHeading(
       "URLs",

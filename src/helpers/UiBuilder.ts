@@ -1,8 +1,8 @@
 import { ButtonComponent, Setting } from "obsidian";
 import { FolderSuggest } from "./FolderSuggest";
-import { MaybeLazy, UiBuilderContextApi, UiBuilderComponentApi, UiBuilderOptions, UiBuilderApi } from "../types/ui-builder-types";
+import { MaybeLazy, UiBuilderContextApi, UiBuilderComponentApi, UiBuilderOptions, UiBuilderApi } from "../types/ui-builder_types";
 import { logger } from "../utils/logging";
-import { LogLevel } from "../types/settings-types";
+import { LogLevel } from "../types/settings_types";
 
 // [Reference Docs](https://docs.obsidian.md/Plugins/User+interface/Settings)
 

@@ -2,7 +2,7 @@ import { App, Modal } from "obsidian";
 import {  classification } from "./SettingsTab";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "../utils/Constants";
 import { UiBuilder } from "../helpers/UiBuilder";
-import { Kind, LogLevel } from "../types/settings-types";
+import { Kind, LogLevel } from "../types/settings_types";
 
 export class KindModal extends Modal {
 	private kind: Kind;
@@ -12,7 +12,7 @@ export class KindModal extends Modal {
 	constructor(app:App, kind: Kind, log_level: LogLevel) {
 		super(app);
 		this.kind = kind;
-    this.log_level = log_level;
+    	this.log_level = log_level;
 	}
 
 	onOpen() {
@@ -23,10 +23,10 @@ export class KindModal extends Modal {
       .addTextInput();
 
       core(
-      "Tag", 
-      "the tag which will be used to identify this Kind; no need to include \'#\' symbol though you're free to.", 
-      "tag"
-    ).addTextInput();
+		"Tag", 
+		"the tag which will be used to identify this Kind; no need to include \'#\' symbol though you're free to.", 
+		"tag"
+		).addTextInput();
 
       core(
           "Classification", 

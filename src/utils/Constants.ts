@@ -1,4 +1,4 @@
-import { Kind, KindModelSettings } from "types/settings-types";
+import { Kind, KindModelSettings } from "types/settings_types";
 
 
 export const CLASSIFICATION = [
@@ -20,6 +20,10 @@ export const LOG_LEVELS = [
   "warn",
   "error",
 ] as const;
+
+/** Days of the Week */
+export const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec"];
 
 export const DEFAULT_SETTINGS: KindModelSettings = {
   kinds: {},

@@ -19,6 +19,9 @@ export default defineConfig({
       },
       external: ['obsidian']
     },
+	watch: {
+		include: /src\/.*\.ts/,
+	},
     // Use root as the output dir
     emptyOutDir: false,
     outDir: '.'

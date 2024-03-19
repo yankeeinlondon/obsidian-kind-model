@@ -1,4 +1,4 @@
-import { LogLevel } from "types/settings-types";
+import { LogLevel } from "types/settings_types";
 
 
 const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") as string | undefined;
@@ -18,7 +18,9 @@ const debug = <TLevel extends LogLevel>(level: TLevel) =>(...args: unknown[]) =>
   args.forEach(a => {
     if (typeof a === "function") {
       console.log(a());
-    } else {
+    }  else if (typeof a === "object" && a !== null) {
+		Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
+	} else {
       console.log(a);
     }
   })
@@ -32,8 +34,14 @@ const info = <TLevel extends LogLevel>(level: TLevel) =>
   }
   console.groupCollapsed(`obsidian-kind-model (info: ${trunc(msg(args))})`);
   args.forEach(a => {
-    console.info(a);
-  })
+		if (typeof a === "function") {
+		console.info(a());
+		} else if (typeof a === "object" && a !== null) {
+			Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
+		} else {
+			console.info(a);
+		}
+	});
   console.groupEnd();
 }
 
@@ -53,11 +61,11 @@ const warn = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) =>
   console.groupEnd();
 }
 const error = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) => {
-  const trunc = (s: string | undefined) => typeof s === "string"
-  console.group("obsidian-kind-model (error)");
-  args.forEach(a => {
-    console.error(a);
-  })
+//   const trunc = (s: string | undefined) => typeof s === "string"
+//   ? console.group("obsidian-kind-model (error)")
+//   : args.forEach(a => {
+//     console.error(a);
+//   })
   console.groupEnd();
   new Notification(`obsidian-kind-model (Error): ${msg(args) || ""}`, {body: "see developer console for more details"});
 
@@ -103,6 +111,7 @@ export const logger = <
   if (context) {
     for (const k of Object.keys(api)) {
       if(k !== "level" && Object.keys(context).includes(k) ) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (context as any)[k as keyof Omit<Logger<TLevel>, "level">] = api[k as keyof typeof api];
       }
     }

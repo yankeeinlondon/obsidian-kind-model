@@ -1,41 +1,29 @@
 import { Editor, MarkdownView } from "obsidian";
 import KindModelPlugin from "../main";
-import { getPageContext } from "../utils/getPageContext";
+import { getBasePageContext } from "../utils/page/getBasePageContext";
+import { isCategoryPage } from "../utils/type_guards/isCategoryPage";
+import { categoryPage } from "../utils/page/page_context/categoryPage";
 
 export const update_kinded_page = (plugin: KindModelPlugin) => async (editor: Editor, view: MarkdownView) => {
-  const content = view.getViewData();
-  const ctx = await getPageContext(view, plugin); 
-  const {kind} = ctx;
-  plugin.info("update-kinded-page", `page context: ${ctx}`);
+  const p = await getBasePageContext(plugin, view); 
+  plugin.info("update-kinded-page", p);
 
   if (view.getViewType() !== "markdown") {
     plugin.warn(
       "non-markdown file", 
       `update-kinded-page[${view.file?.name || view.file?.basename}] was run on a non-markdown page so nothing to do`
     );
-    return;
+  } else {
+
+  
+    if (isCategoryPage(p)) {
+		const cp = categoryPage(plugin, p);
+		plugin.info(`Category Page [${cp.ref_tag}, ${p?.file?.name}]`);
+	
+      if (!p.meta.fm.kind) {
+        // 
+      }
+    } 
   }
   
-  plugin.info(
-    "context",
-    "command: update-kinded-page",  
-    ctx,
-    {tags: kind.kind_tags(), kinds: kind.kind_names()},
-    `This page has the following tags: ${ctx.meta.etags}`,
-    {
-      structure: ctx.contentStructure
-    }
-  );
-
-  if (ctx.meta.isCategoryPage) {
-    const tag = k.get_category_tag(ctx);
-    const kind = k.lookup_kind_by_tag(tag);
-    plugin.info(`category page [${tag}, ${kind?.file.name}]`);
-
-    if (!ctx.meta.fm.kind) {
-      
-    }
-  } 
-
-
 }

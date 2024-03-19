@@ -1,5 +1,8 @@
-import { Frontmatter } from "./frontmatter";
-import { DateTime, Link } from "obsidian-dataview";
+import { FmPropSuggestions, Frontmatter } from "./frontmatter";
+import {  Link as DvLink } from "obsidian-dataview";
+import { DateTime } from "luxon";
+import { Tag } from "./general";
+import { ExpandRecursively } from "inferred-types";
 
 /** A function which maps an array element to some value. */
 export type ArrayFunc<T, O> = (elem: T, index: number, arr: T[]) => O;
@@ -27,7 +30,7 @@ export interface DataArray<T> {
   /** Map elements in the data array by applying a function to each, then flatten the results to produce a new array. */
   flatMap<U>(f: ArrayFunc<T, U[]>): DataArray<U>;
   /** Mutably change each value in the array, returning the same array which you can further chain off of. */
-  mutate(f: ArrayFunc<T, any>): DataArray<any>;
+  mutate(f: ArrayFunc<T, unknown>): DataArray<unknown>;
 
   /** Limit the total number of entries in the array to the given value. */
   limit(count: number): DataArray<T>;
@@ -84,12 +87,12 @@ export interface DataArray<T> {
   last(): T;
 
   /** Map every element in this data array to the given key, and then flatten it.*/
-  to(key: string): DataArray<any>;
+  to(key: string): DataArray<unknown>;
   /**
    * Recursively expand the given key, flattening a tree structure based on the key into a flat array. Useful for handling
    * hierarchical data like tasks with 'subtasks'.
    */
-  expand(key: string): DataArray<any>;
+  expand(key: string): DataArray<unknown>;
 
   /** Run a lambda on each element in the array. */
   forEach(f: ArrayFunc<T, void>): void;
@@ -101,22 +104,25 @@ export interface DataArray<T> {
   [Symbol.iterator](): Iterator<T>;
 
   /** Map indexes to values. */
-  [index: number]: any;
-  /** Automatic flattening of fields. Equivalent to implicitly calling `array.to("field")` */
-  [field: string]: any;
+  [index: number]: unknown;
+  /** 
+	 * Automatic flattening of fields. Equivalent to implicitly 
+	 * calling `array.to("field")` */
+  [field: string]: unknown;
 }
 
-export interface DataviewPage {
-  aliases: string[],
-  file: {
-    name: string;
-    link: any;
-    frontmatter: Frontmatter;
-    tags: string[];
-    etags: string[];
-  };
-  
-}
+/**
+ * **DataToArray**
+ * 
+ * Iterates over a dictionary and proxies the key/values through but
+ * in cases where the value _extends_ Dataview's `DataArray` type it will
+ * convert it into just a standard Javascript array.
+ */
+export type DataToArray<T extends Record<string, unknown>> = ExpandRecursively<{
+	[K in keyof T]: T[K] extends DataArray<infer U>
+		? U[] | null
+		: T[K];
+}>;
 
 export interface FileStats {
   /**
@@ -135,6 +141,7 @@ export interface FileStats {
    */
   size: number;
 }
+
 
 export interface TemplateFile  {
   stat: FileStats;
@@ -162,70 +169,131 @@ export interface TemplateFile  {
   deleted: boolean;
 }
 
-export type PageRef = {
-  aliases?: Array<string> | null,
-  file: {
-    aliases?: DataArray<string>;
+
+
+/**
+ * **DataviewPage**
+ * 
+ * A representation of a "page" returned by 
+ */
+export type DvPage = { file: DvFileProperties } & FmPropSuggestions;
+
+export type DvPageWithArray = { file:  DvFilePropertiesAsArray } & FmPropSuggestions;
+
+/**
+ * **Link**
+ * 
+ * A reference to a file (extends dataview's Link to allow future "hover" functionality)
+ */
+export interface Link extends DvLink {
+	/** a fully qualified path to a file in the vault */
+	path: string;
+	type: "file" | "folder";
+	display?: string;
+	hover?: string;
+	embed: boolean;
+}
+
+/**
+ * A more explicit typing of `Link` which requires the link to
+ * be to a **file**.
+ */
+export interface FileLink extends Link {
+	type: "file"
+}
+
+/**
+ * A more explicit typing of `Link` which requires the link to
+ * be to a **folder**.
+ */
+
+export interface FolderLink extends Link {
+	type: "folder"
+}
+
+/**
+ * The "file" property on a Dataview page.
+ */
+export type DvFileProperties = {
+	/** _aliases_ for this page's name */
+    aliases: DataArray<string>;
+	/** the _date_ the page was created */
     cday: DateTime;
+	/** _date_ and _time_ that page was created */
     ctime: DateTime;
     etags: DataArray<string>;
+	/** the file's extension (often `md` but not always) */
     ext: string;
+	/** the **folder** which this page is contained in */
     folder: string;
+	/** the frontmatter defined on this page */
     frontmatter: Frontmatter;
-    inlinks: DataArray<string>,
+	/** pages which _link to_ the given page */
+    inlinks: DataArray<Link>,
+	/** a `Link` to the page *//** a `Link` to the page */
     link: Link,
-    lists: DataArray<string>,
+    lists: DataArray<unknown>,
+	/** date that page was last modified */
     mday: DateTime,
+	/** date and time that page was last modified */		
     mtime: DateTime,
+	/** The file's name (without extension) */
     name: string;
-    outlinks: DataArray<string>,
+	/**
+	 * The other pages in the vault which this page _links to_
+	 */
+    outlinks: DataArray<Link>,
+	/** The fully qualified path to the page (including filename and extension) */
     path: string;
     size: number;
     starred: boolean;
     tags: DataArray<string>,
-    tasks: DataArray<string>,
-  };
-  kind?: Link | string | null;
-  type?: Link | string | null;
-  category?: Link | string | null;
-  sub_category?: Link | string | null;
-  categories?: DataArray<Link | string> | null;
-  group?: Link | string | null;
-  classification?: Link | string | null;
-  metrics?: Link | DataArray<Link | string> | Array<string> | null;
-  [key: string]: unknown;
-};
+    tasks: DataArray<unknown>,
+	file: never
+}
 
-export type DataViewFilter = (f: ({file: PageRef})) => boolean;
+type DvFileDataProps = "aliases" | "etags" | "inlinks" | "lists" | "outlinks" | "tags" | "tasks";
 
-export interface DataViewApi {
+export type DvFilePropertiesAsArray = Omit<DvFileProperties, DvFileDataProps> & {
+	/** _aliases_ for this page's name */
+	aliases: string[];
+	etags: string[];
+	/** pages which _link to_ the given page */
+	inlinks: Link[];
+	lists: unknown[];
+	/**
+	 * The other pages in the vault which this page _links to_
+	 */
+	outlinks: Link[];
+	tags: string[];
+	tasks: unknown[]
+}
+
+
+export type DataViewFilter = (f: ({file: DvPage})) => boolean;
+
+
+
+export interface DataViewQueryApi {
 
   /**
    * Query for a list of pages
    */
-  pages: (query: string) => DataArray<PageRef>
+  pages: (query: string) => DataArray<DvFileProperties>
 
   /**
    * Query for a singular page
    */
-  page: (query: string  | TemplateFile)=> PageRef;
-
+  page: (query: string  | TemplateFile)=> DvPage;
   fileLink: (file: string, embed?: boolean, displayAs?: string) => Link;
-
   pagePaths: (query: string | TemplateFile | TemplateFile[])=> string[];
 
   // render
-
   el(element: string, text: string): void;
-
   header(level: 1 | 2 | 3 | 4 | 5 | 6, text: string): void;
-
   paragraph(text: string): void;
-
   span(text: string): void;
-
   execute(query: string): void;
-
   executeJs(inlineCode: string): void;
 
   view(path: string, params: Record<string, unknown>): Promise<void>;
@@ -234,14 +302,35 @@ export interface DataViewApi {
   /**
    * Output a table to page
    */
-  table(cols: string[], data: any[]): void;
+  table(cols: string[], data: unknown[]): void;
   /**
    * Output a list to page
    */
-  list(data: any[]): void;
+  list(data: unknown[]): void;
 
 }
 
+export type DvPageCacheEntry = {
+	aliases: Set<string>;
+	ctime: DateTime;
+	day?: DateTime;
+	/** a representation of the frontmatter in the form of a `Map` */
+	fields: Map<string, unknown>;
+	/** a dictionary representation of the frontmatter */
+	frontmatter: Frontmatter;
+	links: Link[];
+	lists: unknown[];
+	mtime: DateTime;
+	/** fully qualified path include file's name and extension */
+	path: string;
+	size: number;
+	/** tags on page */
+	tags: Set<Tag>
+}
+
+export type DataviewRootApi = {
+	pages: Map<string, DvPageCacheEntry>;
+}
 
 export interface DataviewSettings {
   allowHtml: boolean;
@@ -266,4 +355,4 @@ export interface DataviewSettings {
   taskCompletionTracking: boolean;
   taskCompletionUseEmojiSHorthand: boolean;
   warnOnEmptyResult: boolean;
-};
+}
