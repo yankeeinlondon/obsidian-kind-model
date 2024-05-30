@@ -1,7 +1,7 @@
 import { DvPage, DvPageWithArray } from "../../types/dataview_types";
-import KindModelPlugin, { KindCache } from "../../main";
+import KindModelPlugin from "../../main";
 import { getDataviewPageCache } from "../getDataviewPageCache";
-import { KindDefinition, KindPage } from "../../types/PageContext";
+import {  KindPage, KindDefinition } from "../../types/PageContext";
 import { Tag } from "../../types/general";
 import { convertToPageWithArrays } from "../../utils/convertToPageWithArrays";
 
@@ -26,7 +26,6 @@ const tags = (tags: Set<Tag>) => {
 
 
 const build_cache = (plugin: KindModelPlugin) => {
-
 	const dv_api = getDataviewPageCache(plugin);
 	const cache: KindCache = {
 		kinds: new Map<string, KindDefinition>(),

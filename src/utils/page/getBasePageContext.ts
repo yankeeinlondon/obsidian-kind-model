@@ -5,7 +5,7 @@ import { splitContent } from "../splitContent";
 import KindModelPlugin from "../../main";
 import { getHeadingLevel } from "../getHeadingLevel";
 import { BasePageContext } from "../../types/PageContext";
-import { DataViewQueryApi, DvPage, FileLink } from "../../types/dataview_types";
+import { DataViewApi, DvPage, FileLink } from "../../types/dataview_types";
 // import { categoryPage } from "./page_context/categoryPage";
 // import { kindDefinition } from "./page_context/kindDefinition";
 // import { enumDefinition } from "./page_context/enumDefinition";
@@ -14,7 +14,7 @@ import { DataViewQueryApi, DvPage, FileLink } from "../../types/dataview_types";
 import { isMarkdownView } from "../type_guards/isMarkdownView";
 import { convertToPageWithArrays } from "../convertToPageWithArrays";
 
-const looks_like_kind = (k: unknown, dv: DataViewQueryApi): boolean => {
+const looks_like_kind = (k: unknown, dv: DataViewApi): boolean => {
 	try {
 		return typeof k === "object" && k !== null
 			? (k as Record<string,any>)?.file?.basename 
@@ -36,10 +36,9 @@ const looks_like_kind = (k: unknown, dv: DataViewQueryApi): boolean => {
  * 
  * Takes a variety of references to a page and returns a `BasePageContext<THasView>`.
  */
-export const getBasePageContext = <
+export const getBasePageContext = (plugin: KindModelPlugin) => <
 	TRef extends TFile | FileLink | string | MarkdownView | DvPage
->(
-	plugin: KindModelPlugin, 
+>( 
 	ref: TRef
 ): BasePageContext<TRef extends MarkdownView ? true : false> => {
 	let context: Partial<BasePageContext<TRef extends MarkdownView ? true : false>> = {}; 

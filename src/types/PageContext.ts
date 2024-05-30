@@ -3,8 +3,7 @@ import { DateTime, Link } from "obsidian-dataview";
 // import { DataviewSettings } from "./dataview_types";
 import { Node, RenderableTreeNode } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
-import { KindApi } from "../helpers/KindApi";
-import { KindClassification, UomType } from "./settings_types";
+import {  UomType } from "./settings_types";
 import { BlockTemplate } from "./BlockTemplate";
 import { Tag } from "../types/general";
 
@@ -27,40 +26,14 @@ export type NamedLink = { name: string; link: Link };
 export interface BasePageContext<THasView extends boolean = false> {
 	__kind: "BasePageContext";
 	/**
-	 * The API surface for a page
-	 */
-	api: KindApi;
-	/**
-	 * The identified category of page this is (as an element of the `KindType` enumeration)
-	 */
-	kind: KindType;
-	/**
 	 * Boolean flag indicating whether a "view" was provided to gather context for this
 	 * page. In cases where it _was_ some additional properties will be made available.
 	 */
 	viewProvided: THasView;
-
-	/**
-	 * **kindTags**
-	 * 
-	 * a list of tags which represent _kind types_ in the current vault
-	 */
-	kindTags: string[],
-	/**
-	 * a list of recognized category tags
-	 */
-	categoryTags: string[];
-	/**
-	 * a list of recognized subcategory tags
-	 */
-	subcategoryTags: string[];
-
 	/**
 	 * a list of recognized enumeration tags
 	 */
 	enumTags: string[];
-
-
 	// /**
 	//  * Settings for [Dataview plugin](https://blacksmithgu.github.io/obsidian-dataview/annotation/metadata-pages/).
 	//  */
@@ -276,13 +249,12 @@ export interface BasePageContext<THasView extends boolean = false> {
 	backlinks?: HTMLElement;
 	}
 
-	}
+}
 
-	export type KindConditionalFlags = {
+export type KindConditionalFlags = {
 	/**
 	 * Whether the page has been identified as a _kind definition page_ because it has 
 	 * a tag of `#kind/[NAME]` or has a `kind` property that points back to `[[Kind]]`
-	 * the 
 	 */
 	isKindDefinition: boolean;
 
@@ -362,7 +334,10 @@ export interface BasePageContext<THasView extends boolean = false> {
 	hasClassificationForProp: boolean;	
 }
 
-export type KindType = 
+/**
+ * The _category_ of page type
+ */
+export type KindCategory = 
 	| "Kind Definition" 
 	| "Type Definition"
 	| "Kinded Page" 
@@ -375,38 +350,91 @@ export type KindType =
 /**
  * **PageContext**`<K>`
  * 
- * The `BasePageContext` plus the `kind_category` property indicating the 
- * type of page it is.
+ * The `BasePageContext` plus the `kind_category` property and the `api`
+ * property which exposes a bespoke API surface based on the category of
+ * the page.
  */
-export type PageContext<K extends KindType = KindType, V extends boolean = false> = {__kind: "PageContext"; kind_category: K} & (
-	K extends "Kind Definition"
-	? KindDefinition  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Type Page"
-	? TypeDefinition  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Category Page"
-	? CategoryPage  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Subcategory Page"
-	? SubcategoryPage  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Enumeration Definition"
-	? EnumDefinition  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Block Template"
-	? BlockTemplate  & Omit<BasePageContext<V>, "__kind">
-	: K extends "Kind Page"
-	? KindedPage  & Omit<BasePageContext<V>, "__kind">
-	: UnknownKind  & Omit<BasePageContext<V>, "__kind">
-);
+export type PageContext<
+	K extends KindCategory = KindCategory, 
+	V extends boolean = false
+> = {
+	__kind: "PageContext"; 
+	kind_category: K
+} & PageApi<K,V> & Omit<BasePageContext<V>, "__kind">;
 
-export type KindPageApi = {
+
+export type UrlValidation = {
+	property: string;
+	cardinality: "unknown" | "list" | "singular";
+	passed: boolean;
+	failures: string[];
+}
+
+export type KindPageApi<
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_K extends KindCategory,
+	V extends boolean
+> = {
 	base: {
+		/**
+		 * Gets the `PageContext<"Kind Definition">` for the current
+		 * page's `kind` property (if defined).
+		 */
+		kind_definition: () => PageContext<"Kind Definition">  | null;
+		/**
+		 * _render_ or _re-render_ the `H1` element on the page
+		 * based on the page's (or it's kind's) strategy
+		 */
 		render_h1: () => Promise<void>;
-		render_cover: () => Promise<void>;
 
+		/**
+		 * _render_ or _re-render_ the configured "blocks" defined
+		 * for the current page.
+		 */
+		update_blocks: () => Promise<void>;
+
+		/**
+		 * remove the current page from the vault and adjust the
+		 * cache and lookup values found in the plugin's `KindApi`.
+		 */
 		remove_page: () => Promise<void>;
-		update_page: () => Promise<void>;
-	}
+
+		rename_page: () => Promise<void>;
+		/**
+		 * update the _frontmatter_ properties while leaving the body
+		 * of the page alone.
+		 */
+		update_frontmatter: <T extends Record<string,unknown>>(fm: T) => Promise<void>;
+
+		/**
+		 * gets a list of property names which are expected to contain
+		 * URL's in them.
+		 */
+		get_url_props: () => string[];
+
+		/**
+		 * checks all the properties which are supposed to contain URLs
+		 * and returns a `UrlValidation` per property.
+		 */
+		validate_url_props: () => string[];
+
+		/**
+		 * _request_ that the current page be saved
+		 */
+		request_save: () => Promise<void>;
+	};
+	"Kind Definition": {
+		/**
+		 * returns a boolean flag based on whether the page has
+		 * defined the "reference name" for the kind (aka,
+		 * by adding a tag such as `#kind/foobar`)
+		 */
+		definesRefName: () => boolean;
+
+	};
 	"Category Page": {
 		/** returns the kind(s) this is a category for */
-		category_for: () => KindPage<"Kind Definition">[];
+		category_for: () => PageContext<"Category Page",V>[];
 		/**
 		 * The full etag found on the category page. A category page, even one which
 		 * hasn't provided a ref_tag, must provide at least `#category` to be considered
@@ -424,8 +452,8 @@ export type KindPageApi = {
 		ref_tag: () => OptionalTag;
 	};
 	"Subcategory Page": {
-		of_kind: () => KindPage<"Kind Definition">;
-		of_category: () => KindPage<"Category Page">;
+		of_kind: () => PageContext<"Kind Definition",V>;
+		of_category: () => PageContext<"Category Page",V>;
 		/** the reference tag for this category */
 		ref_tag: () => OptionalTag;
 		/** the etag which starts with #subcategory and ideally has hierarchy */
@@ -433,20 +461,15 @@ export type KindPageApi = {
 	}
 }
 
-
 /**
- * **KindPage**`<K>`
+ * **PageApi**`<K>`
  * 
- * A page with all context provided by `PageContext` as well as an `api` property
- * which hosts the API surface for the given _kind_ of page.
+ * Lookup utility which returns the extracts the appropriate API
+ * signature for the given page's page category from `KindPageApi`.
  */
-export type KindPage<K extends KindType = KindType, V extends boolean = false>  = {
-	api: KindPageApi["base"] & (
-		K extends keyof KindPageApi 
-			? KindPageApi[K] 
-			: { msg: "no methods for this category of page"}
-	)
-} & PageContext<K,V>;
+export type PageApi<K extends KindCategory,V extends boolean> = K extends keyof KindPageApi<K,V>
+	? KindPageApi<K,V>["base"] & KindPageApi<K,V>[K]
+	: KindPageApi<K,V>["base"];
 
 export type UomTuple = [prop: string, defn: UomType, value: number];
 export type PropTuple<T> = [prop: string, value: T];
@@ -459,6 +482,6 @@ export type PropTuple<T> = [prop: string, value: T];
  */
 export type ListExpansion = [logic: boolean ] | [logic: boolean, ...blocks: BlockTemplate[]];
 
-export type LinkExpansionConstraint = [regex: string, ...kinds:KindType[]];
+export type LinkExpansionConstraint = [regex: string, ...kinds:KindCategory[]];
 
 export type LinkExpansion = (string | LinkExpansionConstraint)

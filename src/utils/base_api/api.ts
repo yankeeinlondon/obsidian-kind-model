@@ -4,26 +4,40 @@ import { MarkdownView, TFile } from "obsidian";
 import { Page } from "../../helpers/page";
 import KindModelPlugin from "../../main";
 import { Kind, PageBlock } from "../../types/settings_types";
-import { KindPage, KindPage } from "../../types/PageContext";
 import { isMarkdownView } from "../../utils/type_guards/isMarkdownView";
 import { isTFile } from "../../utils/type_guards/isTFile";
 import { DvPage, FileLink } from "../../types/dataview_types";
 import { isFileLink } from "../../utils/type_guards/isFileLink";
 import { isDataviewPage } from "../../utils/type_guards/isDataviewPage";
 import { getBasePageContext } from "../page/getBasePageContext";
-import { Tag } from "types/general";
+import { Tag } from "../../types/general";
+import { dv_page } from "../../dv_queries/dv_page";
+import { back_links } from "../../dv_queries/back_links";
 
 export const api = (plugin: KindModelPlugin) => ({
+	/**
+	 * Get the `dv_page` helper utility to build a Dataview query
+	 * for a given page.
+	 */
+	dv_page: dv_page(plugin),
+
+	/**
+	 * Service a `km` code block with a back links section
+	 */
+	back_links: back_links(plugin),
 
 	/**
 	 * **kinds**()
 	 * 
-	 * Get all the known kinds defined in the vault.
+	 * Get all the defined _kinds_ in vault as a 
 	 */
 	kinds: async(): Promise<Kind[]> => {
 		return []
 	},
 
+	/**
+	 * **kind_tags**
+	 */
 	kind_tags: (): Set<Tag> => {
 		return plugin.settings.cache?.kind_tags
 			? plugin.settings.cache?.kind_tags
@@ -31,28 +45,11 @@ export const api = (plugin: KindModelPlugin) => ({
 	},
 
 	/**
-	 * **kind_pages**(kind?)
-	 * 
-	 * Gets pages which have a "kind" specified to define them.
-	 * 
-	 * Note: while specifically a **Type**, a **Category**, etc. are
-	 * examples of kind_pages they are _not_ returned as part of this
-	 * query result. This instead returns pages which _are_ of a particular
-	 * "kind".
-	 */
-	kind_pages: async (kind?: string | Kind<"Kind">): Promise<KindPage[]> => {
-		const pages = await plugin._cache["kind_pages"];
-		return kind
-			? pages.filter(i => i.file.name === kind)
-			: pages;
-	},
-
-	/**
 	 * **types**()
 	 * 
 	 * Get all the known types defined in the vault.
 	 */
-	types: (): Kind<"Type">[] => {
+	types: async(): Promise<Kind<"Type">[]> => {
 		return [];
 	},
 

@@ -1,62 +1,29 @@
 
-import {  Editor, MarkdownView,  Notice, Plugin } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { getAPI } from "obsidian-dataview";
 import { SettingsTab} from './config-ui/SettingsTab';
-import {  DataViewQueryApi } from './types/dataview_types';
+import {  DataViewApi } from './types/dataview_types';
 import {  KindModelSettings } from './types/settings_types';
 import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
-import { update_kinded_page } from './commands/update_kinded_page';
-import App from "./App.vue";
-import {createApp} from "vue"
+// import App from "./App.vue";
 import { api } from './utils/base_api/api';
-import { KindDefinition, KindPage } from './types/PageContext';
 import { initialize_cache } from './utils/on_load/initialize_cache';
-import { Tag } from "./types/general";
-
-export interface KindCache {
-	/**
-	 * Kind definitions
-	 */
-	kinds: Map<string, KindDefinition>,
-	/** 
-	 * **pages**
-	 * 
-	 * A dictionary of `KindedPage` types for each relevant page which
-	 * Kind Model is aware of. The dictionaries keys represent the
-	 * fully qualified path to the page.
-	 */
-	pages: Map<string, KindPage>,
-	/**
-	 * **tag_lookup**
-	 * 
-	 * A dictionary where any tag being used in **Kind Model** can be
-	 * looked up and an array of _paths_ to pages will be returned.
-	 * 
-	 * **Note:** the tag's name is the index for the lookup and _should not_ contain
-	 * a leading `#` symbol.
-	 */
-	tag_lookup: Map<string, Set<string>>,
-
-	kind_lookup: Map<string, Set<string>>,
-
-	/**
-	 *  **name_lookup**
-	 * 
-	 * Provides the ability to provide just the "name" of a page and
-	 * a Set of fully qualified paths will be returned (note: typically 
-	 * this should just be one).
-	 */
-	name_lookup: Map<string, Set<string>>,
-
-	kind_tags: Set<Tag>
-}
+import { KindCache } from 'types/KindCache';
+import { csv } from './utils/on_load/csv';
+import { on_editor_change } from './utils/on_load/on_editor_change';
+import { add_commands } from './utils/on_load/add_commands';
+import { on_file_deleted } from './utils/on_load/on_file_deleted';
+import { on_file_created } from './utils/on_load/on_file_created';
+import { on_file_modified } from './utils/on_load/on_file_modified';
+import { km_codeblock_parser } from './utils/on_load/km_codeblock_parser';
 
 
 export default class KindModelPlugin extends Plugin {
 	settings: KindModelSettings;
 	/** the Dataview API surface */
-	public dv: DataViewQueryApi;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public dv: DataViewApi = (globalThis as any)["DataviewAPI"] as DataViewApi;
 	public api: ReturnType<typeof api>;
 
 	public debug: Logger["debug"];
@@ -95,62 +62,20 @@ export default class KindModelPlugin extends Plugin {
 		this.dv = getAPI(this.app);
 		// expose Kind Model API
 		this.api = api(this);
-
+		
 		initialize_cache(this);
+		csv(this);
+		on_editor_change(this);
+		add_commands(this);
+		// file events
+		on_file_deleted(this);
+		on_file_created(this);
+		on_file_modified(this);
 
-		this.addCommand({
-			id: "create-new-kinded-page",
-			name: "create a new (kinded) page",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const content = view.getViewData();
-				info("create-new-kinded-page", {content})
-			},
-		});
-		this.addCommand({
-			id: "create-new-classification-page",
-			name: "add a classification for a (kinded) page",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const content = view.getViewData();
-				info("create-new-classification-page", {content});
-			},
-		});
+		// code blocks
+		km_codeblock_parser(this);
 
-		this.addCommand({
-			id: "add-url-props-for-kinded-page",
-			name: "add links to (kinded) page",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const content = view.getViewData();
-				info("add-url-props-for-kinded-page", {content})
-			},
-		});
 
-		this.addCommand({
-			id: "update-kinded-page",
-			name: "update this (kinded) page",
-			editorCallback: update_kinded_page(this)
-		});
-
-		this.registerEvent(this.app.vault.on('delete', evt => {
-			const kind_folder = this.settings.kind_folder;
-			const find = new RegExp(`^${kind_folder}$`);
-			if (find.test(evt.path)) {
-				new Notice('Kind file deleted');
-			}
-		}));
-		this.registerEvent(this.app.vault.on('modify', evt => {
-			const kind_folder = this.settings.kind_folder;
-			const find = new RegExp(`^${kind_folder}`);
-			if (find.test(evt.path)) {
-				new Notice('Kind file modified');
-			}
-		}));
-		this.registerEvent(this.app.vault.on('create', evt => {
-			const kind_folder = this.settings.kind_folder;
-			const find = new RegExp(`^${kind_folder}$`);
-			if (find.test(evt.path)) {
-				new Notice('Kind file added');
-			}
-		}));
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
@@ -166,13 +91,13 @@ export default class KindModelPlugin extends Plugin {
 	}
 
 	mount() {
-    createApp(App, {
-      app: this.app
-    }).mount(document.body.createDiv())
-  }
+		// Vue.createApp(App, {
+		// app: this.app
+		// }).mount(document.body.createDiv())
+	}
 
 	onunload() {
-
+		// 
 	}
 
 	async loadSettings() {

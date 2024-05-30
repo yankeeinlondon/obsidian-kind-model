@@ -1,4 +1,4 @@
-import { BasePageContext, KindType, PageContext } from "../../types/PageContext";
+import { BasePageContext, KindCategory, PageContext } from "../../types/PageContext";
 import KindModelPlugin from "../../main";
 import { isCategoryPage } from "utils/type_guards/isCategoryPage";
 import { isSubcategoryPage } from "../../utils/type_guards/isSubcategoryPage";
@@ -7,11 +7,12 @@ import { isTypeDefinition } from "../../utils/type_guards/isTypeDefinition";
 import { isBlockTemplate } from "../../utils/type_guards/isBlockTemplate";
 import { isEnumDefinition } from "../../utils/type_guards/isEnumDefinition";
 import { isKindedPage } from "../../utils/type_guards/isKindedPage";
+import { createPageApi } from "./createPageApi";
 
 const determine = <THasView extends boolean>(
 	plugin: KindModelPlugin, 
 	base: BasePageContext<THasView>
-): KindType => {
+): KindCategory => {
 	return isKindDefinition(plugin)(base)
 		? "Kind Definition"
 		: isTypeDefinition(plugin)(base)
@@ -32,19 +33,26 @@ const determine = <THasView extends boolean>(
 /**
  * **getPageContext**(plugin) → (base_context) → `PageContext`
  * 
- * The `PageContext<TKind, THasView>` adds the `kind_category` property by determining
- * the category of page it is. This category is an element of the `KindType` enumeration.
+ * The `PageContext<TKind, THasView>` adds:
+ * 	- the `kind_category` property by determining the category of page it is. 
+ *  - the `api` property is also brought in and specifically tailed to the
+ * category of page it is.
  */
 export const getPageContext = (plugin: KindModelPlugin) => <
 	TBase extends BasePageContext<THasView>,
 	THasView extends boolean,
 >(
 	base: TBase
-): PageContext<KindType, THasView> => {
+) => {
 	const kind_category = determine(plugin, base);
-	return {
+	const no_api = {
 		kind_category,
 		...base,
 		__kind: "PageContext",
-	} as PageContext<KindType, THasView>
+	} as Omit<PageContext<typeof kind_category, THasView>, "api">
+
+	return {
+		api: createPageApi(plugin, no_api),
+		...no_api
+	} as PageContext<typeof kind_category, THasView>
 }

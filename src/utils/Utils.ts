@@ -82,6 +82,9 @@ export function arraymove<T>(
     arr[toIndex] = element;
 }
 
-export function get_active_file(app: App) {
+/**
+ * Get's the currently active file in the editor (if there is one)
+ */
+export function get_active_file(app: App): TFile | null {
     return app.workspace.activeEditor?.file ?? app.workspace.getActiveFile();
 }
