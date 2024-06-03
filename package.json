@@ -22,7 +22,7 @@
 	"author": "Ken Snyder <ken@ken.net>",
 	"license": "MIT",
 	"devDependencies": {
-		"@codemirror/autocomplete": "^6.16.1",
+		"@codemirror/autocomplete": "^6.16.2",
 		"@codemirror/commands": "^6.5.0",
 		"@codemirror/language": "^6.10.1",
 		"@codemirror/lint": "^6.8.0",
@@ -30,10 +30,10 @@
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/view": "^6.26.3",
 		"@types/luxon": "^3.4.2",
-		"@types/node": "^20.12.13",
+		"@types/node": "^20.14.0",
 		"@typescript-eslint/eslint-plugin": "^7.11.0",
 		"@typescript-eslint/parser": "^7.11.0",
-		"@vitejs/plugin-vue": "^5.0.4",
+		"@vitejs/plugin-vue": "^5.0.5",
 		"@vue/compiler-sfc": "^3.4.27",
 		"builtin-modules": "^4.0.0",
 		"bumpp": "^9.4.1",
@@ -51,12 +51,12 @@
 		"@codemirror/lang-javascript": "^6.2.2",
 		"@markdoc/markdoc": "^0.4.0",
 		"@popperjs/core": "^2.11.8",
-		"inferred-types": "^0.43.5",
+		"inferred-types": "^0.45.0",
 		"luxon": "^3.4.4",
 		"obsidian": "latest",
 		"obsidian-dataview": "^0.5.66",
 		"vue": "^3.4.27",
 		"xxhash-wasm": "^1.0.2",
-		"yaml": "^2.4.2"
+		"yaml": "^2.4.3"
 	}
 }

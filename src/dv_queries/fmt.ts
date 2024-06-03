@@ -2,6 +2,7 @@ import {
 	Api, 
 	EscapeFunction, 
 	createFnWithProps, 
+	ensureLeading, 
 	isFunction 
 } from "inferred-types";
 import KindModelPlugin from "main";
@@ -43,10 +44,26 @@ type StyleOptions = {
 	pl?: string;
 	/** pad right */
 	pr?: string;
+
+	/** margin left */
+	ml?: string;
+	/** margin right */
+	mr?: string;
+
+	/** add in some other bespoke CSS key/values */
+	bespoke?: string[];
 }
 
 type BlockQuoteOptions = {
+	/**
+	 * The content area directly below the title line.
+	 */
 	content?: string;
+	contentStyle?: StyleOptions;
+
+	/**
+	 * The style for the overall callout block
+	 */
 	style?: StyleOptions;
 	fold?: ObsidianFoldOptions;
 	/** 
@@ -59,6 +76,14 @@ type BlockQuoteOptions = {
 	 * folding region that is registered.
 	 */
 	belowTheFold?: string;
+
+	/**
+	 * style attributes which effect the `belowTheFold`
+	 * section when used.
+	 * 
+	 * @default padding: var(--callout-content-padding)
+	 */
+	belowTheFoldStyle?: StyleOptions;
 };
 
 const style = (opts: StyleOptions) => {
@@ -75,6 +100,22 @@ const style = (opts: StyleOptions) => {
 	if(opts?.mt) {
 		fmt.push(`margin-top: ${opts.mt}`);
 	}
+	if(opts?.pl) {
+		fmt.push(`padding-left: ${opts.pl}`);
+	}
+	if(opts?.pr) {
+		fmt.push(`padding-right: ${opts.pr}`);
+	}
+	if(opts?.ml) {
+		fmt.push(`margin-left: ${opts.ml}`);
+	}
+	if(opts?.mr) {
+		fmt.push(`margin-right: ${opts.mr}`);
+	}
+	if(opts.bespoke) {
+		fmt.push(...opts.bespoke)
+	}
+	
 
 	return fmt.length === 0 
 		? `style=""`
@@ -88,17 +129,19 @@ const obsidian_blockquote = (
 	icon: string,
 	fold: "" | "-" | "+",
 	belowTheFold: string | undefined,
-	formatting: StyleOptions = {}
+	formatting: StyleOptions = {},
+	contentStyle: StyleOptions = {},
+	belowTheFoldStyle: StyleOptions = {}
 ) =>  [
 	`<div data-callout-metadata="" data-callout-fold="${fold}" data-callout="${kind}" class="callout" ${style(formatting)}>`,
-		`<div class="callout-title">`,
+		`<div class="callout-title" style="gap:15px">`,
 			`<div class="callout-icon">${icon}</div>`,
 			`<div class="callout-title-inner">${title}</div>`,
 		`</div>`,
 		...(
 			content
 			? [
-				`<div class="callout-content">`,
+				`<div class="callout-content" ${style(contentStyle)}>`,
 				`<p>${content}</p>`,
 				`</div>`
 			]
@@ -106,7 +149,7 @@ const obsidian_blockquote = (
 		),
 	...(
 		belowTheFold
-		? [`<div class="below-the-fold" style="padding: var(--callout-content-padding)">${belowTheFold}</div>`]
+		? [`<div class="below-the-fold" ${style(belowTheFoldStyle)}>${belowTheFold}</div>`]
 		: ['']
 	),
 	`</div>`
@@ -138,7 +181,12 @@ const blockquote = (
 		opts?.icon || iconLookup[kind],
 		opts?.fold || "",
 		opts?.belowTheFold,
-		opts?.style || {}
+		opts?.style || {},
+		opts?.contentStyle || {},
+		{
+			bespoke: ["padding: var(--callout-content-padding)"],
+			...opts?.belowTheFoldStyle
+		}
 	)
 };
 
@@ -209,7 +257,13 @@ export const fmt = (p: KindModelPlugin) => (
 		container,p, filePath, true
 	),
 
-
+	/**
+	 * **as_tag**`(text)`
+	 * 
+	 * Puts the provided text into a _code block_ and ensures that the
+	 * leading character is a `#` symbol.
+	 */
+	as_tag: (text: string) => `<code class="tag-reference">${ensureLeading(text, "#")}</code>`,
 
 	callout: (kind: ObsidianCalloutColors, title: string, opts?: BlockQuoteOptions) => 
 		p.dv.renderValue(

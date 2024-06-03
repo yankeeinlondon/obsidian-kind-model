@@ -25,16 +25,6 @@ export type FmPropSuggestions = {
 export type LinkedAsset = { page: Link, prop: string };
 
 
-export type PropertyType = "string" | "string[]" | "number" | "number[]" | "boolean" | "boolean[]" | "metric";
-
-/**
- * A string which describes a property in a Kind model as being:
- * 
- * 1. of a particular type (defined by `PropertyType` union)
- * 2. of a given name
- */
-export type PropertyDefn = `${string}::${PropertyType}`
-
 export type FmPropMetaSuggestions = {
 	/**
 	 * The cover image to display at the top of the page

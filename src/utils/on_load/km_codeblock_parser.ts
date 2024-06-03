@@ -1,6 +1,6 @@
 import { isObject } from "inferred-types";
-import KindModelPlugin from "main";
 import { MarkdownPostProcessorContext } from "obsidian";
+import KindModelPlugin from "../../main";
 import {  Link } from "../../types/dataview_types";
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -16,6 +16,10 @@ export const km_codeblock_parser = (plugin: KindModelPlugin) => {
 		if (/BackLinks\((.*)\)/.test(source)) {
 			await plugin.api.back_links(source,el,ctx,ctx.sourcePath);
 			plugin.debug(`backlinks rendered on "${ctx.sourcePath}"`)
+		}
+		if (/PageEntry\((.*)\)/.test(source)) {
+			await plugin.api.page_entry(source,el,ctx,ctx.sourcePath);
+			plugin.debug(`page entry rendered on "ctx.sourcePath"`);
 		}
 
 	}

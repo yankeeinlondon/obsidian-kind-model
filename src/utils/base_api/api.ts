@@ -13,6 +13,7 @@ import { getBasePageContext } from "../page/getBasePageContext";
 import { Tag } from "../../types/general";
 import { dv_page } from "../../dv_queries/dv_page";
 import { back_links } from "../../dv_queries/back_links";
+import { page_entry } from "../../dv_queries/page_entry";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -25,6 +26,11 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * Service a `km` code block with a back links section
 	 */
 	back_links: back_links(plugin),
+
+	/**
+	 * Service a `km` code block with entry content for a page
+	 */
+	page_entry: page_entry(plugin),
 
 	/**
 	 * **kinds**()

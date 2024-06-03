@@ -21,8 +21,10 @@ import { DateTime, Duration } from "luxon";
 import KindModelPlugin from "../main";
 import { DataArray, DvPage, Grouping, Link, SListItem } from "../types/dataview_types";
 import { isDvPage } from "../utils/type_guards/isDvPage";
-import { isLink } from "../utils/type_guards/isFileLink";
+import { isFileLink, isLink } from "../utils/type_guards/isFileLink";
 import { fmt } from "./fmt";
+import { PropertyKind } from "types/general";
+import { get_property_type } from "utils/page/get_property_type";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -123,6 +125,28 @@ function removePound(tag: string | undefined){
 	return typeof tag === "string" && tag?.startsWith("#")
 		? tag.slice(1)
 		: tag
+}
+
+
+
+
+/**
+ * returns a list of any youtube videos referenced on a page
+ * along with whether or not the page is tagged as the appropriate
+ * kind/category for this.
+ */
+const get_youtube_videos = (plugin: KindModelPlugin) => (
+	pg: Link | DvPage
+) => {
+	const page = isDvPage(pg) 
+	? pg 
+	: isFileLink(pg)
+		? plugin.dv.page(pg)
+		: undefined;
+
+	if(!page) {
+
+	}
 }
 
 const extractPath = (path: DvPage | string | Link) => {
@@ -418,6 +442,22 @@ export const dv_page = (plugin: KindModelPlugin) => (
 	}
 	const linkIcons = (plugin.dv.page("Link Icons") || {}) as DvPage;
 
+	const metadata = () => {
+		let meta: Record<Partial<PropertyKind>,string[]> = {};
+		let fm = current.file.frontmatter;
+
+		for (const key of Object.keys(fm)) {
+			const type = get_property_type(fm[key]);
+			if (meta[type]) {
+				meta[type].push(key);
+			} else {
+				meta[type] = [key];
+			}
+		}
+		
+		return meta;
+	}
+
 	return {
 		/** the current page represented as a `DvPage` */
 		current,
@@ -496,6 +536,16 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * pound symbol) as the second.
 		 */
 		get_kind_prop: get_kind_prop(plugin),
+
+		/**
+		 * **metadata**`()`
+		 * 
+		 * Provides a dictionary of key/values where:
+		 * - the keys are an element in the `PropertyType` union
+		 * - the values -- where defined -- are an array of Frontmatter keys which
+		 * are of the given type.
+		 */
+		metadata,
 
 		/**
 		 * **show_prop**`(page, prop, ...fallbacks)`
