@@ -19,9 +19,12 @@ export const km_codeblock_parser = (plugin: KindModelPlugin) => {
 		}
 		if (/PageEntry\((.*)\)/.test(source)) {
 			await plugin.api.page_entry(source,el,ctx,ctx.sourcePath);
-			plugin.debug(`page entry rendered on "ctx.sourcePath"`);
+			plugin.debug(`page entry rendered on "${ctx.sourcePath}"`);
 		}
-
+		if (/Book\((.*)\)/.test(source)) {
+			await plugin.api.book(source,el,ctx,ctx.sourcePath);
+			plugin.debug(`book rendered on "${ctx.sourcePath}"`);
+		}
 	}
 
 	let registration = plugin.registerMarkdownCodeBlockProcessor(

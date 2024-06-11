@@ -14,6 +14,7 @@ import { Tag } from "../../types/general";
 import { dv_page } from "../../dv_queries/dv_page";
 import { back_links } from "../../dv_queries/back_links";
 import { page_entry } from "../../dv_queries/page_entry";
+import { book } from "../../dv_queries/book";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -31,6 +32,11 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * Service a `km` code block with entry content for a page
 	 */
 	page_entry: page_entry(plugin),
+
+	/**
+	 * Produces a nice book summary widget on a page with book metadata
+	 */
+	book: book(plugin),
 
 	/**
 	 * **kinds**()

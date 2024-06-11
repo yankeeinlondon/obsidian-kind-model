@@ -238,6 +238,22 @@ export const fmt = (p: KindModelPlugin) => (
 			container, p, filePath, false
 		);
 	},
+
+	/**
+	 * Uses the underlying `renderValue()` functionality exposed by
+	 * dataview to render data to the page.
+	 */
+	async render(data: unknown): Promise<void> {
+		await p.dv.renderValue(data, container, p, filePath, false);
+	},
+
+	/**
+	 * returns the HTML for an unordered list but doesn't render
+	 */
+	html_ul(...items: readonly (string | ListItemsCallback)[]) {
+		
+		return render_list_items(wrap_ul, items);
+	},
 	async ol(...items: readonly (string | ListItemsCallback)[]) {
 		
 		
@@ -265,6 +281,25 @@ export const fmt = (p: KindModelPlugin) => (
 	 */
 	as_tag: (text: string) => `<code class="tag-reference">${ensureLeading(text, "#")}</code>`,
 
+
+	/**
+	 * **blockquote**`(kind, title, opts)`
+	 * 
+	 * Produces the HTML for a callout.
+	 * 
+	 * **Note:** use `callout` for same functionality but 
+	 * with HTML _rendered_ rather than _returned_.
+	 */
+	blockquote: (kind: ObsidianCalloutColors, title: string, opts?: BlockQuoteOptions) => blockquote(kind,title,opts),
+
+	/**
+	 * **callout**`(kind, title, opts)`
+	 * 
+	 * Renders a callout to the current block.
+	 * 
+	 * **Note:** use `blockquote` for same functionality but 
+	 * with HTML returned rather than _rendered_.
+	 */
 	callout: (kind: ObsidianCalloutColors, title: string, opts?: BlockQuoteOptions) => 
 		p.dv.renderValue(
 			blockquote(kind,title,opts), 
