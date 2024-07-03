@@ -15,6 +15,8 @@ import { dv_page } from "../../dv_queries/dv_page";
 import { back_links } from "../../dv_queries/back_links";
 import { page_entry } from "../../dv_queries/page_entry";
 import { book } from "../../dv_queries/book";
+import { kind_table } from "../../dv_queries/kind_table";
+import { video_gallery } from "../../dv_queries/video_gallery";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -37,6 +39,17 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * Produces a nice book summary widget on a page with book metadata
 	 */
 	book: book(plugin),
+
+	/**
+	 * Produces a table summary of all pages of a particular kind
+	 */
+	kind_table: kind_table(plugin),
+
+	/**
+	 * Produces a video 
+	 */
+	video_gallery: video_gallery(plugin),
+
 
 	/**
 	 * **kinds**()

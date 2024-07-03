@@ -20,12 +20,14 @@ import { km_codeblock_parser } from './utils/on_load/km_codeblock_parser';
 
 
 export default class KindModelPlugin extends Plugin {
-	settings: KindModelSettings;
+	public settings: KindModelSettings;
 	/** the Dataview API surface */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public dv: DataViewApi = (globalThis as any)["DataviewAPI"] as DataViewApi;
 	public api: ReturnType<typeof api>;
+	public config: KindModelSettings;
 
+	public log: Logger;
 	public debug: Logger["debug"];
 	public info: Logger["info"];
 	public warn: Logger["warn"];
@@ -53,6 +55,8 @@ export default class KindModelPlugin extends Plugin {
 		await this.loadSettings();
 		const log = logger(this.settings.log_level);
 		const { debug, info, warn, error } = log;
+		/** allows you to pull directly from all log endpoints */
+		this.log = log;
 		this.debug = debug;
 		this.info = info;
 		this.warn = warn;
@@ -74,8 +78,6 @@ export default class KindModelPlugin extends Plugin {
 
 		// code blocks
 		km_codeblock_parser(this);
-
-
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();

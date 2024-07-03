@@ -35,7 +35,7 @@ const info = <TLevel extends LogLevel>(level: TLevel) =>
   console.groupCollapsed(`obsidian-kind-model (info: ${trunc(msg(args))})`);
   args.forEach(a => {
 		if (typeof a === "function") {
-		console.info(a());
+			console.info(a);
 		} else if (typeof a === "object" && a !== null) {
 			Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
 		} else {

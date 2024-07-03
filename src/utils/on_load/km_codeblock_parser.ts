@@ -24,6 +24,17 @@ export const km_codeblock_parser = (plugin: KindModelPlugin) => {
 		if (/Book\((.*)\)/.test(source)) {
 			await plugin.api.book(source,el,ctx,ctx.sourcePath);
 			plugin.debug(`book rendered on "${ctx.sourcePath}"`);
+		} 
+		const kind = /Kind\((.*)\)/
+		if (kind.test(source)) {
+			const [_, params] = Array.from(source.match(kind) || []);			
+			
+			await plugin.api.kind_table(source,el,ctx,ctx.sourcePath)(params);
+			plugin.debug(`Kind Table rendered on "${ctx.sourcePath}"`)
+		}
+		if (/Videos\(.*\)/.test(source)) {
+			await plugin.api.video_gallery(source,el,ctx,ctx.sourcePath)("");
+			plugin.debug(`Video Gallery rendered on ${ctx.sourcePath}`)
 		}
 	}
 

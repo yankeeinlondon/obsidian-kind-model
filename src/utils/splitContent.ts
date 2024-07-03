@@ -1,3 +1,5 @@
+import { stripAfter, stripBefore, stripTrailing } from "inferred-types";
+
 export interface PageBlock {
   name: string;
   content: string;
@@ -48,19 +50,27 @@ export interface SplitContent {
  * content defined by `SplitContent`
  */
 export const splitContent = (c: string): SplitContent => {
-  const hasYamlBlock = /(.*)\n---(.*)\n---\s*\n/;
+  const re = /^(---.*\n---\s*\n){0,1}(.*)$/s;
 
-  const yaml = hasYamlBlock ? c.replace(/.*(\n---.*\n---\s*\n).*/, "$1") : undefined;
-  const body = c.replace(/.*\n---.*\n---\s*\n(.*)/, "$1");
-  // using Regex to parse out body section to isolate H1 element
-  const [preH1, h1, postH1] = /\n# (.*)\n/.test(body)
-    ? [ 
-        body.replace(/(.*)\n# .*/s, "$1"),
-        body.replace(/.*\n# (.+?)\n{1}(.*)/s, "$1"),
-        body.replace(/.*\n# (.+?)\n{1}(.*)/s, "$2"),
-      ]
-    // if there is no H1 then there is _only_ **postH1**
-    : [undefined, undefined, body];
+  const result = c.trimStart().match(re);
+
+  if (!result) {
+	throw new Error(`Invalid Content passed to splitContent(${c})`)
+  }
+  
+  const [_, yaml, body] = Array.from(result);
+
+  const [preH1, h1, postH1] = `\n${body}`.includes("\n# ")
+	? [ 
+		stripTrailing(stripAfter(`\n${body}`, "\n# "), "\n#"),
+		stripAfter(stripBefore(`\n${body}`, "\n#"), "\n").trim(),
+		stripBefore(stripBefore(`\n${body}`, "\n#"), "\n")
+	]
+	: [
+		undefined,
+		undefined,
+		body
+	];
 
   const blocks = (h1 ? postH1 : body)
     .replace(/\n## (.*)\n/g, "\n## $1:::\n")

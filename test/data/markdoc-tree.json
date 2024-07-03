@@ -1,0 +1,31 @@
+{
+	"$$mdtype": "Tag",
+	"name": "article",
+	"attributes": {},
+	"children": [
+			{
+					"$$mdtype": "Tag",
+					"name": "p",
+					"attributes": {},
+					"children": [
+							"#video"
+					]
+			},
+			{
+					"$$mdtype": "Tag",
+					"name": "p",
+					"attributes": {},
+					"children": [
+							{
+									"$$mdtype": "Tag",
+									"name": "img",
+									"attributes": {
+											"src": "https://youtu.be/l17oRkhgqHE?si=qiLLrGJgIBWso9e3",
+											"alt": "video"
+									},
+									"children": []
+							}
+					]
+			}
+	]
+}

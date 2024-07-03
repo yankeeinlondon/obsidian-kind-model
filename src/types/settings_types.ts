@@ -160,4 +160,13 @@ export interface KindModelSettings {
 	 * the **log level** being reported to the developer console 
 	 */
 	log_level: LogLevel;
+
+	/**
+	 * to query the [World Cat](https://search.worldcat.org) 
+	 * service for books you need to know the _version_ of the API. 
+	 * Not sure the frequency of it changing but we will cache it so 
+	 * that we can get fast results _until_ we have to re-scrape to
+	 * get a new one.
+	 */
+	worldCatApiVersion?: string;
 }

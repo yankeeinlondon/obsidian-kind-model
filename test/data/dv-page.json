@@ -1,0 +1,296 @@
+{
+    "file": {
+        "path": "video/Docker and Nix.md",
+        "folder": "video",
+        "name": "Docker and Nix",
+        "link": {
+            "path": "video/Docker and Nix.md",
+            "embed": false,
+            "type": "file"
+        },
+        "outlinks": {
+            "values": [
+                {
+                    "path": "video/YouTube Video.md",
+                    "display": "YouTube Video",
+                    "embed": false,
+                    "type": "file"
+                },
+                {
+                    "path": "software/containerization/Docker.md",
+                    "display": "Docker",
+                    "embed": false,
+                    "type": "file"
+                },
+                {
+                    "path": "software/containerization/Containerization.md",
+                    "display": "Containerization",
+                    "embed": false,
+                    "type": "file"
+                },
+                {
+                    "path": "os/linux/NixOS.md",
+                    "display": "NixOS",
+                    "embed": false,
+                    "type": "file"
+                }
+            ],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 4
+        },
+        "inlinks": {
+            "values": [],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 0
+        },
+        "etags": {
+            "values": [
+                "#video"
+            ],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 1
+        },
+        "tags": {
+            "values": [
+                "#video"
+            ],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 1
+        },
+        "aliases": {
+            "values": [],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 0
+        },
+        "lists": {
+            "values": [],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 0
+        },
+        "tasks": {
+            "values": [],
+            "settings": {
+                "renderNullAs": "\\-",
+                "taskCompletionTracking": true,
+                "taskCompletionUseEmojiShorthand": false,
+                "taskCompletionText": "completion",
+                "taskCompletionDateFormat": "yyyy-MM-dd",
+                "recursiveSubTaskCompletion": true,
+                "warnOnEmptyResult": true,
+                "refreshEnabled": true,
+                "refreshInterval": 2500,
+                "defaultDateFormat": "MMMM dd, yyyy",
+                "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+                "maxRecursiveRenderDepth": 4,
+                "tableIdColumnName": "File",
+                "tableGroupColumnName": "Group",
+                "showResultCount": true,
+                "allowHtml": true,
+                "inlineQueryPrefix": "=",
+                "inlineJsQueryPrefix": "$=",
+                "inlineQueriesInCodeblocks": true,
+                "enableInlineDataview": true,
+                "enableDataviewJs": true,
+                "enableInlineDataviewJs": true,
+                "prettyRenderInlineFields": true,
+                "prettyRenderInlineFieldsInLivePreview": true,
+                "dataviewJsKeyword": "dataviewjs"
+            },
+            "length": 0
+        },
+        "ctime": "2023-12-25T10:34:02.000-08:00",
+        "cday": "2023-12-25T00:00:00.000-08:00",
+        "mtime": "2023-12-25T12:37:01.000-08:00",
+        "mday": "2023-12-25T00:00:00.000-08:00",
+        "size": 191,
+        "starred": false,
+        "frontmatter": {
+            "kind": "[[video/YouTube Video|YouTube Video]]",
+            "topics": [
+                "[[Docker]]",
+                "[[Containerization]]",
+                "[[NixOS]]"
+            ]
+        },
+        "ext": "md"
+    },
+    "kind": {
+        "path": "video/YouTube Video.md",
+        "display": "YouTube Video",
+        "embed": false,
+        "type": "file"
+    },
+    "topics": [
+        {
+            "path": "software/containerization/Docker.md",
+            "embed": false,
+            "type": "file"
+        },
+        {
+            "path": "software/containerization/Containerization.md",
+            "embed": false,
+            "type": "file"
+        },
+        {
+            "path": "os/linux/NixOS.md",
+            "embed": false,
+            "type": "file"
+        }
+    ]
+}

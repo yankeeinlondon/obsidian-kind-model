@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { 
 	Api,
-	AsArray, 
+	AsArray,
 	Container, 
 	EscapeFunction, 
 	Never, 
@@ -39,7 +39,7 @@ export const isKeyOf = <
 type UlApi = Api<{
 	/** indent the unordered list a level */
 	indent: (...items: string[]) => string;
-	done: EscapeFunction<() => "">
+	done: EscapeFunction
 }>;
 
 type UlCallback = <T extends UlApi>(api:T) => unknown;
@@ -207,13 +207,6 @@ const get_kind_tag = (p: KindModelPlugin) => (pg: DvPage) => {
 		) || get_kind_prop(p)(pg).tag || "unknown";
 }
 
-function as_array<V>(val: V): AsArray<V> {
-	return (
-		Array.isArray(val)
-		? val
-		: [val]
-	) as unknown as AsArray<V>
-}
 
 
 function show_tags(pg: DvPage, ...exclude: string[]) {
@@ -381,6 +374,38 @@ function show_modified_date(pg: DvPage, format?: string) {
 		: pg.file.mday
 }
 
+/**
+ * **when**
+ * 
+ * A smart date field which tries to express the most
+ * relevant date info for a page.
+ */
+const when = (_p: KindModelPlugin) => (
+	pg: DvPage | undefined,
+	format: string = "LLL yyyy"
+) => {
+	if (pg) {
+		const created = pg.file.cday;
+		const modified = pg.file.mday;
+		const deltaCreated = Math.abs(created.diffNow('days').days);
+		const deltaModified = Math.abs(modified.diffNow('days').days);
+
+		// TODO: add in linking to day page if present
+		if (deltaCreated < 14) {
+			const desc = created.toRelative();
+			return `<span style="cursor: default"><i style="font-weight: 150">created</i> ${desc}</span>`;
+		} else if (deltaModified < 14) {
+			const desc = modified.toRelative();
+			return `<span style="cursor: default"><i style="font-weight: 150">modified</i> ${desc}</span>`
+		} else {
+			return `<span style="cursor: default">${modified.toFormat(format)}</span>`
+		}
+
+	} else {
+		return ""
+	}
+}
+
 const show_subcategories_for = (plg: KindModelPlugin) => (
 	pg: DvPage | undefined
 ) => {
@@ -536,6 +561,22 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		show_prop: show_prop(plugin),
 
 		/**
+		 * **show_desc**`()`
+		 * 
+		 * Looks for a description in all common _description_
+		 * properties
+		 */
+		show_desc: (pg: DvPage) => {
+			const desc = show_prop(plugin)(pg, "about","desc","description")
+			if (typeof desc == "string") {
+				return `<span style="font-weight:200; font-size: 14px">${desc}</span>`
+			} else {
+				return ""
+			}
+		},
+
+
+		/**
 		 * **show_links**`(page)`
 		 * 
 		 * Shows a horizontal row of links that the given page has in it's frontmatter.
@@ -559,6 +600,15 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * [Luxon format](https://github.com/moment/luxon/blob/master/docs/formatting.md#table-of-tokens) as a string.
 		 */
 		show_modified_date,
+
+		/**
+		 * **show_when**`(page,[format])`
+		 * 
+		 * A smart date format that considers recency
+		 * of both modified and created dates and displays
+		 * a compact but meaningful date.
+		 */
+		show_when: when(plugin),
 
 		/** 
 		 * The current page's "kind tag"
@@ -596,9 +646,18 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		/**
 		 * **as_array**`(v)`
 		 * 
-		 * Utility function which ensures that the passed in value _is_ an array
+		 * Utility function which ensures that the passed in value _is_ an array,
+		 * and that any DvArray[] proxy is converted to a normal JS array
 		 */
-		as_array,
+		as_array: <T>(v: T) => {
+			return (
+				plugin.dv.isDataArray(v)
+				? Array.from(v.values)
+				: isArray(v)
+					? v.map(i => plugin.dv.isDataArray(i) ? i.values : i)
+					: [ v ]
+			) as T extends DataArray<infer D> ? D[] : AsArray<T>;
+		},
 
 		/**
 		 * Return an array of paths (as strings) corresponding to pages 

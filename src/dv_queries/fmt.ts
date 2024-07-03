@@ -30,25 +30,88 @@ type ListItemsApi<_W extends WrapperCallback> = Api<{
 	done: EscapeFunction<() => "">
 }>;
 
+type Gap = `${number}px` | `${number}em` | `${number}rem` | `${number}%` | `calc(${string})`;
+
+export type CssCursor = "help" | "wait" | "crosshair" | "zoom-in" | "grab" | "auto" | "default" | "none" | "context-menu" | "pointer" | "progress" | "cell" | "text" | "vertical-text" | "alias" | "copy" | "move" | "no-drop" | "not-allowed" | "grabbing" | "all-scroll" | "col-resize" | "row-resize" | "n-resize" |  "e-resize" | "s-resize" | "w-resize" | "ne-resize" | "nw-resize" | "se-resize" | "sw-resize" | "eq-resize" | "ns-resize" | "nesw-resize" | "nwse-resize" | "zoom-in" | "zoom-out";
+
 type StyleOptions = {
+	/** padding for top,bottom,left, and right */
+	p?: string;
 	/** padding top */
 	pt?: string;
 	/** padding bottom */
 	pb?: string;
-	/** margin top */
-	mt?: string;
-	/** margin bottom */
-	mb?: string;
-
 	/** pad left */
 	pl?: string;
 	/** pad right */
 	pr?: string;
+	/** padding top and bottom */
+	py?: string;
+	/** padding left and right */
+	px?: string;
 
+	/** margin applied to all sides */
+	m?: string;
+	/** margin to left and right */
+	mx?: string;
+	/** margin to top and bottom */
+	my?: string; 
+	/** margin top */
+	mt?: string;
+	/** margin bottom */
+	mb?: string;	
 	/** margin left */
 	ml?: string;
 	/** margin right */
 	mr?: string;
+
+	/**
+	 * text size
+	 */
+	ts?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | `${number}rem` | `${number}rem`
+
+	/** width */
+	w?: string;
+	/**
+	 * font weight
+	 */
+	fw?: "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
+	/** font style */
+	fs?: "italic" | "none" | "oblique" | `oblique ${number}deg` | "unset" | "inherit" | "revert" | "revert-layer";
+
+	flex?: boolean;
+	direction?: "row" | "column";
+	grow?: number;
+
+	/**
+	 * [alignItems](https://css-tricks.com/snippets/css/a-guide-to-flexbox/#aa-align-items)
+	 * 
+	 * This defines the default behavior for how flex items are laid out along 
+	 * the cross axis on the current line. Think of it as the justify-content 
+	 * version for the cross-axis (perpendicular to the main-axis).
+	 */
+	alignItems?: "center" | "baseline" | "start" | "end" | "revert" | "stretch";
+
+	/**
+	 * [alignContent](https://css-tricks.com/snippets/css/a-guide-to-flexbox/#aa-align-content)
+	 * 
+	 * aligns a flex container’s lines within when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis.
+	 */
+	alignContent?: "normal" | "start" | "end" | "center" | "space-between" | "space-around" | "space-evenly" | "stretch";
+	/** 
+	 * [justify-content](https://css-tricks.com/snippets/css/a-guide-to-flexbox/#aa-justify-content)
+	 * 
+	 * defines the alignment along the main axis. It helps distribute extra free 
+	 * space leftover when either all the flex items on a line are inflexible, or 
+	 * are flexible but have reached their maximum size. It also exerts some 
+	 * control over the alignment of items when they overflow the line.
+	 */
+	justifyContent?: "start" | "end" | "left" | "right" | "center" | "space-between" | "space-around" | "space-evenly";
+	justifyItems?: "space-around" ;
+
+
+	gap?: Gap | `${Gap} ${Gap}` | "inherit" | "initial" | "revert" |"unset" | "revert-layer";
+	cursor?: CssCursor;
 
 	/** add in some other bespoke CSS key/values */
 	bespoke?: string[];
@@ -84,9 +147,51 @@ type BlockQuoteOptions = {
 	 * @default padding: var(--callout-content-padding)
 	 */
 	belowTheFoldStyle?: StyleOptions;
+
+
+	/**
+	 * Adds a DIV below the content section and makes it a `flex` _with_
+	 * **grow** on. The intent is to _grow_ this blockquote into the available
+	 * vertical space of the parent container.
+	 * 
+	 * @default false
+	 */
+	growHeight?: boolean;
 };
 
-const style = (opts: StyleOptions) => {
+
+// LI
+// padding-top: var(--list-spacing)
+// padding-bottom: var(--list-spacing)
+
+// UL
+// padding-inline-start: var(--list-indent)
+// margin-block-start: var(--p-spacing)
+// margin-block-end: var(--p-spacing)
+
+type ListStyle = {
+	/**
+	 * Set the indentation level on the `UL` or `OL` element
+	 */
+	indentation?: "default" | "12px" | "16px" | "20px" | "24px" |"none";
+	/**
+	 * set the top margin for the list block (using `margin-block-start`)
+	 */
+	mt?: "default" |"none" | "tight" | "spaced" | `${number}px` | `${number}rem`;
+	/**
+	 * set the top margin for the list block (using `margin-block-end`)
+	 */
+	mb?: "default" | "none" | "tight" | "spaced" | `${number}px` | `${number}rem`;
+	/**
+	 * set _both_ top and bottom margins for the list block
+	 */
+	my?: "default" | "none" |  "tight" | "spaced" | `${number}px` | `${number}rem`;
+	/** styling for list items */
+	li?: StyleOptions | ((text: string) => StyleOptions);
+}
+
+
+const style = <T extends StyleOptions>(opts?: T) => {
 	let fmt = [];
 	if(opts?.pb) {
 		fmt.push(`padding-bottom: ${opts.pb}`)
@@ -94,17 +199,45 @@ const style = (opts: StyleOptions) => {
 	if(opts?.pt) {
 		fmt.push(`padding-top: ${opts.pt}`);
 	}
+
+	if(opts?.py) {
+		fmt.push(`padding-top: ${opts.py}`);
+		fmt.push(`padding-bottom: ${opts.py}`);
+	}
+	if(opts?.px) {
+		fmt.push(`padding-left: ${opts.px}`);
+		fmt.push(`padding-right: ${opts.px}`);
+	}
+
+	if(opts?.pl) {
+		fmt.push(`padding-left: ${opts.pl}`);
+	}
+	if(opts?.pr) {
+		fmt.push(`padding-right: ${opts.pr}`);
+	}
+	if(opts?.p) {
+		fmt.push(`padding: ${opts.p}`);
+	}
+
+	if(opts?.m) {
+		fmt.push(`margin-top: ${opts.m}`);
+		fmt.push(`margin-bottom: ${opts.m}`);
+		fmt.push(`margin-left: ${opts.m}`);
+		fmt.push(`margin-right: ${opts.m}`);
+	}
 	if(opts?.mb) {
 		fmt.push(`margin-bottom: ${opts.mb}`)
 	}
 	if(opts?.mt) {
 		fmt.push(`margin-top: ${opts.mt}`);
 	}
-	if(opts?.pl) {
-		fmt.push(`padding-left: ${opts.pl}`);
+	if(opts?.my) {
+		fmt.push(`margin-top: ${opts.mx}`);
+		fmt.push(`margin-bottom: ${opts.mx}`);
 	}
-	if(opts?.pr) {
-		fmt.push(`padding-right: ${opts.pr}`);
+	if(opts?.mx) {
+		fmt.push(`margin-left: ${opts.mx}`);
+		fmt.push(`margin-right: ${opts.mx}`);
 	}
 	if(opts?.ml) {
 		fmt.push(`margin-left: ${opts.ml}`);
@@ -112,14 +245,119 @@ const style = (opts: StyleOptions) => {
 	if(opts?.mr) {
 		fmt.push(`margin-right: ${opts.mr}`);
 	}
-	if(opts.bespoke) {
+	if(opts?.bespoke) {
 		fmt.push(...opts.bespoke)
 	}
-	
+	if(opts?.w) {
+		fmt.push(`weight: ${opts.w}`);
+	}
+	if(opts?.fw) {
+		fmt.push(`font-weight: ${opts.fw}`)
+	}
+	if(opts?.fs) {
+		fmt.push(`font-style: ${opts.fs}`);
+	}
+	if(opts?.ts) {
+		switch(opts.ts) {
+			case "xs": 
+				fmt.push(`font-size: 0.75rem`);
+				fmt.push(`line-height: 1rem`)
+				break;
+			case "sm":
+				fmt.push(`font-size: 0.875rem`);
+				fmt.push(`line-height: 1.25rem`)
+				break;
+			case "base":
+				fmt.push(`font-size: 1rem`);
+				fmt.push(`line-height: 1.5rem`)
+				break;
+			case "lg":
+				fmt.push(`font-size: 1.125rem`);
+				fmt.push(`line-height: 1.75rem`);
+				break;	
+			case "xl":
+				fmt.push(`font-size: 1.25rem`);
+				fmt.push(`line-height: 1.75rem`);
+				break;	
+			case "2xl":
+				fmt.push(`font-size: 1.5rem`);
+				fmt.push(`line-height: 2rem`);
+				break;	
+			default:
+				fmt.push(`font-size: ${opts.ts}`);
+				fmt.push(`line-height: auto`);
+			}
+	}
+	if(opts?.flex) {
+		fmt.push(`display: flex`);
+	}
+	if(opts?.direction) {
+		fmt.push(`flex-direction: ${opts.direction}`)
+	}
+	if(opts?.grow) {
+		fmt.push(`flex-grow: ${opts.grow}`);
+	}
+	if(opts?.gap) {
+		fmt.push(`gap: ${opts.gap}`);
+	}
+	if(opts?.cursor) {
+		fmt.push(`cursor: ${opts.cursor}`);
+	}
+	if(opts?.alignItems) {
+		fmt.push(`align-items: ${opts.alignItems}`);
+	}
+	if(opts?.justifyItems) {
+		fmt.push(`justify-items: ${opts.justifyItems}`);
+	}
+	if(opts?.justifyContent) {
+		fmt.push(`justify-content: ${opts.justifyContent}`);
+	}
 
 	return fmt.length === 0 
 		? `style=""`
 		: `style="${fmt.join("; ")}"`
+}
+
+
+const listStyle = (opts: ListStyle = {}) => {
+	let fmt: string[] = [];
+
+	if(opts?.indentation && opts.indentation !== "default") {
+		switch(opts.indentation) {
+			case "24px":
+				fmt.push(`padding-inline-start: 24px`);
+				break;
+			case "20px":
+				fmt.push(`padding-inline-start: 20px`);
+				break;
+			case "16px":
+				fmt.push(`padding-inline-start: 16px`);
+				break;
+			case "12px":
+				fmt.push(`padding-inline-start: 12px`);
+				break;
+			case "none":
+				fmt.push(`padding-inline-start: 0px`);
+				break;
+		}
+	}
+
+	if(opts?.mt && opts.mt !== "default") {
+		fmt.push(`margin-block-start: ${opts.mt === "tight" ? "2px" : opts.mt === "none" ? "0px" : opts.mt === "spaced" ? "1.5rem" : opts.mt }`);
+	}
+
+	if(opts?.mb && opts.mb !== "default") {
+		fmt.push(`margin-block-end: ${opts.mb === "tight" ? "2px" : opts.mb === "none" ? "0px" : opts.mb === "spaced" ? "1.5rem" : opts.mb }`);
+	}
+
+	if(opts?.my && opts.my !== "default") {
+		fmt.push(`margin-block-start: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my }`);
+		fmt.push(`margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my }`);
+	}
+
+	return fmt.length === 0 
+	? `style=""`
+	: `style="${fmt.join("; ")}"`
 }
 
 const obsidian_blockquote = (
@@ -147,6 +385,7 @@ const obsidian_blockquote = (
 			]
 			: []
 		),
+
 	...(
 		belowTheFold
 		? [`<div class="below-the-fold" ${style(belowTheFoldStyle)}>${belowTheFold}</div>`]
@@ -154,6 +393,12 @@ const obsidian_blockquote = (
 	),
 	`</div>`
 ].filter(i => i).join("\n");
+
+const empty_callout = (fmt?: StyleOptions) => [
+`<div class="callout" ${style(fmt)}>`,
+`<div class="callout-title">&nbsp;</div>`,
+`<div class="callout-content">&nbsp;</div>`
+].join("\n");
 
 const blockquote = (
 	kind: ObsidianCalloutColors,
@@ -201,25 +446,65 @@ const list_items_api = <
 type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(api:T) => unknown;
 
 /** wrap text in `<ol>...</ol>` tags */
-const wrap_ol = (items: string) => `<ol>${items}</ol>`
+const wrap_ol = (items: string, opts?: ListStyle) => `<ol ${listStyle(opts)}>${items}</ol>`
+
 /** wrap text in `<ul>...</ul>` tags */
-const wrap_ul = (items: string) => `<ul>${items}</ul>`
+const wrap_ul = (items: string, opts?: ListStyle) => `<ul ${listStyle(opts)}>${items}</ul>`
+
 /** wraps an ordered or unordered list recursively */
 const render_list_items = (
-	wrapper: (items: string) => string,
-	items: readonly (string | ListItemsCallback)[]
+	wrapper: (items: string, opts?: ListStyle) => string,
+	items: readonly (string | ListItemsCallback | undefined )[],
+	opts?: ListStyle
 ) => wrapper(
 	items
+		.filter(i => i !== undefined)
 		.map(i => (
 			isFunction(i)
 				? isFunction(i(list_items_api))
 					? ""
 					: i(list_items_api)
-				: `<li>${i}</li>`
+				: `<li ${style((opts?.li ? isFunction(opts?.li) ? opts.li(i ? i : "") : opts.li : {}))}>${i}</li>`
 		) as unknown as string)
 		.filter(i => i !== "")
-		.join("\n") as string
+		.join("\n") as string,
+	opts
 );
+
+const span = (text: string | number, fmt?: StyleOptions) => {
+	return `<span ${style(fmt || {fw: "400"})}>${text}</span>`
+};
+const italics = (text: string | number, fmt?: Omit<StyleOptions, "fs">) => {
+	return `<span ${style({...(fmt || { fw: "400"}), fs: "italic" } as StyleOptions)}>${text}</span>`
+};
+
+const bold = (text: string, fmt?: Omit<StyleOptions, "fw">) => {
+	return `<span ${style({...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`
+};
+
+const light = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
+	return `<span ${style({...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`
+};
+
+const thin =(text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
+	return `<span ${style({...(fmt || {}), fw: "100" } as StyleOptions)}>${text}</span>`
+};
+const medium = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
+	return `<span ${style({...(fmt || {}), fw: "500" } as StyleOptions)}>${text}</span>`
+};
+
+const normal = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
+	return `<span ${style({...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`
+}
+
+
+export type LinkOptions = {
+	style?: StyleOptions;
+	iconUrl?: string;
+	svgInline?: string;
+	titlePosition?: "top" | "bottom";
+}
+
 
 /**
  * **fmt**
@@ -250,9 +535,8 @@ export const fmt = (p: KindModelPlugin) => (
 	/**
 	 * returns the HTML for an unordered list but doesn't render
 	 */
-	html_ul(...items: readonly (string | ListItemsCallback)[]) {
-		
-		return render_list_items(wrap_ul, items);
+	html_ul(items: readonly (string | ListItemsCallback |undefined )[], opts?: ListStyle) {
+		return render_list_items(wrap_ul, items.filter(i => i !== undefined), opts);
 	},
 	async ol(...items: readonly (string | ListItemsCallback)[]) {
 		
@@ -262,8 +546,7 @@ export const fmt = (p: KindModelPlugin) => (
 			container, p, filePath, false
 		);
 	},
-	italics: (text: string) => `<em>${text}</em>`,
-	bold: (text: string) => `<b>${text}</b>`,
+	
 	code: (code: string) => p.dv.renderValue(
 		`<code>${code}</code>`, 
 		container,p, filePath, true
@@ -272,6 +555,54 @@ export const fmt = (p: KindModelPlugin) => (
 		`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
 		container,p, filePath, true
 	),
+
+
+	/**
+	 * Add a span element with optional formatting
+	 */
+	span,
+	italics,
+	bold,
+	light,
+	thin,
+	medium,
+	normal,
+
+	/**
+	 * Wrap children items with DIV element; gain formatting control for block
+	 */
+	wrap: (children: (string|number|undefined)[], fmt?: StyleOptions) => {
+		return [
+			`<div class="wrapped-content" ${style(fmt || {})}>`,
+			...children.filter(i => i !== undefined),
+			`</div>`
+		].join("\n")
+	},
+
+	link: (title: string, url: string, opts?: LinkOptions) => {
+		return [
+			`<a href="${url}" >`,
+			...(
+				opts?.iconUrl || opts?.svgInline
+					? opts?.titlePosition === "top"
+						? [
+							normal(title),
+						]
+						: [
+							`<span class="grouping" ${style(opts?.style || { alignItems: "center", flex: true })}>`,
+							opts?.iconUrl
+								? `<img src="${opts.iconUrl}" style="padding-right: 4px">`
+								: opts?.svgInline,
+							normal(title),
+							`</span>`
+						]
+					: [
+						normal(title)
+					]
+			),
+			`</a>`
+		].join("\n")
+	},
 
 	/**
 	 * **as_tag**`(text)`
@@ -290,7 +621,11 @@ export const fmt = (p: KindModelPlugin) => (
 	 * **Note:** use `callout` for same functionality but 
 	 * with HTML _rendered_ rather than _returned_.
 	 */
-	blockquote: (kind: ObsidianCalloutColors, title: string, opts?: BlockQuoteOptions) => blockquote(kind,title,opts),
+	blockquote: (
+		kind: ObsidianCalloutColors, 
+		title: string, 
+		opts?: BlockQuoteOptions
+	) => blockquote(kind,title,opts),
 
 	/**
 	 * **callout**`(kind, title, opts)`
@@ -306,6 +641,7 @@ export const fmt = (p: KindModelPlugin) => (
 			container,p, filePath, false
 		),
 
+	empty_callout
 });
 
 

@@ -1,6 +1,5 @@
 import KindModelPlugin from "main";
 
-
 /**
  * Does some simple find and replace on an editor which has changed.
  * Features include: `::quote()`, `::warn()`, and emoji's with `((name))`
@@ -9,17 +8,16 @@ export const on_editor_change = (plugin: KindModelPlugin) => {
 	plugin.registerEvent(
 		plugin.app.workspace.on(
 			'editor-change', 
-			(editor, info) => {
+			(editor, _info) => {
 				// this.warn(`editor change:`, {editor, info});
 				let content = editor.getValue();
-
+				
 				const attributed = /\n::\s*quote\s*\(\s*"(.+?)"\s{0,1},\s{0,1}"(.+?)"\s*\)/sg;
 				const quote = /\n::\s{0,1}quote\s{0,1}\("(.+?)"\s*\)/sg;
 				const warn = /\n::\s{0,1}warn\s{0,1}\("(.+?)"\s*\)/sg;
 				const warnWithCode = /\n::\s*warn\s*\(\s*"(.+?)"\s{0,1},\s{0,1}(.+?)\s*\)/sg;
 				const err = /\n::\s{0,1}err(or){0,1}\s{0,1}\("(.+?)"\s*\)/sg;
 				const errWithCode = /\n::\s*err(or){0,1}\s*\(\s*"(.+?)"\s{0,1},\s{0,1}(.+?)\s*\)/sg;
-
 
 				const cur = editor.getCursor()
 				if(attributed.test(content)) {

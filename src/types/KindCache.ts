@@ -1,11 +1,15 @@
-import { KindPage } from "./PageContext";
-import { Tag } from "./general";
+
+import { ExternalLink, PagePath, Tag } from "./general";
+
+
 
 export interface KindCache {
+	external_links: Map<PagePath, ExternalLink>;
+
 	/**
 	 * Kind definitions
 	 */
-	kinds: Map<string, KindDefinition>,
+	kinds: Map<string, unknown>,
 	/** 
 	 * **pages**
 	 * 

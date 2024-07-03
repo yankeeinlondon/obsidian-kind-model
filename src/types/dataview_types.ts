@@ -232,11 +232,13 @@ export type ArrayComparator<T> = (a: T, b: T) => number;
  * Proxied interface which allows manipulating array-based data. All functions on a data array produce a NEW array
  * (i.e., the arrays are immutable).
  */
-export interface DataArray<T> {
+export interface DataArray<T>  {
   /** The total number of elements in the array. */
   length: number;
 
   values: T[];
+
+  [Symbol.iterator](): Iterable<T[]>;
 
   /** Filter the data array down to just elements which match the given predicate. */
   where(predicate: ArrayFunc<T, boolean>): DataArray<T>;
@@ -318,6 +320,8 @@ export interface DataArray<T> {
   /** Convert this to a plain javascript array. */
   array(): T[];
 
+  settings?: DataviewSettings;
+
   /** Allow iterating directly over the array. */
   [Symbol.iterator](): Iterator<T>;
 
@@ -327,6 +331,7 @@ export interface DataArray<T> {
 	 * Automatic flattening of fields. Equivalent to implicitly 
 	 * calling `array.to("field")` */
   [field: string]: unknown;
+
 }
 
 /**
@@ -477,7 +482,9 @@ export type DvFileProperties = {
     starred: boolean;
     tags: DataArray<string>,
     tasks: DataArray<unknown>,
-	file: never
+	
+
+
 }
 
 type DvFileDataProps = "aliases" | "etags" | "inlinks" | "lists" | "outlinks" | "tags" | "tasks";
@@ -941,6 +948,46 @@ export interface DataViewApi {
 		component: Component,
 		filePath: string
 	): Promise<void>;
+
+	/** 
+	 * These utility methods are all contained in the dv.io sub-API, 
+	 * and are all asynchronous 
+	 */
+	io: {
+		/**
+		 * **csv**
+		 * 
+		 * Load a CSV from the given path (a link or string). Relative paths
+		 * will be resolved relative to the optional origin file (defaulting to 
+		 * the current file if not provided). Return a dataview array, each 
+		 * element containing an object of the CSV values; if the file does not 
+		 * exist, return undefined.
+		 * 
+		 * ```ts
+		 * await dv.io.csv("hello.csv") => [{ column1: ..., column2: ...}, ...]
+		 * ```
+		 */
+		csv(path: Link | string, originFile?: string): Promise<unknown>;
+		/**
+		 * **load**
+		 * 
+		 * Load the contents of the given path (a link or string) 
+		 * asynchronously. Relative paths will be resolved relative to the 
+		 * optional origin file (defaulting to the current file if not 
+		 * provided). Returns the string contents of the file, or undefined if 
+		 * the file does not exist.
+		 */
+		load(path: Link | string, originFile?: string): Promise<string>;
+		/**
+		 * **normalize**
+		 * 
+		 * Convert a relative link or path into an absolute path. If 
+		 * origin-file is provided, then the resolution is doing as if you were 
+		 * resolving the link from that file; if not, the path is resolved 
+		 * relative to the current file.
+		 */
+		normalize(path: string, originFile?: string): Promise<unknown>;
+	}
 
 }
 
