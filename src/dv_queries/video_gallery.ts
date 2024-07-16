@@ -2,7 +2,6 @@ import KindModelPlugin from "../main";
 import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { YouTubeVideoUrl, isObject, youtubeEmbed } from "inferred-types";
 import { PageContent, pageContent } from "../helpers/pageContent";
-import { Link } from "obsidian-dataview";
 import { PagePath } from "types/general";
 
 

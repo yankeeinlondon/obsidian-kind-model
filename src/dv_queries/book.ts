@@ -49,6 +49,14 @@ export type OtherBook = {
 	imageLink: string;
 }
 
+export type Author = {
+	name: string;
+	amazonLink?: string;
+	googleLink?: string;
+	goodReadsLink?: string;
+	worldCatLink?: string;
+}
+
 /**
  * This plugins internal representation of metadata for Books
  */
@@ -69,6 +77,7 @@ export type BookMeta = {
 	/** ASIN identifier from Amazon */
 	asin?: string;
 
+	/** the book's weight */
 	weight?: string;
 	/** 
 	 * WorldCat identifier 
@@ -84,13 +93,24 @@ export type BookMeta = {
 	coverImages: string[];
 
 	/**
-	 * the number of stars (out of 5)
+	 * the average number of stars (out of 5) on Amazon
 	 */
 	ratingAmazonStars?: number ;
 	ratingAmazonDistribution?: [number,number,number,number,number];
 
+	/**
+	 * the average number of stars (out of 5) from Good Reads
+	 */
+	ratingGoodReads?: number;
+
+	/**
+	 * boolean flag indicating if the particular book referenced _is_ a Kindle book
+	 */
 	isKindleBook?: boolean;
-	kindVariantAvailable?: boolean;
+	/**
+	 * boolean flag indicating if there appears to be a Kindle version of this book
+	 */
+	kindleVariantAvailable?: boolean;
 
 	/**
 	 * how many ratings the book has
@@ -132,13 +152,15 @@ export const book =  (p: KindModelPlugin) => async(
 	let book: BookMeta = {
 		title: current.title || current["kindle-sync"]?.title || "unknown",
 		subtitle: current.subtitle,
-		authors: current.authors
+		authors: (
+			current.authors
 			? current.authors.split(",").map(i => i.trim())
 			: current.author
 			? current.author.split(",").map(i => i.trim())
 			: current["kindle-sync"].author
 			? current["kindle-sync"].author.split(",").map(i => i.trim())
-			: [],
+			: []
+		),
 		bookCategory: current.category,
 		publisher: current.publisher,
 		publishDate: current.publishDate,
@@ -179,9 +201,10 @@ export const book =  (p: KindModelPlugin) => async(
 		
 		fmt.callout("warning","No Book metadata found!", {content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`});
 	} else {
-		book.worldCatBookLink = worldCatBookPage(p, book);
+		book.worldCatBookLink = await worldCatBookPage(p, book);
 		// get Amazon info
 		book = await AmazonBook(p,book);
+		p.debug("Book after Amazon Scrape", {book})
 
 		const cover = [
 			`<div class="book-cover" style="padding-bottom: 8px;">`,

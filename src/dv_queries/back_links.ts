@@ -1,16 +1,60 @@
 import { Component, MarkdownPostProcessorContext } from "obsidian";
+import { TupleToUnion, isString } from "inferred-types";
 import type KindModelPlugin from "../main";
 import type { DvPage } from "../types/dataview_types";
-import { isString } from "inferred-types";
+import { Tag } from "../types/general";
+import { parseParams } from "../helpers/parseParams";
+
+export const COLUMN_CHOICES = [
+	"when", "created", "modified",
+	"links", "desc",
+	"classification", "category", "subcategory",
+	"kind",
+	"related", "about",
+	"company",
+	/^#[a-zA-Z/]+ AS [a-zA-Z]{1}.*/ as unknown as `#${string} AS ${string}`
+] as const
+
+export type ColumnChoice = TupleToUnion<typeof COLUMN_CHOICES>;
+
+export type BackLinkOptions = {
+	/**
+	 * rather than backlinks auto determining how to layout your links
+	 * you can instead specify which columns you'd like
+	 */
+	columns?: ColumnChoice[],
+
+	/**
+	 * you can specify tags that indicate that a back linked page should be 
+	 * filtered from the list
+	 */
+	filterTags?: Tag[],
+
+
+	/**
+	 * the property you want to sort by
+	 */
+	sortProperty?: string;
+
+	/**
+	 * the sort order (either ASC or DESC)
+	 */
+	sortOrder?: "ASC" | "DESC"
+
+
+}
+
 
 /**
  * Renders back links for any obsidian page
  */
-export const back_links = (plugin: KindModelPlugin) => async (
+export const back_links = (plg: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
 	filePath: string
+) => async(
+	params_str: string = ""
 ) => {
 	const {
 		current,
@@ -36,8 +80,11 @@ export const back_links = (plugin: KindModelPlugin) => async (
 		show_modified_date,
 		renderValue,
 		subcategory
-	} = plugin.api.dv_page(source, container, component, filePath);
+	} = plg.api.dv_page(source, container, component, filePath);
 
+	let opt: BackLinkOptions = parseParams([],{ });
+
+	
 
 	/** all in-bound links for the page with the exception of self-references */
 	const links = current.file.inlinks
@@ -89,7 +136,7 @@ export const back_links = (plugin: KindModelPlugin) => async (
 						show_links(pg)
 					]
 				})
-			).catch(e => plugin.error(`Problems rendering subcategories table`, e));
+			).catch(e => plg.error(`Problems rendering subcategories table`, e));
 		} else {
 			ul(
 				`no subcategories found for this category page`,
@@ -120,7 +167,7 @@ export const back_links = (plugin: KindModelPlugin) => async (
 						show_links(pg)
 					]
 				})
-			).catch(e => plugin.error(`Problems rendering table`, e));
+			).catch(e => plg.error(`Problems rendering table`, e));
 		}
 
 		if(otherPages.length > 0) {
@@ -145,7 +192,7 @@ export const back_links = (plugin: KindModelPlugin) => async (
 						show_links(pg)
 					]
 				})
-			).catch(e => plugin.error(`Problems rendering otherPages table`, e));
+			).catch(e => plg.error(`Problems rendering otherPages table`, e));
 		}
 
 	} // end Category Page
@@ -401,6 +448,6 @@ export const back_links = (plugin: KindModelPlugin) => async (
 	
 
 	if(links.length === 0) {
-		renderValue(`- no back links found to this page`).catch(e => plugin.error(`Problem rendering paragraph WRT to no back links`, e));
+		renderValue(`- no back links found to this page`).catch(e => plg.error(`Problem rendering paragraph WRT to no back links`, e));
 	}
 }

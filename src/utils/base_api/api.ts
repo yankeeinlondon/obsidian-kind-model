@@ -1,12 +1,10 @@
 import { isString } from "inferred-types";
-import { Link } from "obsidian-dataview"
 import { MarkdownView, TFile } from "obsidian";
-import { Page } from "../../helpers/page";
 import KindModelPlugin from "../../main";
 import { Kind, PageBlock } from "../../types/settings_types";
 import { isMarkdownView } from "../../utils/type_guards/isMarkdownView";
 import { isTFile } from "../../utils/type_guards/isTFile";
-import { DvPage, FileLink } from "../../types/dataview_types";
+import { DvPage, FileLink, Link } from "../../types/dataview_types";
 import { isFileLink } from "../../utils/type_guards/isFileLink";
 import { isDataviewPage } from "../../utils/type_guards/isDataviewPage";
 import { getBasePageContext } from "../page/getBasePageContext";

@@ -17,7 +17,7 @@ export default defineConfig({
         entryFileNames: 'main.js',
         assetFileNames: 'styles.css'
       },
-      external: ['obsidian']
+      external: ['obsidian', 'electron']
     },
 	watch: {
 		include: /src\/.*\.ts/,

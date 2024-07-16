@@ -1,6 +1,8 @@
 import { 
 	Api, 
+	EmptyObject, 
 	EscapeFunction, 
+	Keys, 
 	createFnWithProps, 
 	ensureLeading, 
 	isFunction 
@@ -20,6 +22,10 @@ import {
 	TIP_ICON, 
 	WARN_ICON 
 } from "../constants/obsidian-constants";
+import { isDvPage } from "../utils/type_guards/isDvPage";
+import { DvPage, Link } from "../types/dataview_types";
+import { isLink } from "../utils/type_guards/isFileLink";
+import { CssDisplay, CssPosition } from "types/css";
 
 
 type WrapperCallback = (items: string) => string;
@@ -27,14 +33,14 @@ type WrapperCallback = (items: string) => string;
 type ListItemsApi<_W extends WrapperCallback> = Api<{
 	/** indent the list a level using same OL or UL nomenclature */
 	indent: (...items: string[]) => string;
-	done: EscapeFunction<() => "">
+	done: EscapeFunction
 }>;
 
 type Gap = `${number}px` | `${number}em` | `${number}rem` | `${number}%` | `calc(${string})`;
 
 export type CssCursor = "help" | "wait" | "crosshair" | "zoom-in" | "grab" | "auto" | "default" | "none" | "context-menu" | "pointer" | "progress" | "cell" | "text" | "vertical-text" | "alias" | "copy" | "move" | "no-drop" | "not-allowed" | "grabbing" | "all-scroll" | "col-resize" | "row-resize" | "n-resize" |  "e-resize" | "s-resize" | "w-resize" | "ne-resize" | "nw-resize" | "se-resize" | "sw-resize" | "eq-resize" | "ns-resize" | "nesw-resize" | "nwse-resize" | "zoom-in" | "zoom-out";
 
-type StyleOptions = {
+type UserStyleOptions = {
 	/** padding for top,bottom,left, and right */
 	p?: string;
 	/** padding top */
@@ -80,6 +86,7 @@ type StyleOptions = {
 	fs?: "italic" | "none" | "oblique" | `oblique ${number}deg` | "unset" | "inherit" | "revert" | "revert-layer";
 
 	flex?: boolean;
+	display?: CssDisplay;
 	direction?: "row" | "column";
 	grow?: number;
 
@@ -115,13 +122,28 @@ type StyleOptions = {
 
 	/** add in some other bespoke CSS key/values */
 	bespoke?: string[];
+
+	/**
+	 * the position property in CSS (e.g., relative, absolute, sticky, etc.)
+	 */
+	position?: CssPosition;
+
+	opacity?: string | number;
 }
+
+type StyleOptions<TOverride extends UserStyleOptions = EmptyObject> = Exclude<UserStyleOptions, Keys<TOverride>>;
 
 type BlockQuoteOptions = {
 	/**
 	 * The content area directly below the title line.
 	 */
 	content?: string;
+
+	/**
+	 * Add content on title row but pushed to the right
+	 */
+	toRight?: string;
+
 	contentStyle?: StyleOptions;
 
 	/**
@@ -312,6 +334,15 @@ const style = <T extends StyleOptions>(opts?: T) => {
 	if(opts?.justifyContent) {
 		fmt.push(`justify-content: ${opts.justifyContent}`);
 	}
+	if(opts?.position) {
+		fmt.push(`position: ${opts.position}`)
+	}
+	if(opts?.display) {
+		fmt.push(`display: ${opts.display}`)
+	}
+	if(opts?.opacity) {
+		fmt.push(`opacity: ${opts.opacity}`)
+	}
 
 	return fmt.length === 0 
 		? `style=""`
@@ -361,34 +392,39 @@ const listStyle = (opts: ListStyle = {}) => {
 }
 
 const obsidian_blockquote = (
-	kind: string,
+	kind: ObsidianCalloutColors,
 	title: string,
-	content: string | undefined,
-	icon: string,
-	fold: "" | "-" | "+",
-	belowTheFold: string | undefined,
-	formatting: StyleOptions = {},
-	contentStyle: StyleOptions = {},
-	belowTheFoldStyle: StyleOptions = {}
+	opts?: BlockQuoteOptions
 ) =>  [
-	`<div data-callout-metadata="" data-callout-fold="${fold}" data-callout="${kind}" class="callout" ${style(formatting)}>`,
-		`<div class="callout-title" style="gap:15px">`,
-			`<div class="callout-icon">${icon}</div>`,
+	`<div data-callout-metadata="" data-callout-fold="${opts?.fold || ""}" data-callout="${kind}" class="callout" ${style(opts?.style || {})}>`,
+		`<div class="callout-title" style="gap:15px; align-items: center">`,
+			...(
+				opts?.icon
+				? [`<div class="callout-icon">${opts?.icon}</div>`]
+				: []
+			),
 			`<div class="callout-title-inner">${title}</div>`,
+			...(
+				opts?.toRight 
+					? [
+						`<div class="callout-title-right" style="display: flex; flex-grow: 1; justify-content: right">${opts.toRight}</div>`
+					]
+					: []
+			),
 		`</div>`,
 		...(
-			content
+			opts?.content
 			? [
-				`<div class="callout-content" ${style(contentStyle)}>`,
-				`<p>${content}</p>`,
+				`<div class="callout-content" ${style(opts.contentStyle || {})}>`,
+				`<p>${opts.content}</p>`,
 				`</div>`
 			]
 			: []
 		),
 
 	...(
-		belowTheFold
-		? [`<div class="below-the-fold" ${style(belowTheFoldStyle)}>${belowTheFold}</div>`]
+		opts?.belowTheFold
+		? [`<div class="below-the-fold" ${style(opts?.belowTheFoldStyle || {})}>${opts?.belowTheFold}</div>`]
 		: ['']
 	),
 	`</div>`
@@ -397,9 +433,15 @@ const obsidian_blockquote = (
 const empty_callout = (fmt?: StyleOptions) => [
 `<div class="callout" ${style(fmt)}>`,
 `<div class="callout-title">&nbsp;</div>`,
-`<div class="callout-content">&nbsp;</div>`
+`<div class="callout-content">&nbsp;</div>`,
+`</div>`
 ].join("\n");
 
+/**
+ * **blockquote**`(kind, title, opts)`
+ * 
+ * Generates the HTML necessary to show a callout/blockquote in Obsidian.
+ */
 const blockquote = (
 	kind: ObsidianCalloutColors,
 	title: string,
@@ -422,16 +464,9 @@ const blockquote = (
 	return obsidian_blockquote(
 		kind,
 		title,
-		opts?.content,
-		opts?.icon || iconLookup[kind],
-		opts?.fold || "",
-		opts?.belowTheFold,
-		opts?.style || {},
-		opts?.contentStyle || {},
-		{
-			bespoke: ["padding: var(--callout-content-padding)"],
-			...opts?.belowTheFoldStyle
-		}
+		opts?.icon && opts.icon in iconLookup
+			? { ...opts, icon: iconLookup[opts.icon as keyof typeof iconLookup]}
+			: opts
 	)
 };
 
@@ -551,10 +586,50 @@ export const fmt = (p: KindModelPlugin) => (
 		`<code>${code}</code>`, 
 		container,p, filePath, true
 	),
-	toRight: (text: string) => p.dv.renderValue(
+
+
+	/**
+	 * **renderToRight**`(text)`
+	 * 
+	 * Takes text/html and renders it to the right.
+	 * 
+	 * Note: use `toRight` just to wrap this text in the appropriate HTML
+	 * to move content to right.
+	 */
+	renderToRight: (text: string) => p.dv.renderValue(
 		`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
 		container,p, filePath, true
 	),
+
+	toRight: (content: string, fmt?: StyleOptions<{ position: "relative" }>) => {
+		const html = [
+			`<div class="wrapper-to-right" style="display: relative">`,
+			`<span class="block-to-right" style="position: absolute; right: 0">`,
+			`<span ${style({...fmt, position: "relative"})}>`,
+			content,
+			`</span>`,
+			`</div>`
+		].join("\n")
+		return html
+	},
+
+	/**
+	 * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
+	 * 
+	 * Note: for external links use the `link` helper instead as the generated link
+	 * here provides the reference as meta-data other then the traditional `href` 
+	 * property.
+	 */
+	internalLink: (ref: DvPage | Link, opt?: LinkOptions & {title?: string}) => {
+		const link = (href: string, title: string) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`
+
+		return isDvPage(ref) 
+			? link(ref.file.path, opt?.title || ref.file.name)
+			: isLink(ref)
+				? link(ref.path , opt?.title || ref?.hover || "link" )
+				: ""
+
+	},
 
 
 	/**

@@ -207,6 +207,31 @@ const get_kind_tag = (p: KindModelPlugin) => (pg: DvPage) => {
 		) || get_kind_prop(p)(pg).tag || "unknown";
 }
 
+/**
+ * **get_internal_links**`(p) => (pg, ...props)`
+ * 
+ * Gets any links to pages in the vault found across the various properties
+ * passed in.
+ */
+const get_internal_links = (p: KindModelPlugin) => (pg: DvPage, ...props: string[]) => {
+
+	let links: Link[] = [];
+	for (const prop of props) {
+		const pgProp = pg[prop];
+		if (!pgProp) {
+			break;
+		}
+		if (Array.isArray(pgProp)) {
+			links = [ ...links, ...pgProp.filter(i => isLink(i)) ];
+		} else if (isLink(pgProp)) {
+			links.push(pgProp);
+		} else if (isDvPage(pgProp)) {
+			links.push(pgProp.file.link)
+		}
+	}		
+	return links;
+}
+
 
 
 function show_tags(pg: DvPage, ...exclude: string[]) {
@@ -540,6 +565,14 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * pound symbol) as the second.
 		 */
 		get_kind_prop: get_kind_prop(plugin),
+
+		/**
+		 * **get_internal_links**
+		 * 
+		 * Gets any links to pages in the vault found across the various 
+		 * properties passed in.
+		 */
+		get_internal_links: get_internal_links(plugin),
 
 		/**
 		 * **metadata**`()`
