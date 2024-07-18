@@ -26,8 +26,6 @@ let page: HappyDoc;
 let book: BookMeta;
 
 describe("Name", () => {
-
-
 	beforeAll(() => {
 		page = createDocument(readFileSync("./test/data/amazon-book.html", "utf-8"));
 		book = {
@@ -51,15 +49,9 @@ describe("Name", () => {
 
 	
 	it("first test", () => {
-		/** number of reviewers */
-		let reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText")
-			? Number(stripAfter(query(page, "span .arcCustomerReviewText", "throw")?.textContent, " "))
-			: undefined;
+
 		/** DOM area where review histogram is presented [ 5-star, 4-star, 3-star, 2-star, 1-star ] */
 		let histogram = queryAll(page, "#histogramTable tr").map((el: IElement) => el.lastChild.textContent);
-		if (histogram) {
-			//
-		}
 
 		let pages: number | undefined = undefined;
 		let xrayEnabled: boolean | undefined  = undefined;
@@ -112,21 +104,21 @@ describe("Name", () => {
 			}
 		}
 
-		if(hasSelector(page, "h2", { contains: "Editorial Reviews" } )) {
-			let review = findWhere(page, "h2", "throw", "contains", "Editorial Reviews");
+		let review = findWhere(page, "h2", "undefined", "contains", "Editorial Reviews");
+		if(review) {
 			let sections = review.nextElementSibling
-			? queryAll(review.nextElementSibling, "h3").map(el => {
+			? queryAll(review.nextElementSibling as IElement, "h3").map(el => {
 				const heading = `<p><b>${el.textContent}</b></p>\n`;
 				const body = `<p>${el.nextElementSibling.textContent}</p>`;
 				return [heading,body].join("");
 			})
 			: undefined;
-			editorialReview = sections.join("\n");
+			editorialReview = sections?.join("\n");
 		}
 
 		let isKindleBook = query(page, "#rpi-attribute-book_details-ebook_pages", "undefined") 
-		? true
-		: false;
+			? true
+			: false;
 		let description = query(page, "div[data-a-expander-name=book_description_expander] p span")?.textContent;
 		let edition = query(page, "#rpi-attribute-book_details-edition .rpi-attribute-value")?.textContent?.trim();
 		let publisher = query(page, "#rpi-attribute-book_details-publisher .rpi-attribute-value")?.textContent?.trim();
@@ -205,7 +197,6 @@ describe("Name", () => {
 		isbn10, 
 		isbn13, 
 		description, 
-		reviewsAmazon, 
 		publisher,
 		publication_date,
 		language,
