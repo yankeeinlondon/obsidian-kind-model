@@ -12,6 +12,9 @@
 	"scripts": {
 		"dev": "VITE_CJS_IGNORE_WARNING=true && vite build --watch ",
 		"build": "VITE_CJS_IGNORE_WARNING=true vite build",
+		"build:bun": "bun build src/main.ts --external obsidian --external electron --external obsidian-dataview --minify-whitespace --outfile ./obsidian-kind-model.mjs",
+		"build:tsup": "",
+		"watch": "bun build src/main.ts --watch --external obsidian --external electron --external obsidian-dataview --minify-whitespace --outfile ./obsidian-kind-model.mjs",
 		"test": "vitest",
 		"test:ci": "vitest run",
 		"release": "bumpp"
@@ -50,7 +53,10 @@
 		"unplugin-vue-components": "^0.27.2",
 		"unplugin-vue-macros": "^2.9.5",
 		"vite": "5.0.12",
-		"vitest": "^1.6.0"
+		"electron": "^31.1.0",
+		"vitest": "^1.6.0",
+		"obsidian-dataview": "^0.5.67",
+		"obsidian": "latest"
 	},
 	"dependencies": {
 		"@markdoc/markdoc": "^0.4.0",
@@ -58,10 +64,6 @@
 		"@yankeeinlondon/happy-wrapper": "^3.5.4",
 		"inferred-types": "^0.46.1",
 		"luxon": "^3.4.4",
-		"obsidian": "latest",
-		"electron": "^31.1.0",
-		"obsidian-dataview": "^0.5.67",
-		"scraped": "^0.6.1",
 		"vue": "^3.4.31",
 		"xxhash-wasm": "^1.0.2",
 		"yaml": "^2.4.5"
