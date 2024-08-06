@@ -17,24 +17,12 @@ importers:
       '@yankeeinlondon/happy-wrapper':
         specifier: ^3.5.4
         version: 3.5.4(happy-dom@14.12.0)
-      electron:
-        specifier: ^31.1.0
-        version: 31.1.0
       inferred-types:
         specifier: ^0.46.1
         version: 0.46.1
       luxon:
         specifier: ^3.4.4
         version: 3.4.4
-      obsidian:
-        specifier: latest
-        version: 1.5.7-1(@codemirror/state@6.4.1)(@codemirror/view@6.28.3)
-      obsidian-dataview:
-        specifier: ^0.5.67
-        version: 0.5.67
-      scraped:
-        specifier: ^0.6.1
-        version: 0.6.1(@yankeeinlondon/happy-wrapper@3.5.4(happy-dom@14.12.0))(happy-dom@14.12.0)
       vue:
         specifier: ^3.4.31
         version: 3.4.31(typescript@5.5.3)
@@ -99,9 +87,18 @@ importers:
       bumpp:
         specifier: ^9.4.1
         version: 9.4.1
+      electron:
+        specifier: ^31.1.0
+        version: 31.1.0
       esbuild:
         specifier: ^0.20.2
         version: 0.20.2
+      obsidian:
+        specifier: latest
+        version: 1.5.7-1(@codemirror/state@6.4.1)(@codemirror/view@6.28.3)
+      obsidian-dataview:
+        specifier: ^0.5.67
+        version: 0.5.67
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -1164,10 +1161,6 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  brilliant-errors@0.6.1:
-    resolution: {integrity: sha512-PciFPYWTSNUkDNPEQotMVPEKQ4TbHqzaUEYGJZkGn7MpNdqi8gsP7wb4d5mBZyA5QG7BAzoz4h9RtLNrKS7k7g==}
-    engines: {node: '>=14.0.0'}
-
   brilliant-errors@0.7.3:
     resolution: {integrity: sha512-WT9BkAze4SUOJfr7LUwJWNDAvynEAvUMvMPuFKu8QQKnRq+WMx3DAtHfOBJjHmHRxf748JY3CNVytSk6HH2yGg==}
     engines: {node: '>=14.0.0'}
@@ -1256,9 +1249,6 @@ packages:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
 
-  common-types@1.33.2:
-    resolution: {integrity: sha512-jlnKm38MLr1Z4lNgyLa/koenixWZwK0hjMobdKmv9Uzpr8AJZ96yPnnrPYfmM7c/iQKw13E++NCb67zIfCR5AA==}
-
   concat-map@0.0.1:
     resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
@@ -1278,10 +1268,6 @@ packages:
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
-
-  data-uri-to-buffer@4.0.1:
-    resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
-    engines: {node: '>= 12'}
 
   debug@4.3.5:
     resolution: {integrity: sha512-pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==}
@@ -1468,10 +1454,6 @@ packages:
   fd-slicer@1.1.0:
     resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
 
-  fetch-blob@3.2.0:
-    resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
-    engines: {node: ^12.20 || >= 14.13}
-
   file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -1494,10 +1476,6 @@ packages:
   form-data@2.5.1:
     resolution: {integrity: sha512-m21N3WOmEEURgk6B9GLOE4RuWOFf28Lhh9qGYeNlGq4VDXUlJy2th2slBNU8Gp8EzloYZOibZJ7t5ecIrFSjVA==}
     engines: {node: '>= 0.12'}
-
-  formdata-polyfill@4.0.10:
-    resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
-    engines: {node: '>=12.20.0'}
 
   fp-ts@2.16.7:
     resolution: {integrity: sha512-Xiux+4mHHPj32/mrqN3XIIqEKk/MousgoC2FIaCwehpPjBI4oDrLvQEyQ/2T1sbTe0s/YIQqF98z+uHJLVoS9Q==}
@@ -1633,9 +1611,6 @@ packages:
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
     engines: {node: '>=0.8.19'}
-
-  inferred-types@0.33.4:
-    resolution: {integrity: sha512-/fBPKXKtMLFzaMcW+lEomTPVWv26XVU36v8AGbhdPOK+1dQvu2SHjv/2DlS/FWbJZ4qC281DdFTl8xYo5SZKfw==}
 
   inferred-types@0.37.6:
     resolution: {integrity: sha512-CfL5g1wR5rVwX2K5S6wSL+h9eODScum/LBwlhGRrcBIvfYppvUQM0aeRJ1BZS+QE38kGzd3v+U526+nQR7ZUkg==}
@@ -1843,16 +1818,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-
   node-fetch-native@1.6.4:
     resolution: {integrity: sha512-IhOigYzAKHd244OC0JIMIUrjzctirCmPkaIfhDeGcEETWof5zKYUW7e7MYvChGWh/4CJeXEgsRyGzuF334rOOQ==}
-
-  node-fetch@3.3.2:
-    resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -2066,12 +2033,6 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
-
-  scraped@0.6.1:
-    resolution: {integrity: sha512-1rl3LZ0q7xPpGdxhdCpNyOSTDTunJBiLSO8MUUb/lw6PatrW/8oAq7L6sDo9aMr3h2Fvng7dgl3u2aN5G3PJiw==}
-    peerDependencies:
-      '@yankeeinlondon/happy-wrapper': ^2.8.0
-      happy-dom: ^7.7.0
 
   scule@1.3.0:
     resolution: {integrity: sha512-6FtHJEvt+pVMIB9IBY+IcCJ6Z5f1iQnytgyfKMhDKgmzYG+TeH/wx1y3l27rshSbLiSanrR9ffZDrEsmjlQF2g==}
@@ -2438,10 +2399,6 @@ packages:
 
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
-
-  web-streams-polyfill@3.3.3:
-    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
-    engines: {node: '>= 8'}
 
   webidl-conversions@7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
@@ -3503,12 +3460,6 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  brilliant-errors@0.6.1:
-    dependencies:
-      callsites: 4.2.0
-      common-types: 1.33.2
-      inferred-types: 0.33.4
-
   brilliant-errors@0.7.3(happy-dom@14.12.0):
     dependencies:
       bumpp: 8.2.1
@@ -3641,8 +3592,6 @@ snapshots:
     dependencies:
       delayed-stream: 1.0.0
 
-  common-types@1.33.2: {}
-
   concat-map@0.0.1: {}
 
   confbox@0.1.7: {}
@@ -3658,8 +3607,6 @@ snapshots:
       which: 2.0.2
 
   csstype@3.1.3: {}
-
-  data-uri-to-buffer@4.0.1: {}
 
   debug@4.3.5:
     dependencies:
@@ -3942,11 +3889,6 @@ snapshots:
     dependencies:
       pend: 1.2.0
 
-  fetch-blob@3.2.0:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
-
   file-entry-cache@6.0.1:
     dependencies:
       flat-cache: 3.2.0
@@ -3973,10 +3915,6 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
-
-  formdata-polyfill@4.0.10:
-    dependencies:
-      fetch-blob: 3.2.0
 
   fp-ts@2.16.7: {}
 
@@ -4107,6 +4045,7 @@ snapshots:
       entities: 4.5.0
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
+    optional: true
 
   has-flag@4.0.0: {}
 
@@ -4145,10 +4084,6 @@ snapshots:
       resolve-from: 4.0.0
 
   imurmurhash@0.1.4: {}
-
-  inferred-types@0.33.4:
-    dependencies:
-      brilliant-errors: 0.6.1
 
   inferred-types@0.37.6(happy-dom@14.12.0):
     dependencies:
@@ -4349,15 +4284,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  node-domexception@1.0.0: {}
-
   node-fetch-native@1.6.4: {}
-
-  node-fetch@3.3.2:
-    dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
 
   normalize-path@3.0.0: {}
 
@@ -4592,13 +4519,6 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
-
-  scraped@0.6.1(@yankeeinlondon/happy-wrapper@3.5.4(happy-dom@14.12.0))(happy-dom@14.12.0):
-    dependencies:
-      '@yankeeinlondon/happy-wrapper': 3.5.4(happy-dom@14.12.0)
-      happy-dom: 14.12.0
-      inferred-types: 0.33.4
-      node-fetch: 3.3.2
 
   scule@1.3.0: {}
 
@@ -4962,8 +4882,6 @@ snapshots:
       typescript: 5.5.3
 
   w3c-keyname@2.2.8: {}
-
-  web-streams-polyfill@3.3.3: {}
 
   webidl-conversions@7.0.0: {}
 

@@ -1,7 +1,9 @@
 import KindModelPlugin from "../main";
 import { Component, MarkdownPostProcessorContext } from "obsidian";
-import { DvPage } from "../types/dataview_types";
+import {  OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
+import { Dictionary } from "inferred-types";
 import { isDvPage } from "../utils/type_guards/isDvPage";
+import { DvPage } from "../types/dataview_types";
 
 export type KindQueryOptions = {
 	category?: string;
@@ -12,6 +14,22 @@ export type KindQueryOptions = {
 	hide_cols?: string[];
 }
 
+
+export const kind_defn = {
+	kind: "query-defn",
+	type: "Kind",
+	scalar: [
+		"kind AS string",
+		"category AS opt(string)",
+		"subcategory AS opt(string)",
+	],
+	options: {
+		remove_columns: "enum(when,desc,links)",
+		add_columns: "columns()"
+	}
+} as const satisfies QueryDefinition;
+
+
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
@@ -20,22 +38,24 @@ export const kind_table = (p: KindModelPlugin) => (
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
 	filePath: string
-) => async(
-	/** the parameters as a raw string from user's query */
-	params_str: [string, string, KindQueryOptions]
+) => async <
+	TScalar extends ScalarParams<typeof kind_defn>,
+	TOption extends OptionParam<typeof kind_defn>
+>(
+	scalar: TScalar,
+	opt: TOption
 ) => {
 	const dv = p.api.dv_page(source, container, component, filePath);
 	const table = dv.table;
 	const {createFileLink, show_when, show_desc, show_links, fmt} = dv;
+	const [kind, category, subcategory] = scalar;
 
-	const [kind, category, opts] = params_str;
 		
-	const pages = opts.subcategory 
-		? dv.pages(`#${kind}/${category}/${opts.subcategory}`)
+	const pages = subcategory 
+		? dv.pages(`#${kind}/${category}/${subcategory}`)
 		: category
 		? dv.pages(`#${kind}/${category}`)
 		: dv.pages(`#${kind}`)
-
 
 	if (pages.length > 0) {
 		table(
@@ -53,11 +73,11 @@ export const kind_table = (p: KindModelPlugin) => (
 			})
 		)
 	} else {
-		const msg = opts.subcategory
-			? fmt.as_tag(`${kind}/${category}/${opts.subcategory}`)
+		const msg = subcategory
+			? fmt.as_tag(`${kind}/${category}/${subcategory}`)
 			: category
 			? fmt.as_tag(`${kind}/${category}`)
-			: `${fmt.as_tag(kind)}`;
+			: `${fmt.as_tag(kind as string)}`;
 		fmt.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg}</span>`)
 	}
 }

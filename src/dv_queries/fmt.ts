@@ -137,7 +137,7 @@ type BlockQuoteOptions = {
 	/**
 	 * The content area directly below the title line.
 	 */
-	content?: string;
+	content?: string | string[];
 
 	/**
 	 * Add content on title row but pushed to the right
@@ -403,7 +403,7 @@ const obsidian_blockquote = (
 				? [`<div class="callout-icon">${opts?.icon}</div>`]
 				: []
 			),
-			`<div class="callout-title-inner">${title}</div>`,
+			`<div class="callout-title-inner" style="display: flex; flex-direction: row;">${title}</div>`,
 			...(
 				opts?.toRight 
 					? [
@@ -414,11 +414,17 @@ const obsidian_blockquote = (
 		`</div>`,
 		...(
 			opts?.content
-			? [
-				`<div class="callout-content" ${style(opts.contentStyle || {})}>`,
-				`<p>${opts.content}</p>`,
-				`</div>`
-			]
+			? typeof opts.content === "string" 
+				? [
+					`<div class="callout-content" ${style(opts.contentStyle || {})}>`,
+					`<p>${opts.content}</p>`,
+					`</div>`
+				]
+				: [
+					`<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
+					...opts.content.map(c => `<div class="content-element" ${style({ flex: true, ...(opts.contentStyle || {})})}>${c}</div>`),
+					`</div>`
+				]
 			: []
 		),
 
@@ -686,6 +692,8 @@ export const fmt = (p: KindModelPlugin) => (
 	 * leading character is a `#` symbol.
 	 */
 	as_tag: (text: string) => `<code class="tag-reference">${ensureLeading(text, "#")}</code>`,
+
+	inline_codeblock: (text: string) => `<code class="inline-codeblock" style="display: flex; flex-direction: row;">${text}</code>`,
 
 
 	/**

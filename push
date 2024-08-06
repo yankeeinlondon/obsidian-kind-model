@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+PLUGIN_DIR="${HOME}/obsidian/.obsidian/plugins"
+JS_FILE="${PWD}/main.js"
+STYLES="${PWD}/styles.css"
+MANIFEST_FILE="${PWD}/manifest.json"
+
+# dir_exists <filepath>
+#
+# tests whether a given filepath exists in the filesystem as a directory
+function dir_exists() {
+    local filepath="${1:?filepath is missing}"
+
+    if [ -d "${filepath}" ]; then
+        return 0;
+    else
+        return 1;
+    fi
+}
+
+# file_exists <filepath>
+#
+# tests whether a given filepath exists in the filesystem
+function file_exists() {
+    local filepath="${1:?filepath is missing}"
+
+    if [ -f "${filepath}" ]; then
+        return 0;
+    else
+        return 1;
+    fi
+}
+
+
+# has_command <cmd>
+#
+# checks whether a particular program passed in via $1 is installed 
+# on the OS or not (at least within the $PATH)
+function has_command() {
+    local -r cmd="${1:?cmd not passed into has_command}"
+
+    if command -v "${cmd}" &> /dev/null; then
+        return 0
+    else 
+        return 1
+    fi
+}
+
+function copy_files() {
+	if file_exists "${JS_FILE}"; then
+		cp -f "${JS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
+		touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+		if file_exists "${MANIFEST_FILE}"; then
+			cp -f "${MANIFEST_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
+			touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
+		fi
+		if file_exists "${STYLES}"; then
+		 cp -f "${STYLES}" "${PLUGIN_DIR}/obsidian-kind-model"
+		fi
+		echo "- updated files"
+		echo ""
+		
+		if has_command "exa"; then
+			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model"
+		elif has_command "eza"; then
+			eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model"
+		else 
+			ls -la --color "${PLUGIN_DIR}/obsidian-kind-model"
+		fi
+	else
+		echo "- no JS source file found!"
+	fi
+}
+
+echo "Pushing the transpiled JS to Obsidian Vault"
+echo "-------------------------------------------"
+
+if dir_exists "${PLUGIN_DIR}/obsidian-kind-model"; then
+	copy_files
+else
+	if dir_exists "${PLUGIN_DIR}"; then
+		mkdir "${PLUGIN_DIR}/obsidian-kind-model"
+		copy_files
+	else 
+		echo "- for the push functionality to work you must create an 'obsidian' directory"
+		echo "  (or symlink) off of your home directory which points to the base of the"
+		echo "  vault you'd like to test with"
+	fi
+	
+fi

@@ -1,0 +1,12 @@
+!main.js
+!manifest.json
+!styles.css
+!README.md
+*
+node_modules
+dist
+**/*.*
+dist/**
+.git/**
+.pnpm-lock.yaml
+bun.lockb

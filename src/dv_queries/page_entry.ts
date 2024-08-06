@@ -12,19 +12,38 @@ import { DvPage } from "../types/dataview_types";
 import { isWikipediaUrl } from "../utils/type_guards/isWikipediaUrl";
 import { find_in } from "../utils/type_guards/find_in";
 import { MARKDOWN_PAGE_ICON } from "../constants/obsidian-constants";
+import { 
+	OptionParam, 
+	QueryDefinition, 
+	ScalarParams 
+} from "../helpers/QueryDefinition";
+
+export const page_entry_defn = {
+	kind: "query-defn",
+	type: "PageEntry",
+	scalar: [],
+	options: {
+		verbose: "bool"
+	}
+} as const satisfies QueryDefinition;
 
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
-export const page_entry = (p: KindModelPlugin) => async (
+export const page_entry = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
 	filePath: string
+) => async <
+	TScalar extends ScalarParams<typeof page_entry_defn>,
+	TOption extends OptionParam<typeof page_entry_defn>
+>(
+_scalar: TScalar,
+_opt: TOption
 ) => {
 	const dv = p.api.dv_page(source, container, component, filePath);
 	const {fmt, current} = dv;
-
 
 	const banner_img = isUrl(dv.current["_banner"]) ? dv.current["_banner"] : undefined ;
 	const banner_aspect = isCssAspectRatio(dv.current["_banner_aspect"])

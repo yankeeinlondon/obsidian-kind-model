@@ -17,6 +17,7 @@
 		"watch": "bun build src/main.ts --watch --external obsidian --external electron --external obsidian-dataview --minify-whitespace --outfile ./obsidian-kind-model.mjs",
 		"test": "vitest",
 		"test:ci": "vitest run",
+		"push": "echo 'pushing new build to vault' && cp ./main.js \"/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model\" && cp ./manifest.json '/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model'",
 		"release": "bumpp"
 	},
 	"keywords": [
