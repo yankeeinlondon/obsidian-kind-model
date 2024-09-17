@@ -29,11 +29,7 @@ const baseMethods = <
 
 		return [];
 	},
-	validate_url_props: () => {
-		return baseMethods(plugin,ctx).get_url_props().map(prop => {
 
-		});
-	},
 	request_save: async() => {
 		return ctx.request_save();
 	}

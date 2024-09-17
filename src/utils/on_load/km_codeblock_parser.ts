@@ -65,21 +65,21 @@ export const km_codeblock_parser = (plugin: KindModelPlugin) => {
 				return
 			} 
 		}
-		else if (videos.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, video_defn);
-			if (p.isOk) {
-				await plugin.api.video_gallery(
-					source,el,ctx,ctx.sourcePath
-				)(p.scalar, p.options);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"Videos",
-					p.error,
-					p.param_str
-				)
-				return
-			} 
-		}
+		// else if (videos.test(source)) {
+		// 	let p = evaluate_query_params(plugin)(kind, source, video_defn);
+		// 	if (p.isOk) {
+		// 		await plugin.api.video_gallery(
+		// 			source,el,ctx,ctx.sourcePath
+		// 		)(p.scalar, p.options);
+		// 	} else {
+		// 		query_error(plugin)(source,el,ctx,ctx.sourcePath)(
+		// 			"Videos",
+		// 			p.error,
+		// 			p.param_str
+		// 		)
+		// 		return
+		// 	} 
+		// }
 		else {
 			// query error
 		}

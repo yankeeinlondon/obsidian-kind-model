@@ -32,7 +32,6 @@ export default defineConfig({
 				assetFileNames: 'styles.css'
 			},
 			external: [ 
-				'electron', 
 				"obsidian",
   		        "@codemirror/autocomplete",
   		        "@codemirror/collab",

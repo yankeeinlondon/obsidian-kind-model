@@ -2,7 +2,6 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
 import { Scope, TFolder, Setting, Modal, PluginSettingTab, Notice, Plugin as Plugin$1 } from "obsidian";
-import "electron";
 var commonjsGlobal$1 = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x2) {
   return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
@@ -111324,7 +111323,6 @@ const km_codeblock_parser = (plugin4) => {
     const page_entry2 = /PageEntry\((.*)\)/;
     const book2 = /Book\((.*)\)/;
     const kind = /Kind\((.*)\)/;
-    const videos = /Videos\((.*)\)/;
     if (back_links2.test(source)) {
       const [_, params] = Array.from(source.match(back_links2) || []);
       await plugin4.api.back_links(source, el, ctx, ctx.sourcePath)(params);
@@ -111362,23 +111360,6 @@ const km_codeblock_parser = (plugin4) => {
       } else {
         query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
           "Kind",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else if (videos.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(kind, source, video_defn);
-      if (p2.isOk) {
-        await plugin4.api.video_gallery(
-          source,
-          el,
-          ctx,
-          ctx.sourcePath
-        )(p2.scalar, p2.options);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "Videos",
           p2.error,
           p2.param_str
         );

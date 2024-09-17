@@ -18,7 +18,7 @@ import {
 import KindModelPlugin from "../main";
 import { BookMeta } from "../dv_queries/book";
 import { DateTime } from "luxon";
-import { loadRemoteDom } from "./network";
+// import { loadRemoteDom } from "./network.ts.ignore";
 import { requestUrl } from "./obsidian";
 
 /**
@@ -26,28 +26,28 @@ import { requestUrl } from "./obsidian";
  * caches this to the 
  */
 const _getWorldCatApiVersion = async (p: KindModelPlugin) => {
-	const html = await loadRemoteDom("https://search.worldcat.org/search", 0, p);
-	const scriptIdentifier = html.getElementsByTagName("script").find(el => el.getAttribute("src")?.includes("next/static/v"));
-	if(!scriptIdentifier) {
-		const scriptsWithSource = html
-			.getElementsByTagName("script")
-			.map(i => i.getAttribute("src"))
-			.filter(i =>  i !== undefined);
+	// const html = await loadRemoteDom("https://search.worldcat.org/search", 0, p);
+	// const scriptIdentifier = html.getElementsByTagName("script").find(el => el.getAttribute("src")?.includes("next/static/v"));
+	// if(!scriptIdentifier) {
+	// 	const scriptsWithSource = html
+	// 		.getElementsByTagName("script")
+	// 		.map(i => i.getAttribute("src"))
+	// 		.filter(i =>  i !== undefined);
 
-		p.error(`Failed to find a script which indicates the API version for WorldCat's book search! The scripts which did have a src tag were as follows: `, {scriptsWithSource});
-		return;
-	}
-	let searchWorldCat = stripAfter(
-		stripBefore(
-			scriptIdentifier.getAttribute("src"), "static/"
-		), 
-		"/"
-	);
+	// 	p.error(`Failed to find a script which indicates the API version for WorldCat's book search! The scripts which did have a src tag were as follows: `, {scriptsWithSource});
+	// 	return;
+	// }
+	// let searchWorldCat = stripAfter(
+	// 	stripBefore(
+	// 		scriptIdentifier.getAttribute("src"), "static/"
+	// 	), 
+	// 	"/"
+	// );
 
-	p.saveData({searchWorldCat});
-	p.info(`Saved the WorldCat API version to settings for caching purposes`);
+	// p.saveData({searchWorldCat});
+	// p.info(`Saved the WorldCat API version to settings for caching purposes`);
 	
-	return searchWorldCat;
+	// return searchWorldCat;
 }
 
 export const WORLD_CAT_URL = `https://search.worldcat.org/search` as const;

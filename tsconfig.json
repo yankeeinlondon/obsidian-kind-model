@@ -31,7 +31,7 @@
     ],
   },
   "include": [
-    "src/**/*.ts",
+    "src/**/*.ts", "src/helpers/electron.ts.ignore", "src/helpers/network.ts.ignore",
   ],
   "exclude": [
 	"node_modules", "dist"

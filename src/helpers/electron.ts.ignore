@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { 
-	BrowserWindow,
+	type BrowserWindow,
 	type PowerMonitor, 
 	type SystemPreferences, 
 	type Dialog, 

@@ -416,7 +416,7 @@ export type KindPageApi<
 		 * checks all the properties which are supposed to contain URLs
 		 * and returns a `UrlValidation` per property.
 		 */
-		validate_url_props: () => string[];
+		// validate_url_props: () => string[];
 
 		/**
 		 * _request_ that the current page be saved
