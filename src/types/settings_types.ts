@@ -1,4 +1,4 @@
-import { KindCache } from "main";
+
 import { Link } from "obsidian-dataview";
 import { CARDINALITY_TYPES, CLASSIFICATION, LOG_LEVELS, TAG_HANDLING, UOM_TYPES } from "utils/Constants";
 import { Mutable, TupleToUnion } from "utils/type-utils";
@@ -151,7 +151,7 @@ export interface KindModelSettings {
 	 * The "cache" of pages and lookups which this plugin 
 	 * is responsible for managing.
 	 */
-	cache: KindCache | null;
+	cache:  null;
 	url_props: UrlProp[];
 	url_patterns: UrlPattern[];
 

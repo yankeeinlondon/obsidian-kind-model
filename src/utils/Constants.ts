@@ -26,32 +26,31 @@ export const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec"];
 
 export const DEFAULT_SETTINGS: KindModelSettings = {
-  kinds: {},
-  types: {},
+	kinds: {},
+	types: {},
 	kind_folder: "kind",
-  handle_tags: "Do not Change",
-  other_type: false,
-  default_classification: "category and subcategory",
-  page_blocks: [],
-  url_patterns: [],
-  url_props: [],
-  log_level: "warn"
+	cache:null,
+	handle_tags: "Do not Change",
+	default_classification: "category and subcategory",
+	page_blocks: [],
+	url_patterns: [],
+	url_props: [],
+	log_level: "warn"
 };
 
 export const DEFAULT_KIND: Kind = {
   name: "",
-  classification_type: "category and subcategory",
-  filename_date_prefix: false,
-  folder_include_cwd: false,
-  folder_choices_sub_dirs: false,
-  folder_favorite: "",
-  show_sub_dirs: false,
-  relationships: [],
+  _classification_type: "category and subcategory",
+  _filename_date_prefix: false,
+  _folder_include_cwd: false,
+  _folder_choices_sub_dirs: false,
+  _folder_favorite: "",
+  _show_sub_dirs: false,
+  _relationships: [],
   tag: "",
-  metric_props: [],
-  class_inside_kind: false,
-  aliases_casing: false,
-  aliases_plural: false
+  _metric_props: [],
+  _aliases_lowercase: false,
+  _aliases_plural: false
 };
 
 export const FOLDER_DEFAULT = [

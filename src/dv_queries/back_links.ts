@@ -19,7 +19,7 @@ export type ColumnChoice = TupleToUnion<typeof COLUMN_CHOICES>;
 
 export type BackLinkOptions = {
 	/**
-	 * rather than backlinks auto determining how to layout your links
+	 * rather than back links auto determining how to layout your links
 	 * you can instead specify which columns you'd like
 	 */
 	columns?: ColumnChoice[],

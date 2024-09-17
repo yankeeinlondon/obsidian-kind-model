@@ -1,6 +1,7 @@
 import { isString } from 'inferred-types';
 import { createDocument, HappyDoc } from '@yankeeinlondon/happy-wrapper';
 import KindModelPlugin from '../main';
+import { BrowserWindow } from 'electron';
 
 
 

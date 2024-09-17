@@ -21,21 +21,36 @@ export default defineConfig({
 		minify: false,
 		// Use Vite lib mode https://vitejs.dev/guide/build.html#library-mode
 		lib: {
-		entry: path.resolve(__dirname, './src/main.ts'),
-		formats: ['cjs']
+			entry: path.resolve(__dirname, './src/main.ts'),
+			formats: ["es"]
 		},
 		rollupOptions: {
-		output: {
-			// Overwrite default Vite output fileName
-			entryFileNames: 'main.js',
-			assetFileNames: 'styles.css'
+			treeshake: true,
+			output: {
+				// Overwrite default Vite output fileName
+				entryFileNames: 'main.mjs',
+				assetFileNames: 'styles.css'
+			},
+			external: [ 
+				'electron', 
+				"obsidian",
+  		        "@codemirror/autocomplete",
+  		        "@codemirror/collab",
+  		        "@codemirror/commands",
+  		        "@codemirror/language",
+  		        "@codemirror/lint",
+  		        "@codemirror/search",
+  		        "@codemirror/state",
+  		        "@codemirror/view",
+  		        "@lezer/common",
+  		        "@lezer/highlight",
+  		        "@lezer/lr"
+			]
 		},
-		external: ['obsidian', 'electron']
-		},
+		sourcemap: true,
 		watch: {
 			include: /src\/.*\.ts/,
 		}, 
-		// Use root as the output dir
 		emptyOutDir: false,
 		outDir: '.'
 	}

@@ -20,7 +20,7 @@ export const QueryApi = (ctx: KindModelSettings) => ({
 
     let query: string;
 
-    switch(model.classification_type) {
+    switch(model._classification_type) {
       case "categories":
         query = ``;
         break;

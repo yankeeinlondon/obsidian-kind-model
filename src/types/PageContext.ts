@@ -380,7 +380,7 @@ export type KindPageApi<
 		 * Gets the `PageContext<"Kind Definition">` for the current
 		 * page's `kind` property (if defined).
 		 */
-		kind_definition: () => PageContext<"Kind Definition">  | null;
+		// kind_definition: () => PageContext<"Kind Definition">  | null;
 		/**
 		 * _render_ or _re-render_ the `H1` element on the page
 		 * based on the page's (or it's kind's) strategy

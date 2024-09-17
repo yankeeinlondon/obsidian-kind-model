@@ -7,7 +7,7 @@ import {
 	ensureLeading, 
 	isFunction 
 } from "inferred-types";
-import KindModelPlugin from "main";
+import KindModelPlugin from "../main";
 import { ObsidianCalloutColors, ObsidianFoldOptions } from "../types/ObsidianCallouts";
 import { 
 	BUG_ICON, 
@@ -25,16 +25,16 @@ import {
 import { isDvPage } from "../utils/type_guards/isDvPage";
 import { DvPage, Link } from "../types/dataview_types";
 import { isLink } from "../utils/type_guards/isFileLink";
-import { CssDisplay, CssPosition } from "types/css";
+import { CssDisplay, CssPosition } from "../types/css";
 
 
 type WrapperCallback = (items: string) => string;
 
-type ListItemsApi<_W extends WrapperCallback> = Api<{
+type ListItemsApi<_W extends WrapperCallback> = {
 	/** indent the list a level using same OL or UL nomenclature */
 	indent: (...items: string[]) => string;
 	done: EscapeFunction
-}>;
+};
 
 type Gap = `${number}px` | `${number}em` | `${number}rem` | `${number}%` | `calc(${string})`;
 
@@ -727,5 +727,10 @@ export const fmt = (p: KindModelPlugin) => (
 	empty_callout
 });
 
-
+/**
+ * **Fmt**
+ * 
+ * A formatting API surface to more quickly produce page output in Obsidian.
+ */
+export type Fmt = ReturnType<ReturnType<typeof fmt>>;
 

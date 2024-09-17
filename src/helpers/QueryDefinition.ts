@@ -91,16 +91,7 @@ type _ScalarDescription<T extends ScalarDefn[]> = {
 	: never
 }
 
-/**
- * provides a textual representation of the params
- */
-export type QuerySignature<T extends QueryDefinition> = Join<[
-	`${T["type"]}( `,		
-	Join<
-		_ScalarDescription<T["scalar"]>, ", "
-	>,
-	", Options)"
-], "">;
+
 
 type MaybeOpt<TDef extends string, TType> = Contains<TDef, "opt("> extends true
 	? TType | undefined

@@ -36,11 +36,11 @@ export const isKeyOf = <
 	);
 }
 
-type UlApi = Api<{
+type UlApi = {
 	/** indent the unordered list a level */
 	indent: (...items: string[]) => string;
 	done: EscapeFunction
-}>;
+};
 
 type UlCallback = <T extends UlApi>(api:T) => unknown;
 
@@ -875,4 +875,10 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		fmt: fmt(plugin)(container,filePath)
 	};
 }
-	
+
+/**
+ * **DvQuerySurface**
+ * 
+ * The full dataview query API plus all the addons which `dv_page` provides.
+ */
+export type DvQuerySurface = ReturnType<ReturnType<typeof dv_page>>;

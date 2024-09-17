@@ -1,10 +1,10 @@
 import { Editor, MarkdownView } from "obsidian";
 import KindModelPlugin from "../main";
 import { getBasePageContext } from "../utils/page/getBasePageContext";
-import { isCategoryPage } from "../utils/type_guards/isCategoryPage";
+
 
 export const update_kinded_page = (plugin: KindModelPlugin) => async (editor: Editor, view: MarkdownView) => {
-  const p = getBasePageContext(plugin, view); 
+  const p = getBasePageContext(plugin); 
   plugin.info("update-kinded-page", p);
 
   if (view.getViewType() !== "markdown") {
@@ -15,9 +15,7 @@ export const update_kinded_page = (plugin: KindModelPlugin) => async (editor: Ed
   } else {
 
   
-    if (isCategoryPage(p)) {
-		// 
-    } 
+
   }
   
 }

@@ -18,7 +18,8 @@ type PageTypeUnits =
 | "url::profile" 
 | `url::repo::${RepoOrganization}${"" | `::${RepoName}`}` 
 | "url::news" 
-| "url" ;
+| "url" 
+| "other";
 /**
  * **PropertyType**
  * 

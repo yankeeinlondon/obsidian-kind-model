@@ -6,12 +6,12 @@ import {
 	isString, 
 	isUrl 
 } from "inferred-types";
-import KindModelPlugin from "../main";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import { DvPage } from "../types/dataview_types";
 import { isWikipediaUrl } from "../utils/type_guards/isWikipediaUrl";
 import { find_in } from "../utils/type_guards/find_in";
 import { MARKDOWN_PAGE_ICON } from "../constants/obsidian-constants";
+import KindModelPlugin from "../main";
 import { 
 	OptionParam, 
 	QueryDefinition, 

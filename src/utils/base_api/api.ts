@@ -7,7 +7,6 @@ import { isTFile } from "../../utils/type_guards/isTFile";
 import { DvPage, FileLink, Link } from "../../types/dataview_types";
 import { isFileLink } from "../../utils/type_guards/isFileLink";
 import { isDataviewPage } from "../../utils/type_guards/isDataviewPage";
-import { getBasePageContext } from "../page/getBasePageContext";
 import { Tag } from "../../types/general";
 import { dv_page } from "../../dv_queries/dv_page";
 import { back_links } from "../../dv_queries/back_links";
@@ -62,9 +61,7 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * **kind_tags**
 	 */
 	kind_tags: (): Set<Tag> => {
-		return plugin.settings.cache?.kind_tags
-			? plugin.settings.cache?.kind_tags
-			: plugin.error(`Call to kind_tags() prior to cache having this set!`);
+		return new Set();
 	},
 
 	/**
@@ -92,12 +89,8 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * Returns an array of subcategories in the vault (all by default, but filtered
 	 * down to just those for a particular category if specified)
 	 */
-	subcategories: async (category?: string | Kind): Promise<Kind<"Subcategory">[]> => {
-		const sub = await plugin._cache["subcategories"];
-		const name = isString(category) ? category : category?.name;
-		return category
-			? sub.filter(i => i.name === name)
-			: sub;
+	subcategories: async (category?: string | Kind): Promise<any> => {
+		return null;
 	},
 
 	/**
@@ -147,41 +140,7 @@ export const api = (plugin: KindModelPlugin) => ({
 		}
 	},
 
-	/**
-	 * **get_kinded_page**(page, _view_)
-	 * 
-	 * Get's a `KindedView` structure 
-	 */
-	get_kinded_page: (
-		page: TFile | FileLink | string | MarkdownView | DvPage
-	): KindPage | null => {
-		const context = getBasePageContext(plugin, page);
 
-		return null;
-	},
-
-	/**
-	 * **create_link**(text, path)
-	 * 
-	 * Utility which converts the provided _text_ into a link to another page
-	 * in the vault.
-	 */
-	create_link: (text: string, path: string | Kind, hover?: string): Link => {
-
-	},
-
-	/**
-	 * **create_link_ext**(text, uri, _hover_)
-	 * 
-	 * Utility to create a link external to this vault
-	 */
-	create_link_ext: (text: string, uri: string, hover?: string): string => {
-		return ""
-	},
-
-	set_page_icon: (page: string | Kind | Page, icon: string ): void => {
-		// 
-	},
 
 
 });

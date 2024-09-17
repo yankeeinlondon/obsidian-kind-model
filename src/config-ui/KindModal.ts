@@ -30,8 +30,8 @@ export class KindModal extends Modal {
 
       core(
           "Classification", 
-          () => classification(this.kind.classification_type).desc, 
-          "classification_type"
+          () => classification(this.kind._classification_type).desc, 
+          "_classification_type"
         ).addDropdown(CLASSIFICATION);
 
       const filesAndFolders = ui.sectionHeading(
@@ -42,35 +42,35 @@ export class KindModal extends Modal {
       filesAndFolders(
         "Favorite Folder", 
         "the folder you most associate with this kind", 
-        "folder_favorite"
+        "_folder_favorite"
       ).addTextInput();
 
       filesAndFolders(
         "Include Subdirectories", 
         "whether the sub-directories under your favorite folder should be offered as options", 
-        "show_sub_dirs"
+        "_show_sub_dirs"
       ).addToggleSwitch();
 
       filesAndFolders(
         "Current Directory", 
         "whether to allow current directory to be a valid location", 
-        "folder_include_cwd"
+        "_folder_include_cwd"
       ).addToggleSwitch({
         refreshDomOnChange: true
       });
 
-      if (this.kind.folder_include_cwd) {
+      if (this.kind._folder_include_cwd) {
         filesAndFolders(
           "Default Directory",
           "whether the current directory or the favorite dir should be the default", 
-          "classification_type"
+          "_classification_type"
         ).addDropdown(FOLDER_DEFAULT);
       }
 
       filesAndFolders(
         "Filename Date Prefix", 
         "whether or not the file name should be prefixed with a date", 
-        "filename_date_prefix"
+        "_filename_date_prefix"
       ).addToggleSwitch();
 
       const properties = ui.sectionHeading(
@@ -81,33 +81,33 @@ export class KindModal extends Modal {
       properties(
           "Add Relationship",
           "The classification strategy sets up an abstracted set of relationships but sometimes you want a direct relationship to another kind. You can add them here.",
-          "relationships"
+          "_relationships"
         ).addButton({
           icon: "key",
           buttonText: "+",
           onClick: () =>  {
-            this.kind.relationships.push({prop: "", fk_kind: "", cardinality: "0:1"})
+            this.kind._relationships.push({prop: "", fk_kind: "", cardinality: "0:1"})
           }
       });
 
       properties(
         "Add Metric",
         "Metrics are numeric properties which are associated with a unit of measure. When added to a kind these properties will be added as properties to the page; you can fill them in manually or you can use the \"Add Metrics\" command to be brought through it via script.",
-        "metric_props"
+        "_metric_props"
       ).addButton({
         icon: "binary",
         buttonText: "+",
         onClick: () =>  {
-          this.kind.metric_props.push({name: "", uom_type: "mass"})
+          this.kind._metric_props.push({name: "", uom_type: "mass"})
         }
       });
 
-      const metrics = this.kind.metric_props;
-      for (const key in this.kind.metric_props) {
+      const metrics = this.kind._metric_props;
+      for (const key in this.kind._metric_props) {
         ui(
           metrics[key].name,
           () => metrics[key].name.trim() === "" ? "new property" : "existing property",
-          "metric_props",
+          "_metric_props",
           key
         ).addDropdown(UOM_TYPES)
       }
@@ -117,12 +117,12 @@ export class KindModal extends Modal {
       auto(
         "Plural/Singular",
         "Ensure that both the singular and plural versions of a Kind page are available",
-        "aliases_plural"
+        "_aliases_plural"
       ).addToggleSwitch()
       auto(
         "Casing",
         "Ensure that the page's name is available in lowercase as well as capitalized",
-        "aliases_casing"
+        "_aliases_lowercase"
       ).addToggleSwitch()
 	}
 	onClose() {

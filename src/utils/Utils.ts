@@ -27,7 +27,7 @@ export function generate_dynamic_command_regex(): RegExp {
 export function resolve_tfolder(folder_str: string): TFolder {
     folder_str = normalizePath(folder_str);
 
-    const folder = app.vault.getAbstractFileByPath(folder_str);
+    const folder = (globalThis.app as any).vault.getAbstractFileByPath(folder_str);
     if (!folder) {
         throw new Error(`Folder "${folder_str}" doesn't exist`);
     }

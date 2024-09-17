@@ -1,8 +1,5 @@
-import { isKindDefinition } from "utils/type_guards/isKindDefinition";
 import KindModelPlugin from "../../main";
 import { KindCategory,  PageContext, KindPageApi,  PageApi } from "../../types/PageContext";
-import { getPageContext } from "./getPageContext";
-import { getBasePageContext } from "./getBasePageContext";
 
 const baseMethods = <
 	K extends KindCategory,
@@ -11,19 +8,7 @@ const baseMethods = <
 	plugin: KindModelPlugin, 
 	ctx: Omit<PageContext<K,V>, "api">
 ): KindPageApi<K,V>["base"] => ({
-	kind_definition: () => {
-		if(ctx.fm.kind) {
-			const defn = getPageContext(plugin)(getBasePageContext(plugin)(ctx.fm.kind));
-			if(isKindDefinition(plugin)(defn)) {
-				return defn
-			} else {
-				plugin.warn(`When calling kind_definition() on the page "${ctx.file.path}" the returned page was NOT a "kind definition" but rather a "${defn.kind_category}"!`);
-				return defn
-			}
-		} else {
-			return null;
-		}
-	},
+
 	render_h1: async () => {
 		// 
 	},

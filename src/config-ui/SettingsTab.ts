@@ -107,11 +107,11 @@ export class SettingsTab extends PluginSettingTab {
       "Types provide a grouping function for Kinds. You can specify as many as you like and then later map 1:M Kinds to these types. Each type will receive it's own page and the kinds related to it will have a \"type\" property which points to this page."
     );
 
-    types(
-      "Create \"Other\" Type",
-      "All kind models without a \"type\" will be assigned to type of Other",
-      "other_type"
-    ).addToggleSwitch();
+    // types(
+    //   "Create \"Other\" Type",
+    //   "All kind models without a \"type\" will be assigned to type of Other",
+    //   ""
+    // ).addToggleSwitch();
 
     types(
       "List of Types",

@@ -73,6 +73,12 @@ function copy_files() {
 	fi
 }
 
+echo "Converting ESM output into CJS"
+echo "------------------------------"
+tsup main.mjs --format=cjs --external obsidian
+cp dist/main.cjs ./main.js
+
+
 echo "Pushing the transpiled JS to Obsidian Vault"
 echo "-------------------------------------------"
 

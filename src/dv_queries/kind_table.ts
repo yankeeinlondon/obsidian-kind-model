@@ -1,9 +1,9 @@
-import KindModelPlugin from "../main";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import {  OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
-import { Dictionary } from "inferred-types";
 import { isDvPage } from "../utils/type_guards/isDvPage";
 import { DvPage } from "../types/dataview_types";
+import { DvQuerySurface } from "./dv_page";
+import KindModelPlugin from "../main";
 
 export type KindQueryOptions = {
 	category?: string;
@@ -45,7 +45,7 @@ export const kind_table = (p: KindModelPlugin) => (
 	scalar: TScalar,
 	opt: TOption
 ) => {
-	const dv = p.api.dv_page(source, container, component, filePath);
+	const dv: DvQuerySurface = p.api.dv_page(source, container, component, filePath);
 	const table = dv.table;
 	const {createFileLink, show_when, show_desc, show_links, fmt} = dv;
 	const [kind, category, subcategory] = scalar;
@@ -57,6 +57,7 @@ export const kind_table = (p: KindModelPlugin) => (
 		? dv.pages(`#${kind}/${category}`)
 		: dv.pages(`#${kind}`)
 
+
 	if (pages.length > 0) {
 		table(
 			[ "Repo", "When", "Desc", "Links" ],
@@ -64,6 +65,7 @@ export const kind_table = (p: KindModelPlugin) => (
 				.sort(p => p.file.mday)
 				.map(p => {
 				const pg = isDvPage(p) ? p : dv.page(p) as DvPage;
+
 				return [
 					createFileLink(pg),
 					show_when(pg),

@@ -8,7 +8,6 @@ import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
 // import App from "./App.vue";
 import { api } from './utils/base_api/api';
-import { initialize_cache } from './utils/on_load/initialize_cache';
 import { KindCache } from 'types/KindCache';
 import { csv } from './utils/on_load/csv';
 import { on_editor_change } from './utils/on_load/on_editor_change';
@@ -34,9 +33,7 @@ export default class KindModelPlugin extends Plugin {
 	public error: Logger["error"];
 
 	public get_cache(): KindCache | null {
-		return this.settings.cache?.pages
-			? this.settings.cache
-			: null;
+		return null;
 	}
 
 	/**
@@ -45,7 +42,7 @@ export default class KindModelPlugin extends Plugin {
 	 * on this can proceed.
 	 */
 	public get ready() {
-		return this.settings.cache && this.settings.cache?.pages !== null
+		return false
 	}
 
 	/**
@@ -67,7 +64,7 @@ export default class KindModelPlugin extends Plugin {
 		// expose Kind Model API
 		this.api = api(this);
 		
-		initialize_cache(this);
+		// initialize_cache(this);
 		csv(this);
 		on_editor_change(this);
 		add_commands(this);

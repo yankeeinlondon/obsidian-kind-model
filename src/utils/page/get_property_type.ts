@@ -1,11 +1,12 @@
-import { isObject, isString, isUrl, isYouTubeUrl, isYouTubeVideoUrl, stripLeading, stripTrailing } from "inferred-types";
+import { getYouTubePageType,  isString, isUrl, isYouTubeUrl, stripLeading, stripTrailing } from "inferred-types";
 import { PropertyType } from "../../types/PageMeta";
+
 
 
 export const get_property_type = (value: unknown): PropertyType => {
 	if(isUrl(value,"https", "http")) {
 		if(isYouTubeUrl(value)) {
-			return `youtube::${getYou}`
+			return `youtube::${getYouTubePageType(value)}`
 		}
 
 		return "url"
@@ -29,13 +30,12 @@ export const get_property_type = (value: unknown): PropertyType => {
 			}
 		}
 	}
-		
-
-
 	// ARRAYS
 	else if (Array.isArray(value)) {
 		if(value.every(i => isUrl(i))) {
 			return "list::url";
 		}
 	}
+
+	return "other"
 }
