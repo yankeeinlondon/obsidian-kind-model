@@ -1,4 +1,4 @@
-import { isObject } from "inferred-types";
+import { isObject, stripBefore, retainUntil } from "inferred-types";
 import { MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "../../main";
 import {  Link } from "../../types/dataview_types";
@@ -7,6 +7,7 @@ import { evaluate_query_params } from "../../helpers/QueryDefinition";
 import { kind_defn } from "../../dv_queries/kind_table";
 import { video_defn } from "../../dv_queries/video_gallery";
 import { page_entry_defn } from "../../dv_queries/page_entry";
+
 
 export const isPageLink= (v: unknown): v is Link => {
 	return isObject(v) && "file" in v && isObject(v.file) && "path" in v.file
@@ -65,23 +66,35 @@ export const km_codeblock_parser = (plugin: KindModelPlugin) => {
 				return
 			} 
 		}
-		// else if (videos.test(source)) {
-		// 	let p = evaluate_query_params(plugin)(kind, source, video_defn);
-		// 	if (p.isOk) {
-		// 		await plugin.api.video_gallery(
-		// 			source,el,ctx,ctx.sourcePath
-		// 		)(p.scalar, p.options);
-		// 	} else {
-		// 		query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-		// 			"Videos",
-		// 			p.error,
-		// 			p.param_str
-		// 		)
-		// 		return
-		// 	} 
-		// }
+		else if (videos.test(source)) {
+			let p = evaluate_query_params(plugin)(kind, source, video_defn);
+			if (p.isOk) {
+				await plugin.api.video_gallery(
+					source,el,ctx,ctx.sourcePath
+				)(p.scalar, p.options);
+			} else {
+				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
+					"Videos",
+					p.error,
+					p.param_str
+				)
+				return
+			} 
+		}
 		else {
-			// query error
+			// doesn't match any known syntax
+			const command_attempt = source.includes("(")
+				? retainUntil(source, "(")
+				: "Unknown";
+			const params_attempt = command_attempt === "Unknown"
+				? ""
+				: source.replace(command_attempt + "(", "").replace(/\)$/, "");
+
+			query_error(plugin)(source,el,ctx,ctx.sourcePath)(
+				command_attempt as any,
+				new Error(`Unknown query command: ${command_attempt}()`),
+				params_attempt
+			);
 		}
 	}
 

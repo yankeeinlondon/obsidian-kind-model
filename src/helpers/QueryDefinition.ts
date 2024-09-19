@@ -44,7 +44,7 @@ export type TypeToken = "string"
 export type ScalarName = string;
 export type ScalarDefn = `${ScalarName} AS ${TypeToken}`;
 
-export type QueryCmd = "Kind" | "PageEntry" | "Videos" | "Book" | "BackLinks";
+export type QueryCmd = "Kind" | "PageEntry" | "Videos" | "Book" | "BackLinks" | "Unknown Command";
 
 export type QueryDefinition = {
 	kind: "query-defn";

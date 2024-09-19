@@ -7,6 +7,7 @@ import {
 	Never, 
 	OptionalSpace, 
 	StripLeading, 
+	TypedFunction, 
 	createFnWithProps, 
 	isArray, 
 	isContainer, 
@@ -466,7 +467,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 ) => {
 	const current = plugin.dv.page(filePath);
 	if(!current) {
-		throw new Error("Attempt to initialize dv_page() with an invalid sourcePath: ${sourcePath}!")
+		throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`)
 	}
 	const linkIcons = (plugin.dv.page("Link Icons") || {}) as DvPage;
 
@@ -853,9 +854,9 @@ export const dv_page = (plugin: KindModelPlugin) => (
 			const render_items = (items: readonly (string | UlCallback)[]) => items
 				.map(i => (
 					isFunction(i)
-						? isFunction(i(ul_api))
+						? isFunction((i as TypedFunction)(ul_api))
 							? ""
-							: i(ul_api)
+							: (i as TypedFunction)(ul_api)
 						: `<li>${i}</li>`
 				) as unknown as string)
 				.filter(i => i !== "")

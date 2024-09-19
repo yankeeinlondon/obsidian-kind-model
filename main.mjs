@@ -6814,12 +6814,12 @@ var Values;
 })(Values || (Values = {}));
 var Groupings;
 (function(Groupings2) {
-  function isElementGroup(entry) {
-    return Values.isObject(entry) && Object.keys(entry).length == 2 && "key" in entry && "rows" in entry;
+  function isElementGroup(entry2) {
+    return Values.isObject(entry2) && Object.keys(entry2).length == 2 && "key" in entry2 && "rows" in entry2;
   }
   Groupings2.isElementGroup = isElementGroup;
-  function isGrouping(entry) {
-    for (let element of entry)
+  function isGrouping(entry2) {
+    for (let element of entry2)
       if (!isElementGroup(element))
         return false;
     return true;
@@ -7303,8 +7303,8 @@ const EXPRESSION = parsimmon_umd_minExports.createLanguage({
     return { name: name2, value: value2 };
   }).sepBy(parsimmon_umd_minExports.string(",").trim(parsimmon_umd_minExports.optWhitespace)).wrap(parsimmon_umd_minExports.string("{").skip(parsimmon_umd_minExports.optWhitespace), parsimmon_umd_minExports.optWhitespace.then(parsimmon_umd_minExports.string("}"))).map((vals) => {
     let res = {};
-    for (let entry of vals)
-      res[entry.name] = entry.value;
+    for (let entry2 of vals)
+      res[entry2.name] = entry2.value;
     return Fields.object(res);
   }).desc("object ('{ a: 1, b: 2 }')"),
   atomInlineField: (q) => parsimmon_umd_minExports.alt(q.date, q.duration.map((d) => normalizeDuration(d)), q.string, q.tag, q.embedLink, q.bool, q.number, q.rawNull),
@@ -9602,7 +9602,7 @@ function createConstant$1(kind) {
     kind
   };
 }
-const NUMERIC_CHAR = [
+var NUMERIC_CHAR = [
   "0",
   "1",
   "2",
@@ -9614,15 +9614,151 @@ const NUMERIC_CHAR = [
   "8",
   "9"
 ];
-const Never$1 = createConstant$1("never");
-const REPO_SOURCE_LOOKUP = {
+var WideAssignment = {
+  boolean: () => "<<boolean>>",
+  string: () => "<<string>>",
+  number: () => "<<number>>",
+  symbol: () => "<<symbol>>",
+  null: () => "<<null>>",
+  function: () => "<<function>>",
+  tuple: () => "<<tuple>>",
+  singularTuple: () => ["<<tuple>>"],
+  object: () => "<<object>>",
+  emptyObject: () => "<<empty-object>>",
+  undefined: () => "<<undefined>>",
+  /**
+   * run-time value is a type token for `unknown` and type is of course `unknown`
+   */
+  unknown: () => "<<unknown>>",
+  nothing: () => "<<nothing>>",
+  something: () => "<<something>>"
+};
+var wide = WideAssignment;
+var entry = (refType, desc, ...params) => [
+  refType(wide),
+  desc,
+  params.map(
+    (i) => typeof i === "function" ? i(wide) : i
+  )
+];
+({
+  "Extends": entry((t) => t.unknown(), "extends the type", (t) => t.unknown()),
+  "NotExtends": entry((t) => t.unknown(), "does not extent the type", (t) => t.unknown()),
+  "Equals": entry((t) => t.unknown(), "equals the type", (t) => t.unknown()),
+  "NotEqual": entry((t) => t.unknown(), "does not equal the type", (t) => t.unknown()),
+  "Truthy": entry((t) => t.unknown(), "must be a truthy value"),
+  "Falsy": entry((t) => t.unknown(), "must be a falsy value"),
+  "IsSomething": entry((t) => t.unknown(), "must be 'something' (aka, not null or undefined)"),
+  "IsNothing": entry((t) => t.unknown(), "must be 'nothing' (aka, null or undefined)"),
+  "IsString": entry((t) => t.string(), "must extend a string type"),
+  "IsNumber": entry((t) => t.number(), "must extend a number type"),
+  "IsBoolean": entry((t) => t.boolean(), "must extend a boolean type"),
+  // numeric
+  "GreaterThan": entry((t) => t.number(), "must be a numeric literal greater than [[0]]", (t) => t.number()),
+  "LessThan": entry((t) => t.number(), "must be a numeric literal less than [[0]]", (t) => t.number()),
+  // string
+  "StartsWith": entry((t) => t.string(), "must be a string literal that starts with '[[0]]'", (t) => t.string()),
+  "EndsWith": entry((t) => t.string(), "must be a string literal that ends with '[[0]]'", (t) => t.string()),
+  "Includes": entry((t) => t.string(), "must be a string literal that includes the substring '[[0]]'", (t) => t.string()),
+  // function
+  "ReturnsSomething": entry((t) => t.function(), "must be a function which returns 'something' (aka, not null or undefined)"),
+  "ReturnsNothing": entry((t) => t.function(), "must be a function which returns 'nothing' (aka, null or undefined)"),
+  "ReturnsTrue": entry((t) => t.function(), "must be a function which returns 'true'"),
+  "ReturnsFalse": entry((t) => t.function(), "must be a function which returns 'false'"),
+  "ReturnsTruthy": entry((t) => t.function(), "must be a function which returns a 'truthy' value"),
+  "ReturnsFalsy": entry((t) => t.function(), "must be a function which returns a 'falsy' value"),
+  "ReturnsExtends": entry((t) => t.unknown(), "must be a function which returns a value which extends [[0]]", (t) => t.unknown()),
+  "ReturnsEquals": entry((t) => t.unknown(), "must be a function which returns a value which equals [[0]]", (t) => t.unknown()),
+  "Contains": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.unknown()),
+  // TODO: get the below working`
+  "ContainsSome": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.singularTuple())
+});
+var Never$1 = createConstant$1("never");
+var SIMPLE_SCALAR_TOKENS = [
+  "string",
+  "number",
+  `string(TOKEN)`,
+  `number(TOKEN)`,
+  "boolean",
+  "true",
+  "false",
+  "null",
+  "undefined",
+  "unknown",
+  "any",
+  "never"
+];
+var SIMPLE_OPT_SCALAR_TOKENS = [
+  "Opt<string>",
+  "Opt<number>",
+  "Opt<boolean>",
+  "Opt<true>",
+  "Opt<false>",
+  "Opt<null>",
+  "Opt<undefined>",
+  "Opt<unknown>",
+  "Opt<any>",
+  "Opt<string(TOKEN)>",
+  "Opt<number(TOKEN)>",
+  "Opt<undefined>"
+];
+var SIMPLE_UNION_TOKENS = [
+  `Union(TOKEN)`
+];
+var SIMPLE_DICT_TOKENS = [
+  "Dict",
+  "Dict<string, string>",
+  "Dict<string, number>",
+  "Dict<string, boolean>",
+  "Dict<string, unknown>",
+  "Dict<string, Opt<string>>",
+  "Dict<string, Opt<number>>",
+  "Dict<string, Opt<boolean>>",
+  "Dict<string, Opt<unknown>>",
+  "Dict<{TOKEN: TOKEN}>",
+  "Dict<{TOKEN: TOKEN, TOKEN: TOKEN}>"
+];
+var SIMPLE_ARRAY_TOKENS = [
+  "Array",
+  "Array<string>",
+  "Array<string(TOKEN)>",
+  "Array<number>",
+  "Array<number(TOKEN)>",
+  "Array<boolean>",
+  "Array<unknown>",
+  `Array<Dict>`,
+  `Array<Set>`,
+  `Array<Map>`
+];
+var SIMPLE_MAP_TOKENS = [
+  "Map",
+  "Map<TOKEN, TOKEN>",
+  "WeakMap"
+];
+var SIMPLE_SET_TOKENS = [
+  "Set",
+  "Set<TOKEN>"
+];
+var SIMPLE_CONTAINER_TOKENS = [
+  ...SIMPLE_DICT_TOKENS,
+  ...SIMPLE_ARRAY_TOKENS,
+  ...SIMPLE_MAP_TOKENS,
+  ...SIMPLE_SET_TOKENS
+];
+var SIMPLE_TOKENS = [
+  ...SIMPLE_SCALAR_TOKENS,
+  ...SIMPLE_OPT_SCALAR_TOKENS,
+  ...SIMPLE_CONTAINER_TOKENS,
+  ...SIMPLE_UNION_TOKENS
+];
+var REPO_SOURCE_LOOKUP = {
   "github": [`github.com`, "github.io"],
   "bitbucket": ["bitbucket.com"],
   "gitlab": ["gitlab.com"],
   "codecommit": ["https://aws.amazon.com/codecommit/"],
   "local": []
 };
-const NETWORK_PROTOCOL_LOOKUP = {
+var NETWORK_PROTOCOL_LOOKUP = {
   http: ["http", "https"],
   ftp: ["ftp", "sftp"],
   file: ["", "file"],
@@ -9630,6 +9766,24 @@ const NETWORK_PROTOCOL_LOOKUP = {
   ssh: ["", "ssh"],
   "scp": ["", "scp"]
 };
+var toFinalizedConfig = (config) => {
+  return { ...config, finalized: true };
+};
+toFinalizedConfig({
+  input: "req",
+  output: "opt",
+  cardinality: "I -> O[]"
+});
+toFinalizedConfig({
+  input: "req",
+  output: "req",
+  cardinality: "I -> O"
+});
+toFinalizedConfig({
+  input: "req",
+  output: "req",
+  cardinality: "I[] -> O"
+});
 function isString$2(value2) {
   return typeof value2 === "string";
 }
@@ -9649,7 +9803,7 @@ function keysOf(container) {
   const keys = Array.isArray(container) ? Object.keys(container).map((i) => Number(i)) : isObject(container) ? isRef(container) ? ["value"] : Object.keys(container) : [];
   return keys;
 }
-const valuesOf = (obj) => {
+var valuesOf = (obj) => {
   const values = [];
   for (const k of Object.keys(obj)) {
     values.push(obj[k]);
@@ -9677,11 +9831,11 @@ function isRef(value2) {
 function isFunction$2(value2) {
   return typeof value2 === "function" ? true : false;
 }
-const isUrl = (val, ...protocols) => {
+var isUrl = (val, ...protocols) => {
   const p2 = protocols.length === 0 ? ["http", "https"] : protocols;
   return isString$2(val) && p2.some((i) => val.startsWith(`${i}://`));
 };
-const tokens = [
+var tokens = [
   "1",
   "inherit",
   "initial",
@@ -9690,36 +9844,42 @@ const tokens = [
   "unset",
   "auto"
 ];
-const isRatio = (val) => /[0-9]{1,4}\s*\/\s*[0-9]{1,4}/.test(val);
-const isCssAspectRatio = (val) => {
+var isRatio = (val) => /[0-9]{1,4}\s*\/\s*[0-9]{1,4}/.test(val);
+var isCssAspectRatio = (val) => {
   return isString$2(val) && val.split(/\s+/).every((i) => tokens.includes(i) || isRatio(i));
 };
-const isInlineSvg = (v) => {
+var isInlineSvg = (v) => {
   return isString$2(v) && v.trim().startsWith(`<svg`) && v.trim().endsWith(`</svg>`);
 };
-const isYouTubeShareUrl = (val) => {
+var isYouTubeShareUrl = (val) => {
   return isString$2(val) && val.startsWith(`https://youtu.be`);
 };
-const isYouTubeVideoUrl = (val) => {
+var isYouTubeVideoUrl = (val) => {
   return isString$2(val) && (val.startsWith("https://www.youtube.com") || val.startsWith("https://youtube.com") || val.startsWith("https://youtu.be"));
 };
-const isYouTubeCreatorUrl = (url) => {
+var isYouTubeCreatorUrl = (url) => {
   return isString$2(url) && (url.startsWith(`https://www.youtube.com/@`) || url.startsWith(`https://youtube.com/@`) || url.startsWith(`https://www.youtube.com/channel/`));
 };
-const isRepoUrl = (val) => {
+var isRepoUrl = (val) => {
   const baseUrls = valuesOf(REPO_SOURCE_LOOKUP).flat();
-  return isString$2(val) && baseUrls.every((u) => val === u || val.startsWith(`${u}/`));
+  return isString$2(val) && baseUrls.every(
+    (u) => val === u || val.startsWith(`${u}/`)
+  );
 };
-const isGithubRepoUrl = (val) => {
+var isGithubRepoUrl = (val) => {
   const baseUrls = [""];
-  return isString$2(val) && baseUrls.every((u) => val === u || val.startsWith(`${u}/`));
+  return isString$2(val) && baseUrls.every(
+    (u) => val === u || val.startsWith(`${u}/`)
+  );
 };
-const hasUrlQueryParameter = (val, prop) => {
+var hasUrlQueryParameter = (val, prop) => {
   return isString$2(getUrlQueryParams(val, prop));
 };
-const asChars = (str) => {
+var asChars = (str) => {
   return str.split("");
 };
+SIMPLE_TOKENS.map((i) => i.split("TOKEN"));
+SIMPLE_SCALAR_TOKENS.map((i) => i.split("TOKEN"));
 function stripTrailing(content2, ...strip) {
   let output = String(content2);
   for (const s2 of strip) {
@@ -9739,28 +9899,36 @@ function ensureLeading(content2, ensure) {
   let output = String(content2);
   return output.startsWith(String(ensure)) ? content2 : isString$2(content2) ? `${ensure}${content2}` : Number(`${ensure}${content2}`);
 }
-function stripAfter(content2, find) {
-  return content2.split(find).shift();
+function stripAfter(content2, find2) {
+  return content2.split(find2).shift();
 }
-function stripBefore(content2, find) {
-  return content2.split(find).slice(1).join(find);
+function stripBefore(content2, find2) {
+  return content2.split(find2).slice(1).join(find2);
 }
-const stripUntil = (content2, ...until) => {
+var stripUntil = (content2, ...until) => {
   const stopIdx = asChars(content2).findIndex((c) => until.includes(c));
   return content2.slice(stopIdx);
 };
-const retainWhile = (content2, ...retain) => {
-  const stopIdx = asChars(content2).findIndex((c) => !retain.includes(c));
+var retainWhile = (content2, ...retain2) => {
+  const stopIdx = asChars(content2).findIndex((c) => !retain2.includes(c));
   return content2.slice(0, stopIdx);
 };
-const createFnWithProps = (fn2, props, narrowing = false) => {
+function retainUntil(content2, ...find2) {
+  const chars = asChars(content2);
+  let idx = 0;
+  while (!find2.includes(chars[idx]) && idx <= chars.length) {
+    idx = idx + 1;
+  }
+  return idx === 0 ? "" : content2.slice(0, idx);
+}
+var createFnWithProps = (fn2, props, narrowing = false) => {
   let fnWithProps = fn2;
   for (let prop of Object.keys(props)) {
     fnWithProps[prop] = props[prop];
   }
   return isTrue(narrowing) ? fnWithProps : fnWithProps;
 };
-const youtubeEmbed = (url) => {
+var youtubeEmbed = (url) => {
   if (hasUrlQueryParameter(url, "v")) {
     const id = getUrlQueryParams(url, "v");
     return `https://www.youtube.com/embed/${id}`;
@@ -9776,10 +9944,15 @@ const youtubeEmbed = (url) => {
   }
 };
 Object.values(NETWORK_PROTOCOL_LOOKUP).flat().filter((i) => i !== "");
-const getUrlQueryParams = (url, specific = void 0) => {
+var getUrlQueryParams = (url, specific = void 0) => {
   const qp = stripBefore(url, "?");
   if (specific) {
-    return qp.includes(`${specific}=`) ? decodeURIComponent(stripAfter(stripBefore(qp, `${specific}=`), "&").replace(/\+/g, "%20")) : void 0;
+    return qp.includes(`${specific}=`) ? decodeURIComponent(
+      stripAfter(
+        stripBefore(qp, `${specific}=`),
+        "&"
+      ).replace(/\+/g, "%20")
+    ) : void 0;
   }
   return qp === "" ? qp : `?${qp}`;
 };
@@ -10464,7 +10637,7 @@ const show_subcategories_for = (plg) => (pg) => {
 const dv_page = (plugin4) => (source, container, component, filePath) => {
   const current = plugin4.dv.page(filePath);
   if (!current) {
-    throw new Error("Attempt to initialize dv_page() with an invalid sourcePath: ${sourcePath}!");
+    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
   }
   const linkIcons = plugin4.dv.page("Link Icons") || {};
   const metadata = () => {
@@ -11211,7 +11384,9 @@ const page_entry = (p2) => (source, container, component, filePath) => async (_s
   const repo_lnk = repo ? fmt2.link("Repo", repo) : void 0;
   const shouldDisplay = hasIcon || hasDesc || type || kind || category || categories;
   if (shouldDisplay) {
-    const breadcrumbs = [type, kind, category, categories, subcategory].filter((i) => i).join(fmt2.light("&nbsp;>&nbsp;", { opacity: 0.5 }));
+    const breadcrumbs = [type, kind, category, categories, subcategory].filter((i) => i).join(
+      fmt2.light("&nbsp;>&nbsp;", { opacity: 0.5 })
+    );
     const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
     const title = isString$2(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
     const body = isString$2(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
@@ -81519,8 +81694,8 @@ class FormData {
    * @param callback Callback.
    */
   forEach(callback) {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      callback.call(this, entry.value, entry.name, this);
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      callback.call(this, entry2.value, entry2.name, this);
     }
   }
   /**
@@ -81543,9 +81718,9 @@ class FormData {
    */
   delete(name2) {
     const newEntries = [];
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      if (entry.name !== name2) {
-        newEntries.push(entry);
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      if (entry2.name !== name2) {
+        newEntries.push(entry2);
       }
     }
     __classPrivateFieldSet$x(this, _FormData_entries, newEntries, "f");
@@ -81557,9 +81732,9 @@ class FormData {
    * @returns Value.
    */
   get(name2) {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      if (entry.name === name2) {
-        return entry.value;
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      if (entry2.name === name2) {
+        return entry2.value;
       }
     }
     return null;
@@ -81572,9 +81747,9 @@ class FormData {
    */
   getAll(name2) {
     const values = [];
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      if (entry.name === name2) {
-        values.push(entry.value);
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      if (entry2.name === name2) {
+        values.push(entry2.value);
       }
     }
     return values;
@@ -81586,8 +81761,8 @@ class FormData {
    * @returns "true" if the FormData object contains the key.
    */
   has(name2) {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      if (entry.name === name2) {
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      if (entry2.name === name2) {
         return true;
       }
     }
@@ -81601,9 +81776,9 @@ class FormData {
    * @param [filename] Filename.
    */
   set(name2, value2, filename) {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      if (entry.name === name2) {
-        entry.value = __classPrivateFieldGet$A(this, _FormData_instances, "m", _FormData_parseValue).call(this, value2, filename);
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      if (entry2.name === name2) {
+        entry2.value = __classPrivateFieldGet$A(this, _FormData_instances, "m", _FormData_parseValue).call(this, value2, filename);
         return;
       }
     }
@@ -81615,8 +81790,8 @@ class FormData {
    * @returns Iterator.
    */
   *keys() {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      yield entry.name;
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      yield entry2.name;
     }
   }
   /**
@@ -81625,8 +81800,8 @@ class FormData {
    * @returns Iterator.
    */
   *values() {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      yield entry.value;
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      yield entry2.value;
     }
   }
   /**
@@ -81635,8 +81810,8 @@ class FormData {
    * @returns Iterator.
    */
   *entries() {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      yield [entry.name, entry.value];
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      yield [entry2.name, entry2.value];
     }
   }
   /**
@@ -81645,8 +81820,8 @@ class FormData {
    * @returns Iterator.
    */
   *[(_FormData_entries = /* @__PURE__ */ new WeakMap(), _FormData_instances = /* @__PURE__ */ new WeakSet(), Symbol.iterator)]() {
-    for (const entry of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
-      yield [entry.name, entry.value];
+    for (const entry2 of __classPrivateFieldGet$A(this, _FormData_entries, "f")) {
+      yield [entry2.name, entry2.value];
     }
   }
 }
@@ -111304,12 +111479,11 @@ const evaluate_query_params = (p2) => (re, source, defn) => {
 const query_error = (p2) => (source, container, component, filePath) => async (query2, err, params_str) => {
   const dv = p2.api.dv_page(source, container, component, filePath);
   p2.warn(err);
-  const desc = query2 in QUERY_DEFN_LOOKUP ? describe_query(QUERY_DEFN_LOOKUP[query2]) : `no query definition for ${query2} command!`;
+  const desc = query2 in QUERY_DEFN_LOOKUP ? `<span style="margin-top: 0.75rem">This query command is defined as:</span>` + describe_query(QUERY_DEFN_LOOKUP[query2]) : `<br>${query2} is not a recognized command!`;
   dv.fmt.callout("error", `<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${dv.fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
     content: [
       `Problems parsing parameters passed into the&nbsp;${dv.fmt.bold(`${query2}()`)}&nbsp;${dv.fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
       `<span><b>Error:</b> ${(err == null ? void 0 : err.message) || String(err)}</span>`,
-      `<span style="margin-top: 0.75rem">This query command is defined as:</span>`,
       desc
     ],
     icon: ERROR_ICON,
@@ -111323,6 +111497,7 @@ const km_codeblock_parser = (plugin4) => {
     const page_entry2 = /PageEntry\((.*)\)/;
     const book2 = /Book\((.*)\)/;
     const kind = /Kind\((.*)\)/;
+    const videos = /Videos\((.*)\)/;
     if (back_links2.test(source)) {
       const [_, params] = Array.from(source.match(back_links2) || []);
       await plugin4.api.back_links(source, el, ctx, ctx.sourcePath)(params);
@@ -111365,7 +111540,32 @@ const km_codeblock_parser = (plugin4) => {
         );
         return;
       }
-    } else ;
+    } else if (videos.test(source)) {
+      let p2 = evaluate_query_params(plugin4)(kind, source, video_defn);
+      if (p2.isOk) {
+        await plugin4.api.video_gallery(
+          source,
+          el,
+          ctx,
+          ctx.sourcePath
+        )(p2.scalar, p2.options);
+      } else {
+        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
+          "Videos",
+          p2.error,
+          p2.param_str
+        );
+        return;
+      }
+    } else {
+      const command_attempt = source.includes("(") ? retainUntil(source, "(") : "Unknown";
+      const params_attempt = command_attempt === "Unknown" ? "" : source.replace(command_attempt + "(", "").replace(/\)$/, "");
+      query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
+        command_attempt,
+        new Error(`Unknown query command: ${command_attempt}()`),
+        params_attempt
+      );
+    }
   };
   let registration = plugin4.registerMarkdownCodeBlockProcessor(
     "km",

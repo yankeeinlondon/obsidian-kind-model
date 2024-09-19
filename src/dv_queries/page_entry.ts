@@ -45,7 +45,9 @@ _opt: TOption
 	const dv = p.api.dv_page(source, container, component, filePath);
 	const {fmt, current} = dv;
 
-	const banner_img = isUrl(dv.current["_banner"]) ? dv.current["_banner"] : undefined ;
+	const banner_img = isUrl(dv.current["_banner"]) 
+		? dv.current["_banner"] 
+		: undefined;
 	const banner_aspect = isCssAspectRatio(dv.current["_banner_aspect"])
 		? dv.current["_banner_aspect"]
 		: "32/12";
@@ -103,7 +105,9 @@ _opt: TOption
 
 		const breadcrumbs = [ type,kind,category,categories,subcategory ]
 			.filter(i => i)
-			.join(fmt.light("&nbsp;>&nbsp;", {opacity: 0.5 }));
+			.join(
+				fmt.light("&nbsp;>&nbsp;", {opacity: 0.5 })
+			);
 
 		const ext_links = [ wiki, repo_lnk ]
 			.filter(i => i)

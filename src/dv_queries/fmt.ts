@@ -2,7 +2,10 @@ import {
 	Api, 
 	EmptyObject, 
 	EscapeFunction, 
+	If, 
+	IsEqual, 
 	Keys, 
+	TypedFunction, 
 	createFnWithProps, 
 	ensureLeading, 
 	isFunction 
@@ -26,7 +29,6 @@ import { isDvPage } from "../utils/type_guards/isDvPage";
 import { DvPage, Link } from "../types/dataview_types";
 import { isLink } from "../utils/type_guards/isFileLink";
 import { CssDisplay, CssPosition } from "../types/css";
-
 
 type WrapperCallback = (items: string) => string;
 
@@ -131,7 +133,15 @@ type UserStyleOptions = {
 	opacity?: string | number;
 }
 
-type StyleOptions<TOverride extends UserStyleOptions = EmptyObject> = Exclude<UserStyleOptions, Keys<TOverride>>;
+type StyleOptions<
+	TOverride extends UserStyleOptions = EmptyObject
+> = UserStyleOptions;
+
+// If<
+// 	IsEqual<EmptyObject, TOverride>,  
+// 	UserStyleOptions, 
+// 	Omit<UserStyleOptions, Keys<TOverride>> & TOverride
+// >;
 
 type BlockQuoteOptions = {
 	/**
@@ -213,7 +223,7 @@ type ListStyle = {
 }
 
 
-const style = <T extends StyleOptions>(opts?: T) => {
+const style = <T extends StyleOptions<any>>(opts?: T) => {
 	let fmt = [];
 	if(opts?.pb) {
 		fmt.push(`padding-bottom: ${opts.pb}`)
@@ -502,9 +512,9 @@ const render_list_items = (
 		.filter(i => i !== undefined)
 		.map(i => (
 			isFunction(i)
-				? isFunction(i(list_items_api))
+				? isFunction((i as TypedFunction)(list_items_api))
 					? ""
-					: i(list_items_api)
+					: (i as TypedFunction)(list_items_api)
 				: `<li ${style((opts?.li ? isFunction(opts?.li) ? opts.li(i ? i : "") : opts.li : {}))}>${i}</li>`
 		) as unknown as string)
 		.filter(i => i !== "")
