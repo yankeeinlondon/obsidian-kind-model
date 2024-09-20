@@ -24,6 +24,7 @@ import { DataArray, DvPage, Grouping, Link, SListItem } from "../types/dataview_
 import { isDvPage } from "../utils/type_guards/isDvPage";
 import {  isLink } from "../utils/type_guards/isFileLink";
 import { fmt } from "./fmt";
+import { getClassification } from "utils/base_api/getClassification";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -55,70 +56,6 @@ function extractTitle<
 	) as T extends string ? StripLeading<T, `${number}-${number}-${number}${OptionalSpace}`>: T;
 }
 
-function get_classification(pg: DvPage | undefined): PageClassification {
-	if(pg === undefined) {
-		return { isCategory: false, isSubcategory: false, category: undefined, subcategory: undefined};
-	}
-	const directCat = pg.file.etags.find(
-		t => t?.startsWith(`#category/`)
-	);
-	const directSubCat = pg.file.etags.find(
-		t => t?.startsWith(`#subcategory/`)
-	);
-	const indirectCat = pg.file.etags.find(
-		t => t?.split("/").length > 2 && t?.split("/")[1] === "category" 
-	);
-	const indirectSubCat =  pg.file.etags.find(
-		t => t?.split("/").length > 2 && t.split("/")[1] === "subcategory" 
-	);
-	const kindedPage = pg.file.etags.find(t => 
-		t?.split("/").length > 1 && 
-		!["#category","#subcategory"].includes(t.split("/")[0]) &&
-		!["category","subcategory"].includes(t.split("/")[1])
-	)
-
-	return directCat
-		? {
-			isCategory: true,
-			isSubcategory: false,
-			category: directCat.split("/")[1],
-			subcategory: undefined
-		}
-		: directSubCat
-		? {
-			isCategory: false,
-			isSubcategory: true,
-			category: directSubCat.split("/")[1],
-			subcategory: directSubCat.split("/")[2],
-		}
-		: indirectCat
-		? {
-			isCategory: true,
-			isSubcategory: false,
-			category: indirectCat.split("/")[2],
-			subcategory: undefined
-		}
-		: indirectSubCat
-		? {
-			isCategory: false,
-			isSubcategory: true,
-			category: indirectSubCat.split("/")[2],
-			subcategory: indirectSubCat.split("/")[3]
-		}
-		: kindedPage
-		? {
-			isCategory: false,
-			isSubcategory: false,
-			category: kindedPage.split("/")[1],
-			subcategory: kindedPage.split("/")[2],
-		}
-		: { 
-			isCategory: false, 
-			isSubcategory: false, 
-			category: undefined, 
-			subcategory: undefined
-		};
-}
 
 function removePound(tag: string | undefined){
 	return typeof tag === "string" && tag?.startsWith("#")
@@ -145,8 +82,8 @@ const isKindedPage = (plugin: KindModelPlugin) => (
 ) => {
 	return isUndefined(pg)
 		? false
-		: get_classification(pg).isCategory === false && 
-			get_classification(pg).isSubcategory === false &&
+		: getClassification(pg).isCategory === false && 
+			getClassification(pg).isSubcategory === false &&
 			!pg.file.etags.find(i => i.startsWith("#kind"))
 			? isUndefined(category)
 				? true
@@ -439,10 +376,10 @@ const show_subcategories_for = (plg: KindModelPlugin) => (
 		return [];
 	}
 
-	if(get_classification(pg).isCategory) {
+	if(get_classification(plg)(pg).isCategory) {
 		// this is the intended page type
 		const kindTag = get_kind_tag(plg)(pg);
-		const category = get_classification(pg).category;
+		const category = get_classification(plg)(pg).category;
 		const query = kindTag 
 			? `#${kindTag}/subcategory/${category} OR #subcategory/${category}`
 			: `#subcategory/${category}`;
@@ -452,12 +389,6 @@ const show_subcategories_for = (plg: KindModelPlugin) => (
 	}
 }
 
-export type PageClassification = {
-	isCategory: boolean;
-	isSubcategory: boolean;
-	category: string | undefined;
-	subcategory: string | undefined;
-}
 
 export const dv_page = (plugin: KindModelPlugin) => (
 	source: string,

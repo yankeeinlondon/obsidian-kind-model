@@ -9066,13 +9066,13 @@ class FolderSuggest extends TextInputSuggest {
     this.close();
   }
 }
-const msg = (list2) => list2.find((i) => typeof i === "string");
+const msg = (list2) => list2.find((i) => typeof i === "string") || "";
 const trunc = (s2) => typeof s2 === "string" ? s2.length > 12 ? `${s2.slice(0, 12).trim()}...` : `${s2}` : "";
 const debug$1 = (level) => (...args) => {
   if (level !== "debug") {
     return;
   }
-  console.groupCollapsed(`obsidian-kind-model (dbg: ${trunc(msg(args))})`);
+  console.groupCollapsed(`Kind Model(d) (${trunc(msg(args))})`);
   args.forEach((a) => {
     if (typeof a === "function") {
       console.log(a());
@@ -9088,7 +9088,7 @@ const info = (level) => (...args) => {
   if (["debug"].includes(level)) {
     return;
   }
-  console.groupCollapsed(`obsidian-kind-model (info: ${trunc(msg(args))})`);
+  console.groupCollapsed(`Kind Model(i): ${trunc(msg(args))}`);
   args.forEach((a) => {
     if (typeof a === "function") {
       console.info(a);
@@ -9104,7 +9104,7 @@ const warn = (level) => (...args) => {
   if (["error"].includes(level)) {
     return;
   }
-  console.group("obsidian-kind-model");
+  console.group("Kind Model(warn)");
   args.forEach((a) => {
     console.warn(a);
   });
@@ -9112,7 +9112,7 @@ const warn = (level) => (...args) => {
 };
 const error$3 = (level) => (...args) => {
   console.groupEnd();
-  new Notification(`obsidian-kind-model (Error): ${msg(args) || ""}`, { body: "see developer console for more details" });
+  new Notification(`Kind Model(err): ${msg(args) || ""}`, { body: "see developer console for more details" });
   class KindModelError extends Error {
     constructor(msg2) {
       super(msg2);
@@ -10447,11 +10447,11 @@ function removePound(tag) {
 const extractPath = (path) => {
   return isDvPage(path) ? path.file.path : isLink(path) ? path.path : isString$2(path) ? path : Never$1;
 };
-const isKindedPage = (plugin4) => (pg, category, subcategory) => {
+const isKindedPage$1 = (plugin4) => (pg, category, subcategory) => {
   var _a2, _b2, _c2, _d2;
   return isUndefined$1(pg) ? false : get_classification(pg).isCategory === false && get_classification(pg).isSubcategory === false && !pg.file.etags.find((i) => i.startsWith("#kind")) ? isUndefined$1(category) ? true : pg.category ? ((_b2 = (_a2 = plugin4.dv.page(pg.category)) == null ? void 0 : _a2.file) == null ? void 0 : _b2.path) === extractPath(category) ? isUndefined$1(subcategory) ? true : pg.subcategory && ((_d2 = (_c2 = plugin4.dv.page(pg.subcategory)) == null ? void 0 : _c2.file) == null ? void 0 : _d2.path) === extractPath(subcategory) : false : false : false;
 };
-function isKindDefnPage(pg) {
+function isKindDefnPage$1(pg) {
   return isUndefined$1(pg) ? false : pg.file.etags.find((t) => t.startsWith(`#kind/`));
 }
 const get_kind_prop = (p2) => (pg) => {
@@ -10792,13 +10792,13 @@ const dv_page = (plugin4) => (source, container, component, filePath) => {
      * Tests whether a given page is a _kinded_ page and _optionally_ if
      * the page is of a particular `category`.
      */
-    isKindedPage: isKindedPage(plugin4),
+    isKindedPage: isKindedPage$1(plugin4),
     /**
      * **isKindDefnPage**(page)
      * 
      * Tests whether a given page is a _kind definition_ page.
      */
-    isKindDefnPage,
+    isKindDefnPage: isKindDefnPage$1,
     /**
      * **page**`(path, [originFile])`
      * 
@@ -110966,7 +110966,16 @@ const video_gallery = (p2) => (source, container, component, filePath) => async 
   ].join("\n");
   fmt2.render(dom);
 };
+const isKindedPage = (p2) => (pg) => {
+};
+const isKindDefnPage = (p2) => (pg) => {
+};
 const api = (plugin4) => ({
+  /**
+   * checks whether the given page is a "kinded" page (aka, a page defined by a Kind definition)
+   */
+  isKindedPage: isKindedPage(),
+  isKindDefnPage: isKindDefnPage(),
   /**
    * Get the `dv_page` helper utility to build a Dataview query
    * for a given page.
@@ -111365,14 +111374,48 @@ const on_file_created = (plugin4) => {
     }
   }));
 };
+const EventHandler = (plugin4) => ({
+  /** a new active tab has been selected */
+  onTabChange(cb) {
+    plugin4.registerEvent(
+      plugin4.app.workspace.on("active-leaf-change", (leaf) => {
+        var _a2, _b2, _c2, _d2;
+        if (leaf) {
+          let pageName = leaf.view.getDisplayText();
+          let icon = leaf.view.getIcon();
+          let state = leaf.view.getState();
+          let ephemeral = leaf.getEphemeralState().cursor;
+          cb({
+            pageName,
+            filePath: state.file,
+            icon,
+            cursor: ephemeral,
+            hasSelectedText: !(((_a2 = ephemeral == null ? void 0 : ephemeral.from) == null ? void 0 : _a2.ch) === ((_b2 = ephemeral == null ? void 0 : ephemeral.to) == null ? void 0 : _b2.ch) && ((_c2 = ephemeral == null ? void 0 : ephemeral.from) == null ? void 0 : _c2.line) === ((_d2 = ephemeral == null ? void 0 : ephemeral.to) == null ? void 0 : _d2.line)),
+            leaf
+          });
+        }
+      })
+    );
+  },
+  onFileModified(cb) {
+    plugin4.registerEvent(
+      plugin4.app.vault.on("modify", (file) => {
+        cb({
+          ...file
+        });
+      })
+    );
+    plugin4.info("registered event", cb);
+  }
+});
 const on_file_modified = (plugin4) => {
-  plugin4.registerEvent(plugin4.app.vault.on("modify", (evt) => {
+  EventHandler(plugin4).onFileModified((evt) => {
     const kind_folder = plugin4.settings.kind_folder;
     const find = new RegExp(`^${kind_folder}`);
     if (find.test(evt.path)) {
       new Notice("Kind file modified");
     }
-  }));
+  });
 };
 const opt = (value2) => {
   let opt_type = stripBefore(value2, "opt(").slice(0, -1);
@@ -111573,6 +111616,25 @@ const km_codeblock_parser = (plugin4) => {
   );
   registration.sortOrder = -100;
 };
+const on_layout_change = (plugin4) => {
+  plugin4.registerEvent(
+    plugin4.app.workspace.on("layout-change", () => {
+      plugin4.info("Layout Change");
+    })
+  );
+};
+const on_tab_change = (plugin4) => {
+  EventHandler(plugin4).onTabChange((evt) => {
+    plugin4.info(
+      evt.pageName,
+      {
+        file: evt.filePath,
+        icon: evt.icon,
+        hasSelectedText: evt.hasSelectedText
+      }
+    );
+  });
+};
 class KindModelPlugin extends Plugin$1 {
   constructor() {
     super(...arguments);
@@ -111609,12 +111671,14 @@ class KindModelPlugin extends Plugin$1 {
     on_file_deleted(this);
     on_file_created(this);
     on_file_modified(this);
+    on_layout_change(this);
+    on_tab_change(this);
     km_codeblock_parser(this);
     const statusBarItemEl = this.addStatusBarItem();
     statusBarItemEl.setText("Kind Models");
     statusBarItemEl.addClass("clickable");
     this.addSettingTab(new SettingsTab(this.app, this));
-    this.info(`Kind Model has reloaded`);
+    this.info(`Reloaded`);
     this.mount();
   }
   mount() {

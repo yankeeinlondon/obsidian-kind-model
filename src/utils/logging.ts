@@ -1,7 +1,7 @@
 import { LogLevel } from "types/settings_types";
 
 
-const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") as string | undefined;
+const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") || "" as string | "";
 
 const trunc = (s: string | undefined) => typeof s === "string"
   ? s.length > 12 
@@ -14,7 +14,7 @@ const debug = <TLevel extends LogLevel>(level: TLevel) =>(...args: unknown[]) =>
     return;
   }
 
-  console.groupCollapsed(`obsidian-kind-model (dbg: ${trunc(msg(args))})`);
+  console.groupCollapsed(`Kind Model(d) (${trunc(msg(args))})`);
   args.forEach(a => {
     if (typeof a === "function") {
       console.log(a());
@@ -32,7 +32,7 @@ const info = <TLevel extends LogLevel>(level: TLevel) =>
   if (["debug"].includes(level)) {
     return;
   }
-  console.groupCollapsed(`obsidian-kind-model (info: ${trunc(msg(args))})`);
+  console.groupCollapsed(`Kind Model(i): ${trunc(msg(args))}`);
   args.forEach(a => {
 		if (typeof a === "function") {
 			console.info(a);
@@ -54,7 +54,7 @@ const warn = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) =>
   if (["error"].includes(level)) {
     return;
   }
-  console.group("obsidian-kind-model");
+  console.group("Kind Model(warn)");
   args.forEach(a => {
     console.warn(a);
   })
@@ -67,7 +67,7 @@ const error = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) =
 //     console.error(a);
 //   })
   console.groupEnd();
-  new Notification(`obsidian-kind-model (Error): ${msg(args) || ""}`, {body: "see developer console for more details"});
+  new Notification(`Kind Model(err): ${msg(args) || ""}`, {body: "see developer console for more details"});
 
 
   class KindModelError extends Error {

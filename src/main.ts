@@ -16,6 +16,8 @@ import { on_file_deleted } from './utils/on_load/on_file_deleted';
 import { on_file_created } from './utils/on_load/on_file_created';
 import { on_file_modified } from './utils/on_load/on_file_modified';
 import { km_codeblock_parser } from './utils/on_load/km_codeblock_parser';
+import { on_layout_change } from './utils/on_load/on_layout_change';
+import { on_tab_change } from './utils/on_load/on_tab_change';
 
 
 export default class KindModelPlugin extends Plugin {
@@ -72,6 +74,8 @@ export default class KindModelPlugin extends Plugin {
 		on_file_deleted(this);
 		on_file_created(this);
 		on_file_modified(this);
+		on_layout_change(this);
+		on_tab_change(this);
 
 		// code blocks
 		km_codeblock_parser(this);
@@ -84,7 +88,7 @@ export default class KindModelPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		this.info(`Kind Model has reloaded`);
+		this.info(`Reloaded`);
 		
 		this.mount();
 	}
