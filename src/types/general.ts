@@ -64,3 +64,5 @@ export type Traversable<
 	T extends RenderableTreeNode | Node = RenderableTreeNode | Node
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = (T & { [key: string]: any; children?: T[], parent?: Traversable}) | Scalar
+
+

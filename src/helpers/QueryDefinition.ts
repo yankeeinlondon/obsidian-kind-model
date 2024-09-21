@@ -23,10 +23,10 @@ import {
 	stripBefore, 
 	TupleToUnion 
 } from "inferred-types";
-import { kind_defn } from "../dv_queries/kind_table";
+import { kind_defn } from "../handlers/kind_table";
 import KindModelPlugin from "../main";
-import { video_defn } from "../dv_queries/video_gallery";
-import { page_entry_defn } from "../dv_queries/page_entry";
+import { video_defn } from "../handlers/video_gallery";
+import { page_entry_defn } from "../handlers/page_entry";
 
 export type Column = `column()`;
 export type Columns = `columns()`;

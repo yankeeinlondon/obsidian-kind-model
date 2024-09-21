@@ -1,11 +1,12 @@
-import { PageBanners, PageIcons, PageSuggestion } from "utils/base_api/api";
-import { DvPage } from "./dataview_types";
+import { PageBanners, PageIcons, PageSuggestion } from "api/api";
+import { DvPage, Link } from "./dataview_types";
 import { Classification } from "./Classification";
+import { TAbstractFile, TFile } from "./Obsidian";
 
 export type PageType = "kinded" | "kind-defn" | "type-defn" | "none";
 
 
-export type PageTypeInfo<T extends PageType = PageType> = {
+export type PageInfo<T extends PageType = PageType> = {
 	/** 
 	 * whether page is _kinded_, a _kind definition_, a _type definition_, or none of the above.
 	 */
@@ -15,24 +16,24 @@ export type PageTypeInfo<T extends PageType = PageType> = {
 	path: string;
 
 	/** boolean flag indicating whether page is a **category** page for a `kind` */
-	isCategoryPage: T extends "kinded-defn" ? boolean : false;
+	isCategoryPage: boolean;
 
 	hasCategoryTag: boolean;
 	hasCategoryProp: boolean;
 
 
 	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
-	isSubcategoryPage: T extends "kinded-defn" ? boolean : false;
+	isSubcategoryPage: boolean;
 	/**
 	 * whether a kinded page has _multiple_ kinds in claims membership to
 	 */
-	hasMultipleKinds: T extends "kinded-defn" ? boolean : false;
+	hasMultipleKinds: boolean;
 
 	/**
 	 * whether the page has a tag which indicates the page's "kind"
 	 * but is _not_ a Kind Definition tag.
 	 */
-	hasKindTag: T extends "kinded-defn" ? boolean : false;
+	hasKindTag: boolean;
 
 	hasKindDefinitionTag: boolean;
 	hasTypeDefinitionTag: boolean;
@@ -48,11 +49,6 @@ export type PageTypeInfo<T extends PageType = PageType> = {
 	 */
 	hasKindProp: boolean;
 
-	/**
-	 * Either the `kind` or `kinds` properties reference the `kind` page indicating that this
-	 * page is a Kind Definition.
-	 */
-	hasKindDefinitionProp: boolean;
 
 	/**
 	 * the Classifications of the page
@@ -64,7 +60,7 @@ export type PageTypeInfo<T extends PageType = PageType> = {
 	 * (or multiple kinds); this looks for a list where at least one item in the 
 	 * list is a link to another page in the vault.
 	 */
-	hasKindsProperty: T extends "kinded-defn" ? boolean : false;
+	hasKindsProperty: boolean;
 
 	/** get the icons associated with this page */
 	getIcons(): PageIcons;
@@ -79,3 +75,34 @@ export type PageTypeInfo<T extends PageType = PageType> = {
 	 */
 	page: DvPage;
 }
+
+
+export type PageIcons = {
+	hasIcon?: boolean;
+	typeIcon?: string;
+	kindIcon?: string;
+	categoryIcon?: string;
+	subcategoryIcon?: string;
+	pageIcon?: string;
+}
+export type PageBanners = {
+	hasBanner?: boolean;
+	typeBanner?: string;
+	kindBanner?: string;
+	categoryBanner?: string;
+	subcategoryBanner?: string;
+	pageBanner?: string;
+}
+
+export type PageSuggestion = 
+| "add-kind-prop"
+| "add-kind-tag"
+| "add-kinded-prop"
+| "add-kinded-tag"
+| "add-category-tag"
+| "add-category-prop"
+| "add-subcategory-tag"
+| "add-subcategory-prop";
+
+
+export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | string;

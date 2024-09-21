@@ -7,7 +7,7 @@ import {  KindModelSettings } from './types/settings_types';
 import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
 // import App from "./App.vue";
-import { api } from './utils/base_api/api';
+import { api } from './api/api';
 import { KindCache } from 'types/KindCache';
 import { csv } from './utils/on_load/csv';
 import { on_editor_change } from './utils/on_load/on_editor_change';

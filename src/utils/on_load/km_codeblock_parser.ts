@@ -2,11 +2,11 @@ import { isObject, stripBefore, retainUntil } from "inferred-types";
 import { MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "../../main";
 import {  Link } from "../../types/dataview_types";
-import { query_error } from "../../dv_queries/query_error";
+import { query_error } from "../../handlers/query_error";
 import { evaluate_query_params } from "../../helpers/QueryDefinition";
-import { kind_defn } from "../../dv_queries/kind_table";
-import { video_defn } from "../../dv_queries/video_gallery";
-import { page_entry_defn } from "../../dv_queries/page_entry";
+import { kind_defn } from "../../handlers/kind_table";
+import { video_defn } from "../../handlers/video_gallery";
+import { page_entry_defn } from "../../handlers/page_entry";
 
 
 export const isPageLink= (v: unknown): v is Link => {

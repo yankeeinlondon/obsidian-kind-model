@@ -3,9 +3,10 @@ import KindModelPlugin from "main";
 
 import { DvPage, Link } from "types/dataview_types";
 import { TAbstractFile, TFile } from "types/Obsidian";
-import { PageTypeInfo } from "types/Page";
+
 import { getPath } from "./getPath"
-import { isTAbstractFile, isDvPage, isTFile, isLink } from "utils/type_guards";
+import { isDvPage, isPageInfo } from "type-guards";
+import { PageInfo, PageReference } from "types";
 
 /**
  * caching of `DvPage`'s we're interested in
@@ -20,7 +21,7 @@ let PAGE_CACHE: Record<string, DvPage> = {};
  * and the values are an array of `kind` types which
  * are associated.
  */
-let PAGE_INFO_CACHE: Record<string, PageTypeInfo> = {};
+let PAGE_INFO_CACHE: Record<string, PageInfo> = {};
 
 /**
  * All of the "kind definitions" in the vault.
@@ -247,14 +248,18 @@ export const kindDefinitionsWithDuplicates = (p: KindModelPlugin) => () => {
  * will run a query to get it and ensure that's placed in the page cache.
  */
 export const getPage = (p: KindModelPlugin) => (
-	pg: DvPage | TFile |TAbstractFile | Link | string | undefined,
+	pg: PageReference | undefined,
 	force?: boolean
 ): DvPage | undefined => {
 	if (isDvPage(pg)) {
 		return pg.file.path in PAGE_CACHE
 			? pg
 			: pushPage(pg);
-	} 
+	}
+	if (isPageInfo(pg)) {
+		return pg.page;
+	}
+	
 	if (isUndefined(pg)) {
 		return undefined;
 	}
@@ -274,11 +279,23 @@ export const getPage = (p: KindModelPlugin) => (
 	return undefined;
 }
 
+/** remove an item from the PAGE cache */
+export const removeFromPageCache = (p: KindModelPlugin) => (
+	pg: PageReference
+) => {
+	const path = getPath(pg);
+
+	if (PAGE_CACHE && path && path in PAGE_CACHE) {
+		delete PAGE_CACHE[path]
+	}
+}
+
+
 /**
  * checks whether a given file path is found in the PAGE_INFO_CACHE.
  */
 export const hasPageInfo = (p: KindModelPlugin) => (
-	pg: DvPage | TFile |TAbstractFile | Link | string
+	pg: PageReference
 ): boolean => {
 	const path = getPath(pg);
 	
@@ -287,13 +304,23 @@ export const hasPageInfo = (p: KindModelPlugin) => (
 		: false
 }
 
+/** add or update an entry  in the PAGE INFO cache */
+export const updatePageInfoCache = (p: KindModelPlugin) => (
+	path: string,
+	info: PageInfo
+) => {
+	if(!PAGE_INFO_CACHE) {
+		PAGE_INFO_CACHE = {};
+	}
+
+	PAGE_INFO_CACHE[path] = info;
+}
+
 
 export const lookupPageInfo = (p: KindModelPlugin) => (
-	pg: DvPage | TFile |TAbstractFile | Link | string
-) => {
-	let path: string | undefined = isDvPage(pg) || isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
-		? pg.path as string
-		: isString(pg) ? pg : undefined;
+	pg: PageReference
+): PageInfo | undefined => {
+	let path: string | undefined = getPath(pg);
 
 	if (!path) {
 		p.warn(`failed to identify a valid file path from the page representation passed to lookupPageType()`, p);
@@ -301,7 +328,7 @@ export const lookupPageInfo = (p: KindModelPlugin) => (
 	}
 
 	if (path in PAGE_INFO_CACHE) {
-		return PAGE_INFO_CACHE[path];
+		return PAGE_INFO_CACHE[path] as PageInfo;
 	} else {
 		return undefined
 	}

@@ -21,10 +21,11 @@ import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { DateTime, Duration } from "luxon";
 import KindModelPlugin from "../main";
 import { DataArray, DvPage, Grouping, Link, SListItem } from "../types/dataview_types";
-import { isDvPage } from "../utils/type_guards/isDvPage";
-import {  isLink } from "../utils/type_guards/isFileLink";
 import { fmt } from "./fmt";
-import { getClassification } from "utils/base_api/getClassification";
+import { getPath } from "api/getPath";
+import { PageReference } from "types";
+import { getClassification } from "api/buildingBlocks";
+import { isDvPage, isLink } from "type-guards";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -64,17 +65,6 @@ function removePound(tag: string | undefined){
 }
 
 
-
-const extractPath = (path: DvPage | string | Link) => {
-	return isDvPage(path)
-		? path.file.path
-		: isLink(path)
-		? path.path
-		: isString(path)
-		? path
-		: Never
-}
-
 const isKindedPage = (plugin: KindModelPlugin) => (
 	pg: DvPage | undefined, 
 	category?: DvPage | string | Link,
@@ -88,10 +78,10 @@ const isKindedPage = (plugin: KindModelPlugin) => (
 			? isUndefined(category)
 				? true
 				: pg.category 
-					? plugin.dv.page(pg.category)?.file?.path === extractPath(category)
+					? plugin.dv.page(pg.category)?.file?.path === getPath(category)
 						? isUndefined(subcategory)
 							? true
-							: pg.subcategory && plugin.dv.page(pg.subcategory)?.file?.path === extractPath(subcategory)
+							: pg.subcategory && plugin.dv.page(pg.subcategory)?.file?.path === getPath(subcategory)
 						: false
 					: false
 			: false;
@@ -104,13 +94,13 @@ function isKindDefnPage(pg: DvPage | undefined) {
 }
 
 const get_kind_prop = (p: KindModelPlugin) => (
-	pg: DvPage | string | undefined
+	pg: PageReference
 ): {kind: Partial<DvPage>  | undefined; tag: string | undefined} => {
 	if(!pg) {
 		return {kind: undefined, tag: undefined};
 	}
 	if(!isDvPage(pg)) {
-		return get_kind_prop(p)(p.dv.page(pg as string));
+		return get_kind_prop(p)(pg);
 	} else {
 		let [_,kind] = get_prop(p)(pg as DvPage, "kind");
 
@@ -151,7 +141,10 @@ const get_kind_tag = (p: KindModelPlugin) => (pg: DvPage) => {
  * Gets any links to pages in the vault found across the various properties
  * passed in.
  */
-const get_internal_links = (p: KindModelPlugin) => (pg: DvPage, ...props: string[]) => {
+const get_internal_links = (p: KindModelPlugin) => (
+	pg: DvPage, 
+	...props: string[]
+) => {
 
 	let links: Link[] = [];
 	for (const prop of props) {
@@ -311,7 +304,7 @@ const show_prop = (plugin: KindModelPlugin) => (
 				: isLink(value)
 				? value
 				: isDvPage(value)
-				? value.file.link
+				? value?.file.link
 				: isArray(value)
 				? value.map(v => isLink(v) ? v : isDvPage(v) ? v.file.link : "")
 					.filter(i => i)
@@ -376,10 +369,10 @@ const show_subcategories_for = (plg: KindModelPlugin) => (
 		return [];
 	}
 
-	if(get_classification(plg)(pg).isCategory) {
+	if(getClassification(plg)(pg).isCategory) {
 		// this is the intended page type
 		const kindTag = get_kind_tag(plg)(pg);
-		const category = get_classification(plg)(pg).category;
+		const category = getClassification(plg)(pg).category;
 		const query = kindTag 
 			? `#${kindTag}/subcategory/${category} OR #subcategory/${category}`
 			: `#subcategory/${category}`;
@@ -461,9 +454,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * 
 		 * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
 		 */
-		get_classification,
-		// adds classification properties for current page
-		...get_classification(current),
+		getClassification: getClassification(plugin),
 		
 		/**
 		 * **show_tags**`(page, ...exclude)`

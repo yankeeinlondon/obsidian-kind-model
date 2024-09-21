@@ -1,19 +1,21 @@
 import { isString } from "inferred-types";
-import { DvPage, Link } from "types/dataview_types";
-import { TAbstractFile, TFile } from "types/Obsidian";
-import { isDvPage, isLink, isTAbstractFile, isTFile } from "utils/type_guards";
+import { PageReference } from "types";
+import { isDvPage, isLink, isPageInfo, isTAbstractFile, isTFile } from "type-guards";
 
 /**
  * Get's a page's "path" from various page reference types.
  */
-export const getPath = (
-	pg: DvPage | TFile |TAbstractFile | Link | string
+export const getPath = <T extends PageReference>(
+	pg: T
 ): string | undefined => {
+
 	return isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
 	? pg.path
 	: isDvPage(pg)
 	? pg.file.path
 	: isString(pg)
 	? pg
+	: isPageInfo(pg)
+	? pg.page.file.path
 	: undefined;
 }

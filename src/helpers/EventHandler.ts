@@ -1,6 +1,7 @@
 import KindModelPlugin from "main";
 import {  WorkspaceLeaf } from "obsidian";
-import { TAbstractFile } from "types/TAbstractFile";
+import { TAbstractFile } from "types";
+
 
 export type CursorPosition = {
 	line: number;

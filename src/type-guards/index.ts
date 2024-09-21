@@ -8,6 +8,7 @@ export * from "./isError";
 export * from "./isFileLink";
 export * from "./isMarkdownView";
 export * from "./isPageContext";
+export * from "./isPageInfo";
 export * from "./isStringPageRef";
 export * from "./isTAbstractFile";
 export * from "./isTFile";
