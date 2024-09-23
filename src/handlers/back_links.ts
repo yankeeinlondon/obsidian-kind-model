@@ -4,6 +4,7 @@ import type KindModelPlugin from "../main";
 import type { DvPage } from "../types/dataview_types";
 import { Tag } from "../types/general";
 import { parseParams } from "../helpers/parseParams";
+import { createPageInfo } from "api";
 
 export const COLUMN_CHOICES = [
 	"when", "created", "modified",
@@ -56,31 +57,42 @@ export const back_links = (plg: KindModelPlugin) => (
 ) => async(
 	params_str: string = ""
 ) => {
+	// const {
+	// 	current,
+	// 	kind_tag,
+	// 	page,
+	// 	isCategory,
+	// 	isSubcategory,
+	// 	isKindedPage,
+	// 	isKindDefnPage,
+	// 	fmt,
+	// 	ul,
+	// 	paragraph,
+	// 	category,
+	// 	table,
+	// 	show_subcategories_for,
+	// 	get_classification,
+	// 	get_prop,
+	// 	createFileLink,
+	// 	show_links,
+	// 	show_prop,
+	// 	show_created_date,
+	// 	get_kind_prop,
+	// 	show_modified_date,
+	// 	renderValue,
+	// 	subcategory
+	// } = plg.api.dv_page(source, container, component, filePath);
+
+	const current = createPageInfo(plg)(filePath);
 	const {
-		current,
-		kind_tag,
-		page,
-		isCategory,
-		isSubcategory,
-		isKindedPage,
-		isKindDefnPage,
-		fmt,
-		ul,
-		paragraph,
-		category,
-		table,
-		show_subcategories_for,
-		get_classification,
-		get_prop,
-		createFileLink,
 		show_links,
 		show_prop,
 		show_created_date,
-		get_kind_prop,
-		show_modified_date,
-		renderValue,
-		subcategory
-	} = plg.api.dv_page(source, container, component, filePath);
+		createFileLink,
+		
+	} = renderApi()
+
+
 
 	let opt: BackLinkOptions = parseParams([],{ });
 

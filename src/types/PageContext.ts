@@ -148,12 +148,7 @@ export interface BasePageContext<THasView extends boolean = false> {
 	 */
 	navigation: THasView extends true ? MarkdownView["navigation"] : never
 
-	editor: THasView extends true ? MarkdownView["editor"] : never;
-
-	/**
-	 * A debounced request to save the page (2 secs from now)
-	 */
-	requestSave: THasView extends true ? MarkdownView["requestSave"] : never;
+	
 
 	/**
 	 * The raw/text content of the page (including frontmatter)

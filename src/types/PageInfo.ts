@@ -1,7 +1,10 @@
-import { PageBanners, PageIcons, PageSuggestion } from "api/api";
 import { DvPage, Link } from "./dataview_types";
 import { Classification } from "./Classification";
 import { TAbstractFile, TFile } from "./Obsidian";
+import { MarkdownView } from "obsidian";
+import { RenderableTreeNode, Node } from "@markdoc/markdoc";
+import { HeadingTag } from "./frontmatter";
+import { DateTime } from "luxon";
 
 export type PageType = "kinded" | "kind-defn" | "type-defn" | "none";
 
@@ -74,6 +77,185 @@ export type PageInfo<T extends PageType = PageType> = {
 	 * The `DvPage` API surface for the given page
 	 */
 	page: DvPage;
+}
+
+/**
+ * references to DOM elements found on a Markdown View derived page
+ */
+export type PageDomElements = {
+	container: HTMLElement;
+	content: HTMLElement;
+	icon?: HTMLElement;
+	backButton?: HTMLElement;
+	forwardButton?: HTMLElement;
+	title?: HTMLElement;
+	titleContainer?: HTMLElement;
+	titleParent?: HTMLElement;
+	inlineTitle?: HTMLElement;
+	actions?: HTMLElement;
+	modeButton?: HTMLElement;
+	backlinks?: HTMLElement;
+}
+
+export type MarkdownViewMeta = {
+
+
+
+	/**
+	 * **titleTimestamp**
+	 * 
+	 * Only available if the file has a date inside its file name 
+	 * (of form yyyy-mm-dd or yyyymmdd), or has a Date field/inline field.
+	 */
+	title_timestamp?: DateTime;
+
+	/**
+	 * The **icon** assigned to the page by Obsidian. This is an **iconId**
+	 * and will be available when a "view" is provided to **getPageContext()**.
+	 */
+	iconAssigned: string;
+
+	/**
+	 * The **mode** that the current page is operating under
+	 */
+	mode: MarkdownView["currentMode"];
+
+	leaf: MarkdownView["leaf"];
+
+	/**
+	 * The height of the window which is hosting the current file
+	 */
+	leaf_height?: number;
+	/**
+	 * The width of the window which is hosting the current file
+	 */
+	leaf_width?:  number ;
+	leaf_id?: string ;
+	popover: MarkdownView["hoverPopover"];
+	allowNoFile: MarkdownView["allowNoFile"];
+	previewMode: MarkdownView["previewMode"];
+	/**
+	 * A textual representation of the type of view you have.
+	 * 
+	 * - if you're editing a markdown file it should be `markdown`
+	 */
+	viewType: ReturnType<MarkdownView["getViewType"]>;
+	showBackLinks?: boolean;
+
+	/**
+	 * Whether or not the view is intended for navigation. If your view is a static view that 
+	 * is not intended to be navigated away, set this to false. (For example: File explorer, 
+	 * calendar, etc.) If your view opens a file or can be otherwise navigated, set this to 
+	 * true. (For example: Markdown editor view, Kanban view, PDF view, etc.) File views can 
+	 * be navigated by default.
+	 */
+	navigation: MarkdownView["navigation"];
+
+	editor: MarkdownView["editor"];
+
+	/**
+	 * A debounced request to save the page (2 secs from now)
+	 */
+	requestSave: MarkdownView["requestSave"];
+
+	/** Load this component and its children */
+	load: MarkdownView["load"];
+
+	onLoadFile: MarkdownView["onLoadFile"];
+	onUnloadFile: MarkdownView["onUnloadFile"];
+	/** Called when the size of this view is changed. */
+	onResize: MarkdownView["onResize"];
+	onRename: MarkdownView["onRename"];
+	/**
+	 * Populates the pane menu.
+	 * 
+	 * (Replaces the previously removed onHeaderMenu and onMoreOptionsMenu)
+	 */
+	onPaneMenu: MarkdownView["onPaneMenu"];
+
+	/** Registers a callback to be called when unloading */
+	register: MarkdownView["register"];
+	/** Registers an DOM event to be detached when unloading */
+	registerDomEvent: MarkdownView["registerDomEvent"];
+	/** Registers an event to be detached when unloading */
+	registerEvent: MarkdownView["registerEvent"];
+	/** Registers an interval (from setInterval) to be cancelled when unloading 
+	 * Use window.setInterval instead of setInterval to avoid TypeScript confusing 
+	 * between NodeJS vs Browser API 
+	 */
+	registerInterval: MarkdownView["registerInterval"];
+
+	getEphemeralState: MarkdownView["getEphemeralState"];
+	getState: MarkdownView["getState"];
+	getViewData: MarkdownView["getViewData"];
+	getViewType: MarkdownView["getViewType"];
+
+	/**
+	 * The raw/text content of the page (including frontmatter)
+	 */
+	content: string;
+
+	/**
+	 * Properties derived from the `content` property based on both a
+	 * **regex** decomposition as well as using [Markdoc](https://markdoc.dev/)'s
+	 * AST parsing as well as the further refined 
+	 * [renderable tree node](https://markdoc.dev/docs/render#transform).
+	 */
+	contentStructure: {
+		/**
+		 * **ast**
+		 * 
+		 * MarkDoc AST tree from root of Document.
+		 * 
+		 * References: [docs](markdoc.dev), [sandbox](https://markdoc.dev/sandbox)
+		 */
+		ast: Node;
+
+		/**
+		 * **renderableTree**
+		 * 
+		 * MarkDoc's `RenderableTreeNode` representation of the page. This
+		 * is a higher level representation of the AST and often a better tool
+		 * for extraction of structural content on the page 
+		 * (like a table of contents, etc.).
+		 * 
+		 * References: [docs](markdoc.dev/docs/render#transform), [sandbox](https://markdoc.dev/sandbox)
+		 */
+		renderableTree: RenderableTreeNode | RenderableTreeNode[];
+		
+		/** the raw YAML content/frontmatter at top of page  */
+		yaml: string | undefined;
+
+		/** the raw `content` with frontmatter removed  */
+		body: string;
+
+		h1: string | undefined;
+
+		h2_tags: HeadingTag<2>[];
+
+		preH1: string | undefined;
+		postH1: string | undefined;
+
+		/**
+		 * The page broken down by H2 headings
+		 */
+		blocks: {name: string; content: string;}[];
+	}
+}
+
+/**
+ * **PageView**
+ * 
+ * Is provided by the createPageView() utility when a `MarkdownView` is available.
+ * It provides all the properties of the `PageInfo` data structure along with additional
+ * endpoints which can only be provided when a "view" is underlying the 
+ */
+export type PageView = PageInfo & {
+	dom: PageDomElements;
+	/**
+	 * Metadata derived from the `MarkdownView` provided to create the `PageView`
+	 */
+	view: MarkdownViewMeta;
 }
 
 

@@ -17,4 +17,5 @@ export * from "./Position";
 export * from "./settings_types";
 export * from "./ui-builder_types";
 export * from "./video-types";
+export * from "./style";
 

@@ -1,33 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { 
-	Api,
-	AsArray,
-	Container, 
-	EscapeFunction, 
-	Never, 
-	OptionalSpace, 
-	StripLeading, 
-	TypedFunction, 
-	createFnWithProps, 
-	isArray, 
-	isContainer, 
-	isFunction, 
-	isNumber,  
-	isString, 
-	isUndefined, 
-	keysOf 
-} from "inferred-types";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
-import { DateTime, Duration } from "luxon";
-import KindModelPlugin from "../main";
-import { DataArray, DvPage, Grouping, Link, SListItem } from "../types/dataview_types";
-import { fmt } from "./fmt";
-import { getPath } from "api/getPath";
-import { PageReference, PropertyType } from "types";
-import { getClassification } from "api/buildingBlocks";
+import { AsArray, Container, createFnWithProps, EscapeFunction, isArray, isContainer, isFunction, isNumber, isString, isUndefined, keysOf, OptionalSpace, StripLeading, TypedFunction } from "inferred-types";
+import KindModelPlugin from "main";
 import { isDvPage, isLink } from "type-guards";
-import { get_property_type } from "utils/page/get_property_type";
-import { getPage } from "api/cache";
+import { DataArray, DvPage, Grouping, Link, PageReference, SListItem } from "types";
+import { getClassification, isKindDefnPage, isKindedPage } from "./buildingBlocks";
+import { DateTime, Duration } from "luxon";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -64,35 +40,6 @@ function removePound(tag: string | undefined){
 	return typeof tag === "string" && tag?.startsWith("#")
 		? tag.slice(1)
 		: tag
-}
-
-
-const isKindedPage = (plugin: KindModelPlugin) => (
-	pg: DvPage | undefined, 
-	category?: DvPage | string | Link,
-	subcategory?: DvPage | string | Link
-) => {
-	return isUndefined(pg)
-		? false
-		: getClassification(pg).isCategory === false && 
-			getClassification(pg).isSubcategory === false &&
-			!pg.file.etags.find(i => i.startsWith("#kind"))
-			? isUndefined(category)
-				? true
-				: pg.category 
-					? plugin.dv.page(pg.category)?.file?.path === getPath(category)
-						? isUndefined(subcategory)
-							? true
-							: pg.subcategory && plugin.dv.page(pg.subcategory)?.file?.path === getPath(subcategory)
-						: false
-					: false
-			: false;
-}
-
-function isKindDefnPage(pg: DvPage | undefined) {
-	return isUndefined(pg)
-		? false
-		: pg.file.etags.find(t => t.startsWith(`#kind/`));
 }
 
 const get_kind_prop = (p: KindModelPlugin) => (
@@ -164,8 +111,6 @@ const get_internal_links = (p: KindModelPlugin) => (
 	}		
 	return links;
 }
-
-
 
 function show_tags(pg: DvPage, ...exclude: string[]) {
 	return pg.file.etags.filter( t => !exclude.some(i => t.startsWith(i) ? true : false))
@@ -364,21 +309,21 @@ const when = (_p: KindModelPlugin) => (
 	}
 }
 
-const show_subcategories_for = (plg: KindModelPlugin) => (
+const show_subcategories_for = (p: KindModelPlugin) => (
 	pg: DvPage | undefined
 ) => {
 	if(!pg) {
 		return [];
 	}
 
-	if(getClassification(plg)(pg).isCategory) {
+	if(getClassification(p)(pg).isCategory) {
 		// this is the intended page type
-		const kindTag = get_kind_tag(plg)(pg);
-		const category = getClassification(plg)(pg).category;
+		const kindTag = get_kind_tag(p)(pg);
+		const category = getClassification(p)(pg).category;
 		const query = kindTag 
 			? `#${kindTag}/subcategory/${category} OR #subcategory/${category}`
 			: `#subcategory/${category}`;
-		return plg.dv.pages(query).map(i => i.file.link);
+		return p.dv.pages(query).map(i => i.file.link);
 	} else {
 		return [];
 	}
@@ -392,6 +337,31 @@ export const dv_page = (plugin: KindModelPlugin) => (
 	filePath: string
 ) => {
 
+	
+
+	return {
+		
+		fmt: fmt(plugin)(container,filePath)
+	};
+}
+
+/**
+ * **DvQuerySurface**
+ * 
+ * The full dataview query API plus all the addons which `dv_page` provides.
+ */
+export type DvQuerySurface = ReturnType<ReturnType<typeof dv_page>>;
+
+
+
+/**
+ * **renderApi**`(p, el)`
+ * 
+ * The render API provides a means to directly render to the DOM. It expects a DOM node and file path along with the
+ * plugin to instantiate and will probably be most useful in scenarios where you're rendering a codeblock as these
+ * interrupts conveniently provide both the parent element as well the file path.
+ */
+export const renderApi =  (p: KindModelPlugin, el: HTMLElement, filePath: string) => {
 	const current = getPage(plugin)(filePath);
 
 	if(!current) {
@@ -415,7 +385,16 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		return meta;
 	}
 
+
 	return {
+		/**
+		 * Uses the underlying `renderValue()` functionality exposed by
+		 * dataview to render data to the page.
+		 */
+		async render(data: unknown): Promise<void> {
+			await p.dv.renderValue(data, el, p, filePath, false);
+		},
+
 		/** the current page represented as a `DvPage` */
 		current,
 		/**
@@ -442,7 +421,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * - right now it does not consider the possibility of multiple
 		 * _kinds_ associated to a category/subcategory
 		 */
-		get_kind_tag: get_kind_tag(plugin),
+		get_kind_tag: get_kind_tag(p),
 
 		/**
 		 * **extractTitle**`(fileName)`
@@ -457,7 +436,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * 
 		 * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
 		 */
-		getClassification: getClassification(plugin),
+		getClassification: getClassification(p),
 		
 		/**
 		 * **show_tags**`(page, ...exclude)`
@@ -478,7 +457,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * const [prop, val] = get_prop(pg, "kind");
 		 * ```
 		 */
-		get_prop: get_prop(plugin),
+		get_prop: get_prop(p),
 
 		/**
 		 * **get_kind_prop**`(page) → [page, tag]`
@@ -490,7 +469,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * as the first element and the "kindTag" (aka, tag name without leading
 		 * pound symbol) as the second.
 		 */
-		get_kind_prop: get_kind_prop(plugin),
+		get_kind_prop: get_kind_prop(p),
 
 		/**
 		 * **get_internal_links**
@@ -498,7 +477,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Gets any links to pages in the vault found across the various 
 		 * properties passed in.
 		 */
-		get_internal_links: get_internal_links(plugin),
+		get_internal_links: get_internal_links(p),
 
 		/**
 		 * **metadata**`()`
@@ -517,7 +496,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * find a value). If nothing is found across the relevant properties an empty string is
 		 * returned. 
 		 */
-		show_prop: show_prop(plugin),
+		show_prop: show_prop(p),
 
 		/**
 		 * **show_desc**`()`
@@ -526,7 +505,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * properties
 		 */
 		show_desc: (pg: DvPage) => {
-			const desc = show_prop(plugin)(pg, "about","desc","description")
+			const desc = show_prop(p)(pg, "about","desc","description")
 			if (typeof desc == "string") {
 				return `<span style="font-weight:200; font-size: 14px">${desc}</span>`
 			} else {
@@ -540,7 +519,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * 
 		 * Shows a horizontal row of links that the given page has in it's frontmatter.
 		 */
-		show_links: show_links(plugin, linkIcons as Record<string, string>),
+		show_links: show_links(p, linkIcons as Record<string, string>),
 
 		/**
 		 * **show_created_date**`(page,[format])`
@@ -567,12 +546,12 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * of both modified and created dates and displays
 		 * a compact but meaningful date.
 		 */
-		show_when: when(plugin),
+		show_when: when(p),
 
 		/** 
 		 * The current page's "kind tag"
 		 */
-		kind_tag: get_kind_tag(plugin)(current),
+		kind_tag: get_kind_tag(p)(current),
 
 		/**
 		 * **isKindedPage**(page,[category])
@@ -580,7 +559,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Tests whether a given page is a _kinded_ page and _optionally_ if
 		 * the page is of a particular `category`.
 		 */
-		isKindedPage: isKindedPage(plugin),
+		isKindedPage: isKindedPage(p),
 
 		/**
 		 * **isKindDefnPage**(page)
@@ -595,11 +574,11 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Map a page path to the actual data contained within that page.
 		 */
 		page(pg: string | Link, originFile?: string) {
-			return plugin.dv.page(pg, originFile);
+			return p.dv.page(pg, originFile);
 		},
 
 		pages(query?: string, originFile?: string) {
-			return plugin.dv.pages(query, originFile);
+			return p.dv.pages(query, originFile);
 		},
 
 		/**
@@ -610,10 +589,10 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 */
 		as_array: <T>(v: T) => {
 			return (
-				plugin.dv.isDataArray(v)
+				p.dv.isDataArray(v)
 				? Array.from(v.values)
 				: isArray(v)
-					? v.map(i => plugin.dv.isDataArray(i) ? i.values : i)
+					? v.map(i => p.dv.isDataArray(i) ? i.values : i)
 					: [ v ]
 			) as T extends DataArray<infer D> ? D[] : AsArray<T>;
 		},
@@ -623,7 +602,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * which match the query.
 		 */
 		pagePaths(query?: string, originFile?: string) {
-			return plugin.dv.pagePaths(query, originFile);
+			return p.dv.pagePaths(query, originFile);
 		},
 		/**
 		 * **date**`(pathLike)`
@@ -631,7 +610,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Attempt to extract a date from a string, link or date.
 		 */
 		date(pathLike: string | Link | DateTime) {
-			return plugin.dv.date(pathLike);
+			return p.dv.date(pathLike);
 		},		
 
 		/**
@@ -640,7 +619,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Attempt to extract a duration from a string or duration.
 		 */
 		duration(str: string | Duration) {
-			return plugin.dv.duration(str);
+			return p.dv.duration(str);
 		},
 
 		/**
@@ -651,31 +630,31 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 */
 		createFileLink(pathLike: string | Link | DvPage, embed?: boolean, display?: string) {
 			if(isLink(pathLike)) {
-				const pg = plugin.dv.page(pathLike.path);
+				const pg = p.dv.page(pathLike.path);
 				if(!pg) {
-					plugin.error(`createFileLink() had issues creating a link from the passed in parameters`, {pathLike, embed, display});
+					p.error(`createFileLink() had issues creating a link from the passed in parameters`, {pathLike, embed, display});
 
 					return "";
 				}
-				return plugin.dv.fileLink(
+				return p.dv.fileLink(
 					pg.file.path,
 					isUndefined(embed) ? false : embed,
 					isUndefined(display) ? extractTitle(pg.file.name) : display
 				);
 			} else if (isDvPage(pathLike)) {
-				return plugin.dv.fileLink(
+				return p.dv.fileLink(
 					pathLike.file.path,
 					isUndefined(embed) ? false : embed,
 					isUndefined(display) ? extractTitle(pathLike.file.name) : display
 				);
 			} else if(isString(pathLike)) {
-				const pg = plugin.dv.page(pathLike);
+				const pg = p.dv.page(pathLike);
 				if(!pg) {
-					plugin.error(`createFileLink() had issues creating a link from the passed in string path`, {pathLike, embed, display});
+					p.error(`createFileLink() had issues creating a link from the passed in string path`, {pathLike, embed, display});
 
 					return "";
 				}
-				return plugin.dv.fileLink(
+				return p.dv.fileLink(
 					pg.file.path,
 					isUndefined(embed) ? false : embed,
 					isUndefined(display) ? extractTitle(pg.file.name) : display
@@ -689,7 +668,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Create a dataview file link to the given path.
 		 */
 		fileLink(path: string, embed?: boolean, displayAs?: string) {
-			return plugin.dv.fileLink(path, embed, displayAs);
+			return p.dv.fileLink(path, embed, displayAs);
 		},
 		/**
 		 * **sectionLink**`(path, [embed],[display])`
@@ -697,7 +676,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Create a dataview section link to the given path.
 		 */
 		sectionLink(path: string, embed?: boolean, display?: string) {
-			return plugin.dv.sectionLink(path,embed,display);
+			return p.dv.sectionLink(path,embed,display);
 		},
 		/**
 		 * **blockLink**`(path, [embed],[display])`
@@ -705,7 +684,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Create a dataview block link to the given path.
 		 */
 		blockLink(path: string, embed?: boolean, display?: string)	{
-			return plugin.dv.blockLink(path, embed, display);
+			return p.dv.blockLink(path, embed, display);
 		},
 
 		/**
@@ -718,7 +697,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 			headers: string[],
 			values: any[] | DataArray<any>
 		) {
-			return plugin.dv.table(headers,values,container,plugin,filePath)
+			return p.dv.table(headers,values,el,p,filePath)
 		},
 
 		/**
@@ -730,7 +709,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 			value: unknown,
 			inline: boolean = false
 		) {
-			return plugin.dv.renderValue(value, container, plugin, filePath, inline);
+			return p.dv.renderValue(value, el, p, filePath, inline);
 		},
 
 		/** 
@@ -742,7 +721,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 			tasks: Grouping<SListItem>,
 			groupByFile: boolean
 		) {
-			return plugin.dv.taskList(tasks, groupByFile, container, plugin, filePath);
+			return p.dv.taskList(tasks, groupByFile, el, p, filePath);
 		},
 
 		/**
@@ -758,11 +737,11 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		async list(
 			values: unknown[] | DataArray<unknown> | undefined
 		) {
-			return plugin.dv.list(values, container, plugin, filePath);
+			return p.dv.list(values, el, p, filePath);
 		},
 
 		async paragraph(text: string) {
-			return plugin.dv.renderValue(text, container, plugin, filePath, false);
+			return p.dv.renderValue(text, el, p, filePath, false);
 		},
 
 		/**
@@ -771,7 +750,7 @@ export const dv_page = (plugin: KindModelPlugin) => (
 		 * Intended for category pages to be passed in and in return
 		 * will get a `DataArray<Link>` as response.
 		 */
-		show_subcategories_for: show_subcategories_for(plugin),
+		show_subcategories_for: show_subcategories_for(p),
 
 
 		async ul(...items: readonly (string | UlCallback)[]) {
@@ -793,18 +772,10 @@ export const dv_page = (plugin: KindModelPlugin) => (
 			};
 
 			
-			return plugin.dv.renderValue(
+			return p.dv.renderValue(
 				wrap_ul(render_items(items)), 
-				container, plugin, filePath, false
+				el, p, filePath, false
 			);
 		},
-		fmt: fmt(plugin)(container,filePath)
 	};
 }
-
-/**
- * **DvQuerySurface**
- * 
- * The full dataview query API plus all the addons which `dv_page` provides.
- */
-export type DvQuerySurface = ReturnType<ReturnType<typeof dv_page>>;

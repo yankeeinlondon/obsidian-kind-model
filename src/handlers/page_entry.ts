@@ -8,8 +8,6 @@ import {
 } from "inferred-types";
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import { DvPage } from "../types/dataview_types";
-import { isWikipediaUrl } from "../utils/type_guards/isWikipediaUrl";
-import { find_in } from "../utils/type_guards/find_in";
 import { MARKDOWN_PAGE_ICON } from "../constants/obsidian-constants";
 import KindModelPlugin from "../main";
 import { 
@@ -17,6 +15,7 @@ import {
 	QueryDefinition, 
 	ScalarParams 
 } from "../helpers/QueryDefinition";
+import { find_in, isWikipediaUrl } from "type-guards";
 
 export const page_entry_defn = {
 	kind: "query-defn",

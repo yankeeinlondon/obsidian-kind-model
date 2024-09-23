@@ -1,12 +1,12 @@
 import { isObject, stripBefore, retainUntil } from "inferred-types";
 import { MarkdownPostProcessorContext } from "obsidian";
-import KindModelPlugin from "../../main";
-import {  Link } from "../../types/dataview_types";
-import { query_error } from "../../handlers/query_error";
-import { evaluate_query_params } from "../../helpers/QueryDefinition";
-import { kind_defn } from "../../handlers/kind_table";
-import { video_defn } from "../../handlers/video_gallery";
-import { page_entry_defn } from "../../handlers/page_entry";
+import KindModelPlugin from "../main";
+import {  Link } from "../types/dataview_types";
+import { query_error } from "../handlers/query_error";
+import { evaluate_query_params } from "../helpers/QueryDefinition";
+import { kind_defn } from "../handlers/kind_table";
+import { video_defn } from "../handlers/video_gallery";
+import { page_entry_defn } from "../handlers/page_entry";
 
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -15,7 +15,15 @@ export const isPageLink= (v: unknown): v is Link => {
 	: false
 }
 
-export const km_codeblock_parser = (plugin: KindModelPlugin) => {
+/**
+ * **codeblockParser**`(p) => void`
+ * 
+ * Registers a handler with Obsidian to handle the `km` codeblock language.
+ * 
+ * - it parses blocks and hands off responsibility to the appropriate handler
+ * - if no handler is found, an error is raised in the UI
+ */
+export const codeblockParser = (plugin: KindModelPlugin) => {
 	let processor = async (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
 		el.style.overflowX = "auto"; 
 		

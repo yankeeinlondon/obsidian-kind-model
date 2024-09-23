@@ -7,10 +7,24 @@ import {
 	isTagCacheReady, 
 	lookupPageInfo 
 } from "./cache";
-import { isArray, isDefined, stripLeading } from "inferred-types";
+import { 
+	isArray, 
+	isDefined, 
+	stripLeading 
+} from "inferred-types";
 
 import {  isFileLink } from "type-guards";
-import { DvPage, Link, Classification, PageBanners, PageIcons, PageSuggestion, TAbstractFile, TFile, Tag, PageReference } from "types";
+import { 
+	DvPage, 
+	Classification, 
+	PageBanners, 
+	PageIcons, 
+	PageSuggestion, 
+	TAbstractFile, 
+	TFile, 
+	Tag, 
+	PageReference 
+} from "types";
 import { BuildingBlocksApi } from "types/BuildingBlocksApi";
 
 

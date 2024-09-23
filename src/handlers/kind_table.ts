@@ -1,9 +1,10 @@
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import {  OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
-import { isDvPage } from "../utils/type_guards/isDvPage";
+
 import { DvPage } from "../types/dataview_types";
 import { DvQuerySurface } from "./dv_page";
 import KindModelPlugin from "../main";
+import { isDvPage } from "type-guards";
 
 export type KindQueryOptions = {
 	category?: string;

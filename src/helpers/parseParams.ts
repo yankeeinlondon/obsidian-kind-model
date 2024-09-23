@@ -25,7 +25,8 @@ import {
 	isUndefined,
 	isScalar
 } from "inferred-types";
-import { isError } from "../utils/type_guards/isError";
+import { isError } from "type-guards";
+
 
 /**
  * Defines the parameters available to the options hash of a particular

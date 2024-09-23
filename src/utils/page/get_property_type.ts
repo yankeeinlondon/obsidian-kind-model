@@ -1,5 +1,12 @@
-import { getYouTubePageType,  isString, isUrl, isYouTubeUrl, stripLeading, stripTrailing } from "inferred-types";
-import { PropertyType } from "../../types/PageMeta";
+import { 
+	getYouTubePageType,  
+	isString, 
+	isUrl, 
+	isYouTubeUrl, 
+	stripLeading, 
+	stripTrailing 
+} from "inferred-types";
+import { PropertyType } from "types";
 
 
 

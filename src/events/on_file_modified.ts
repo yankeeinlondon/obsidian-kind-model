@@ -1,5 +1,5 @@
-import { EventHandler } from "../../helpers/EventHandler";
-import KindModelPlugin from "../../main";
+import { EventHandler } from "../helpers/EventHandler";
+import KindModelPlugin from "../main";
 import { Notice } from "obsidian";
 
 /**

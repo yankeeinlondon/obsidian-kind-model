@@ -1,15 +1,18 @@
-import {  isString } from "inferred-types";
-import { MarkdownView } from "obsidian";
 import KindModelPlugin from "../main";
-import { isMarkdownView } from "../utils/type_guards/isMarkdownView";
-import { isTFile } from "../utils/type_guards/isTFile";
-import { DvPage, FileLink } from "../types/dataview_types";
-import { isFileLink } from "../utils/type_guards/isFileLink";
-import { isDataviewPage } from "../utils/type_guards/isDataviewPage";
+import { DvPage } from "../types/dataview_types";
+
 import { dv_page } from "../handlers/dv_page";
-import {  TFile } from "../types/Obsidian";
 import { queryHandlers } from "./queryHandlers";
 import { buildingBlocks } from "./buildingBlocks";
+import {  isDvPage, isPageInfo } from "type-guards";
+import { PageReference } from "types";
+import { getPath } from "./getPath";
+import { createPageView } from "./createPageView";
+import { createPageInfo } from "./createPageInfo";
+import { getPage } from "./cache";
+import { formattingApi } from "./formattingApi";
+import { HtmlElement } from "inferred-types";
+import { renderApi } from "./renderApi";
 
 
 export const api = (plugin: KindModelPlugin) => ({
@@ -18,10 +21,51 @@ export const api = (plugin: KindModelPlugin) => ({
 	...queryHandlers(plugin),
 
 	/**
-	 * Get the `dv_page` helper utility to build a Dataview query
-	 * for a given page.
+	 * Returns a `DvPage` when given a valid path to a file in the vault.
+	 * 
+	 * - also ensures that `DvPage` is added to the cache
 	 */
-	dv_page: dv_page(plugin),
+	getPage: getPage(plugin),
+
+	/**
+	 * Returns the _file path_ to a page when any `PageReference` is passed in.
+	 */
+	getPath,
+
+	/**
+	 * Formatting to help you build useful HTML blocks that work
+	 * well with Obsidian.
+	 */
+	format: formattingApi(plugin),
+
+	/**
+	 * You can gain access to the Render API if you provide an HTMLElement and filePath.
+	 */
+	render: (el: HTMLElement, filePath: string) => renderApi(plugin,el,filePath),
+	
+	/** 
+	 * Converts a `MarkdownView` to a `PageView`.
+	 * 
+	 * A `PageView` is a `PageInfo` on steroids. It provides
+	 * things like _content_, _content structure_, and several 
+	 * DOM entry points.
+	 * 
+	 * Note: from a caching standpoint, the `PageInfo` is cached
+	 * but the remaining props which separate a `PageView` from
+	 * `PageInfo` are all derived from the view that was passed in
+	 * (and therefore are not cached).
+	 */
+	createPageView: createPageView(plugin),
+
+	createPageInfoPlus: null,
+
+	/**
+	 * Converts a `PageReference` into a `PageInfo` which has
+	 * tons of extra meta properties and functions along with 
+	 * a `page` property which represents the `DvPage` API surface
+	 * for this page.
+	 */
+	createPageInfo: createPageInfo(plugin),
 
 
 	/**
@@ -33,23 +77,18 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * 
 	 * **Note:** this uses Dataview to get the page (ignoring the Kind cache)
 	 */
-	get_dv_page: (page: TFile | FileLink | string | MarkdownView | DvPage): DvPage | null => {
-		if (isDataviewPage(page)) {
+	get_dv_page: (page: PageReference): DvPage | null => {
+		if (isDvPage(page)) {
 			return page;
+		} else if (isPageInfo(page)) {
+			return page.page;
 		} else {
-			const dataview_page = isTFile(page)
-				? plugin.dv.page(page.path)
-				: isFileLink(page)
-					? plugin.dv.page(page.path)
-					: isMarkdownView(page) && typeof page.file === "string"
-						? plugin.dv.page(page.file)
-						: isMarkdownView(page) && isTFile(page.file)
-						? plugin.dv.page(page.file.path)
-						: isString(page)
-							? plugin.dv.page(page)
-							: null;
+			const path = getPath(page);
+			if(path) {
+				return plugin.dv.page(path) || null;
+			}
 	
-			return isDataviewPage(dataview_page) ? dataview_page : null;
+			return null;
 		}
 	},
 

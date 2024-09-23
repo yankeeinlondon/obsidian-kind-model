@@ -1,11 +1,27 @@
 import KindModelPlugin from "main";
-import { DvPage, Link } from "types/dataview_types";
-import { TAbstractFile, TFile } from "types/Obsidian";
 import { getPath } from "./getPath";
 import { getPage, hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
 import { isDvPage, isPageInfo } from "type-guards";
 import { PageInfo, PageReference } from "types";
-import { getClassification, getPageBanners, getPageIcons, getSuggestedActions, hasCategoryProp, hasCategoryTag, hasKindDefinitionTag, hasKindProp, hasKindsProp, hasKindTag, hasMultipleKinds, hasTypeDefinitionTag, isCategoryPage, isKindDefnPage, isKindedPage, isSubcategoryPage, isTypeDefnPage } from "./buildingBlocks";
+import { 
+	getClassification, 
+	getPageBanners, 
+	getPageIcons, 
+	getSuggestedActions, 
+	hasCategoryProp, 
+	hasCategoryTag, 
+	hasKindDefinitionTag, 
+	hasKindProp, 
+	hasKindsProp, 
+	hasKindTag, 
+	hasMultipleKinds, 
+	hasTypeDefinitionTag, 
+	isCategoryPage, 
+	isKindDefnPage, 
+	isKindedPage, 
+	isSubcategoryPage, 
+	isTypeDefnPage 
+} from "./buildingBlocks";
 
 /**
  * Creates an entry in PAGE_INFO_CACHE for a page in the vault.

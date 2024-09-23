@@ -32,7 +32,7 @@ export type OnFileModified = TAbstractFile;
 
 
 /**
- * Provides better types for Obsidian
+ * Provides better _event_ types for Obsidian hooks
  */
 export const EventHandler = (plugin: KindModelPlugin) => ({
 	/** a new active tab has been selected */
