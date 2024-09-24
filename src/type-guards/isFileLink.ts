@@ -1,5 +1,5 @@
 import { isObject, isString } from "inferred-types"
-import { FileLink, Link } from "types"
+import { FileLink, Link } from "~/types"
 
 /**
  * Type guard which checks whether the passed in value is a `DvPageRef` structure.

@@ -6,6 +6,7 @@ import { DvPage } from "../types";
 import { getPath } from "./getPath"
 import { isDvPage, isPageInfo } from "../type-guards";
 import { PageInfo, PageReference } from "../types";
+import { isKindTag } from "./buildingBlocks";
 
 /**
  * caching of `DvPage`'s we're interested in
@@ -31,7 +32,7 @@ let PAGE_INFO_CACHE: Record<string, PageInfo> = {};
  * Note: we should only seen one item in the values array but this presumes there are never
  * duplicates so we should _not_ assume that :)
  */
-let KIND_DEFN_TAG_CACHE: Record<string, string[]> | null = null;
+let KIND_TAG_CACHE: Record<string, string[]> | null = null;
 
 /**
  * All of the "type definitions" in the vault.
@@ -42,21 +43,21 @@ let KIND_DEFN_TAG_CACHE: Record<string, string[]> | null = null;
  * Note: we should only seen one item in the values array but this presumes there are never
  * duplicates so we should _not_ assume that :)
  */
-let TYPE_DEFN_TAG_CACHE: Record<string, string[]> = {};
+let TYPE_TAG_CACHE: Record<string, string[]> = {};
 
 /**
- * Dictionary where:
+ * the Category tag cache is organized by the **kind's** tag and then the tag for the category.
  * 
- * - **key** is the tag name (with no leading `#`), 
- * - **value** is an an array of file paths which define this `kind`
- * 
- * Note: we expect only ONE definition but we need a way to capture
- * duplicates if they exist in the vault.
+ * - for example:
+ * ```ts
+ * { 
+ * 		"software": { 
+ * 			ai: "path-to-category-page"
+ * 		}
+ * }
+ * ```
  */
-let KINDED_TAG_CACHE: null | Record<string, TagCacheItem[]> = null;
-
-
-
+let CATEGORY_TAG_CACHE: Record<string, Record<string, string[]>> | null = null;
 
 
 const pushPage = (pg: DvPage | undefined) => {
@@ -66,137 +67,107 @@ const pushPage = (pg: DvPage | undefined) => {
 	}
 }
 
-export const isTagCacheReady = () => KINDED_TAG_CACHE !== null ? true : false;
 
-type TagDefnItem = {
-	/** the path to the kind definition */
-	path: string;
-	/** the path to the type this kind belongs to */
-	type?: string;
-}
-
-type TagCacheItem = {
-	path: string;
-	/** boolean flag to indicate if this page is acting as a "category page" for the given kind */
-	isCategory?: boolean;
-	/** boolean flag to indicate if this page is acting as a "subcategory page" for the given kind */
-	isSubcategory?: boolean;
-
-	/** the category of a kinded page */
-	category?: string;
-	/** the category of a kinded page */
-	subcategory?: string;
-}
-
-export const initializeTypeDefinitionTagCache = (p: KindModelPlugin) => {
-	if(!TYPE_DEFN_TAG_CACHE) {
-		TYPE_DEFN_TAG_CACHE = {};
+export const initializeTypeTagCache = (p: KindModelPlugin) => {
+	if(!TYPE_TAG_CACHE) {
+		TYPE_TAG_CACHE = {};
 		const definitions = p.dv.pages(`#type`);
 		for (const pg of definitions) {
 			const path = pg.file.path;
 			const tag = pg.file.etags.find(i => i.startsWith(`#type/`))?.split("/")[1];
-			if (tag && tag in TYPE_DEFN_TAG_CACHE) {
-				TYPE_DEFN_TAG_CACHE[tag].push(path);
+			if (tag && tag in TYPE_TAG_CACHE) {
+				TYPE_TAG_CACHE[tag].push(path);
 			} else if (tag) {
-				TYPE_DEFN_TAG_CACHE[tag] = [path];
+				TYPE_TAG_CACHE[tag] = [path];
 			}
 		}
 		p.info(`Initialized Type Definition Tag cache [${definitions.length}]`)
 	}	
 }
 
+export const initializeCategoryTagCache = (p: KindModelPlugin) => {
+	if(!CATEGORY_TAG_CACHE) {
+		initializeKindTagCache(p);
+		CATEGORY_TAG_CACHE = {};
+		for (const kt of Object.keys(KIND_TAG_CACHE || {})) {
+			const cats: DvPage[] = Array.from(p.dv.pages(`#${kt}/category`)) as DvPage[];
+			if (!CATEGORY_TAG_CACHE[kt]) {
+				CATEGORY_TAG_CACHE[kt] = {};
+			};
+			for (const cat of cats) {
+				const myCat = cat.file.etags.find(
+					t => t.split("/")[1] === "category" && t.split("/")[0] === `#${kt}`
+				)
+				if (myCat) {
+					if(!CATEGORY_TAG_CACHE[kt][myCat]) {
+						CATEGORY_TAG_CACHE[kt][myCat] = [];
+					}
+					if (!CATEGORY_TAG_CACHE[kt][myCat].includes(cat.file.path)) {
+						CATEGORY_TAG_CACHE[kt][myCat].push(cat.file.path);
+					}
+				}
+			}
+		}
+	}
+};
 
-export const initializeKindDefinitionTagCache = (p: KindModelPlugin) => {
-	if(!KIND_DEFN_TAG_CACHE) {
-		KIND_DEFN_TAG_CACHE = {};
+/**
+ * produces a list of valid category tags for the given kind tag passed in
+ */
+export const getAllCategoryTagsForKind = (p: KindModelPlugin) => (k: string) => {
+	if (isKindTag(p)(k)) {
+		initializeCategoryTagCache(p);
+		return Object.keys((CATEGORY_TAG_CACHE || {})[k]);
+	}
+}
+
+
+export const initializeKindTagCache = (p: KindModelPlugin) => {
+	if(!KIND_TAG_CACHE) {
+		KIND_TAG_CACHE = {};
 		const definitions = p.dv.pages(`#kind`);
 		for (const pg of definitions) {
 			const path = pg.file.path;
 			const tag = pg.file.etags.find(i => i.startsWith(`#kind/`))?.split("/")[1];
-			if (tag && tag in KIND_DEFN_TAG_CACHE) {
-				KIND_DEFN_TAG_CACHE[tag].push(path);
+			if (tag && tag in KIND_TAG_CACHE) {
+				KIND_TAG_CACHE[tag].push(path);
 			} else if (tag) {
-				KIND_DEFN_TAG_CACHE[tag] = [path];
+				KIND_TAG_CACHE[tag] = [path];
 			}
 		}
-		p.info(`Initialized Kind Definition Tag cache [${definitions.length}]`)
+		p.info(`Initialized Kind Tag cache [${definitions.length}]`)
 	}
 }
 
 
 /**
- * initializes the **Kinded Tag** cache (if not already initialized); because
- * this _depends on_ the **Kind Definition** cache, this too will be initialized.
+ * Gets the path to the Kind Definition when passed a kind tag.
+ * 
+ * Note: only the first Kind Definition with that tag is evaluated, duplicates ignored.
  */
-export const initializeKindedTagCache = (p: KindModelPlugin) => {
-	initializeKindDefinitionTagCache(p);
+export const getKindPathFromTag = (p: KindModelPlugin) => (tag: string): string | undefined =>  {
+	initializeKindTagCache(p);
 
-	if (!isTagCacheReady()) {
-		KINDED_TAG_CACHE = {};
-		const definitions = Object.keys(KIND_DEFN_TAG_CACHE || {});
-		if (definitions.length>0) {
-			const pages = p.dv.pages(definitions.map(i => `#${i}`).join(" OR "))
-				.filter(
-					p => p.file.tags.filter(
-						i => definitions.includes( stripLeading(i.split("/")[0], "#")) 
-					).length > 0 ? true : false
-				)
-				.map(
-					p=> {
-						const path = p.file.path;
-						const kinds = p.file.tags.filter(
-							t => definitions.includes( stripLeading(t.split("/")[0], "#")) 
-						);
-						for (const k of kinds) {
-							const [base, uno, dos, tres, quatro ] = k.split("/");
-							const isCategory = uno === "category" && dos !== undefined;
-							const isSubcategory = uno === "subcategory" && dos !== undefined && tres !== undefined;
+	return KIND_TAG_CACHE && tag in KIND_TAG_CACHE
+		? KIND_TAG_CACHE[tag][0]
+		: undefined;
+}
 
-							if (KINDED_TAG_CACHE && base in KINDED_TAG_CACHE) {
-								KINDED_TAG_CACHE[base].push({
-									path,
-									isCategory,
-									isSubcategory,
-									category: isCategory 
-										? dos
-										: isSubcategory
-										? tres
-										: dos,
-									subcategory: isCategory
-										? undefined
-										: isSubcategory
-										? quatro
-										: tres
+/**
+ * Gets the path to the Kind Definition when passed a kind tag.
+ * 
+ * Note: only the first Kind Definition with that tag is evaluated, duplicates ignored.
+ */
+export const getKindPageFromTag = (p: KindModelPlugin) => (tag: string): DvPage | undefined =>  {
+	initializeKindTagCache(p);
 
-								} as TagCacheItem)
-							} else if (KINDED_TAG_CACHE) {
-								KINDED_TAG_CACHE[base] = [{
-									path,
-									isCategory,
-									isSubcategory,
-									category: isCategory 
-										? dos
-										: isSubcategory
-										? tres
-										: dos,
-									subcategory: isCategory
-										? undefined
-										: isSubcategory
-										? quatro
-										: tres
-								}]
-							}
-
-						}
-					}
-				);
-			p.info(`- added ${pages.length} kinded pages to the Tag cache`)
-		}
-	}
+	return KIND_TAG_CACHE && tag in KIND_TAG_CACHE
+		? p.api.getPage(KIND_TAG_CACHE[tag][0])
+		: undefined;
 }
 
 export const getKindTagsFromCache = (tag?: string) => {
-	const tags = KINDED_TAG_CACHE ? Object.keys(KINDED_TAG_CACHE) : [];
+	const tags = KIND_TAG_CACHE ? Object.keys(KIND_TAG_CACHE) : [];
 	if (tag) {
 		return tags.filter(i => i.includes(tag));
 	} else {
@@ -208,10 +179,10 @@ export const getKindTagsFromCache = (tag?: string) => {
  * Returns the _first_ path to the Kind tag if it exists, otherwise returns undefined.
  */
 export const getTagPathFromCache = (p: KindModelPlugin) =>  (tag: string) => {
-	initializeKindedTagCache(p);
+	initializeKindTagCache(p);
 
-	if (KIND_DEFN_TAG_CACHE && tag in KIND_DEFN_TAG_CACHE) {
-		return KIND_DEFN_TAG_CACHE[tag][0]
+	if (KIND_TAG_CACHE && tag in KIND_TAG_CACHE) {
+		return KIND_TAG_CACHE[tag][0]
 	}
 
 	return undefined
@@ -225,25 +196,25 @@ export const getTagPathFromCache = (p: KindModelPlugin) =>  (tag: string) => {
  * - if `at` not used, the first page will be returned (if any exist)
  */
 export const getKindDefnFromCache = (p: KindModelPlugin) => (tag: string, at?: string) => {
-	if (!KIND_DEFN_TAG_CACHE) {
-		initializeKindDefinitionTagCache(p);
+	if (!KIND_TAG_CACHE) {
+		initializeKindTagCache(p);
 	}
-	if (KIND_DEFN_TAG_CACHE && tag in KIND_DEFN_TAG_CACHE && KIND_DEFN_TAG_CACHE[tag].length > 0) {
+	if (KIND_TAG_CACHE && tag in KIND_TAG_CACHE && KIND_TAG_CACHE[tag].length > 0) {
 		return at
-			? KIND_DEFN_TAG_CACHE[tag].find(p => p === at)
-			: KIND_DEFN_TAG_CACHE[tag][0];
+			? KIND_TAG_CACHE[tag].find(p => p === at)
+			: KIND_TAG_CACHE[tag][0];
 	}
 }
 
 export const kindDefinitionsWithDuplicates = (p: KindModelPlugin) => () => {
-	if (!KIND_DEFN_TAG_CACHE) {
-		initializeKindDefinitionTagCache(p);
+	if (!KIND_TAG_CACHE) {
+		initializeKindTagCache(p);
 	}
-	if (KIND_DEFN_TAG_CACHE) {
+	if (KIND_TAG_CACHE) {
 		const dups = [];
 
-		for (const tag of Object.keys(KIND_DEFN_TAG_CACHE)) {
-			if(KIND_DEFN_TAG_CACHE[tag].length > 1) {
+		for (const tag of Object.keys(KIND_TAG_CACHE)) {
+			if(KIND_TAG_CACHE[tag].length > 1) {
 				dups.push(tag)
 			}
 		}

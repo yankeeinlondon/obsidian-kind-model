@@ -14,8 +14,7 @@ import {
 	getKindTagsFromCache, 
 	getPage, 
 	getTagPathFromCache, 
-	initializeKindedTagCache, 
-	isTagCacheReady, 
+	initializeKindTagCache, 
 	lookupPageInfo, 
 } from "./cache";
 
@@ -33,9 +32,11 @@ import {
 	FileLink,
 	PropertyType,
 	PageCategory,
-	PageSubcategory
+	PageSubcategory,
+	ClassificationTuple
 } from "../types";
 import { BuildingBlocksApi } from "../types";
+import { getPropertyType } from "./getPropertyType";
 
 /**
  * returns all Kind tags which have `tag` as part of them; all tags 
@@ -44,9 +45,7 @@ import { BuildingBlocksApi } from "../types";
 export const getKnownKindTags = (p: KindModelPlugin) => (
 	tag?: string
 ) => {
-	if (!isTagCacheReady()) {
-		initializeKindedTagCache(p);
-	}
+	initializeKindTagCache(p);
 	
 	return getKindTagsFromCache(tag);
 }
@@ -62,21 +61,26 @@ export const isKeyOf = <
 }
 
 /**
- * for any page, it will return the `kind` (one or more)
- * for that page.
+ * For a given page, it will return the "kind tags" of that page. 
+ * 
+ * For instance:
+ * 
+ * - a page with the tag `#software/category/ai` would return `software`.
  */
 export const getKindTagsOfPage = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
 ): string[] => {
 	const page = getPage(p)(pg);
 	if(page) {
-		return Array.from(
-			p.api.isKindDefnPage(page)
-			? page.file.tags.find(i => i.startsWith("#kind/"))
-					? [ page.file.tags.find(i => i.startsWith("#kind/")) ]
-					: []
-			: page.file.tags.filter(t => isKindTag(p)(t.split("/")[0]))
-		) as string[]
+		return (
+			Array.from(
+				p.api.isKindDefnPage(page)
+				? page.file.etags.find(i => i.startsWith("#kind/"))
+						? [ page.file.etags.find(i => i.startsWith("#kind/"))?.split("/")[0] ]
+						: []
+				: page.file.etags.filter(t => isKindTag(p)(t.split("/")[0]))
+			) as string[]
+		).map(i => stripLeading(i, "#").split("/")[0])
 	}
 	return [];
 }
@@ -334,19 +338,11 @@ export const getCategories = (p: KindModelPlugin) => (pg: PageReference): PageCa
 	let categories: PageCategory[] = [];
 
 	for (const c of classy) {
-		const cat: DvPage[] = isFileLink(c.category) ? [p.api.getPage(c.category.path)] as [DvPage] : [];
-		const cats: DvPage[] = hasFileLink(c.categories) 
-			? c.categories
-				.map(i => isFileLink(i) ? p.api.getPage(i) : undefined)
-				.filter(i => i) as DvPage[]
-			: [];
-		const all: DvPage[] = [...cat,...cats];
+		const kind = c.kind;
+		const kindTag = getKindTagsOfPage(p)(kind)[0];
+		const cats = c.categories.map(i => i[1]) as DvPage[];
 
-		if (all.length > 0) {
-			categories.push(
-				{ kind: c.kind, categories: all }
-			)
-		}
+		categories.push({kind, kindTag, categories: cats});
 	}
 
 	return categories;
@@ -496,8 +492,10 @@ export const isTypeDefnPage = (p: KindModelPlugin) => (pg: DvPage | TFile | TAbs
 /**
  * return all valid kind tags on a given page
  */
-const getPageKindTags = (p: KindModelPlugin) => (pg: DvPage | TFile | TAbstractFile | string | undefined): string[] => {
-	const page = pg ? getPage(p)(pg) : undefined;
+const getPageKindTags = (p: KindModelPlugin) => (
+	pg: PageReference | undefined
+): string[] => {
+	const page = p.api.getPage(pg);
 	const tags: string[] = [];
 	
 	if (page) {
@@ -545,7 +543,7 @@ export const getMetadata = (p: KindModelPlugin) => (pg: PageReference | undefine
 		let fm = page.file.frontmatter;
 	
 		for (const key of Object.keys(fm)) {
-			const type = get_property_type(fm[key]);
+			const type = getPropertyType(fm[key]);
 			if (meta[type]) {
 				meta[type].push(key);
 			} else {
@@ -559,6 +557,47 @@ export const getMetadata = (p: KindModelPlugin) => (pg: PageReference | undefine
 	return {} as Record<Partial<PropertyType>,string[]>;
 }
 
+/**
+ * given a page, returns the Subcategory tag found (if found)
+ */
+export const getSubcategoryTag = (p: KindModelPlugin) => (
+	pg: PageReference
+): string | undefined => {
+	const page = p.api.getPage(pg);
+	if(page) {
+		const tag = page.file.etags.find(t => t.split("/")[1] === "subcategory" && t.split("/").length === 4);
+
+		if (tag) {
+			return tag.split("/")[3];
+		}
+	}
+
+	return undefined;
+}
+
+/**
+ * given a page, returns the Category tag found (if found)
+ */
+export const getCategoryTag = (p: KindModelPlugin) => (
+	pg: PageReference,
+	kindTag?: string
+): string | undefined => {
+	const page = p.api.getPage(pg);
+	if(page) {
+		/** those tags which qualify as a category definition */
+		const tags = Array.from(page.file.etags
+			.filter(t => t.split("/")[1] === "category" && t.split("/").length === 3)
+		) as string[];
+
+		if (tags.length > 0) {
+			return kindTag
+				? tags.find(t => t.startsWith(`#${kindTag}/`))?.split("/")[2]
+				: tags[0].split("/")[2]
+		}
+	}
+
+	return undefined;
+}
 
 export const getClassification = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
@@ -567,11 +606,12 @@ export const getClassification = (p: KindModelPlugin) => (
 
 	if(page) {
 		let info = lookupPageInfo(p)(page.file.path);
-		if(info) {
+		if(info && isArray(info.classifications)) {
 			return info.classifications;
 		} else {
+			let kt = p.api.getKindTagsOfPage(page);
 			/** tags on this page which are valid "kind tags" */
-			let kindTags = getPageKindTags(p)(page).map(i => getPage(p)(i)).filter(i => i) as DvPage[];
+			let kindTags = kt.map(i => getPage(p)(i)).filter(i => i) as DvPage[];
 
 			let kindProp = page.kind && isFileLink(page.kind)
 				? getPage(p)(page.kind.path)
@@ -597,51 +637,52 @@ export const getClassification = (p: KindModelPlugin) => (
 			}
 
 			const kindPaths = new Set([...kindsProp, kindProp, ...kindTags].filter(i => i).map((i: DvPage) => i.file.path));
-			const kinds = Array.from(kindPaths).map(k => getPage(p)(k));
+			const kinds: DvPage[] = Array.from(kindPaths).map(k => getPage(p)(k)) as DvPage[];
+
 			
-			if (isKindDefnPage(p)(page)) {
-				let masterKindDefn = getPage(p)(getKindDefnFromCache(p)("kind"));
+			const classification: Classification[] = [];
+		
+			for (const kind of kinds) {
+				const kindTag = getKindTagsOfPage(p)(kind)[0];
 
-				// because it's a Kind Definition; only concerned with "type" and "kind"
-				if (!masterKindDefn) {
-					p.warn(`This vault does not appear to have a page for the #kind/kind definition page!`);
-				} else if (kinds.length === 0)  {
-					p.info(`The page "${page.file.path}" appears to be a kind definition but does not define a "kind" property!`);
-				} else if (kinds.length > 1) {
-					p.info(`The page "${page.file.path}" has more than one "kind" associated with it. This is ok in general but this page appears to be a "kind definition" page!`)
+				const cat = kind.category && isFileLink(kind.category)
+					? p.api.getPage(kind.category.path)
+					: undefined;
+				const cats: DvPage[] = kind.categories && hasFileLink(kind.categories)
+					? Array.from(kind.categories
+						.filter(i => isFileLink(i))
+						.map(i => p.api.getPage(i.path))
+					) as DvPage[]
+					: [] as DvPage[];
+
+				if (cat && !cats.map(i => i.file.path).includes(cat.file.path)) {
+					cats.push(cat);
 				}
 
-				return kinds.map((k: DvPage) => ({
-					kind: k.file.name,
-					kindPath: k.file.path,
-					kindTag: "",
-					...(
-						page.type && isFileLink(page.type) && getPage(p)(page.type.path)
-						? {
-							type: getPage(p)(page.type.path)?.file.name,
-							typePath: getPage(p)(page.type.path)?.file.path,
-							typeTag: ""
-						}
-						: k.type && isFileLink(k.type) && getPage(p)(k.type.path)
-						? {
-							type: getPage(p)(k.type.path)?.file.name,
-							typePath: getPage(p)(k.type.path)?.file.path,
-							typeTag: ""
-						}
-						: {}
-					)
-				})) as Classification[];
-			} else if (isKindedPage(p)(page)) {
-				// KINDED PAGES
-				const classification: Classification[] = [];
-				for (const kind of kinds) {
-					
-				}
+				const type: DvPage | undefined = kind.type && isFileLink(kind.type)
+					? p.api.getPage(kind.type)
+					: page.type && isFileLink(page.type)
+					? p.api.getPage(page.type)
+					: undefined;
 
-			} else {
-				// not a Kind Definition or a KINDED age
-				return []
+				const subcategory: ClassificationTuple | undefined = 
+					page.subcategory && 
+					isFileLink(page.subcategory)
+						? [ getSubcategoryTag(p)(page.subcategory), p.api.getPage(page.subcategory)] as ClassificationTuple
+						: undefined;
+
+				classification.push({
+					type,
+					kind,
+					categories: cats.map(c => [getCategoryTag(p)(c, kindTag), c]),
+					subcategory
+				} as Classification)
+
 			}
+
+			p.debug("classification", classification);
+
+			return classification
 		}
 	}
 

@@ -338,7 +338,8 @@ export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | st
  * particular kind.
  */
 export type PageCategory = {
-	kind: string;
+	kind: DvPage;
+	kindTag: string;
 	categories: DvPage[];
 }
 

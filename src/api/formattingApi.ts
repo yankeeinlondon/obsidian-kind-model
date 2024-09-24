@@ -5,9 +5,9 @@ import {
 	isFunction, 
 	TypedFunction 
 } from "inferred-types";
-import { listStyle, style } from "../api";
+import { getPage, listStyle, style } from "../api";
 import KindModelPlugin from "../main";
-import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, StyleOptions } from "../types";
+import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, PageReference, StyleOptions } from "../types";
 import { isDvPage, isLink } from "../type-guards";
 import { blockquote } from "./formatting/blockquote";
 
@@ -103,6 +103,22 @@ export type LinkOptions = {
 }
 
 
+export const internalLink = (p: KindModelPlugin) => (
+	ref: PageReference | undefined, 
+	opt?: LinkOptions & {title?: string}
+) => {
+	const link = (href: string, title: string) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`
+	let page = getPage(p)(ref);
+
+	if (page) {
+
+		link(page.file.path, opt?.title || page.file.name)
+	}
+
+	return ""
+};
+
+
 
 
 /**
@@ -114,9 +130,7 @@ export const formattingApi = (p: KindModelPlugin) =>{
 
 		/** removes the pound symbol from a string */
 		removePound,
-	
 
-	
 		/**
 		 * returns the HTML for an unordered list
 		 */
@@ -160,16 +174,7 @@ export const formattingApi = (p: KindModelPlugin) =>{
 		 * here provides the reference as meta-data other then the traditional `href` 
 		 * property.
 		 */
-		internalLink: (ref: DvPage | Link, opt?: LinkOptions & {title?: string}) => {
-			const link = (href: string, title: string) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`
-	
-			return isDvPage(ref) 
-				? link(ref.file.path, opt?.title || ref.file.name)
-				: isLink(ref)
-					? link(ref.path , opt?.title || ref?.hover || "link" )
-					: ""
-	
-		},
+		internalLink: internalLink(p),
 	
 	
 		/**

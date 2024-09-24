@@ -1,4 +1,4 @@
-import { getProp, showAbout, showCategoriesFor, showCreatedDate, showDesc, showDueDate, showKind, showLinks, showMetrics, showModifiedDate, showPeers, showProp, showSlider, showSubcategoriesFor, showTags, showWhen } from "~/api"
+import { getProp, showAbout, showCategories, showClassifications, showCreatedDate, showDesc, showDueDate, showKind, showLinks, showMetrics, showModifiedDate, showPeers, showProp, showSlider, showSubcategories, showTags, showWhen } from "~/api"
 
 
 export type ShowApi = {
@@ -12,15 +12,16 @@ export type ShowApi = {
 	 * Provides a string output which is a comma separated list of categories
 	 * for the passed in page.
 	 */
-	showCategoriesFor: ReturnType<typeof showCategoriesFor>;
+	showCategories: ReturnType<typeof showCategories>;
 	/**
 	 * Provides a string output which is a comma separated list of subcategories
 	 * for the passed in page.
 	 */
-	showSubcategoriesFor: ReturnType<typeof showSubcategoriesFor>;
+	showSubcategories: ReturnType<typeof showSubcategories>;
 	/**
 	 * list out all tags on the page (excluding those added to `exclude` property)
 	 */
+	showClassifications: ReturnType<typeof showClassifications>;
 	showTags: ReturnType<typeof showTags>;
 	showLinks: ReturnType<typeof showLinks>;
 	showProp: ReturnType<typeof showProp>;

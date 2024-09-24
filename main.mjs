@@ -1224,7 +1224,7 @@ function objToLocalTS(obj) {
   return +d;
 }
 function weeksInWeekYear(weekYear) {
-  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last = weekYear - 1, p2 = (last + Math.floor(last / 4) - Math.floor(last / 100) + Math.floor(last / 400)) % 7;
+  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last2 = weekYear - 1, p2 = (last2 + Math.floor(last2 / 4) - Math.floor(last2 / 100) + Math.floor(last2 / 400)) % 7;
   return p1 === 4 || p2 === 3 ? 53 : 52;
 }
 function untruncateYear(year) {
@@ -9597,6 +9597,12 @@ class SettingsTab extends PluginSettingTab {
     ).addDropdown(LOG_LEVELS);
   }
 }
+function createConstant$1(kind) {
+  return {
+    _type: "Constant",
+    kind
+  };
+}
 var NUMERIC_CHAR = [
   "0",
   "1",
@@ -9668,6 +9674,7 @@ var entry = (refType, desc, ...params) => [
   // TODO: get the below working`
   "ContainsSome": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.singularTuple())
 });
+var Never$1 = createConstant$1("never");
 var SIMPLE_SCALAR_TOKENS = [
   "string",
   "number",
@@ -9848,14 +9855,26 @@ var isCssAspectRatio = (val) => {
 var isInlineSvg = (v) => {
   return isString$1(v) && v.trim().startsWith(`<svg`) && v.trim().endsWith(`</svg>`);
 };
+var isYouTubeUrl = (val) => {
+  return isString$1(val) && (val.startsWith("https://www.youtube.com") || val.startsWith("https://youtube.com") || val.startsWith("https://youtu.be"));
+};
 var isYouTubeShareUrl = (val) => {
   return isString$1(val) && val.startsWith(`https://youtu.be`);
 };
 var isYouTubeVideoUrl = (val) => {
   return isString$1(val) && (val.startsWith("https://www.youtube.com") || val.startsWith("https://youtube.com") || val.startsWith("https://youtu.be"));
 };
+var feed_map = (type) => {
+  return isUndefined(type) ? `/feed` : type === "liked" ? `/playlist?list=LL` : ["history", "playlists", "trending", "subscriptions"].includes(type) ? `/feed/${type}` : `/feed/`;
+};
+var isYouTubeFeedUrl = (val, type = void 0) => {
+  return isString$1(val) && (val.startsWith(`https://www.youtube.com${feed_map(type)}`) || val.startsWith(`https://youtube.com${feed_map(type)}`));
+};
 var isYouTubeCreatorUrl = (url) => {
   return isString$1(url) && (url.startsWith(`https://www.youtube.com/@`) || url.startsWith(`https://youtube.com/@`) || url.startsWith(`https://www.youtube.com/channel/`));
+};
+var isYouTubeVideosInPlaylist = (val) => {
+  return isString$1(val) && (val.startsWith(`https://www.youtube.com/playlist?`) || val.startsWith(`https://youtube.com/playlist?`)) && hasUrlQueryParameter(val, "list");
 };
 var isRepoUrl = (val) => {
   const baseUrls = valuesOf(REPO_SOURCE_LOOKUP).flat();
@@ -9934,6 +9953,12 @@ var createFnWithProps = (fn2, props, narrowing = false) => {
   }
   return isTrue(narrowing) ? fnWithProps : fnWithProps;
 };
+var last = (list2) => {
+  return [...list2].pop();
+};
+var getYouTubePageType = (url) => {
+  return isYouTubeUrl(url) ? isYouTubeVideoUrl(url) && (hasUrlQueryParameter(url, "v") || isYouTubeShareUrl(url)) ? hasUrlQueryParameter(url, "list") ? isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::in-list::share-link::with-timestamp` : `play::video::in-list::share-link` : `play::video::in-list` : isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::solo::share-link::with-timestamp` : `play::video::solo::share-link` : `play::video::solo` : isYouTubeCreatorUrl(url) ? getUrlPath(url).includes("/videos") ? "creator::videos" : getUrlPath(url).includes("/playlists") ? "creator::playlists" : last(getUrlPath(url).split("/")).startsWith("@") || getUrlPath(url).includes("/featured") ? "creator::featured" : "creator::other" : isYouTubeFeedUrl(url) ? isYouTubeFeedUrl(url, "history") ? "feed::history" : isYouTubeFeedUrl(url, "playlists") ? "feed::playlists" : isYouTubeFeedUrl(url, "liked") ? "feed::liked" : isYouTubeFeedUrl(url, "subscriptions") ? "feed::subscriptions" : isYouTubeFeedUrl(url, "trending") ? "feed::trending" : "feed::other" : isYouTubeVideosInPlaylist(url) ? "playlist::show" : "other" : Never$1;
+};
 var youtubeEmbed = (url) => {
   if (hasUrlQueryParameter(url, "v")) {
     const id = getUrlQueryParams(url, "v");
@@ -9950,6 +9975,18 @@ var youtubeEmbed = (url) => {
   }
 };
 Object.values(NETWORK_PROTOCOL_LOOKUP).flat().filter((i) => i !== "");
+var removeUrlProtocol = (url) => {
+  return stripBefore(url, "://");
+};
+var ensurePath = (val) => {
+  const val2 = ensureLeading(val, "/");
+  return val === "" ? "" : stripTrailing(val2, "/");
+};
+var getUrlPath = (url) => {
+  return isUrl(url) ? ensurePath(
+    stripAfter(stripBefore(removeUrlProtocol(url), "/"), "?")
+  ) : Never$1;
+};
 var getUrlQueryParams = (url, specific = void 0) => {
   const qp = stripBefore(url, "?");
   if (specific) {
@@ -9998,78 +10035,32 @@ const getPath = (pg) => {
 };
 let PAGE_CACHE = {};
 let PAGE_INFO_CACHE = {};
-let KIND_DEFN_TAG_CACHE = null;
-let KINDED_TAG_CACHE = null;
+let KIND_TAG_CACHE = null;
 const pushPage = (pg) => {
   if (pg) {
     PAGE_CACHE[pg.file.path] = pg;
     return pg;
   }
 };
-const isTagCacheReady = () => KINDED_TAG_CACHE !== null ? true : false;
-const initializeKindDefinitionTagCache = (p2) => {
+const initializeKindTagCache = (p2) => {
   var _a2;
-  if (!KIND_DEFN_TAG_CACHE) {
-    KIND_DEFN_TAG_CACHE = {};
+  if (!KIND_TAG_CACHE) {
+    KIND_TAG_CACHE = {};
     const definitions = p2.dv.pages(`#kind`);
     for (const pg of definitions) {
       const path = pg.file.path;
       const tag = (_a2 = pg.file.etags.find((i) => i.startsWith(`#kind/`))) == null ? void 0 : _a2.split("/")[1];
-      if (tag && tag in KIND_DEFN_TAG_CACHE) {
-        KIND_DEFN_TAG_CACHE[tag].push(path);
+      if (tag && tag in KIND_TAG_CACHE) {
+        KIND_TAG_CACHE[tag].push(path);
       } else if (tag) {
-        KIND_DEFN_TAG_CACHE[tag] = [path];
+        KIND_TAG_CACHE[tag] = [path];
       }
     }
-    p2.info(`Initialized Kind Definition Tag cache [${definitions.length}]`);
-  }
-};
-const initializeKindedTagCache = (p2) => {
-  initializeKindDefinitionTagCache(p2);
-  if (!isTagCacheReady()) {
-    KINDED_TAG_CACHE = {};
-    const definitions = Object.keys(KIND_DEFN_TAG_CACHE || {});
-    if (definitions.length > 0) {
-      const pages = p2.dv.pages(definitions.map((i) => `#${i}`).join(" OR ")).filter(
-        (p22) => p22.file.tags.filter(
-          (i) => definitions.includes(stripLeading(i.split("/")[0], "#"))
-        ).length > 0 ? true : false
-      ).map(
-        (p22) => {
-          const path = p22.file.path;
-          const kinds = p22.file.tags.filter(
-            (t) => definitions.includes(stripLeading(t.split("/")[0], "#"))
-          );
-          for (const k of kinds) {
-            const [base2, uno, dos, tres, quatro] = k.split("/");
-            const isCategory = uno === "category" && dos !== void 0;
-            const isSubcategory = uno === "subcategory" && dos !== void 0 && tres !== void 0;
-            if (KINDED_TAG_CACHE && base2 in KINDED_TAG_CACHE) {
-              KINDED_TAG_CACHE[base2].push({
-                path,
-                isCategory,
-                isSubcategory,
-                category: isCategory ? dos : isSubcategory ? tres : dos,
-                subcategory: isCategory ? void 0 : isSubcategory ? quatro : tres
-              });
-            } else if (KINDED_TAG_CACHE) {
-              KINDED_TAG_CACHE[base2] = [{
-                path,
-                isCategory,
-                isSubcategory,
-                category: isCategory ? dos : isSubcategory ? tres : dos,
-                subcategory: isCategory ? void 0 : isSubcategory ? quatro : tres
-              }];
-            }
-          }
-        }
-      );
-      p2.info(`- added ${pages.length} kinded pages to the Tag cache`);
-    }
+    p2.info(`Initialized Kind Tag cache [${definitions.length}]`);
   }
 };
 const getKindTagsFromCache = (tag) => {
-  const tags = KINDED_TAG_CACHE ? Object.keys(KINDED_TAG_CACHE) : [];
+  const tags = KIND_TAG_CACHE ? Object.keys(KIND_TAG_CACHE) : [];
   if (tag) {
     return tags.filter((i) => i.includes(tag));
   } else {
@@ -10077,18 +10068,18 @@ const getKindTagsFromCache = (tag) => {
   }
 };
 const getTagPathFromCache = (p2) => (tag) => {
-  initializeKindedTagCache(p2);
-  if (KIND_DEFN_TAG_CACHE && tag in KIND_DEFN_TAG_CACHE) {
-    return KIND_DEFN_TAG_CACHE[tag][0];
+  initializeKindTagCache(p2);
+  if (KIND_TAG_CACHE && tag in KIND_TAG_CACHE) {
+    return KIND_TAG_CACHE[tag][0];
   }
   return void 0;
 };
 const getKindDefnFromCache = (p2) => (tag, at) => {
-  if (!KIND_DEFN_TAG_CACHE) {
-    initializeKindDefinitionTagCache(p2);
+  if (!KIND_TAG_CACHE) {
+    initializeKindTagCache(p2);
   }
-  if (KIND_DEFN_TAG_CACHE && tag in KIND_DEFN_TAG_CACHE && KIND_DEFN_TAG_CACHE[tag].length > 0) {
-    return at ? KIND_DEFN_TAG_CACHE[tag].find((p22) => p22 === at) : KIND_DEFN_TAG_CACHE[tag][0];
+  if (KIND_TAG_CACHE && tag in KIND_TAG_CACHE && KIND_TAG_CACHE[tag].length > 0) {
+    return at ? KIND_TAG_CACHE[tag].find((p22) => p22 === at) : KIND_TAG_CACHE[tag][0];
   }
 };
 const getPage = (p2) => (pg, force) => {
@@ -10141,21 +10132,42 @@ const lookupPageInfo = (p2) => (pg) => {
     return void 0;
   }
 };
-const getKnownKindTags = (p2) => (tag) => {
-  if (!isTagCacheReady()) {
-    initializeKindedTagCache(p2);
+const getPropertyType = (value2) => {
+  if (isUrl(value2, "https", "http")) {
+    if (isYouTubeUrl(value2)) {
+      return `youtube::${getYouTubePageType(value2)}`;
+    }
+    return "url";
+  } else if (isString$1(value2)) {
+    if (value2.startsWith("[[") && value2.endsWith("]]")) {
+      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
+      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".webp") || content2.endsWith(".webp")) {
+        return "image::vault";
+      } else if (content2.endsWith(".excalidraw")) {
+        return "drawing::vault";
+      }
+    }
+  } else if (Array.isArray(value2)) {
+    if (value2.every((i) => isUrl(i))) {
+      return "list::url";
+    }
   }
+  return "other";
+};
+const getKnownKindTags = (p2) => (tag) => {
+  initializeKindTagCache(p2);
   return getKindTagsFromCache(tag);
 };
 const isKeyOf = (container, key) => {
   return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
 };
 const getKindTagsOfPage = (p2) => (pg) => {
+  var _a2;
   const page = getPage(p2)(pg);
   if (page) {
     return Array.from(
-      p2.api.isKindDefnPage(page) ? page.file.tags.find((i) => i.startsWith("#kind/")) ? [page.file.tags.find((i) => i.startsWith("#kind/"))] : [] : page.file.tags.filter((t) => isKindTag()(t.split("/")[0]))
-    );
+      p2.api.isKindDefnPage(page) ? page.file.etags.find((i) => i.startsWith("#kind/")) ? [(_a2 = page.file.etags.find((i) => i.startsWith("#kind/"))) == null ? void 0 : _a2.split("/")[0]] : [] : page.file.etags.filter((t) => isKindTag()(t.split("/")[0]))
+    ).map((i) => stripLeading(i, "#").split("/")[0]);
   }
   return [];
 };
@@ -10281,14 +10293,10 @@ const getCategories = (p2) => (pg) => {
   const classy = getClassification(p2)(pg);
   let categories = [];
   for (const c of classy) {
-    const cat = isFileLink(c.category) ? [p2.api.getPage(c.category.path)] : [];
-    const cats = hasFileLink(c.categories) ? c.categories.map((i) => isFileLink(i) ? p2.api.getPage(i) : void 0).filter((i) => i) : [];
-    const all = [...cat, ...cats];
-    if (all.length > 0) {
-      categories.push(
-        { kind: c.kind, categories: all }
-      );
-    }
+    const kind = c.kind;
+    const kindTag = getKindTagsOfPage(p2)(kind)[0];
+    const cats = c.categories.map((i) => i[1]);
+    categories.push({ kind, kindTag, categories: cats });
   }
   return categories;
 };
@@ -10358,7 +10366,7 @@ const isTypeDefnPage = (p2) => (pg) => {
   }
 };
 const getPageKindTags = (p2) => (pg) => {
-  const page = pg ? getPage(p2)(pg) : void 0;
+  const page = p2.api.getPage(pg);
   const tags = [];
   if (page) {
     for (const t of page.file.tags.map((i) => stripLeading(i.split("/")[0], "#"))) {
@@ -10395,7 +10403,7 @@ const getMetadata = (p2) => (pg) => {
     let meta = {};
     let fm = page.file.frontmatter;
     for (const key of Object.keys(fm)) {
-      const type = get_property_type(fm[key]);
+      const type = getPropertyType(fm[key]);
       if (meta[type]) {
         meta[type].push(key);
       } else {
@@ -10406,14 +10414,38 @@ const getMetadata = (p2) => (pg) => {
   }
   return {};
 };
+const getSubcategoryTag = (p2) => (pg) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const tag = page.file.etags.find((t) => t.split("/")[1] === "subcategory" && t.split("/").length === 4);
+    if (tag) {
+      return tag.split("/")[3];
+    }
+  }
+  return void 0;
+};
+const getCategoryTag = (p2) => (pg, kindTag) => {
+  var _a2;
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const tags = Array.from(
+      page.file.etags.filter((t) => t.split("/")[1] === "category" && t.split("/").length === 3)
+    );
+    if (tags.length > 0) {
+      return kindTag ? (_a2 = tags.find((t) => t.startsWith(`#${kindTag}/`))) == null ? void 0 : _a2.split("/")[2] : tags[0].split("/")[2];
+    }
+  }
+  return void 0;
+};
 const getClassification = (p2) => (pg) => {
   const page = pg ? getPage(p2)(pg) : void 0;
   if (page) {
     let info2 = lookupPageInfo(p2)(page.file.path);
-    if (info2) {
+    if (info2 && isArray(info2.classifications)) {
       return info2.classifications;
     } else {
-      let kindTags = getPageKindTags(p2)(page).map((i) => getPage(p2)(i)).filter((i) => i);
+      let kt = p2.api.getKindTagsOfPage(page);
+      let kindTags = kt.map((i) => getPage(p2)(i)).filter((i) => i);
       let kindProp = page.kind && isFileLink(page.kind) ? getPage(p2)(page.kind.path) : void 0;
       let kindsProp = page.kinds && isArray(page.kinds) && page.kinds.filter(isFileLink).length > 0 ? page.kinds.filter(isFileLink).map((l2) => getPage(p2)(l2.path)) : [];
       if (!kindProp && kindTags.length === 0 && kindsProp.length === 0) {
@@ -10429,38 +10461,27 @@ const getClassification = (p2) => (pg) => {
       }
       const kindPaths = new Set([...kindsProp, kindProp, ...kindTags].filter((i) => i).map((i) => i.file.path));
       const kinds = Array.from(kindPaths).map((k) => getPage(p2)(k));
-      if (isKindDefnPage(p2)(page)) {
-        let masterKindDefn = getPage(p2)(getKindDefnFromCache(p2)("kind"));
-        if (!masterKindDefn) {
-          p2.warn(`This vault does not appear to have a page for the #kind/kind definition page!`);
-        } else if (kinds.length === 0) {
-          p2.info(`The page "${page.file.path}" appears to be a kind definition but does not define a "kind" property!`);
-        } else if (kinds.length > 1) {
-          p2.info(`The page "${page.file.path}" has more than one "kind" associated with it. This is ok in general but this page appears to be a "kind definition" page!`);
+      const classification2 = [];
+      for (const kind of kinds) {
+        const kindTag = getKindTagsOfPage(p2)(kind)[0];
+        const cat = kind.category && isFileLink(kind.category) ? p2.api.getPage(kind.category.path) : void 0;
+        const cats = kind.categories && hasFileLink(kind.categories) ? Array.from(
+          kind.categories.filter((i) => isFileLink(i)).map((i) => p2.api.getPage(i.path))
+        ) : [];
+        if (cat && !cats.map((i) => i.file.path).includes(cat.file.path)) {
+          cats.push(cat);
         }
-        return kinds.map((k) => {
-          var _a2, _b2, _c2, _d2;
-          return {
-            kind: k.file.name,
-            kindPath: k.file.path,
-            kindTag: "",
-            ...page.type && isFileLink(page.type) && getPage(p2)(page.type.path) ? {
-              type: (_a2 = getPage(p2)(page.type.path)) == null ? void 0 : _a2.file.name,
-              typePath: (_b2 = getPage(p2)(page.type.path)) == null ? void 0 : _b2.file.path,
-              typeTag: ""
-            } : k.type && isFileLink(k.type) && getPage(p2)(k.type.path) ? {
-              type: (_c2 = getPage(p2)(k.type.path)) == null ? void 0 : _c2.file.name,
-              typePath: (_d2 = getPage(p2)(k.type.path)) == null ? void 0 : _d2.file.path,
-              typeTag: ""
-            } : {}
-          };
+        const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
+        const subcategory = page.subcategory && isFileLink(page.subcategory) ? [getSubcategoryTag(p2)(page.subcategory), p2.api.getPage(page.subcategory)] : void 0;
+        classification2.push({
+          type,
+          kind,
+          categories: cats.map((c) => [getCategoryTag(p2)(c, kindTag), c]),
+          subcategory
         });
-      } else if (isKindedPage(p2)(page)) {
-        for (const kind of kinds) {
-        }
-      } else {
-        return [];
       }
+      p2.debug("classification", classification2);
+      return classification2;
     }
   }
   return [];
@@ -13826,11 +13847,11 @@ var require_code = __commonJS({
       if (state.md.options.allowIndentation) {
         return false;
       }
-      var nextLine, last, token;
+      var nextLine, last2, token;
       if (state.sCount[startLine] - state.blkIndent < 4) {
         return false;
       }
-      last = nextLine = startLine + 1;
+      last2 = nextLine = startLine + 1;
       while (nextLine < endLine) {
         if (state.isEmpty(nextLine)) {
           nextLine++;
@@ -13838,14 +13859,14 @@ var require_code = __commonJS({
         }
         if (state.sCount[nextLine] - state.blkIndent >= 4) {
           nextLine++;
-          last = nextLine;
+          last2 = nextLine;
           continue;
         }
         break;
       }
-      state.line = last;
+      state.line = last2;
       token = state.push("code_block", "code", 0);
-      token.content = state.getLines(startLine, last, 4 + state.blkIndent, false) + "\n";
+      token.content = state.getLines(startLine, last2, 4 + state.blkIndent, false) + "\n";
       token.map = [startLine, state.line];
       return true;
     };
@@ -14903,7 +14924,7 @@ var require_state_block = __commonJS({
       return pos;
     };
     StateBlock.prototype.getLines = function getLines(begin, end2, indent, keepLastLF) {
-      var i, lineIndent, ch, first, last, queue, lineStart, line = begin;
+      var i, lineIndent, ch, first, last2, queue, lineStart, line = begin;
       if (begin >= end2) {
         return "";
       }
@@ -14912,11 +14933,11 @@ var require_state_block = __commonJS({
         lineIndent = 0;
         lineStart = first = this.bMarks[line];
         if (line + 1 < end2 || keepLastLF) {
-          last = this.eMarks[line] + 1;
+          last2 = this.eMarks[line] + 1;
         } else {
-          last = this.eMarks[line];
+          last2 = this.eMarks[line];
         }
-        while (first < last && lineIndent < indent) {
+        while (first < last2 && lineIndent < indent) {
           ch = this.src.charCodeAt(first);
           if (isSpace(ch)) {
             if (ch === 9) {
@@ -14932,9 +14953,9 @@ var require_state_block = __commonJS({
           first++;
         }
         if (lineIndent > indent) {
-          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last);
+          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last2);
         } else {
-          queue[i] = this.src.slice(first, last);
+          queue[i] = this.src.slice(first, last2);
         }
       }
       return queue.join("");
@@ -15768,8 +15789,8 @@ var require_balance_pairs = __commonJS({
 var require_text_collapse = __commonJS({
   "node_modules/markdown-it/lib/rules_inline/text_collapse.js"(exports, module) {
     module.exports = function text_collapse(state) {
-      var curr, last, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
-      for (curr = last = 0; curr < max2; curr++) {
+      var curr, last2, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
+      for (curr = last2 = 0; curr < max2; curr++) {
         if (tokens2[curr].nesting < 0)
           level--;
         tokens2[curr].level = level;
@@ -15778,14 +15799,14 @@ var require_text_collapse = __commonJS({
         if (tokens2[curr].type === "text" && curr + 1 < max2 && tokens2[curr + 1].type === "text") {
           tokens2[curr + 1].content = tokens2[curr].content + tokens2[curr + 1].content;
         } else {
-          if (curr !== last) {
-            tokens2[last] = tokens2[curr];
+          if (curr !== last2) {
+            tokens2[last2] = tokens2[curr];
           }
-          last++;
+          last2++;
         }
       }
-      if (curr !== last) {
-        tokens2.length = last;
+      if (curr !== last2) {
+        tokens2.length = last2;
       }
     };
   }
@@ -17905,7 +17926,7 @@ __export(schema_exports, {
   link: () => link,
   list: () => list,
   node: () => node,
-  paragraph: () => paragraph$1,
+  paragraph: () => paragraph,
   s: () => s,
   softbreak: () => softbreak,
   strong: () => strong,
@@ -17944,7 +17965,7 @@ var heading = {
     return new Tag(`h${node2.attributes["level"]}`, node2.transformAttributes(config), node2.transformChildren(config));
   }
 };
-var paragraph$1 = {
+var paragraph = {
   render: "p",
   children: ["inline"]
 };
@@ -19356,12 +19377,20 @@ const iconApi = (p2) => {
   };
 };
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
-const showCreatedDate = (pg, format2) => {
-  return format2 ? pg.file.cday.toFormat(format2) : pg.file.cday;
+const showCreatedDate = (p2) => (pg, format2) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    return format2 ? page.file.cday.toFormat(format2) : page.file.cday;
+  }
+  return "";
 };
-function showModifiedDate(pg, format2) {
-  return format2 ? pg.file.mday.toFormat(format2) : pg.file.mday;
-}
+const showModifiedDate = (p2) => (pg, format2) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    return format2 ? page.file.mday.toFormat(format2) : page.file.mday;
+  }
+  return "";
+};
 const showDueDate = (p2) => (page, prop = "due", format2) => {
   const pg = getPage(p2)(page);
   if (pg && pg[prop] !== void 0) {
@@ -19371,17 +19400,22 @@ const showDueDate = (p2) => (page, prop = "due", format2) => {
   }
 };
 const showDesc = (p2) => (pg) => {
-  const desc = showProp(p2)(pg, "about", "desc", "description");
-  if (typeof desc == "string") {
-    return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
-  } else {
-    return "";
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const desc = showProp(p2)(page, "about", "desc", "description");
+    if (typeof desc == "string") {
+      return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
+    } else {
+      return "";
+    }
   }
+  return "";
 };
-const showWhen = (_p2) => (pg, format2 = "LLL yyyy") => {
-  if (pg) {
-    const created = pg.file.cday;
-    const modified = pg.file.mday;
+const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const created = page.file.cday;
+    const modified = page.file.mday;
     const deltaCreated = Math.abs(created.diffNow("days").days);
     const deltaModified = Math.abs(modified.diffNow("days").days);
     if (deltaCreated < 14) {
@@ -19397,7 +19431,7 @@ const showWhen = (_p2) => (pg, format2 = "LLL yyyy") => {
     return "";
   }
 };
-const showCategoriesFor = (p2) => (pg) => {
+const showCategories = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (pg) {
     const kind = p2.api.getKindTagsOfPage(page);
@@ -19418,7 +19452,7 @@ const showCategoriesFor = (p2) => (pg) => {
   }
   return "";
 };
-const showSubcategoriesFor = (p2) => (pg, category2) => {
+const showSubcategories = (p2) => (pg, category) => {
   const page = getPage(p2)(pg);
   if (pg) {
     const kind = p2.api.getKindTagsOfPage(page);
@@ -19426,7 +19460,7 @@ const showSubcategoriesFor = (p2) => (pg, category2) => {
       case 0:
         return "";
       case 1:
-        const categories = p2.dv.pages(`#${kind}/subcategory/${category2} OR #subcategory/${category2}/${kind}`);
+        const categories = p2.dv.pages(`#${kind}/subcategory/${category} OR #subcategory/${category}/${kind}`);
         return categories.map((c) => c.file.link).join(", ");
       default:
         const queries = kind.flatMap((k) => [
@@ -19443,102 +19477,110 @@ const showTags = (p2) => (pg, ...exclude) => {
   return pg.file.etags.filter((t) => !exclude.some((i) => t.startsWith(i) ? true : false)).map((t) => `\`${t}\``).join(", ") || "";
 };
 const showLinks = (p2) => (pg) => {
-  const [_, pageIcon] = getProp(p2)(pg, "icon", "svg_icon", "_icon", "_svg_icon");
-  const link_props = {
-    website: "website",
-    wikipedia: "wikipedia",
-    company: "company",
-    retailer: "company",
-    docs: "documentation",
-    retail_urls: "retail",
-    retail: "retail",
-    url: "link",
-    repo: "repo",
-    review: "review",
-    reviews: "review",
-    blog: "blog",
-    api: "api",
-    map: "map",
-    place: "pin",
-    home: "home",
-    office: "office",
-    offices: "office",
-    work: "office",
-    employer: "office",
-    playground: "playground",
-    demo: "playground",
-    support: "support",
-    help: "support"
-  };
-  const create_lnk = (icon, url, prop) => {
-    icon = prop === "website" && isString$1(pageIcon) ? pageIcon : /youtube.com/.test(url) ? "you_tube" : icon;
-    p2.debug(prop, pageIcon);
-    return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
-  };
-  const links = [];
-  for (const prop of keysOf(pg)) {
-    if (prop in pg && isString$1(pg[prop])) {
-      if (Array.isArray(pg[prop])) {
-        pg[prop].forEach((p22) => {
-          if (isString$1(p22) && /^http/.test(p22)) {
-            links.push([prop, p22]);
-          }
-        });
-      } else if (isString$1(pg[prop]) && !prop.startsWith("_") && /^http/.test(pg[prop])) {
-        links.push([prop, pg[prop]]);
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const [_, pageIcon] = getProp(p2)(pg, "icon", "svg_icon", "_icon", "_svg_icon");
+    const link_props = {
+      website: "website",
+      wikipedia: "wikipedia",
+      company: "company",
+      retailer: "company",
+      docs: "documentation",
+      retail_urls: "retail",
+      retail: "retail",
+      url: "link",
+      repo: "repo",
+      review: "review",
+      reviews: "review",
+      blog: "blog",
+      api: "api",
+      map: "map",
+      place: "pin",
+      home: "home",
+      office: "office",
+      offices: "office",
+      work: "office",
+      employer: "office",
+      playground: "playground",
+      demo: "playground",
+      support: "support",
+      help: "support"
+    };
+    const create_lnk = (icon, url, prop) => {
+      icon = prop === "website" && isString$1(pageIcon) ? pageIcon : /youtube.com/.test(url) ? "you_tube" : icon;
+      p2.debug(prop, pageIcon);
+      return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+    };
+    const links = [];
+    for (const prop of keysOf(pg)) {
+      if (prop in page && isString$1(page[prop])) {
+        if (Array.isArray(page[prop])) {
+          page[prop].forEach((p22) => {
+            if (isString$1(p22) && /^http/.test(p22)) {
+              links.push([prop, p22]);
+            }
+          });
+        } else if (isString$1(page[prop]) && !prop.startsWith("_") && /^http/.test(page[prop])) {
+          links.push([prop, page[prop]]);
+        }
       }
     }
-  }
-  const icons = p2.api.linkIcons;
-  const prettify = (tuple) => {
-    const [prop, url] = tuple;
-    if (prop in link_props) {
-      if (link_props[prop] in icons) {
-        return create_lnk(icons[link_props[prop]], url, prop);
+    const icons = p2.api.linkIcons;
+    const prettify = (tuple) => {
+      const [prop, url] = tuple;
+      if (prop in link_props) {
+        if (link_props[prop] in icons) {
+          return create_lnk(icons[link_props[prop]], url, prop);
+        } else {
+          return create_lnk(DEFAULT_LINK, url, prop);
+        }
       } else {
         return create_lnk(DEFAULT_LINK, url, prop);
       }
-    } else {
-      return create_lnk(DEFAULT_LINK, url, prop);
-    }
-  };
-  return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
+    };
+    return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
+  }
+  return "";
 };
-const showProp = (plugin4) => (pg, ...props) => {
+const showProp = (p2) => (pg, ...props) => {
   var _a2;
-  if (!((_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.name)) {
-    throw new Error(`Attempt to call get_prop(pg, ${props.join(", ")}) with an invalid page passed in!`);
-  }
-  const found = props.find((prop) => isKeyOf(pg, prop) && pg[prop] !== void 0);
-  if (!found) {
-    return "";
-  }
-  if (isKeyOf(pg, found)) {
-    const value2 = pg[found];
-    try {
-      return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v) => isLink(v) ? v : isDvPage(v) ? v.file.link : "").filter((i) => i).join(", ") : "";
-    } catch (e) {
-      plugin4.error(`Ran into problem displaying the "${found}" property on the page "${pg.file.path}" passed in while calling show_prop().`, e);
+  const page = p2.api.getPage(pg);
+  if (page) {
+    if (!((_a2 = page == null ? void 0 : page.file) == null ? void 0 : _a2.name)) {
+      throw new Error(`Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`);
+    }
+    const found = props.find((prop) => isKeyOf(page, prop) && page[prop] !== void 0);
+    if (!found) {
       return "";
     }
+    if (isKeyOf(page, found)) {
+      const value2 = page[found];
+      try {
+        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v) => isLink(v) ? v : isDvPage(v) ? v.file.link : "").filter((i) => i).join(", ") : "";
+      } catch (e) {
+        p2.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e);
+        return "";
+      }
+    }
   }
+  return "";
 };
-const getProp = (plugin4) => (pg, ...props) => {
-  var _a2;
-  if (!((_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.name)) {
-    plugin4.error(`Call to get_prop(pg) passed in an invalid DvPage`, { pg, props });
-    return [void 0, void 0];
+const getProp = (p2) => (pg, ...props) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const found = props.find((prop) => isKeyOf(page, prop) && page[prop] !== void 0);
+    if (!found) {
+      return [void 0, void 0];
+    } else {
+      const value2 = page[found];
+      return [
+        found,
+        isLink(value2) ? p2.dv.page(value2) : Array.isArray(value2) ? value2.map((i) => isLink(i) ? p2.dv.page(i) : i) : value2
+      ];
+    }
   }
-  const found = props.find((prop) => isKeyOf(pg, prop) && pg[prop] !== void 0);
-  if (!found) {
-    return [void 0, void 0];
-  } else {
-    const value2 = pg[found];
-    return [
-      found,
-      isLink(value2) ? plugin4.dv.page(value2) : Array.isArray(value2) ? value2.map((i) => isLink(i) ? plugin4.dv.page(i) : i) : value2
-    ];
-  }
+  p2.error(`Call to getProp(pg) passed in an invalid DvPage`, { pg, props });
+  return [void 0, void 0];
 };
 const showAbout = (p2) => (pg) => {
   return [];
@@ -19555,6 +19597,16 @@ const showMetrics = (p2) => (pg) => {
 const showSlider = (p2) => (pg) => {
   return "";
 };
+const showClassifications = (p2) => (pg) => {
+  const classy = getClassification(p2)(pg);
+  const link2 = internalLink(p2);
+  p2.info("classy", classy);
+  return classy.map((i) => [
+    link2(i.kind),
+    i.categories.map((i2) => i2[1]).map((i2) => link2(i2)),
+    link2(i.subcategory ? i.subcategory[1] : void 0)
+  ].filter((i2) => i2).join(" | ")).join(`<br>`);
+};
 const showApi = (p2) => ({
   /** show the creation date */
   showCreatedDate,
@@ -19562,7 +19614,7 @@ const showApi = (p2) => ({
   showModifiedDate,
   /** show _due_ date */
   showDueDate: showDueDate(p2),
-  showWhen: showWhen(),
+  showWhen: showWhen(p2),
   showDesc: showDesc(p2),
   showTags: showTags(),
   showLinks: showLinks(p2),
@@ -19572,8 +19624,9 @@ const showApi = (p2) => ({
   showAbout: showAbout(),
   showPeers: showPeers(),
   showKind: showKind(),
-  showCategoriesFor: showCategoriesFor(p2),
-  showSubcategoriesFor: showSubcategoriesFor(p2),
+  showCategories: showCategories(p2),
+  showSubcategories: showSubcategories(p2),
+  showClassifications: showClassifications(p2),
   showMetrics: showMetrics(),
   showSlider: showSlider()
 });
@@ -19616,6 +19669,14 @@ const emptyCallout = (fmt) => [
   `<div class="callout-content">&nbsp;</div>`,
   `</div>`
 ].join("\n");
+const internalLink = (p2) => (ref, opt2) => {
+  const link2 = (href, title) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`;
+  let page = getPage(p2)(ref);
+  if (page) {
+    link2(page.file.path, (opt2 == null ? void 0 : opt2.title) || page.file.name);
+  }
+  return "";
+};
 const formattingApi = (p2) => {
   return {
     /** removes the pound symbol from a string */
@@ -19656,10 +19717,7 @@ const formattingApi = (p2) => {
      * here provides the reference as meta-data other then the traditional `href` 
      * property.
      */
-    internalLink: (ref, opt2) => {
-      const link2 = (href, title) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`;
-      return isDvPage(ref) ? link2(ref.file.path, (opt2 == null ? void 0 : opt2.title) || ref.file.name) : isLink(ref) ? link2(ref.path, (opt2 == null ? void 0 : opt2.title) || (ref == null ? void 0 : ref.hover) || "link") : "";
-    },
+    internalLink: internalLink(p2),
     /**
      * Add a span element with optional formatting
      */
@@ -19745,7 +19803,7 @@ const createPageInfo = (p2) => (pg) => {
       getBanners: () => getPageBanners()(page),
       getIcons: () => getPageIcons()(page),
       getSuggestedActions: () => getSuggestedActions()(page),
-      format: formattingApi(),
+      format: formattingApi(p2),
       getPage: getPage(p2),
       ...showApi(p2)
     };
@@ -19888,8 +19946,8 @@ const createPageView = (p2) => (view) => {
     }
   }
 };
-const BackLinks = (plg) => (source, container, component, filePath) => async (params_str = "") => {
-  const page = plg.api.createPageInfoBlock(
+const BackLinks = (p2) => (source, container, component, filePath) => async (params_str = "") => {
+  const page = p2.api.createPageInfoBlock(
     source,
     container,
     component,
@@ -19897,345 +19955,40 @@ const BackLinks = (plg) => (source, container, component, filePath) => async (pa
   );
   if (page) {
     const current = page.current;
-    const fmt = page.format;
-    const links = current.file.inlinks.sort((p2) => {
+    const {
+      table: table3,
+      renderValue,
+      createFileLink,
+      showDesc: showDesc2,
+      showLinks: showLinks2,
+      showClassifications: showClassifications2
+    } = page;
+    const links = current.file.inlinks.sort((p22) => {
       var _a2;
-      return (_a2 = page.getPage(p2)) == null ? void 0 : _a2.file.name;
-    }).where((p2) => {
+      return (_a2 = page.getPage(p22)) == null ? void 0 : _a2.file.name;
+    }).where((p22) => {
       var _a2;
-      return ((_a2 = page.getPage(p2)) == null ? void 0 : _a2.file.path) !== current.file.path;
+      return ((_a2 = page.getPage(p22)) == null ? void 0 : _a2.file.path) !== current.file.path;
     });
-    const categoryPaths = page.categories.flatMap((i) => i.categories.map((c) => c.file.path));
-    if (page.isCategoryPage) {
-      const subCategories = links.where(
-        (p2) => {
-          const pg = createPageInfo(plg)(p2);
-          return pg ? pg.isSubcategoryPage && pg.fm.category && isFileLink(pg.fm.category) && pg.fm.category.path === page.path : false;
-        }
+    p2.info(links.map((i) => [
+      createFileLink(i),
+      showClassifications2(i),
+      showDesc2(i),
+      showLinks2(i)
+    ]));
+    if (links.length > 0) {
+      table3(
+        ["Page", "Classification(s)", "Desc", "Links"],
+        links.map((i) => [
+          createFileLink(i),
+          showClassifications2(i),
+          showDesc2(i),
+          showLinks2(i)
+        ])
       );
-      const kindPages = links.where(
-        (p2) => page.type === "kinded" && categoryPaths.includes(p2.path)
-      );
-      const subPaths = subCategories.map((i) => i.path);
-      const kindPaths = kindPages.map((i) => i.path);
-      const otherPages = links.filter((i) => ![...subPaths, kindPaths].includes(i.path));
-      if (subCategories.length > 0) {
-        page.callout("info", "Subcategories", {
-          style: {
-            mt: "1rem",
-            mb: "1rem"
-          },
-          content: `subcategory pages which are part of the ${fmt.bold(category || "")} ${fmt.italics("category")}.`
-        });
-        page.table(
-          ["Page", "Created", "Modified", "Desc", "Links"],
-          subCategories.map((p2) => {
-            const pg = page.getPage(p2);
-            return [
-              page.createFileLink(pg),
-              page.showCreatedDate(pg, "DD"),
-              page.showModifiedDate(pg, "DD"),
-              page.showProp(pg, "desc", "description", "about"),
-              page.showLinks(pg)
-            ];
-          })
-        ).catch((e) => plg.error(`Problems rendering subcategories table`, e));
-      } else {
-        page.ul(
-          `no subcategories found for this category page`,
-          `to be listed a page would need one of the following tags:`,
-          (l2) => l2.indent(
-            `\`#subcategory/${category}/[subcategory]\`, `,
-            `\`#${kind_tag}/subcategory/${category}/[subcategory]`
-          )
-        );
-      }
-      if (kindPages.length > 0) {
-        page.callout("info", "Kinded Pages", {
-          style: {
-            mt: "1rem",
-            mb: "1rem"
-          },
-          content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(category || "")} category.`
-        });
-        page.table(
-          ["Page", "Created", "Subcategory", "Desc", "Links"],
-          kindPages.map((p2) => {
-            const pg = page.getPage(p2);
-            return [
-              page.createFileLink(pg),
-              page.showCreatedDate(pg, "DD"),
-              page.showCreatedDate(pg, "subcategory"),
-              page.showProp(pg, "desc", "description", "about"),
-              page.showLinks(pg)
-            ];
-          })
-        ).catch((e) => plg.error(`Problems rendering table`, e));
-      }
-      if (otherPages.length > 0) {
-        if (kindPages.length > 0 || subCategories.length > 0) {
-          page.callout("info", "Other Pages", {
-            style: {
-              mt: "1rem",
-              mb: "1rem"
-            },
-            content: `other back links which aren't related directly via their classification`
-          });
-        }
-        page.table(
-          ["Page", "Created", "Kind", "Category", "Links"],
-          otherPages.map((p2) => {
-            const pg = page.getPage(p2);
-            return [
-              page.createFileLink(pg),
-              page.showCreatedDate(pg, "DD"),
-              page.showProp(pg, "kind"),
-              page.showProp(pg, "category", "categories"),
-              page.showLinks(pg)
-            ];
-          })
-        ).catch((e) => plg.error(`Problems rendering otherPages table`, e));
-      }
-    } else if (page.isSubcategoryPage) {
-      const kinded = links.where((p2) => {
-        const pg = page.getPage(p2);
-        if (pg) {
-          return isKindedPage(plg)(pg) ? isFileLink(pg.subcategory) && pg.subcategory.path === current.file.path || hasFileLink(pg.subcategories) && pg.subcategories.filter((i) => isFileLink(i)).map((i) => i.path).includes(current.file.path) : false;
-        }
-        return false;
-      });
-      const other = links.where(
-        (p2) => kinded.map((k) => k.path).includes(p2.path)
-      );
-      if (kinded.length > 0) {
-        page.callout("info", "Kinded Pages", {
-          style: {
-            mt: "1rem",
-            mb: "1rem"
-          },
-          content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(current.file.name)} subcategory .`
-        });
-        page.table(
-          ["Page", "Created", "Modified", "Desc", "Links"],
-          kinded.map((p2) => {
-            const pg = page.getPage(p2);
-            return [
-              page.createFileLink(pg),
-              page.showCreatedDate(pg, "DD"),
-              page.showModifiedDate(pg, "DD"),
-              page.showProp(pg, "desc", "description", "about"),
-              page.showLinks(pg)
-            ];
-          })
-        );
-      } else {
-        page.paragraph(`### Subcategory Page`);
-        page.ul(
-          `no pages which identify as being in this subcategory`,
-          `to be listed, a page would need one of the following tag groups:`,
-          (l2) => l2.indent(
-            `<code>#${kind_tag}/${category}/${subcategory}</code>`,
-            `<code>#${kind_tag} #subcategory/${category}/${subcategory}</code>`
-          )
-        );
-      }
-      if (other.length > 0) {
-        page.paragraph(`### Other Back Links`);
-        page.table(
-          ["Page", "Created", "Kind", "Category", "Links"],
-          other.map((p2) => {
-            const pg = page(p2);
-            return [
-              page.createFileLink(pg),
-              page.showCreatedDate(pg, "DD"),
-              page.showProp(pg, "kind"),
-              page.showProp(pg, "category", "categories"),
-              page.showLinks(pg)
-            ];
-          })
-        );
-      }
-    } else if (page.type === "kinded") {
-      let peering = "none";
-      if (page.subcategories.length > 0) {
-        const peers = links.where(
-          (p2) => {
-            var _a2;
-            return ((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.subcategory) === subcategory;
-          }
-        );
-        if (peers.length > 0) {
-          peering = "subcategory";
-          page.callout("info", "Peers", {
-            content: `pages who share the same ${fmt.bold(current.file.name)} ${fmt.italics("subcategory")} as this page`,
-            style: {
-              mt: "1rem",
-              mb: "1rem"
-            },
-            fold: ""
-          });
-          page.table(
-            ["Page", "Created", "Modified", "Desc", "Links"],
-            peers.map((p2) => {
-              const pg = page.getPage(p2);
-              return [
-                page.createFileLink(pg),
-                page.showCreatedDate(pg, "DD"),
-                page.showModifiedDate(pg, "DD"),
-                page.showProp(pg, "desc", "description", "about"),
-                page.showLinks(pg)
-              ];
-            })
-          );
-        }
-      } else if (page.categories.length > 0) {
-        const peers = links.where(
-          (p2) => {
-            var _a2;
-            return ((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.category) === category;
-          }
-        );
-        if (peers.length > 0) {
-          peering = "category";
-          if (subcategory) {
-            page.callout("info", "Peers", {
-              style: {
-                pt: "1rem"
-              },
-              content: `no peers with your subcategory ${fmt.bold(subcategory)} found but there are peers with your ${fmt.italics("category")} ${fmt.bold(category)}`
-            });
-            page.paragraph(`> ![note] no peers with your subcategory ${subcategory} found but there are peers with your category of ${category}`);
-          } else {
-            page.callout("info", "Peers", {
-              style: {
-                mt: "1rem",
-                mb: "1rem"
-              },
-              content: `pages who share the same ${fmt.bold(category)} ${fmt.italics("category")} as this page`
-            });
-          }
-          page.table(
-            ["Page", "Created", "Modified", "Desc", "Links"],
-            peers.map((p2) => {
-              const pg = page.getPage(p2);
-              return [
-                page.createFileLink(pg),
-                page.showCreatedDate(pg, "DD"),
-                page.showModifiedDate(pg, "DD"),
-                page.showProp(pg, "desc", "description", "about"),
-                page.showLinks(pg)
-              ];
-            })
-          );
-        }
-      } else {
-        if (category && subcategory) {
-          paragraph(`- no peer pages with either your ${category} category or your ${subcategory} subcategory`);
-        } else if (category) {
-          paragraph(`- no peer pages found with your ${category} category`);
-        }
-      }
-      const other = links.where(
-        (p2) => {
-          var _a2, _b2;
-          return peering === "category" && ((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.category) !== category || peering === "subcategory" && ((_b2 = get_classification(page(p2))) == null ? void 0 : _b2.subcategory) !== subcategory || peering === "none";
-        }
-      );
-      if (other.length > 0) {
-        if (category || subcategory) {
-          page.callout("info", "Other Back Links", {
-            style: {
-              mt: "2rem",
-              mb: "1rem"
-            }
-          });
-        }
-        page.table(
-          ["Page", "Created", "Kind", "Category", "Links"],
-          other.map((p2) => {
-            const pg = page(p2);
-            return [
-              createFileLink(pg),
-              show_created_date(pg, "DD"),
-              show_prop(pg, "kind"),
-              show_prop(pg, "category", "categories"),
-              show_links(pg)
-            ];
-          })
-        );
-      }
-    } else if (page.type === "kind-defn") {
-      const categoryPages = links.where(
-        (p2) => {
-          var _a2, _b2, _c2;
-          return ((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.isCategory) && ((_c2 = (_b2 = get_kind_prop(page(p2)).kind) == null ? void 0 : _b2.file) == null ? void 0 : _c2.path) === current.file.path;
-        }
-      );
-      if (categoryPages.length > 0) {
-        page.callout("info", "Classification Pages", {
-          style: {
-            mt: "1rem",
-            mb: "1rem"
-          },
-          content: `pages that are category pages of this ${fmt.italics("kind definition")} page and their subcategories.`
-        });
-        page.table(
-          ["Category", "Tag", "Subcategories"],
-          categoryPages.map((p2) => {
-            const pg = page.getPage(p2);
-            return [
-              page.createFileLink(pg),
-              page.categories.join(`, `),
-              page.subcategories.join(`, `)
-            ];
-          })
-        );
-      }
-      const kindPages = links.where(
-        (p2) => {
-          var _a2, _b2;
-          return ((_b2 = (_a2 = get_kind_prop(page(p2)).kind) == null ? void 0 : _a2.file) == null ? void 0 : _b2.path) === current.file.path && isKindedPage(page(p2));
-        }
-      );
-      if (kindPages.length > 0) {
-        page.callout("info", "Kinded Pages", {
-          style: {
-            mt: "1rem",
-            mb: "1rem"
-          },
-          content: `pages who's "kind" is defined by this page.`
-        });
-        const [_, classification2] = get_prop(current, "__classification");
-        if (isString$1(classification2) && classification2 === "categories") {
-          page.table(
-            ["Page", "Categories", "Links"],
-            kindPages.map((p2) => {
-              const pg = page.getPage(p2);
-              return [
-                page.createFileLink(pg),
-                page.showProp(pg, "categories"),
-                page.showLinks(pg)
-              ];
-            })
-          );
-        } else {
-          page.table(
-            ["Page", "Category", "Subcategory", "Links"],
-            kindPages.map((p2) => {
-              const pg = page.getPage(p2);
-              return [
-                page.createFileLink(pg),
-                page.showProp(pg, "category", "categories"),
-                page.showProp(pg, "subcategory"),
-                page.showLinks(pg)
-              ];
-            })
-          );
-        }
-      }
     }
     if (links.length === 0) {
-      page.renderValue(`- no back links found to this page`).catch((e) => plg.error(`Problem rendering paragraph WRT to no back links`, e));
+      renderValue(`- no back links found to this page`);
     }
   }
 };
@@ -69062,7 +68815,7 @@ function validateLabel(label, {
     }
   }
   if (checkJoiners) {
-    let last = 0;
+    let last2 = 0;
     for (const [i, ch] of codePoints.entries()) {
       if (ch === "‌" || ch === "‍") {
         if (i > 0) {
@@ -69071,9 +68824,9 @@ function validateLabel(label, {
           }
           if (ch === "‌") {
             const next = codePoints.indexOf("‌", i + 1);
-            const test = next < 0 ? codePoints.slice(last) : codePoints.slice(last, next);
+            const test = next < 0 ? codePoints.slice(last2) : codePoints.slice(last2, next);
             if (regexes.validZWNJ.test(test.join(""))) {
-              last = i + 1;
+              last2 = i + 1;
               continue;
             }
           }
@@ -69658,11 +69411,11 @@ var percentEncoding$1 = {
       }
       parts.pop();
     }
-    const last = parts[parts.length - 1];
-    if (parseIPv4Number(last) !== failure) {
+    const last2 = parts[parts.length - 1];
+    if (parseIPv4Number(last2) !== failure) {
       return true;
     }
-    if (/^[0-9]+$/u.test(last)) {
+    if (/^[0-9]+$/u.test(last2)) {
       return true;
     }
     return false;
@@ -70442,15 +70195,15 @@ function requireUrlencoded() {
   }
   function strictlySplitByteSequence(buf, cp) {
     const list2 = [];
-    let last = 0;
+    let last2 = 0;
     let i = buf.indexOf(cp);
     while (i >= 0) {
-      list2.push(buf.slice(last, i));
-      last = i + 1;
-      i = buf.indexOf(cp, last);
+      list2.push(buf.slice(last2, i));
+      last2 = i + 1;
+      i = buf.indexOf(cp, last2);
     }
-    if (last !== buf.length) {
-      list2.push(buf.slice(last));
+    if (last2 !== buf.length) {
+      list2.push(buf.slice(last2));
     }
     return list2;
   }
@@ -104665,20 +104418,20 @@ const requestUrl = async (req) => {
   return resp;
 };
 const WORLD_CAT_URL = `https://search.worldcat.org/search`;
-const worldCatBookPage = async (p2, book2) => {
+const worldCatBookPage = async (p2, book) => {
   const qp = [];
-  if (book2.isbn13) {
-    qp.push(`bn:${book2.isbn13}`);
-  } else if (book2.isbn10) {
-    qp.push(`bn:${book2.isbn10}`);
-  } else if ("isbn" in book2 && [10, 13].includes(String(book2.isbn).length)) {
-    qp.push(`bn:${book2.isbn}`);
+  if (book.isbn13) {
+    qp.push(`bn:${book.isbn13}`);
+  } else if (book.isbn10) {
+    qp.push(`bn:${book.isbn10}`);
+  } else if ("isbn" in book && [10, 13].includes(String(book.isbn).length)) {
+    qp.push(`bn:${book.isbn}`);
   }
-  if (book2.title) {
-    qp.push(`ti:${book2.title}`);
+  if (book.title) {
+    qp.push(`ti:${book.title}`);
   }
-  if (book2.authors.length > 0) {
-    qp.push(`au:${book2.authors[0]}`);
+  if (book.authors.length > 0) {
+    qp.push(`au:${book.authors[0]}`);
   }
   const encode2 = (s2) => s2.map((i) => i.replaceAll(" ", "+")).join("+AND+");
   const url = `${WORLD_CAT_URL}?q=${encode2(qp)}`;
@@ -104700,10 +104453,10 @@ const worldCatBookPage = async (p2, book2) => {
   }
   return url;
 };
-const AmazonBook = async (p2, book2) => {
+const AmazonBook = async (p2, book) => {
   var _a2, _b2, _c2, _d2, _e2, _f2, _g2, _h2, _i, _j2, _k2, _l2, _m2;
-  const url = `https://www.amazon.com/dp/${book2.asin}`;
-  p2.debug(`Scraping ${url}`, book2);
+  const url = `https://www.amazon.com/dp/${book.asin}`;
+  p2.debug(`Scraping ${url}`, book);
   let html;
   try {
     let req = await requestUrl({
@@ -104722,7 +104475,7 @@ const AmazonBook = async (p2, book2) => {
     p2.debug("Returned from Amazon API call", html);
   } catch (e) {
     p2.error(`Problems loading book information from Amazon (${url})`, e == null ? void 0 : e.msg);
-    return book2;
+    return book;
   }
   let page = createDocument(html);
   p2.debug("page created");
@@ -104776,46 +104529,46 @@ const AmazonBook = async (p2, book2) => {
     reviewsAmazon
   });
   return {
-    ...book2,
+    ...book,
     ratingsAmazon: amazonRating,
-    totalPages: book2.totalPages ? book2.totalPages : pages,
-    description: book2.description ? book2.description : description,
+    totalPages: book.totalPages ? book.totalPages : pages,
+    description: book.description ? book.description : description,
     isKindleBook,
     kindleVariantAvailable,
     reviewsAmazon,
-    isbn10: book2.isbn10 ? book2.isbn10 : isbn10,
-    isbn13: book2.isbn13 ? book2.isbn13 : isbn13,
-    weight: book2.weight ? book2.weight : weight,
-    publisher: book2.publisher ? book2.publisher : publisher == null ? void 0 : publisher.trim(),
-    publishDate: book2.publishDate ? book2.publishDate : publicationDate ? DateTime$1.fromFormat(stripTrailing(publicationDate, ")"), "DATE_MED").toFormat("yyyy-mm-dd") : void 0
+    isbn10: book.isbn10 ? book.isbn10 : isbn10,
+    isbn13: book.isbn13 ? book.isbn13 : isbn13,
+    weight: book.weight ? book.weight : weight,
+    publisher: book.publisher ? book.publisher : publisher == null ? void 0 : publisher.trim(),
+    publishDate: book.publishDate ? book.publishDate : publicationDate ? DateTime$1.fromFormat(stripTrailing(publicationDate, ")"), "DATE_MED").toFormat("yyyy-mm-dd") : void 0
   };
 };
-const book = (p2) => async (source, container, component, filePath) => {
+const Book = (p2) => async (source, container, component, filePath) => {
   var _a2, _b2, _c2, _d2, _e2, _f2;
   const page = p2.api.createPageInfoBlock(source, container, component, filePath);
   if (page) {
-    const fm = page.page;
-    const fmt = p2.api.format;
-    let book2 = {
-      title: fm.title || ((_a2 = fm["kindle-sync"]) == null ? void 0 : _a2.title) || "unknown",
-      subtitle: fm.subtitle,
-      authors: fm.authors ? fm.authors.split(",").map((i) => i.trim()) : fm.author ? fm.author.split(",").map((i) => i.trim()) : fm["kindle-sync"].author ? fm["kindle-sync"].author.split(",").map((i) => i.trim()) : [],
-      bookCategory: fm.category,
-      publisher: fm.publisher,
-      publishDate: fm.publishDate,
-      totalPages: fm.totalPage,
-      description: fm.description,
-      isbn13: fm.isbn13,
-      isbn10: fm.isbn10,
-      asin: ((_b2 = fm["kindle-sync"]) == null ? void 0 : _b2.asin) ? fm["kindle-sync"].asin : typeof (fm == null ? void 0 : fm.asin) === "string" ? String(fm == null ? void 0 : fm.asin) : void 0,
+    const fmt = page.format;
+    const current = page.current;
+    let book = {
+      title: current.title || ((_a2 = current["kindle-sync"]) == null ? void 0 : _a2.title) || "unknown",
+      subtitle: current.subtitle,
+      authors: current.authors ? current.authors.split(",").map((i) => i.trim()) : current.author ? current.author.split(",").map((i) => i.trim()) : current["kindle-sync"].author ? current["kindle-sync"].author.split(",").map((i) => i.trim()) : [],
+      bookCategory: current.category,
+      publisher: current.publisher,
+      publishDate: current.publishDate,
+      totalPages: current.totalPage,
+      description: current.description,
+      isbn13: current.isbn13,
+      isbn10: current.isbn10,
+      asin: ((_b2 = current["kindle-sync"]) == null ? void 0 : _b2.asin) ? current["kindle-sync"].asin : typeof (current == null ? void 0 : current.asin) === "string" ? String(current == null ? void 0 : current.asin) : void 0,
       coverImages: [
-        ...fm.coverUrl ? [fm.coverUrl] : [],
-        ...((_c2 = fm["kindle-sync"]) == null ? void 0 : _c2.bookImageUrl) ? [
-          (_d2 = fm["kindle-sync"]) == null ? void 0 : _d2.bookImageUrl
+        ...current.coverUrl ? [current.coverUrl] : [],
+        ...((_c2 = current["kindle-sync"]) == null ? void 0 : _c2.bookImageUrl) ? [
+          (_d2 = current["kindle-sync"]) == null ? void 0 : _d2.bookImageUrl
         ] : []
       ],
       worldCatSubjects: [],
-      googleBookLink: fm.link,
+      googleBookLink: current.link,
       /**
        * provides a link to the WorldCat service with the featured
        * book highlighted.
@@ -104824,47 +104577,47 @@ const book = (p2) => async (source, container, component, filePath) => {
       /**
        * provides a list of books by the same author
        */
-      otherBooks: fm.otherBooks,
+      otherBooks: current.otherBooks,
       /**
        * the _number_ of highlights found from a kindle device
        */
-      kindleHighlightCount: (_e2 = fm["kindle-sync"]) == null ? void 0 : _e2.highlightsCount
+      kindleHighlightCount: (_e2 = current["kindle-sync"]) == null ? void 0 : _e2.highlightsCount
     };
-    if (!book2.title && (!book2.isbn10 || !book2.isbn13 || !book2.asin)) {
+    if (!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
       p2.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
       page.callout("warning", "No Book metadata found!", { content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)` });
     } else {
-      book2.worldCatBookLink = await worldCatBookPage(p2, book2);
-      book2 = await AmazonBook(p2, book2);
-      p2.debug("Book after Amazon Scrape", { book: book2 });
+      book.worldCatBookLink = await worldCatBookPage(p2, book);
+      book = await AmazonBook(p2, book);
+      p2.debug("Book after Amazon Scrape", { book });
       const cover = [
         `<div class="book-cover" style="padding-bottom: 8px;">`,
-        book2.coverImages.length > 0 ? `<img src="${book2.coverImages[0]}" style="">` : ``,
+        book.coverImages.length > 0 ? `<img src="${book.coverImages[0]}" style="">` : ``,
         `</div>`
       ];
-      const publisher = book2.publisher ? [
+      const publisher = book.publisher ? [
         fmt.medium("Publisher:"),
-        fmt.ul([book2.publisher], { indentation: "default", my: "tight" })
+        fmt.ul([book.publisher], { indentation: "default", my: "tight" })
       ] : [];
-      const publicationDate = book2.publishDate ? [
+      const publicationDate = book.publishDate ? [
         fmt.medium("Publication Date:"),
-        isDateTime(book2.publishDate) ? fmt.ul([(_f2 = book2 == null ? void 0 : book2.publishDate) == null ? void 0 : _f2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
+        isDateTime(book.publishDate) ? fmt.ul([(_f2 = book == null ? void 0 : book.publishDate) == null ? void 0 : _f2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
       ] : [];
-      const pages = book2.totalPages ? [
+      const pages = book.totalPages ? [
         fmt.medium("Length:&nbsp;"),
-        fmt.ul([`${fmt.normal(book2.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
+        fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
       ] : [];
-      const author = book2.authors.length > 0 ? [
+      const author = book.authors.length > 0 ? [
         fmt.medium("Written By:"),
-        fmt.ul(book2.authors, { indentation: "default", my: "tight" })
+        fmt.ul(book.authors, { indentation: "default", my: "tight" })
       ] : [];
       const book_ids = [
         `<div class="book-ids">`,
         fmt.medium("Book Identifiers:"),
         fmt.ul([
-          book2.isbn10 ? `${fmt.light(book2.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
-          book2.isbn13 ? `${fmt.light(book2.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
-          book2.asin ? `${fmt.light(book2.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
+          book.isbn10 ? `${fmt.light(book.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
+          book.isbn13 ? `${fmt.light(book.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
+          book.asin ? `${fmt.light(book.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
         ], { indentation: "default", my: "tight" }),
         `</div>`
       ];
@@ -104884,11 +104637,11 @@ const book = (p2) => async (source, container, component, filePath) => {
       });
       const description = fmt.blockquote("info", "Book Description", {
         fold: "+",
-        content: book2.description || "no description found"
+        content: book.description || "no description found"
       });
-      const otherBooks = book2.otherBooks ? [
-        fmt.blockquote("info", `Books by ${book2.authors[0]}`, {
-          content: book2.otherBooks.map((b) => {
+      const otherBooks = book.otherBooks ? [
+        fmt.blockquote("info", `Books by ${book.authors[0]}`, {
+          content: book.otherBooks.map((b) => {
             return fmt.link(
               b.title,
               b.titleLink,
@@ -104901,29 +104654,29 @@ const book = (p2) => async (source, container, component, filePath) => {
       ] : [];
       const actions = fmt.blockquote("info", "Actions / Links", {
         content: fmt.wrap([
-          book2.asin ? fmt.link(
+          book.asin ? fmt.link(
             "Open in Kindle",
-            `kindle://book?action=open&asin=${book2.asin}`,
+            `kindle://book?action=open&asin=${book.asin}`,
             { svgInline: KINDLE_ICON }
           ) : void 0,
-          book2.asin ? fmt.link(
+          book.asin ? fmt.link(
             "Amazon",
-            `https://www.amazon.com/dp/${book2.asin}`,
+            `https://www.amazon.com/dp/${book.asin}`,
             { svgInline: AMAZON }
           ) : void 0,
-          book2.googleBookLink ? fmt.link(
+          book.googleBookLink ? fmt.link(
             "Google",
-            book2.googleBookLink,
+            book.googleBookLink,
             { svgInline: BOOK_ICON }
           ) : void 0,
-          book2.worldCatBookLink ? fmt.link(
+          book.worldCatBookLink ? fmt.link(
             "WorldCat",
-            book2.worldCatBookLink,
+            book.worldCatBookLink,
             { svgInline: BOOK_CATALOG }
           ) : void 0,
           fmt.link(
             "Search",
-            `https://google.com/search?q=${book2.title} by ${book2.authors.join(", ")}`,
+            `https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
             { svgInline: SEARCH_BOOK }
           )
           // fmt.link(
@@ -104944,13 +104697,13 @@ const book = (p2) => async (source, container, component, filePath) => {
         reviews,
         ...otherBooks,
         actions,
-        page.format.emptyCallout({ flex: true, grow: 1 })
+        fmt.empty_callout({ flex: true, grow: 1 })
       ], { flex: true, direction: "column" });
       const html = [
         `<div class="book-summary">`,
-        ...book2.subtitle ? [
+        ...book.subtitle ? [
           `<div class="book-subtitle" style="display:block; width: 100%">`,
-          fmt.blockquote("quote", book2.subtitle, { style: { mb: "8px" } }),
+          fmt.blockquote("quote", book.subtitle, { style: { mb: "8px" } }),
           `</div>`
         ] : [],
         // column container
@@ -104994,17 +104747,17 @@ const kind_defn = {
 const kind_table = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
   const dv = createPageInfoBlock(p2)(source, container, component, filePath);
   if (dv) {
-    const { table: table3, showWhen: showWhen2, showDesc: showDesc2, showLinks: showLinks2, createFileLink: createFileLink2 } = dv;
+    const { table: table3, showWhen: showWhen2, showDesc: showDesc2, showLinks: showLinks2, createFileLink } = dv;
     const fmt = dv.format;
-    const [kind, category2, subcategory2] = scalar;
-    const pages = subcategory2 ? dv.pages(`#${kind}/${category2}/${subcategory2}`) : category2 ? dv.pages(`#${kind}/${category2}`) : dv.pages(`#${kind}`);
+    const [kind, category, subcategory] = scalar;
+    const pages = subcategory ? dv.pages(`#${kind}/${category}/${subcategory}`) : category ? dv.pages(`#${kind}/${category}`) : dv.pages(`#${kind}`);
     if (pages.length > 0) {
       table3(
         ["Repo", "When", "Desc", "Links"],
         pages.sort((p22) => p22.file.mday).map((p22) => {
           const pg = isDvPage(p22) ? p22 : dv.page(p22);
           return [
-            createFileLink2(pg),
+            createFileLink(pg),
             showWhen2(pg),
             showDesc2(pg),
             showLinks2(pg)
@@ -105012,7 +104765,7 @@ const kind_table = (p2) => (source, container, component, filePath) => async (sc
         })
       );
     } else {
-      const msg2 = subcategory2 ? fmt.as_tag(`${kind}/${category2}/${subcategory2}`) : category2 ? fmt.as_tag(`${kind}/${category2}`) : `${fmt.as_tag(kind)}`;
+      const msg2 = subcategory ? fmt.as_tag(`${kind}/${category}/${subcategory}`) : category ? fmt.as_tag(`${kind}/${category}`) : `${fmt.as_tag(kind)}`;
       dv.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
     }
   }
@@ -105026,49 +104779,52 @@ const page_entry_defn = {
   }
 };
 const page_entry = (p2) => (source, container, component, filePath) => async (_scalar, _opt) => {
-  const dv = p2.api.dv_page(source, container, component, filePath);
-  const { fmt, current } = dv;
-  const banner_img = isUrl(dv.current["_banner"]) ? dv.current["_banner"] : void 0;
-  const banner_aspect = isCssAspectRatio(dv.current["_banner_aspect"]) ? dv.current["_banner_aspect"] : "32/12";
-  const hasBanner = isUrl(banner_img);
-  let [_p1, icon] = dv.get_prop(dv.current, "icon", "_icon", "svgIcon", "_svgIcon");
-  const hasIcon = isInlineSvg(icon);
-  let [_p2, desc] = dv.get_prop(dv.current, "desc", "description", "about", "tagline", "summary");
-  const hasDesc = isString$1(desc);
-  const type = current.type ? dv.fmt.internalLink(dv.page(current.type)) : void 0;
-  const kind = current.kind ? dv.fmt.internalLink(dv.page(current.kind)) : void 0;
-  const category2 = current.category ? dv.fmt.internalLink(dv.page(current.category)) : void 0;
-  const categories = current.categories ? current.categories.map((c) => dv.fmt.internalLink(dv.page(c))).join(fmt.light(" | ", { opacity: 0.5 })) : void 0;
-  const subcategory2 = current.subcategory ? dv.fmt.internalLink(dv.page(current.subcategory)) : void 0;
-  const wiki = isWikipediaUrl(current.wiki) ? fmt.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt.link("Wikipedia", current.wikipedia) : void 0;
-  const siblings = dv.get_internal_links(dv.current, "about", "related", "competitors", "partners").map((i) => fmt.internalLink(i));
-  const parents = dv.get_internal_links(dv.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt.internalLink(i));
-  const children2 = dv.get_internal_links(dv.current, "child", "children", "son", "daughter").map((i) => fmt.internalLink(i));
-  const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children2.length === 0;
-  const repo = find_in(isRepoUrl)(current.repo, current.github, current.git, current.homepage, current.url, current.home);
-  const repo_lnk = repo ? fmt.link("Repo", repo) : void 0;
-  const shouldDisplay = hasIcon || hasDesc || type || kind || category2 || categories;
-  if (shouldDisplay) {
-    const breadcrumbs = [type, kind, category2, categories, subcategory2].filter((i) => i).join(
-      fmt.light("&nbsp;>&nbsp;", { opacity: 0.5 })
-    );
-    const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
-    const title = isString$1(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
-    const body = isString$1(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
-    const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt.light("<i>no classification</i>");
-    await fmt.callout("example", title, {
-      style: {
-        mt: "0.55rem",
-        mb: "1rem"
-      },
-      icon: hasIcon ? icon : MARKDOWN_PAGE_ICON,
-      content: body,
-      toRight: right2,
-      fold: "+"
-    });
-  }
-  if (hasBanner) {
-    dv.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
+  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
+  if (page) {
+    const fmt = page == null ? void 0 : page.format;
+    const current = page.current;
+    const banner_img = isUrl(page.current["_banner"]) ? page.current["_banner"] : void 0;
+    const banner_aspect = isCssAspectRatio(page.current["_banner_aspect"]) ? page.current["_banner_aspect"] : "32/12";
+    const hasBanner = isUrl(banner_img);
+    let [_p1, icon] = page.getProp(page.current, "icon", "_icon", "svgIcon", "_svgIcon");
+    const hasIcon = isInlineSvg(icon);
+    let [_p2, desc] = page.getProp(page.current, "desc", "description", "about", "tagline", "summary");
+    const hasDesc = isString$1(desc);
+    const type = current.type ? fmt.internalLink(page.page(current.type)) : void 0;
+    const kind = current.kind ? fmt.internalLink(page.page(current.kind)) : void 0;
+    const category = current.category ? fmt.internalLink(page.page(current.category)) : void 0;
+    const categories = current.categories ? current.categories.map((c) => fmt.internalLink(page.page(c))).join(fmt.light(" | ", { opacity: 0.5 })) : void 0;
+    const subcategory = current.subcategory ? fmt.internalLink(page.page(current.subcategory)) : void 0;
+    const wiki = isWikipediaUrl(current.wiki) ? fmt.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt.link("Wikipedia", current.wikipedia) : void 0;
+    const siblings = page.get_internal_links(page.current, "about", "related", "competitors", "partners").map((i) => fmt.internalLink(i));
+    const parents = page.get_internal_links(page.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt.internalLink(i));
+    const children2 = page.get_internal_links(page.current, "child", "children", "son", "daughter").map((i) => fmt.internalLink(i));
+    const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children2.length === 0;
+    const repo = find_in(isRepoUrl)(current.repo, current.github, current.git, current.homepage, current.url, current.home);
+    const repo_lnk = repo ? fmt.link("Repo", repo) : void 0;
+    const shouldDisplay = hasIcon || hasDesc || type || kind || category || categories;
+    if (shouldDisplay) {
+      const breadcrumbs = [type, kind, category, categories, subcategory].filter((i) => i).join(
+        fmt.light("&nbsp;>&nbsp;", { opacity: 0.5 })
+      );
+      const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
+      const title = isString$1(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
+      const body = isString$1(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
+      const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt.light("<i>no classification</i>");
+      await page.callout("example", title, {
+        style: {
+          mt: "0.55rem",
+          mb: "1rem"
+        },
+        icon: hasIcon ? icon : MARKDOWN_PAGE_ICON,
+        content: body,
+        toRight: right2,
+        fold: "+"
+      });
+    }
+    if (hasBanner) {
+      page.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
+    }
   }
 };
 function traverse(tree, cb) {
@@ -105202,12 +104958,24 @@ const video_gallery = (p2) => (source, container, component, filePath) => async 
   ].join("\n");
   fmt.render(dom);
 };
+const Page = (p2) => (source, container, component, filePath) => {
+  const page = p2.api.createPageInfoBlock(
+    source,
+    container,
+    component,
+    filePath
+  );
+  if (page) {
+    page.paragraph("Page Information");
+  }
+};
 const queryHandlers = (k) => ({
   Icons: Icons(k),
   BackLinks: BackLinks(k),
-  Book: book(k),
+  Book: Book(k),
   Kind: kind_table(k),
   PageEntry: page_entry(k),
+  Page: Page(k),
   VideoGallery: video_gallery(k)
 });
 const api = (plugin4) => ({
@@ -105232,7 +105000,7 @@ const api = (plugin4) => ({
    * **Formatting API**, designed to help you build useful HTML blocks that work
    * well with Obsidian.
    */
-  format: formattingApi(),
+  format: formattingApi(plugin4),
   /**
    * Returns a `DvPage` when given a valid path to a file in the vault.
    * 
@@ -105527,31 +105295,33 @@ const evaluate_query_params = (p2) => (re, source, defn) => {
   }
 };
 const query_error = (p2) => (source, container, component, filePath) => async (query2, err, params_str) => {
-  const dv = p2.api.dv_page(source, container, component, filePath);
+  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
   p2.warn(err);
-  const desc = query2 in QUERY_DEFN_LOOKUP ? `<span style="margin-top: 0.75rem">This query command is defined as:</span>` + describe_query(QUERY_DEFN_LOOKUP[query2]) : `<br>${query2} is not a recognized command!`;
-  dv.fmt.callout("error", `<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${dv.fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
-    content: [
-      `Problems parsing parameters passed into the&nbsp;${dv.fmt.bold(`${query2}()`)}&nbsp;${dv.fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
-      `<span><b>Error:</b> ${(err == null ? void 0 : err.message) || String(err)}</span>`,
-      desc
-    ],
-    icon: ERROR_ICON,
-    toRight: dv.fmt.inline_codeblock(` ${query2}(${(params_str == null ? void 0 : params_str.trim()) || ""}) `)
-  });
+  if (page) {
+    const desc = query2 in QUERY_DEFN_LOOKUP ? `<span style="margin-top: 0.75rem">This query command is defined as:</span>` + describe_query(QUERY_DEFN_LOOKUP[query2]) : `<br>${query2} is not a recognized command!`;
+    page.callout("error", `<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${page.format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
+      content: [
+        `Problems parsing parameters passed into the&nbsp;${page.format.bold(`${query2}()`)}&nbsp;${page.format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
+        `<span><b>Error:</b> ${(err == null ? void 0 : err.message) || String(err)}</span>`,
+        desc
+      ],
+      icon: ERROR_ICON,
+      toRight: page.format.inline_codeblock(` ${query2}(${(params_str == null ? void 0 : params_str.trim()) || ""}) `)
+    });
+  }
 };
 const codeblockParser = (plugin4) => {
   let processor = async (source, el, ctx) => {
     el.style.overflowX = "auto";
     const back_links = /BackLinks\((.*)\)/;
     const page_entry2 = /PageEntry\((.*)\)/;
-    const book2 = /Book\((.*)\)/;
+    const book = /Book\((.*)\)/;
     const kind = /Kind\((.*)\)/;
     const videos = /Videos\((.*)\)/;
     const icons = /Icons\((.*)\)/;
     const {
       BackLinks: BackLinks2,
-      Book,
+      Book: Book2,
       PageEntry,
       Kind,
       VideoGallery,
@@ -105578,8 +105348,8 @@ const codeblockParser = (plugin4) => {
         );
         return;
       }
-    } else if (book2.test(source)) {
-      await Book(source, el, ctx, ctx.sourcePath);
+    } else if (book.test(source)) {
+      await Book2(source, el, ctx, ctx.sourcePath);
       plugin4.debug(`book rendered on "${ctx.sourcePath}"`);
     } else if (kind.test(source)) {
       let p2 = evaluate_query_params(plugin4)(kind, source, kind_defn);

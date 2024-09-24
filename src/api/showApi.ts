@@ -2,27 +2,44 @@ import KindModelPlugin from "~/main";
 import { isArray, isString, keysOf } from "inferred-types";
 import { DvPage, PageReference, FileLink, ShowApi } from "~/types";
 import { getPage, getTagPathFromCache } from "./cache";
-import { isDvPage, isFileLink, isLink } from "~/type-guards";
+import { hasFileLink, isDvPage, isFileLink, isLink } from "~/type-guards";
 import { DateTime } from "luxon";
-import { isKeyOf } from "./buildingBlocks";
+import { getClassification, isKeyOf } from "./buildingBlocks";
+import { internalLink } from "./formattingApi";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
 
-export const showCreatedDate = (pg: DvPage, format?: string) => {
-	return format 
-		? pg.file.cday.toFormat(format)
-		: pg.file.cday
+export const showCreatedDate = (p: KindModelPlugin) => (
+	pg: PageReference | undefined, 
+	format?: string
+) => {
+	const page = p.api.getPage(pg);
+	if (page) {
+		return format 
+			? page.file.cday.toFormat(format)
+			: page.file.cday
+	}
+	return ""
 }
 
-export function showModifiedDate(pg: DvPage, format?: string) {
-	return format 
-		? pg.file.mday.toFormat(format)
-		: pg.file.mday
+export const showModifiedDate = (p: KindModelPlugin) => (
+	pg: PageReference, 
+	format?: string
+) => {
+	const page = p.api.getPage(pg);
+	if (page) {
+		return format 
+			? page.file.mday.toFormat(format)
+			: page.file.mday
+	}
+
+	return ""
 }
+
 
 export const showDueDate = (p: KindModelPlugin) => (
-	page: PageReference,
+	page: PageReference | undefined,
 	prop: string = "due",
 	format?: string
 ) => {
@@ -53,13 +70,18 @@ export const showDueDate = (p: KindModelPlugin) => (
  * Looks for a description in all common _description_
  * properties
  */
-export const showDesc = (p: KindModelPlugin) => (pg: DvPage) => {
-	const desc = showProp(p)(pg, "about","desc","description")
-	if (typeof desc == "string") {
-		return `<span style="font-weight:200; font-size: 14px">${desc}</span>`
-	} else {
-		return ""
+export const showDesc = (p: KindModelPlugin) => (pg: PageReference) => {
+	const page = p.api.getPage(pg);
+	if (page) {
+		const desc = showProp(p)(page, "about","desc","description")
+		if (typeof desc == "string") {
+			return `<span style="font-weight:200; font-size: 14px">${desc}</span>`
+		} else {
+			return ""
+		}
 	}
+
+	return ""
 };
 
 /**
@@ -68,13 +90,15 @@ export const showDesc = (p: KindModelPlugin) => (pg: DvPage) => {
  * A smart date field which tries to express the most
  * relevant date info for a page.
  */
-export const showWhen = (_p: KindModelPlugin) => (
-	pg: DvPage | undefined,
+export const showWhen = (p: KindModelPlugin) => (
+	pg: PageReference | undefined,
 	format: string = "LLL yyyy"
 ) => {
-	if (pg) {
-		const created = pg.file.cday;
-		const modified = pg.file.mday;
+	const page = p.api.getPage(pg);
+
+	if (page) {
+		const created = page.file.cday;
+		const modified = page.file.mday;
 		const deltaCreated = Math.abs(created.diffNow('days').days);
 		const deltaModified = Math.abs(modified.diffNow('days').days);
 
@@ -92,9 +116,13 @@ export const showWhen = (_p: KindModelPlugin) => (
 	} else {
 		return ""
 	}
+
+	return ""
 }
 
-export const showCategoriesFor = (p: KindModelPlugin) => (pg: PageReference | undefined): string => {
+export const showCategories = (p: KindModelPlugin) => (
+	pg: PageReference | undefined
+): string => {
 	const page = getPage(p)(pg);
 	
 	if (pg) {
@@ -120,7 +148,7 @@ export const showCategoriesFor = (p: KindModelPlugin) => (pg: PageReference | un
 	return ""
 }
 
-export const showSubcategoriesFor = (p: KindModelPlugin) => (
+export const showSubcategories = (p: KindModelPlugin) => (
 	pg: PageReference | undefined,
 	/** the category which you want to get subcategories for */
 	category: string 
@@ -164,107 +192,115 @@ export const showTags   = (p: KindModelPlugin) => (pg: DvPage, ...exclude: strin
  * passed in.
  */
 export const getInternalLinks = (p: KindModelPlugin) => (
-	pg: DvPage, 
+	pg: PageReference | undefined, 
 	...props: string[]
 ) => {
-
 	let links: FileLink[] = [];
-	for (const prop of props) {
-		const pgProp = pg[prop];
-		if (!pgProp) {
-			break;
-		}
-		if (Array.isArray(pgProp)) {
-			links = [ ...links, ...pgProp.filter(i => isFileLink(i)) ];
-		} else if (isFileLink(pgProp)) {
-			links.push(pgProp);
-		} else if (isDvPage(pgProp)) {
-			links.push(pgProp.file.link)
-		}
-	}		
+	const page = p.api.getPage(pg);
+
+	if(page) {
+		for (const prop of props) {
+			const pgProp = page[prop];
+			if (!pgProp) {
+				break;
+			}
+			if (hasFileLink(pgProp)) {
+				links = [ ...links, ...pgProp.filter(i => isFileLink(i)) ];
+			} else if (isFileLink(pgProp)) {
+				links.push(pgProp);
+			} 
+		}		
+	}
+
 	return links;
 }
 
-export const showLinks = (p: KindModelPlugin) => (pg: DvPage) => {
-	const [_,pageIcon] = getProp(p)(pg, "icon", "svg_icon","_icon","_svg_icon");
-
-	const link_props = {
-		website: "website",
-		wikipedia: "wikipedia",
-		company: "company",
-		retailer: "company",
-		docs: "documentation",
-		retail_urls: "retail",
-		retail: "retail",
-		url: "link",
-		repo: "repo",
-		review: "review",
-		reviews: "review",
-		blog: "blog",
-		api: "api",
-		map: "map",
-		place: "pin",
-		home: "home",
-		office: "office",
-		offices: "office",
-		work: "office",
-		employer: "office",
-		playground: "playground",
-		demo: "playground",
-		support: "support",
-		help: "support"
-	} as Record<string, string>;
-	
-	const create_lnk = (
-		icon: string, 
-		/** the URL to the external site */
-		url: string, 
-		/** the property in metadata which this URL was found in */
-		prop: string
-	) => {
-		icon = prop === "website" && isString(pageIcon) 
-			? pageIcon
-			: /youtube.com/.test(url) 
-			? "you_tube" 
-			: icon;
-		p.debug(prop,pageIcon)
-		return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
-	}
-	const links: [prop:string, link: string][] = [];
-	
-	for (const prop of keysOf(pg)) {
-		if(prop in pg && isString(pg[prop])) {
-			// check if property is a HTTP link or an array of them
-			if(Array.isArray(pg[prop])) {
-				pg[prop].forEach((p: unknown) => { 
-					if(isString(p)  &&/^http/.test(p)) {
-						links.push([prop,p]);
-					} 
-				})
-			} else if (isString(pg[prop]) && !prop.startsWith("_")&& /^http/.test(pg[prop])) {
-				links.push([prop, pg[prop]]);
+export const showLinks = (p: KindModelPlugin) => (
+	pg: PageReference | undefined
+) => {
+	const page = p.api.getPage(pg);
+	if (page) {
+		const [_,pageIcon] = getProp(p)(pg, "icon", "svg_icon","_icon","_svg_icon");
+		const link_props = {
+			website: "website",
+			wikipedia: "wikipedia",
+			company: "company",
+			retailer: "company",
+			docs: "documentation",
+			retail_urls: "retail",
+			retail: "retail",
+			url: "link",
+			repo: "repo",
+			review: "review",
+			reviews: "review",
+			blog: "blog",
+			api: "api",
+			map: "map",
+			place: "pin",
+			home: "home",
+			office: "office",
+			offices: "office",
+			work: "office",
+			employer: "office",
+			playground: "playground",
+			demo: "playground",
+			support: "support",
+			help: "support"
+		} as Record<string, string>;
+		
+		const create_lnk = (
+			icon: string, 
+			/** the URL to the external site */
+			url: string, 
+			/** the property in metadata which this URL was found in */
+			prop: string
+		) => {
+			icon = prop === "website" && isString(pageIcon) 
+				? pageIcon
+				: /youtube.com/.test(url) 
+				? "you_tube" 
+				: icon;
+			p.debug(prop,pageIcon)
+			return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+		}
+		const links: [prop:string, link: string][] = [];
+		
+		for (const prop of keysOf(pg)) {
+			if(prop in page && isString(page[prop])) {
+				// check if property is a HTTP link or an array of them
+				if(Array.isArray(page[prop])) {
+					page[prop].forEach((p: unknown) => { 
+						if(isString(p)  &&/^http/.test(p)) {
+							links.push([prop,p]);
+						} 
+					})
+				} else if (isString(page[prop]) && !prop.startsWith("_")&& /^http/.test(page[prop])) {
+					links.push([prop, page[prop]]);
+				}
 			}
 		}
-	}
-
-	const icons = p.api.linkIcons;
-
-	const prettify = (tuple: [prop: string, url: string]) => {
-		const [prop, url] = tuple;
-		if(prop in link_props) {
-
-			if(link_props[prop] in icons) {
-				return create_lnk(icons[link_props[prop]], url, prop);
+	
+		const icons = p.api.linkIcons;
+	
+		const prettify = (tuple: [prop: string, url: string]) => {
+			const [prop, url] = tuple;
+			if(prop in link_props) {
+	
+				if(link_props[prop] in icons) {
+					return create_lnk(icons[link_props[prop]], url, prop);
+				} else {
+					return create_lnk(DEFAULT_LINK, url, prop);
+				}
 			} else {
 				return create_lnk(DEFAULT_LINK, url, prop);
 			}
-		} else {
-			return create_lnk(DEFAULT_LINK, url, prop);
 		}
+	
+	
+		return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
 	}
 
-
-	return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
+	return ""
 }
 
 
@@ -273,41 +309,46 @@ export const showLinks = (p: KindModelPlugin) => (pg: DvPage) => {
  * - higher order display prop which receives the plugin and then a page with a set of props
  * - the output is displayed in the column based on the _type_ of content found
  */
-export const showProp = (plugin: KindModelPlugin) => (
-	pg: DvPage & Record<string, unknown>, 
+export const showProp = (p: KindModelPlugin) => (
+	pg: PageReference | undefined, 
 	...props: [string, ...string[]]
 ) => {
-	if(!pg?.file?.name) {
-		throw new Error(`Attempt to call get_prop(pg, ${props.join(", ")}) with an invalid page passed in!`);
-	}
-	const found = props.find(prop => isKeyOf(pg, prop) && pg[prop] !== undefined) as (string) | undefined;
+	const page = p.api.getPage(pg);
 
-	if (!found) {
-		return "";
-	}
-	if(isKeyOf(pg, found)) {
-		const value = pg[found];
-		try {
-			return isString(value)
-				? value
-				: isLink(value)
-				? value
-				: isDvPage(value)
-				? value?.file.link
-				: isArray(value)
-				? value.map(v => isLink(v) ? v : isDvPage(v) ? v.file.link : "")
-					.filter(i => i)
-					.join(", ")
-				: ""
-		} catch (e) {
-			plugin.error(`Ran into problem displaying the "${found}" property on the page "${pg.file.path}" passed in while calling show_prop().`, e);
-
-			return ""
+	if (page) {
+		if(!page?.file?.name) {
+			throw new Error(`Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`);
 		}
+		const found = props.find(prop => isKeyOf(page, prop) && page[prop] !== undefined) as (string) | undefined;
+	
+		if (!found) {
+			return "";
+		}
+		if(isKeyOf(page, found)) {
+			const value = page[found];
+			try {
+				return isString(value)
+					? value
+					: isLink(value)
+					? value
+					: isDvPage(value)
+					? value?.file.link
+					: isArray(value)
+					? value.map(v => isLink(v) ? v : isDvPage(v) ? v.file.link : "")
+						.filter(i => i)
+						.join(", ")
+					: ""
+			} catch (e) {
+				p.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e);
+	
+				return ""
+			}
+		}
+
 	}
+
+	return ""
 }
-
-
 
 /** 
  * similar to showProp but this function returns a tuple of `[prop,value]` and 
@@ -316,30 +357,32 @@ export const showProp = (plugin: KindModelPlugin) => (
  * Note: if a `link` or array of `links` is found it will resolve these
  * to `DvPage` objects.
  */
-export const getProp = (plugin: KindModelPlugin) => (
-	pg: DvPage & Record<string, unknown>,
+export const getProp = (p: KindModelPlugin) => (
+	pg: PageReference | undefined,
 	...props: [string, ...string[]]
 ) => {
-	if(!pg?.file?.name) {
-		plugin.error(`Call to get_prop(pg) passed in an invalid DvPage`, {pg,props});
-		return [undefined, undefined];
+	const page = p.api.getPage(pg);
+
+	if(page) {
+		const found = props.find(prop => isKeyOf(page, prop) && page[prop] !== undefined) as (string) | undefined;
+		if (!found) {
+			return [undefined, undefined];
+		} else {
+			const value = page[found];
+	
+			return [
+				found,
+				isLink(value)
+				? p.dv.page(value)
+				: Array.isArray(value)
+				? value.map(i => isLink(i) ? p.dv.page(i) : i)
+				: value
+			]
+		}
 	}
 
-	const found = props.find(prop => isKeyOf(pg, prop) && pg[prop] !== undefined) as (string) | undefined;
-	if (!found) {
-		return [undefined, undefined];
-	} else {
-		const value = pg[found];
-
-		return [
-			found,
-			isLink(value)
-			? plugin.dv.page(value)
-			: Array.isArray(value)
-			? value.map(i => isLink(i) ? plugin.dv.page(i) : i)
-			: value
-		]
-	}
+	p.error(`Call to getProp(pg) passed in an invalid DvPage`, {pg,props});
+	return [undefined, undefined];
 }
 
 export const showAbout = (p: KindModelPlugin) => (pg: PageReference): FileLink[] => {
@@ -354,8 +397,6 @@ export const showKind = (p: KindModelPlugin) => (pg: PageReference): string => {
 	return ""
 }
 
-
-
 export const showMetrics = (p: KindModelPlugin) => (pg: PageReference): string => {
 	return ""
 }
@@ -364,7 +405,18 @@ export const showSlider = (p: KindModelPlugin) => (pg: PageReference): string =>
 	return ""
 }
 
+export const showClassifications = (p: KindModelPlugin) => (pg: PageReference): string => {
+	const classy = getClassification(p)(pg);
+	const link = internalLink(p);
 
+	p.info("classy", classy)
+
+	return classy.map(i => [
+		link(i.kind),
+		i.categories.map(i => i[1]).map(i => link(i)),
+		link(i.subcategory ? i.subcategory[1] : undefined)
+	].filter(i => i).join(" | ")).join(`<br>`);
+}
 
 
 /**
@@ -391,8 +443,9 @@ export const showApi = (p: KindModelPlugin): ShowApi => ({
 	showAbout: showAbout(p),
 	showPeers: showPeers(p),
 	showKind: showKind(p),
-	showCategoriesFor: showCategoriesFor(p),
-	showSubcategoriesFor: showSubcategoriesFor(p),
+	showCategories: showCategories(p),
+	showSubcategories: showSubcategories(p),
+	showClassifications: showClassifications(p),
 	showMetrics: showMetrics(p),
 	showSlider: showSlider(p),
 }) as const;

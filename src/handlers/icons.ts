@@ -1,11 +1,12 @@
-import KindModelPlugin from "~main"";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
+import KindModelPlugin from "~/main";
+import { MarkdownPostProcessorContext } from "obsidian";
+import { ObsidianComponent } from "~/types";
 
 
 export const Icons  = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
+	component: ObsidianComponent | MarkdownPostProcessorContext,
 	filePath: string
 ) => async(
 	params_str: string = ""

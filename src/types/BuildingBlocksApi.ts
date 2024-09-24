@@ -1,5 +1,6 @@
-import { isKeyOf } from "api";
+
 import { 
+	isKeyOf,
 	getCategories,
 	getClassification, 
 	getKindPages, 
@@ -22,7 +23,7 @@ import {
 	isKindedPage, 
 	isKindTag, 
 	isSubcategoryPage 
-} from "api/buildingBlocks";
+} from "~/api/buildingBlocks";
 
 
 export type BuildingBlocksApi = {

@@ -1,15 +1,20 @@
 
 
+import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { Date } from "inferred-types";
 import { DateTime } from "luxon";
-import KindModelPlugin from "../main";
-import { DvPage } from "../types/dataview_types";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
-import { AMAZON, BOOK_CATALOG, BOOK_ICON, KINDLE_ICON,  SEARCH_BOOK, TIP_ICON } from "../constants/obsidian-constants";
-import {  AmazonBook, worldCatBookPage } from "../helpers/scrapers";
-import { isDateTime } from "type-guards";
-
-
+import KindModelPlugin from "~/main";
+import { DvPage } from "~/types";
+import { 
+	AMAZON, 
+	BOOK_CATALOG, 
+	BOOK_ICON, 
+	KINDLE_ICON,  
+	SEARCH_BOOK, 
+	TIP_ICON 
+} from "~/constants";
+import {  AmazonBook, worldCatBookPage } from "~/helpers/scrapers";
+import { isDateTime } from "~/type-guards";
 
 type BookSearchMeta = {
 	title?: string;
@@ -139,16 +144,18 @@ export type BookMeta = {
  * 
  * Based on metadata that is provided by [kindle-sync]() and [book-search]().
  */
-export const book =  (p: KindModelPlugin) => async(
+export const Book =  (p: KindModelPlugin) => async(
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
 	filePath: string
 ) =>  {
 	// const dv = p.dv;
-	const dv = p.api.dv_page(source, container, component, filePath);
-	const {fmt} = dv;
-	const current = dv.current as DvPage & PageMeta;
+	const page = p.api.createPageInfoBlock(source, container, component, filePath);
+	if (page) {
+
+	const fmt = page.format;
+	const current = page.current as DvPage & PageMeta;
 	
 	let book: BookMeta = {
 		title: current.title || current["kindle-sync"]?.title || "unknown",
@@ -200,7 +207,7 @@ export const book =  (p: KindModelPlugin) => async(
 	if(!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
 		p.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
 		
-		fmt.callout("warning","No Book metadata found!", {content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`});
+		page.callout("warning","No Book metadata found!", {content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`});
 	} else {
 		book.worldCatBookLink = await worldCatBookPage(p, book);
 		// get Amazon info
@@ -218,7 +225,7 @@ export const book =  (p: KindModelPlugin) => async(
 		const publisher = book.publisher
 			? [
 				fmt.medium("Publisher:"),
-				fmt.html_ul([book.publisher], {  indentation: "default", my: "tight" })
+				fmt.ul([book.publisher], {  indentation: "default", my: "tight" })
 			]
 			: [];
 
@@ -226,7 +233,7 @@ export const book =  (p: KindModelPlugin) => async(
 			? [
 				fmt.medium("Publication Date:"),
 				isDateTime(book.publishDate)
-				? fmt.html_ul([book?.publishDate?.toFormat("LLL yyyy")], {indentation: "default", my: "tight"})
+				? fmt.ul([book?.publishDate?.toFormat("LLL yyyy")], {indentation: "default", my: "tight"})
 				: "unknown format"
 			]
 			: [];
@@ -234,21 +241,21 @@ export const book =  (p: KindModelPlugin) => async(
 		const pages = book.totalPages
 			? [
 				fmt.medium("Length:&nbsp;"),
-				fmt.html_ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", {ts:"sm"})}`], {indentation: "default", my: "tight"}),
+				fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", {ts:"sm"})}`], {indentation: "default", my: "tight"}),
 			]
 			: [];
 
 		const author = book.authors.length > 0
 			? [
 				fmt.medium("Written By:"),
-				fmt.html_ul(book.authors, {indentation: "default", my: "tight"})
+				fmt.ul(book.authors, {indentation: "default", my: "tight"})
 			]
 			: [];
 		
 		const book_ids = [
 			`<div class="book-ids">`,
 			fmt.medium("Book Identifiers:"),
-			fmt.html_ul([
+			fmt.ul([
 				book.isbn10 ? `${fmt.light(book.isbn10, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn10", {ts: "xs"})}` : undefined,
 				book.isbn13 ? `${fmt.light(book.isbn13, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn13", {ts: "xs"})}` : undefined,
 				book.asin ? `${fmt.light(book.asin, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;asin", {ts: "xs"})}` : undefined
@@ -370,6 +377,9 @@ export const book =  (p: KindModelPlugin) => async(
 			`</div`
 		];
 
-		await fmt.render(html.join("\n"));
+		await page.render(html.join("\n"));
 	}
+		
+	}
+	
 }
