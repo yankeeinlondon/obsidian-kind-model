@@ -1,4 +1,5 @@
 export * from "./BlockTemplate";
+export * from "./BuildingBlocksApi";
 export * from "./Classification";
 export * from "./css";
 export * from "./dataview_types";
@@ -9,6 +10,7 @@ export * from "./KindCache";
 export * from "./Obsidian";
 export * from "./ObsidianCallouts";
 export * from "./ObsidianTask";
+export * from "./query";
 export * from "./PageInfo";
 export * from "./PageContext";
 export * from "./PageMeta";

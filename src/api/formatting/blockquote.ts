@@ -1,4 +1,4 @@
-import { BlockQuoteOptions, ObsidianCalloutColors } from "types";
+import { BlockQuoteOptions, ObsidianCalloutColors } from "~/types";
 import { 
 	BUG_ICON, 
 	EXAMPLE_ICON, 
@@ -11,8 +11,8 @@ import {
 	SUMMARY_ICON,
 	TIP_ICON,
 	WARN_ICON,
-} from "../../constants";
-import { style } from "api";
+} from "~/constants";
+import { style } from "~/api";
 
 
 const obsidian_blockquote = (

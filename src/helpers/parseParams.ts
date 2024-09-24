@@ -25,7 +25,7 @@ import {
 	isUndefined,
 	isScalar
 } from "inferred-types";
-import { isError } from "type-guards";
+import { isError } from "~/type-guards";
 
 
 /**

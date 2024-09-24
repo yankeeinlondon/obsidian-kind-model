@@ -1,4 +1,3 @@
-import { listStyle, style } from "api";
 import { 
 	createFnWithProps, 
 	ensureLeading, 
@@ -6,9 +5,10 @@ import {
 	isFunction, 
 	TypedFunction 
 } from "inferred-types";
-import KindModelPlugin from "main";
-import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, StyleOptions } from "types";
-import { isDvPage, isLink } from "type-guards";
+import { listStyle, style } from "../api";
+import KindModelPlugin from "../main";
+import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, StyleOptions } from "../types";
+import { isDvPage, isLink } from "../type-guards";
 import { blockquote } from "./formatting/blockquote";
 
 type WrapperCallback = (items: string) => string;
@@ -19,6 +19,12 @@ type ListItemsApi<_W extends WrapperCallback> = {
 	done: EscapeFunction
 };
 
+
+export const removePound = (tag: string | undefined) => {
+	return typeof tag === "string" && tag?.startsWith("#")
+		? tag.slice(1)
+		: tag
+}
 
 const list_items_api = <
 	W extends WrapperCallback
@@ -106,6 +112,8 @@ export type LinkOptions = {
 export const formattingApi = (p: KindModelPlugin) =>{
 	return {
 
+		/** removes the pound symbol from a string */
+		removePound,
 	
 
 	

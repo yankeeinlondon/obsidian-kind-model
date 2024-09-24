@@ -1,16 +1,28 @@
-import { TypedFunction, isArray, isGithubRepoUrl, isObject, isString, isUrl, isYouTubeCreatorUrl, isYouTubeVideoUrl } from "inferred-types";
+import { 
+	TypedFunction, 
+	isArray, 
+	isGithubRepoUrl, 
+	isObject, 
+	isString, 
+	isUrl, 
+	isYouTubeCreatorUrl, 
+	isYouTubeVideoUrl 
+} from "inferred-types";
 import { TFile } from "obsidian";
-import Markdoc, { Node, RenderableTreeNode, Tag } from "@markdoc/markdoc";
+import
+	Markdoc, 
+	{ 
+		Node, 
+		RenderableTreeNode
+} from "@markdoc/markdoc";
 
-import KindModelPlugin from "../main";
-import { DvPage, Link } from "../types/dataview_types";
-import { isLink } from "../utils/type_guards/isFileLink";
-import { isTFile } from "../utils/type_guards/isTFile";
-import { ExternalLink, PagePath, PropertyLink, Traversable } from "../types/general";
-import { Frontmatter } from "../types/frontmatter";
-import { isDvPage } from "../utils/type_guards/isDvPage";
-import { splitContent } from "../utils/splitContent";
-import { PageBlock } from "../types/settings_types";
+import KindModelPlugin from "~/main";
+import { DvPage, Link } from "~/types/dataview_types";
+import { ExternalLink, PagePath, PropertyLink, Traversable } from "~/types/general";
+import { Frontmatter } from "~/types/frontmatter";
+import { splitContent } from "~/utils/splitContent";
+import { PageBlock } from "~/types/settings_types";
+import { isDvPage, isFileLink, isTFile } from "~/type-guards";
 
 export type PageContent = {
 	/**
@@ -179,7 +191,7 @@ function linksInFrontmatter(
  */
 export const pageContent = (p: KindModelPlugin) => 
 async <T extends TFile | Link | PagePath | DvPage>(ref: T): Promise<undefined | PageContent> => {
-	const path = isLink(ref)
+	const path = isFileLink(ref)
 		? ref.path
 		: isTFile(ref)
 		? ref.path

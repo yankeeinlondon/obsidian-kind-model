@@ -7,15 +7,15 @@ import {
 	isUrl 
 } from "inferred-types";
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
-import { DvPage } from "../types/dataview_types";
-import { MARKDOWN_PAGE_ICON } from "../constants/obsidian-constants";
-import KindModelPlugin from "../main";
+import { DvPage } from "~/types";
+import { MARKDOWN_PAGE_ICON } from "~/constants";
+import KindModelPlugin from "~/main";
 import { 
 	OptionParam, 
 	QueryDefinition, 
 	ScalarParams 
 } from "../helpers/QueryDefinition";
-import { find_in, isWikipediaUrl } from "type-guards";
+import { find_in, isWikipediaUrl } from "~/type-guards";
 
 export const page_entry_defn = {
 	kind: "query-defn",

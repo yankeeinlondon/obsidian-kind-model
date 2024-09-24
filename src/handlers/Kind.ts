@@ -1,10 +1,10 @@
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
-import {  OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
+import {  OptionParam, QueryDefinition, ScalarParams } from "~/helpers/QueryDefinition";
 
-import { DvPage } from "../types/dataview_types";
-import { DvQuerySurface } from "./dv_page";
-import KindModelPlugin from "../main";
-import { isDvPage } from "type-guards";
+import { DvPage } from "~/types";
+import KindModelPlugin from "~/main";
+import { isDvPage } from "~/type-guards";
+import { createPageInfoBlock } from "~/api";
 
 export type KindQueryOptions = {
 	category?: string;
@@ -46,7 +46,7 @@ export const kind_table = (p: KindModelPlugin) => (
 	scalar: TScalar,
 	opt: TOption
 ) => {
-	const dv: DvQuerySurface = p.api.dv_page(source, container, component, filePath);
+	const dv = createPageInfoBlock(p)(source, container, component, filePath);
 	const table = dv.table;
 	const {createFileLink, show_when, show_desc, show_links, fmt} = dv;
 	const [kind, category, subcategory] = scalar;

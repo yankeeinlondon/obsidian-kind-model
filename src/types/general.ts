@@ -60,6 +60,15 @@ export type ExternalLink = {
 	in_frontmatter: boolean;
 }
 
+
+export type UlApi = {
+	/** indent the unordered list a level */
+	indent: (...items: string[]) => string;
+	done: EscapeFunction
+};
+
+export type UlCallback = <T extends UlApi>(api:T) => unknown;
+
 export type Traversable<
 	T extends RenderableTreeNode | Node = RenderableTreeNode | Node
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

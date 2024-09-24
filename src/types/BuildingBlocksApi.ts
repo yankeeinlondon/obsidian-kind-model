@@ -1,3 +1,4 @@
+import { isKeyOf } from "api";
 import { 
 	getCategories,
 	getClassification, 
@@ -25,6 +26,12 @@ import {
 
 
 export type BuildingBlocksApi = {
+	/**
+	 * **isKeyOf**`(container, key)`
+	 * 
+	 * Boolean check whether `key` is _key of_ `container`.
+	 */
+	isKeyOf: typeof isKeyOf
 	/**
 		 * Boolean operator which reports on whether:
 		 * 

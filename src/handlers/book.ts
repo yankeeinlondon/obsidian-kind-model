@@ -1,12 +1,10 @@
-
-
 import { Date } from "inferred-types";
 import { DateTime } from "luxon";
-import KindModelPlugin from "../main";
 import { Component, MarkdownPostProcessorContext } from "obsidian";
-import { AMAZON, BOOK_CATALOG, BOOK_ICON, KINDLE_ICON,  SEARCH_BOOK, TIP_ICON } from "../constants/obsidian-constants";
-import {  AmazonBook, worldCatBookPage } from "../helpers/scrapers";
-import { isDateTime } from "type-guards";
+import KindModelPlugin from "~/main";
+import { AMAZON, BOOK_CATALOG, BOOK_ICON, KINDLE_ICON,  SEARCH_BOOK, TIP_ICON } from "~/constants";
+import {  AmazonBook, worldCatBookPage } from "~/helpers/scrapers";
+import { isDateTime } from "~/type-guards";
 
 type BookSearchMeta = {
 	title?: string;

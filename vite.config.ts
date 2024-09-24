@@ -4,6 +4,11 @@ import { execFileSync } from "node:child_process";
 import vuePlugin from "@vitejs/plugin-vue";
 
 export default defineConfig({
+	resolve: {
+		alias: {
+		  "~/": `${path.resolve(__dirname, "src")}/`,
+		},
+	  },
 	plugins: [
 		vuePlugin(),
 		{
@@ -33,6 +38,7 @@ export default defineConfig({
 			},
 			external: [ 
 				"obsidian",
+				"luxon",
   		        "@codemirror/autocomplete",
   		        "@codemirror/collab",
   		        "@codemirror/commands",

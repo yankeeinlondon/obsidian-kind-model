@@ -1,12 +1,11 @@
-import { isString, isUndefined, stripLeading } from "inferred-types";
-import KindModelPlugin from "main";
+import {  isUndefined, stripLeading } from "inferred-types";
+import KindModelPlugin from "../main";
 
-import { DvPage, Link } from "types/dataview_types";
-import { TAbstractFile, TFile } from "types/Obsidian";
+import { DvPage } from "../types";
 
 import { getPath } from "./getPath"
-import { isDvPage, isPageInfo } from "type-guards";
-import { PageInfo, PageReference } from "types";
+import { isDvPage, isPageInfo } from "../type-guards";
+import { PageInfo, PageReference } from "../types";
 
 /**
  * caching of `DvPage`'s we're interested in

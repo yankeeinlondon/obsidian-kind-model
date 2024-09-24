@@ -1,4 +1,14 @@
-import KindModelPlugin from "main";
+import { 
+	Container,
+	Dictionary,
+	isArray, 
+	isContainer, 
+	isDefined, 
+	isNumber, 
+	isString, 
+	stripLeading 
+} from "inferred-types";
+import KindModelPlugin from "../main";
 import { 
 	getKindDefnFromCache, 
 	getKindTagsFromCache, 
@@ -8,14 +18,8 @@ import {
 	isTagCacheReady, 
 	lookupPageInfo, 
 } from "./cache";
-import { 
-	Dictionary,
-	isArray, 
-	isDefined, 
-	stripLeading 
-} from "inferred-types";
 
-import {  hasFileLink, isFileLink } from "type-guards";
+import {  hasFileLink, isFileLink } from "../type-guards";
 import { 
 	DvPage, 
 	Classification, 
@@ -28,9 +32,8 @@ import {
 	PageReference, 
 	FileLink,
 	PropertyType
-} from "types";
-import { BuildingBlocksApi } from "types/BuildingBlocksApi";
-
+} from "../types";
+import { BuildingBlocksApi } from "../types";
 
 /**
  * returns all Kind tags which have `tag` as part of them; all tags 
@@ -44,6 +47,16 @@ export const getKnownKindTags = (p: KindModelPlugin) => (
 	}
 	
 	return getKindTagsFromCache(tag);
+}
+
+
+export const isKeyOf = <
+	TContainer,
+	TKey
+>(container: TContainer, key: TKey): key is TContainer extends Container ? TKey & keyof TContainer : TKey => {
+	return (
+		isContainer(container) && (isString(key) || isNumber(key)) && key in container ? true : false
+	);
 }
 
 /**
@@ -332,7 +345,7 @@ export const getCategories = (p: KindModelPlugin) => (pg: PageReference): PageCa
 
 		if (all.length > 0) {
 			categories.push(
-				{ kind: c.kind, categories: all}
+				{ kind: c.kind, categories: all }
 			)
 		}
 	}
@@ -653,28 +666,30 @@ export const getClassification = (p: KindModelPlugin) => (
  * API surface with build block functions
  */
 export const buildingBlocks = (plugin: KindModelPlugin): BuildingBlocksApi => ({
-		hasCategoryProp: hasCategoryProp(plugin),
-		hasCategoriesProp: hasCategoriesProp(plugin),
-		hasTypeDefinitionTag: hasTypeDefinitionTag(plugin),
-		hasKindDefinitionTag: hasKindDefinitionTag(plugin),
-		hasKindProp: hasKindProp(plugin),
-		hasKindsProp: hasKindsProp(plugin),
-		hasTypeProp: hasTypeProp(plugin),
-		hasMultipleKinds: hasMultipleKinds(plugin),
-		hasCategoryTagDefn: hasCategoryTagDefn(plugin),
-		hasCategoryTag: hasCategoryTag(plugin),
-		getCategories: getCategories(plugin),
-		hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin),
-		isCategoryPage: isCategoryPage(plugin),
-		isSubcategoryPage: isSubcategoryPage(plugin),
-		isKindedPage: isKindedPage(plugin),
-		isKindDefnPage: isKindDefnPage(plugin),
-		getClassification: getClassification(plugin),
-		getKnownKindTags: getKnownKindTags(plugin),
-		getKindPages: getKindPages(plugin),
+	isKeyOf: isKeyOf,
 
-		getMetadata: getMetadata(plugin),
+	hasCategoryProp: hasCategoryProp(plugin),
+	hasCategoriesProp: hasCategoriesProp(plugin),
+	hasTypeDefinitionTag: hasTypeDefinitionTag(plugin),
+	hasKindDefinitionTag: hasKindDefinitionTag(plugin),
+	hasKindProp: hasKindProp(plugin),
+	hasKindsProp: hasKindsProp(plugin),
+	hasTypeProp: hasTypeProp(plugin),
+	hasMultipleKinds: hasMultipleKinds(plugin),
+	hasCategoryTagDefn: hasCategoryTagDefn(plugin),
+	hasCategoryTag: hasCategoryTag(plugin),
+	getCategories: getCategories(plugin),
+	hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin),
+	isCategoryPage: isCategoryPage(plugin),
+	isSubcategoryPage: isSubcategoryPage(plugin),
+	isKindedPage: isKindedPage(plugin),
+	isKindDefnPage: isKindDefnPage(plugin),
+	getClassification: getClassification(plugin),
+	getKnownKindTags: getKnownKindTags(plugin),
+	getKindPages: getKindPages(plugin),
 
-		getKindTagsOfPage: getKindTagsOfPage(plugin),
-		isKindTag: isKindTag(plugin),
+	getMetadata: getMetadata(plugin),
+
+	getKindTagsOfPage: getKindTagsOfPage(plugin),
+	isKindTag: isKindTag(plugin),
 })

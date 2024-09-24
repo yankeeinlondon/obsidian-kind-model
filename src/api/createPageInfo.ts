@@ -1,8 +1,8 @@
 import KindModelPlugin from "main";
 import { getPath } from "./getPath";
 import { getPage, hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
-import { isDvPage, isPageInfo } from "type-guards";
-import { PageInfo, PageReference } from "types";
+import { isDvPage, isPageInfo } from "../type-guards";
+import { PageInfo, PageReference } from "../types";
 import { 
 	getCategories,
 	getClassification, 

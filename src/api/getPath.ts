@@ -1,6 +1,6 @@
 import { isString } from "inferred-types";
-import { PageReference } from "types";
-import { isDvPage, isLink, isPageInfo, isTAbstractFile, isTFile } from "type-guards";
+import { PageReference } from "../types";
+import { isDvPage, isLink, isPageInfo, isTAbstractFile, isTFile } from "../type-guards";
 
 /**
  * Get's a page's "path" from various page reference types.

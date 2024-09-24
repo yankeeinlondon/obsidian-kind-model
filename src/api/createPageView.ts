@@ -1,10 +1,10 @@
 import { MarkdownView } from "obsidian";
-import { createPageInfo } from "./createPageInfo";
-import KindModelPlugin from "main";
-import { MarkdownViewMeta, PageInfo, PageView } from "types";
 import Markdoc, { Node } from "@markdoc/markdoc";
-import { getHeadingLevel } from "utils/getHeadingLevel";
-import { splitContent } from "utils/splitContent";
+import { createPageInfo } from "./createPageInfo";
+import { MarkdownViewMeta, PageInfo, PageView } from "../types";
+import KindModelPlugin from "../main";
+import { getHeadingLevel } from "../utils/getHeadingLevel";
+import { splitContent } from "../utils/splitContent";
 
 
 export const getViewMeta = (p: KindModelPlugin) => (view: MarkdownView, info: PageInfo): MarkdownViewMeta => {

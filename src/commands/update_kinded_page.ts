@@ -1,11 +1,10 @@
 import { Editor, MarkdownView } from "obsidian";
 import KindModelPlugin from "../main";
-import { getBasePageContext } from "../utils/page/getBasePageContext";
 
 
 export const update_kinded_page = (plugin: KindModelPlugin) => async (editor: Editor, view: MarkdownView) => {
-  const p = getBasePageContext(plugin); 
-  plugin.info("update-kinded-page", p);
+  const page = plugin.api.createPageView(view);
+  plugin.info("update-kinded-page", page);
 
   if (view.getViewType() !== "markdown") {
     plugin.warn(

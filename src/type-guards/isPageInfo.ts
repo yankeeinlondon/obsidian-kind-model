@@ -1,6 +1,6 @@
 import { isObject } from "inferred-types";
-import { PageInfo } from "types";
-import { isDvPage } from "type-guards";
+import { PageInfo } from "~/types";
+import { isDvPage } from "~/type-guards";
 
 
 /**

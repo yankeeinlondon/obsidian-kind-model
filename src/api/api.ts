@@ -9,7 +9,7 @@ import { renderApi } from "./renderApi";
 import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
 import { createPageInfoBlock } from "./createPageInfoBlock";
-import { queryHandlers } from "handlers";
+import { queryHandlers } from "../handlers";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -32,13 +32,11 @@ export const api = (plugin: KindModelPlugin) => ({
 	 */
 	render: renderApi(plugin),
 
-
 	/**
 	 * **Formatting API**, designed to help you build useful HTML blocks that work
 	 * well with Obsidian.
 	 */
 	format: formattingApi(plugin),
-
 
 	/**
 	 * Returns a `DvPage` when given a valid path to a file in the vault.
