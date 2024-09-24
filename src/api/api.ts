@@ -1,4 +1,4 @@
-import KindModelPlugin from "../main";
+import KindModelPlugin from "~/main";
 import { buildingBlocks } from "./buildingBlocks";
 import { getPath } from "./getPath";
 import { createPageView } from "./createPageView";
@@ -9,7 +9,7 @@ import { renderApi } from "./renderApi";
 import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
 import { createPageInfoBlock } from "./createPageInfoBlock";
-import { queryHandlers } from "../handlers";
+import { queryHandlers } from "~/handlers";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**

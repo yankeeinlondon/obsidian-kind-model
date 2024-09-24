@@ -1450,11 +1450,11 @@ class Formatter {
   static create(locale, opts = {}) {
     return new Formatter(locale, opts);
   }
-  static parseFormat(fmt2) {
+  static parseFormat(fmt) {
     let current = null, currentFull = "", bracketed = false;
     const splits = [];
-    for (let i = 0; i < fmt2.length; i++) {
-      const c = fmt2.charAt(i);
+    for (let i = 0; i < fmt.length; i++) {
+      const c = fmt.charAt(i);
       if (c === "'") {
         if (currentFull.length > 0) {
           splits.push({ literal: bracketed || /^\s+$/.test(currentFull), val: currentFull });
@@ -1520,7 +1520,7 @@ class Formatter {
     }
     return this.loc.numberFormatter(opts).format(n2);
   }
-  formatDateTimeFromString(dt, fmt2) {
+  formatDateTimeFromString(dt, fmt) {
     const knownEnglish = this.loc.listingMode() === "en", useDateTimeFormatter = this.loc.outputCalendar && this.loc.outputCalendar !== "gregory", string = (opts, extract) => this.loc.extract(dt, opts, extract), formatOffset2 = (opts) => {
       if (dt.isOffsetFixed && dt.offset === 0 && opts.allowZ) {
         return "Z";
@@ -1655,9 +1655,9 @@ class Formatter {
           return maybeMacro(token);
       }
     };
-    return stringifyTokens(Formatter.parseFormat(fmt2), tokenToString);
+    return stringifyTokens(Formatter.parseFormat(fmt), tokenToString);
   }
-  formatDurationFromString(dur, fmt2) {
+  formatDurationFromString(dur, fmt) {
     const tokenToField = (token) => {
       switch (token[0]) {
         case "S":
@@ -1686,7 +1686,7 @@ class Formatter {
       } else {
         return token;
       }
-    }, tokens2 = Formatter.parseFormat(fmt2), realTokens = tokens2.reduce(
+    }, tokens2 = Formatter.parseFormat(fmt), realTokens = tokens2.reduce(
       (found, { literal, val }) => literal ? found : found.concat(val),
       []
     ), collapsed = dur.shiftTo(...realTokens.map(tokenToField).filter((t) => t));
@@ -2302,12 +2302,12 @@ class Duration {
    * @example Duration.fromObject({ years: 1, days: 6, seconds: 2 }).toFormat("M S") //=> "12 518402000"
    * @return {string}
    */
-  toFormat(fmt2, opts = {}) {
+  toFormat(fmt, opts = {}) {
     const fmtOpts = {
       ...opts,
       floor: opts.round !== false && opts.floor !== false
     };
-    return this.isValid ? Formatter.create(this.loc, fmtOpts).formatDurationFromString(this, fmt2) : INVALID$2;
+    return this.isValid ? Formatter.create(this.loc, fmtOpts).formatDurationFromString(this, fmt) : INVALID$2;
   }
   /**
    * Returns a string representation of a Duration with all units included.
@@ -4564,26 +4564,26 @@ class DateTime {
    * @param {string} opts.outputCalendar - the output calendar to set on the resulting DateTime instance
    * @return {DateTime}
    */
-  static fromFormat(text2, fmt2, opts = {}) {
-    if (isUndefined$1(text2) || isUndefined$1(fmt2)) {
+  static fromFormat(text2, fmt, opts = {}) {
+    if (isUndefined$1(text2) || isUndefined$1(fmt)) {
       throw new InvalidArgumentError("fromFormat requires an input string and a format");
     }
     const { locale = null, numberingSystem = null } = opts, localeToUse = Locale.fromOpts({
       locale,
       numberingSystem,
       defaultToEN: true
-    }), [vals, parsedZone, specificOffset, invalid] = parseFromTokens(localeToUse, text2, fmt2);
+    }), [vals, parsedZone, specificOffset, invalid] = parseFromTokens(localeToUse, text2, fmt);
     if (invalid) {
       return DateTime.invalid(invalid);
     } else {
-      return parseDataToDateTime(vals, parsedZone, opts, `format ${fmt2}`, text2, specificOffset);
+      return parseDataToDateTime(vals, parsedZone, opts, `format ${fmt}`, text2, specificOffset);
     }
   }
   /**
    * @deprecated use fromFormat instead
    */
-  static fromString(text2, fmt2, opts = {}) {
-    return DateTime.fromFormat(text2, fmt2, opts);
+  static fromString(text2, fmt, opts = {}) {
+    return DateTime.fromFormat(text2, fmt, opts);
   }
   /**
    * Create a DateTime from a SQL date, time, or datetime
@@ -4651,8 +4651,8 @@ class DateTime {
    * @param localeOpts
    * @returns {string}
    */
-  static expandFormat(fmt2, localeOpts = {}) {
-    const expanded = expandMacroTokens(Formatter.parseFormat(fmt2), Locale.fromObject(localeOpts));
+  static expandFormat(fmt, localeOpts = {}) {
+    const expanded = expandMacroTokens(Formatter.parseFormat(fmt), Locale.fromObject(localeOpts));
     return expanded.map((t) => t.val).join("");
   }
   // INFO
@@ -5194,8 +5194,8 @@ class DateTime {
    * @example DateTime.now().toFormat("HH 'hours and' mm 'minutes'") //=> '20 hours and 55 minutes'
    * @return {string}
    */
-  toFormat(fmt2, opts = {}) {
-    return this.isValid ? Formatter.create(this.loc.redefaultToEN(opts)).formatDateTimeFromString(this, fmt2) : INVALID;
+  toFormat(fmt, opts = {}) {
+    return this.isValid ? Formatter.create(this.loc.redefaultToEN(opts)).formatDateTimeFromString(this, fmt) : INVALID;
   }
   /**
    * Returns a localized string representing this date. Accepts the same options as the Intl.DateTimeFormat constructor and any presets defined by Luxon, such as `DateTime.DATE_FULL` or `DateTime.TIME_SIMPLE`.
@@ -5367,18 +5367,18 @@ class DateTime {
    * @return {string}
    */
   toSQLTime({ includeOffset = true, includeZone = false, includeOffsetSpace = true } = {}) {
-    let fmt2 = "HH:mm:ss.SSS";
+    let fmt = "HH:mm:ss.SSS";
     if (includeZone || includeOffset) {
       if (includeOffsetSpace) {
-        fmt2 += " ";
+        fmt += " ";
       }
       if (includeZone) {
-        fmt2 += "z";
+        fmt += "z";
       } else if (includeOffset) {
-        fmt2 += "ZZ";
+        fmt += "ZZ";
       }
     }
-    return toTechFormat(this, fmt2, true);
+    return toTechFormat(this, fmt, true);
   }
   /**
    * Returns a string representation of this DateTime appropriate for use in SQL DateTime
@@ -5625,19 +5625,19 @@ class DateTime {
    * @param {Object} options - options taken by fromFormat()
    * @return {Object}
    */
-  static fromFormatExplain(text2, fmt2, options2 = {}) {
+  static fromFormatExplain(text2, fmt, options2 = {}) {
     const { locale = null, numberingSystem = null } = options2, localeToUse = Locale.fromOpts({
       locale,
       numberingSystem,
       defaultToEN: true
     });
-    return explainFromTokens(localeToUse, text2, fmt2);
+    return explainFromTokens(localeToUse, text2, fmt);
   }
   /**
    * @deprecated use fromFormatExplain instead
    */
-  static fromStringExplain(text2, fmt2, options2 = {}) {
-    return DateTime.fromFormatExplain(text2, fmt2, options2);
+  static fromStringExplain(text2, fmt, options2 = {}) {
+    return DateTime.fromFormatExplain(text2, fmt, options2);
   }
   // FORMAT PRESETS
   /**
@@ -10043,22 +10043,22 @@ const initializeKindedTagCache = (p2) => {
           for (const k of kinds) {
             const [base2, uno, dos, tres, quatro] = k.split("/");
             const isCategory = uno === "category" && dos !== void 0;
-            const isSubcategory2 = uno === "subcategory" && dos !== void 0 && tres !== void 0;
+            const isSubcategory = uno === "subcategory" && dos !== void 0 && tres !== void 0;
             if (KINDED_TAG_CACHE && base2 in KINDED_TAG_CACHE) {
               KINDED_TAG_CACHE[base2].push({
                 path,
                 isCategory,
-                isSubcategory: isSubcategory2,
-                category: isCategory ? dos : isSubcategory2 ? tres : dos,
-                subcategory: isCategory ? void 0 : isSubcategory2 ? quatro : tres
+                isSubcategory,
+                category: isCategory ? dos : isSubcategory ? tres : dos,
+                subcategory: isCategory ? void 0 : isSubcategory ? quatro : tres
               });
             } else if (KINDED_TAG_CACHE) {
               KINDED_TAG_CACHE[base2] = [{
                 path,
                 isCategory,
-                isSubcategory: isSubcategory2,
-                category: isCategory ? dos : isSubcategory2 ? tres : dos,
-                subcategory: isCategory ? void 0 : isSubcategory2 ? quatro : tres
+                isSubcategory,
+                category: isCategory ? dos : isSubcategory ? tres : dos,
+                subcategory: isCategory ? void 0 : isSubcategory ? quatro : tres
               }];
             }
           }
@@ -10147,7 +10147,7 @@ const getKnownKindTags = (p2) => (tag) => {
   }
   return getKindTagsFromCache(tag);
 };
-const isKeyOf$1 = (container, key) => {
+const isKeyOf = (container, key) => {
   return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
 };
 const getKindTagsOfPage = (p2) => (pg) => {
@@ -10320,7 +10320,7 @@ const getPageBanners = (p2) => (pg) => {
 const getSuggestedActions = (p2) => (pg) => {
   return [];
 };
-const isKindedPage$1 = (p2) => (pg) => {
+const isKindedPage = (p2) => (pg) => {
   let info2 = lookupPageInfo(p2)(pg);
   if (info2) {
     return info2.type === "kinded";
@@ -10333,7 +10333,7 @@ const isKindedPage$1 = (p2) => (pg) => {
   p2.error(err);
   return false;
 };
-const isKindDefnPage$1 = (p2) => (pg) => {
+const isKindDefnPage = (p2) => (pg) => {
   let info2 = lookupPageInfo(p2)(pg);
   if (info2) {
     return info2.type === "kind-defn";
@@ -10429,7 +10429,7 @@ const getClassification = (p2) => (pg) => {
       }
       const kindPaths = new Set([...kindsProp, kindProp, ...kindTags].filter((i) => i).map((i) => i.file.path));
       const kinds = Array.from(kindPaths).map((k) => getPage(p2)(k));
-      if (isKindDefnPage$1(p2)(page)) {
+      if (isKindDefnPage(p2)(page)) {
         let masterKindDefn = getPage(p2)(getKindDefnFromCache(p2)("kind"));
         if (!masterKindDefn) {
           p2.warn(`This vault does not appear to have a page for the #kind/kind definition page!`);
@@ -10455,7 +10455,7 @@ const getClassification = (p2) => (pg) => {
             } : {}
           };
         });
-      } else if (isKindedPage$1(p2)(page)) {
+      } else if (isKindedPage(p2)(page)) {
         for (const kind of kinds) {
         }
       } else {
@@ -10466,7 +10466,7 @@ const getClassification = (p2) => (pg) => {
   return [];
 };
 const buildingBlocks = (plugin4) => ({
-  isKeyOf: isKeyOf$1,
+  isKeyOf,
   hasCategoryProp: hasCategoryProp(plugin4),
   hasCategoriesProp: hasCategoriesProp(plugin4),
   hasTypeDefinitionTag: hasTypeDefinitionTag(plugin4),
@@ -10481,8 +10481,8 @@ const buildingBlocks = (plugin4) => ({
   hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
   isCategoryPage: isCategoryPage(plugin4),
   isSubcategoryPage: isSubcategoryPage(plugin4),
-  isKindedPage: isKindedPage$1(plugin4),
-  isKindDefnPage: isKindDefnPage$1(plugin4),
+  isKindedPage: isKindedPage(plugin4),
+  isKindDefnPage: isKindDefnPage(plugin4),
   getClassification: getClassification(plugin4),
   getKnownKindTags: getKnownKindTags(plugin4),
   getKindPages: getKindPages(plugin4),
@@ -17909,7 +17909,7 @@ __export(schema_exports, {
   s: () => s,
   softbreak: () => softbreak,
   strong: () => strong,
-  table: () => table$1,
+  table: () => table,
   tbody: () => tbody,
   td: () => td,
   text: () => text,
@@ -18012,7 +18012,7 @@ var list = {
 var hr = {
   render: "hr"
 };
-var table$1 = {
+var table = {
   render: "table"
 };
 var td = {
@@ -18804,166 +18804,166 @@ Markdoc.createElement = createElement$1;
 Markdoc.truthy = truthy;
 Markdoc.format = format;
 const style$1 = (opts) => {
-  let fmt2 = [];
+  let fmt = [];
   if (opts == null ? void 0 : opts.pb) {
-    fmt2.push(`padding-bottom: ${opts.pb}`);
+    fmt.push(`padding-bottom: ${opts.pb}`);
   }
   if (opts == null ? void 0 : opts.pt) {
-    fmt2.push(`padding-top: ${opts.pt}`);
+    fmt.push(`padding-top: ${opts.pt}`);
   }
   if (opts == null ? void 0 : opts.py) {
-    fmt2.push(`padding-top: ${opts.py}`);
-    fmt2.push(`padding-bottom: ${opts.py}`);
+    fmt.push(`padding-top: ${opts.py}`);
+    fmt.push(`padding-bottom: ${opts.py}`);
   }
   if (opts == null ? void 0 : opts.px) {
-    fmt2.push(`padding-left: ${opts.px}`);
-    fmt2.push(`padding-right: ${opts.px}`);
+    fmt.push(`padding-left: ${opts.px}`);
+    fmt.push(`padding-right: ${opts.px}`);
   }
   if (opts == null ? void 0 : opts.pl) {
-    fmt2.push(`padding-left: ${opts.pl}`);
+    fmt.push(`padding-left: ${opts.pl}`);
   }
   if (opts == null ? void 0 : opts.pr) {
-    fmt2.push(`padding-right: ${opts.pr}`);
+    fmt.push(`padding-right: ${opts.pr}`);
   }
   if (opts == null ? void 0 : opts.p) {
-    fmt2.push(`padding: ${opts.p}`);
+    fmt.push(`padding: ${opts.p}`);
   }
   if (opts == null ? void 0 : opts.m) {
-    fmt2.push(`margin-top: ${opts.m}`);
-    fmt2.push(`margin-bottom: ${opts.m}`);
-    fmt2.push(`margin-left: ${opts.m}`);
-    fmt2.push(`margin-right: ${opts.m}`);
+    fmt.push(`margin-top: ${opts.m}`);
+    fmt.push(`margin-bottom: ${opts.m}`);
+    fmt.push(`margin-left: ${opts.m}`);
+    fmt.push(`margin-right: ${opts.m}`);
   }
   if (opts == null ? void 0 : opts.mb) {
-    fmt2.push(`margin-bottom: ${opts.mb}`);
+    fmt.push(`margin-bottom: ${opts.mb}`);
   }
   if (opts == null ? void 0 : opts.mt) {
-    fmt2.push(`margin-top: ${opts.mt}`);
+    fmt.push(`margin-top: ${opts.mt}`);
   }
   if (opts == null ? void 0 : opts.my) {
-    fmt2.push(`margin-top: ${opts.mx}`);
-    fmt2.push(`margin-bottom: ${opts.mx}`);
+    fmt.push(`margin-top: ${opts.mx}`);
+    fmt.push(`margin-bottom: ${opts.mx}`);
   }
   if (opts == null ? void 0 : opts.mx) {
-    fmt2.push(`margin-left: ${opts.mx}`);
-    fmt2.push(`margin-right: ${opts.mx}`);
+    fmt.push(`margin-left: ${opts.mx}`);
+    fmt.push(`margin-right: ${opts.mx}`);
   }
   if (opts == null ? void 0 : opts.ml) {
-    fmt2.push(`margin-left: ${opts.ml}`);
+    fmt.push(`margin-left: ${opts.ml}`);
   }
   if (opts == null ? void 0 : opts.mr) {
-    fmt2.push(`margin-right: ${opts.mr}`);
+    fmt.push(`margin-right: ${opts.mr}`);
   }
   if (opts == null ? void 0 : opts.bespoke) {
-    fmt2.push(...opts.bespoke);
+    fmt.push(...opts.bespoke);
   }
   if (opts == null ? void 0 : opts.w) {
-    fmt2.push(`weight: ${opts.w}`);
+    fmt.push(`weight: ${opts.w}`);
   }
   if (opts == null ? void 0 : opts.fw) {
-    fmt2.push(`font-weight: ${opts.fw}`);
+    fmt.push(`font-weight: ${opts.fw}`);
   }
   if (opts == null ? void 0 : opts.fs) {
-    fmt2.push(`font-style: ${opts.fs}`);
+    fmt.push(`font-style: ${opts.fs}`);
   }
   if (opts == null ? void 0 : opts.ts) {
     switch (opts.ts) {
       case "xs":
-        fmt2.push(`font-size: 0.75rem`);
-        fmt2.push(`line-height: 1rem`);
+        fmt.push(`font-size: 0.75rem`);
+        fmt.push(`line-height: 1rem`);
         break;
       case "sm":
-        fmt2.push(`font-size: 0.875rem`);
-        fmt2.push(`line-height: 1.25rem`);
+        fmt.push(`font-size: 0.875rem`);
+        fmt.push(`line-height: 1.25rem`);
         break;
       case "base":
-        fmt2.push(`font-size: 1rem`);
-        fmt2.push(`line-height: 1.5rem`);
+        fmt.push(`font-size: 1rem`);
+        fmt.push(`line-height: 1.5rem`);
         break;
       case "lg":
-        fmt2.push(`font-size: 1.125rem`);
-        fmt2.push(`line-height: 1.75rem`);
+        fmt.push(`font-size: 1.125rem`);
+        fmt.push(`line-height: 1.75rem`);
         break;
       case "xl":
-        fmt2.push(`font-size: 1.25rem`);
-        fmt2.push(`line-height: 1.75rem`);
+        fmt.push(`font-size: 1.25rem`);
+        fmt.push(`line-height: 1.75rem`);
         break;
       case "2xl":
-        fmt2.push(`font-size: 1.5rem`);
-        fmt2.push(`line-height: 2rem`);
+        fmt.push(`font-size: 1.5rem`);
+        fmt.push(`line-height: 2rem`);
         break;
       default:
-        fmt2.push(`font-size: ${opts.ts}`);
-        fmt2.push(`line-height: auto`);
+        fmt.push(`font-size: ${opts.ts}`);
+        fmt.push(`line-height: auto`);
     }
   }
   if (opts == null ? void 0 : opts.flex) {
-    fmt2.push(`display: flex`);
+    fmt.push(`display: flex`);
   }
   if (opts == null ? void 0 : opts.direction) {
-    fmt2.push(`flex-direction: ${opts.direction}`);
+    fmt.push(`flex-direction: ${opts.direction}`);
   }
   if (opts == null ? void 0 : opts.grow) {
-    fmt2.push(`flex-grow: ${opts.grow}`);
+    fmt.push(`flex-grow: ${opts.grow}`);
   }
   if (opts == null ? void 0 : opts.gap) {
-    fmt2.push(`gap: ${opts.gap}`);
+    fmt.push(`gap: ${opts.gap}`);
   }
   if (opts == null ? void 0 : opts.cursor) {
-    fmt2.push(`cursor: ${opts.cursor}`);
+    fmt.push(`cursor: ${opts.cursor}`);
   }
   if (opts == null ? void 0 : opts.alignItems) {
-    fmt2.push(`align-items: ${opts.alignItems}`);
+    fmt.push(`align-items: ${opts.alignItems}`);
   }
   if (opts == null ? void 0 : opts.justifyItems) {
-    fmt2.push(`justify-items: ${opts.justifyItems}`);
+    fmt.push(`justify-items: ${opts.justifyItems}`);
   }
   if (opts == null ? void 0 : opts.justifyContent) {
-    fmt2.push(`justify-content: ${opts.justifyContent}`);
+    fmt.push(`justify-content: ${opts.justifyContent}`);
   }
   if (opts == null ? void 0 : opts.position) {
-    fmt2.push(`position: ${opts.position}`);
+    fmt.push(`position: ${opts.position}`);
   }
   if (opts == null ? void 0 : opts.display) {
-    fmt2.push(`display: ${opts.display}`);
+    fmt.push(`display: ${opts.display}`);
   }
   if (opts == null ? void 0 : opts.opacity) {
-    fmt2.push(`opacity: ${opts.opacity}`);
+    fmt.push(`opacity: ${opts.opacity}`);
   }
-  return fmt2.length === 0 ? `style=""` : `style="${fmt2.join("; ")}"`;
+  return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
 };
 const listStyle = (opts = {}) => {
-  let fmt2 = [];
+  let fmt = [];
   if ((opts == null ? void 0 : opts.indentation) && opts.indentation !== "default") {
     switch (opts.indentation) {
       case "24px":
-        fmt2.push(`padding-inline-start: 24px`);
+        fmt.push(`padding-inline-start: 24px`);
         break;
       case "20px":
-        fmt2.push(`padding-inline-start: 20px`);
+        fmt.push(`padding-inline-start: 20px`);
         break;
       case "16px":
-        fmt2.push(`padding-inline-start: 16px`);
+        fmt.push(`padding-inline-start: 16px`);
         break;
       case "12px":
-        fmt2.push(`padding-inline-start: 12px`);
+        fmt.push(`padding-inline-start: 12px`);
         break;
       case "none":
-        fmt2.push(`padding-inline-start: 0px`);
+        fmt.push(`padding-inline-start: 0px`);
         break;
     }
   }
   if ((opts == null ? void 0 : opts.mt) && opts.mt !== "default") {
-    fmt2.push(`margin-block-start: ${opts.mt === "tight" ? "2px" : opts.mt === "none" ? "0px" : opts.mt === "spaced" ? "1.5rem" : opts.mt}`);
+    fmt.push(`margin-block-start: ${opts.mt === "tight" ? "2px" : opts.mt === "none" ? "0px" : opts.mt === "spaced" ? "1.5rem" : opts.mt}`);
   }
   if ((opts == null ? void 0 : opts.mb) && opts.mb !== "default") {
-    fmt2.push(`margin-block-end: ${opts.mb === "tight" ? "2px" : opts.mb === "none" ? "0px" : opts.mb === "spaced" ? "1.5rem" : opts.mb}`);
+    fmt.push(`margin-block-end: ${opts.mb === "tight" ? "2px" : opts.mb === "none" ? "0px" : opts.mb === "spaced" ? "1.5rem" : opts.mb}`);
   }
   if ((opts == null ? void 0 : opts.my) && opts.my !== "default") {
-    fmt2.push(`margin-block-start: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
-    fmt2.push(`margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
+    fmt.push(`margin-block-start: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
+    fmt.push(`margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
   }
-  return fmt2.length === 0 ? `style=""` : `style="${fmt2.join("; ")}"`;
+  return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
 };
 const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
 const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
@@ -19107,13 +19107,13 @@ const renderApi = (p2) => (el, filePath) => {
      * Tests whether a given page is a _kinded_ page and _optionally_ if
      * the page is of a particular `category`.
      */
-    isKindedPage: isKindedPage$1(p2),
+    isKindedPage: isKindedPage(p2),
     /**
      * **isKindDefnPage**(page)
      * 
      * Tests whether a given page is a _kind definition_ page.
      */
-    isKindDefnPage: isKindDefnPage$1,
+    isKindDefnPage,
     /**
      * **page**`(path, [originFile])`
      * 
@@ -19589,29 +19589,29 @@ const renderListItems = (wrapper, items, opts) => wrapper(
   items.filter((i) => i !== void 0).map((i) => isFunction$2(i) ? isFunction$2(i(list_items_api)) ? "" : i(list_items_api) : `<li ${style$1((opts == null ? void 0 : opts.li) ? isFunction$2(opts == null ? void 0 : opts.li) ? opts.li(i ? i : "") : opts.li : {})}>${i}</li>`).filter((i) => i !== "").join("\n"),
   opts
 );
-const span = (text2, fmt2) => {
-  return `<span ${style$1(fmt2 || { fw: "400" })}>${text2}</span>`;
+const span = (text2, fmt) => {
+  return `<span ${style$1(fmt || { fw: "400" })}>${text2}</span>`;
 };
-const italics = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || { fw: "400" }, fs: "italic" })}>${text2}</span>`;
+const italics = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || { fw: "400" }, fs: "italic" })}>${text2}</span>`;
 };
-const bold = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || {}, fw: "700" })}>${text2}</span>`;
+const bold = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "700" })}>${text2}</span>`;
 };
-const light = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || {}, fw: "300" })}>${text2}</span>`;
+const light = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "300" })}>${text2}</span>`;
 };
-const thin = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || {}, fw: "100" })}>${text2}</span>`;
+const thin = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "100" })}>${text2}</span>`;
 };
-const medium = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || {}, fw: "500" })}>${text2}</span>`;
+const medium = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "500" })}>${text2}</span>`;
 };
-const normal = (text2, fmt2) => {
-  return `<span ${style$1({ ...fmt2 || {}, fw: "400" })}>${text2}</span>`;
+const normal = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "400" })}>${text2}</span>`;
 };
-const emptyCallout = (fmt2) => [
-  `<div class="callout" ${style$1(fmt2)}>`,
+const emptyCallout = (fmt) => [
+  `<div class="callout" ${style$1(fmt)}>`,
   `<div class="callout-title">&nbsp;</div>`,
   `<div class="callout-content">&nbsp;</div>`,
   `</div>`
@@ -19638,11 +19638,11 @@ const formattingApi = (p2) => {
     // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
     // 	container,p, filePath, true
     // ),
-    toRight: (content2, fmt2) => {
+    toRight: (content2, fmt) => {
       const html = [
         `<div class="wrapper-to-right" style="display: relative">`,
         `<span class="block-to-right" style="position: absolute; right: 0">`,
-        `<span ${style$1({ ...fmt2, position: "relative" })}>`,
+        `<span ${style$1({ ...fmt, position: "relative" })}>`,
         content2,
         `</span>`,
         `</div>`
@@ -19674,9 +19674,9 @@ const formattingApi = (p2) => {
     /**
      * Wrap children items with DIV element; gain formatting control for block
      */
-    wrap: (children2, fmt2) => {
+    wrap: (children2, fmt) => {
       return [
-        `<div class="wrapped-content" ${style$1(fmt2 || {})}>`,
+        `<div class="wrapped-content" ${style$1(fmt || {})}>`,
         ...children2.filter((i) => i !== void 0),
         `</div>`
       ].join("\n");
@@ -19719,9 +19719,6 @@ const formattingApi = (p2) => {
 };
 const createPageInfo = (p2) => (pg) => {
   const path = getPath(pg);
-  if (isPageInfo(pg)) {
-    p2.info(`createPageInfo() was passed a PageInfo reference; this is possibly ok but not expected`);
-  }
   if (path && hasPageInfo()(path)) {
     return lookupPageInfo(p2)(path);
   }
@@ -19730,7 +19727,7 @@ const createPageInfo = (p2) => (pg) => {
     const info2 = {
       page,
       path,
-      type: isKindDefnPage$1(p2)(page) ? "kind-defn" : isKindedPage$1(p2)(page) ? "kinded" : isTypeDefnPage(p2)(page) ? "type-defn" : "none",
+      type: isKindDefnPage(p2)(page) ? "kind-defn" : isKindedPage(p2)(page) ? "kinded" : isTypeDefnPage(p2)(page) ? "type-defn" : "none",
       fm: page.file.frontmatter,
       categories: getCategories(p2)(page),
       subcategories: getSubcategories(p2)(page),
@@ -19891,10 +19888,16 @@ const createPageView = (p2) => (view) => {
     }
   }
 };
-const back_links = (plg) => (source, container, component, filePath) => async (params_str = "") => {
-  const page = plg.api.createPageInfoBlock(source, container, component, filePath);
+const BackLinks = (plg) => (source, container, component, filePath) => async (params_str = "") => {
+  const page = plg.api.createPageInfoBlock(
+    source,
+    container,
+    component,
+    filePath
+  );
   if (page) {
     const current = page.current;
+    const fmt = page.format;
     const links = current.file.inlinks.sort((p2) => {
       var _a2;
       return (_a2 = page.getPage(p2)) == null ? void 0 : _a2.file.name;
@@ -19902,30 +19905,29 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
       var _a2;
       return ((_a2 = page.getPage(p2)) == null ? void 0 : _a2.file.path) !== current.file.path;
     });
-    page.get;
+    const categoryPaths = page.categories.flatMap((i) => i.categories.map((c) => c.file.path));
     if (page.isCategoryPage) {
-      const subCategories = page.showSubcategoriesFor(page, page.category);
+      const subCategories = links.where(
+        (p2) => {
+          const pg = createPageInfo(plg)(p2);
+          return pg ? pg.isSubcategoryPage && pg.fm.category && isFileLink(pg.fm.category) && pg.fm.category.path === page.path : false;
+        }
+      );
       const kindPages = links.where(
-        (p2) => {
-          var _a2;
-          return isKindedPage(page(p2)) && ((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.category) === category;
-        }
+        (p2) => page.type === "kinded" && categoryPaths.includes(p2.path)
       );
-      const otherPages = links.where(
-        (p2) => {
-          var _a2, _b2;
-          return !isKindedPage(page(p2), current) && !(((_a2 = get_classification(page(p2))) == null ? void 0 : _a2.isSubcategory) || ((_b2 = get_classification(page(p2))) == null ? void 0 : _b2.category) === category);
-        }
-      );
+      const subPaths = subCategories.map((i) => i.path);
+      const kindPaths = kindPages.map((i) => i.path);
+      const otherPages = links.filter((i) => ![...subPaths, kindPaths].includes(i.path));
       if (subCategories.length > 0) {
-        fmt.callout("info", "Subcategories", {
+        page.callout("info", "Subcategories", {
           style: {
             mt: "1rem",
             mb: "1rem"
           },
           content: `subcategory pages which are part of the ${fmt.bold(category || "")} ${fmt.italics("category")}.`
         });
-        table(
+        page.table(
           ["Page", "Created", "Modified", "Desc", "Links"],
           subCategories.map((p2) => {
             const pg = page.getPage(p2);
@@ -19939,7 +19941,7 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
           })
         ).catch((e) => plg.error(`Problems rendering subcategories table`, e));
       } else {
-        ul(
+        page.ul(
           `no subcategories found for this category page`,
           `to be listed a page would need one of the following tags:`,
           (l2) => l2.indent(
@@ -19949,30 +19951,30 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         );
       }
       if (kindPages.length > 0) {
-        fmt.callout("info", "Kinded Pages", {
+        page.callout("info", "Kinded Pages", {
           style: {
             mt: "1rem",
             mb: "1rem"
           },
           content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(category || "")} category.`
         });
-        table(
+        page.table(
           ["Page", "Created", "Subcategory", "Desc", "Links"],
           kindPages.map((p2) => {
-            const pg = page(p2);
+            const pg = page.getPage(p2);
             return [
-              createFileLink(pg),
-              show_created_date(pg, "DD"),
-              show_prop(pg, "subcategory"),
-              show_prop(pg, "desc", "description", "about"),
-              show_links(pg)
+              page.createFileLink(pg),
+              page.showCreatedDate(pg, "DD"),
+              page.showCreatedDate(pg, "subcategory"),
+              page.showProp(pg, "desc", "description", "about"),
+              page.showLinks(pg)
             ];
           })
         ).catch((e) => plg.error(`Problems rendering table`, e));
       }
       if (otherPages.length > 0) {
         if (kindPages.length > 0 || subCategories.length > 0) {
-          fmt.callout("info", "Other Pages", {
+          page.callout("info", "Other Pages", {
             style: {
               mt: "1rem",
               mb: "1rem"
@@ -19980,60 +19982,55 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
             content: `other back links which aren't related directly via their classification`
           });
         }
-        table(
+        page.table(
           ["Page", "Created", "Kind", "Category", "Links"],
           otherPages.map((p2) => {
-            const pg = page(p2);
+            const pg = page.getPage(p2);
             return [
-              createFileLink(pg),
-              show_created_date(pg, "DD"),
-              show_prop(pg, "kind"),
-              show_prop(pg, "category", "categories"),
-              show_links(pg)
+              page.createFileLink(pg),
+              page.showCreatedDate(pg, "DD"),
+              page.showProp(pg, "kind"),
+              page.showProp(pg, "category", "categories"),
+              page.showLinks(pg)
             ];
           })
         ).catch((e) => plg.error(`Problems rendering otherPages table`, e));
       }
-    } else if (isSubcategory) {
-      const kinded = links.where(
-        (p2) => {
-          var _a2, _b2, _c2, _d2;
-          return (
-            // isKindedPage(page(p)) &&
-            page(p2) && ((_a2 = page(p2)) == null ? void 0 : _a2.subcategory) && ((_d2 = (_c2 = page((_b2 = page(p2)) == null ? void 0 : _b2.subcategory)) == null ? void 0 : _c2.file) == null ? void 0 : _d2.path) === current.file.path
-          );
+    } else if (page.isSubcategoryPage) {
+      const kinded = links.where((p2) => {
+        const pg = page.getPage(p2);
+        if (pg) {
+          return isKindedPage(plg)(pg) ? isFileLink(pg.subcategory) && pg.subcategory.path === current.file.path || hasFileLink(pg.subcategories) && pg.subcategories.filter((i) => isFileLink(i)).map((i) => i.path).includes(current.file.path) : false;
         }
-      );
+        return false;
+      });
       const other = links.where(
-        (p2) => {
-          var _a2, _b2, _c2, _d2;
-          return !((_a2 = page(p2)) == null ? void 0 : _a2.subcategory) || ((_d2 = (_c2 = page((_b2 = page(p2)) == null ? void 0 : _b2.subcategory)) == null ? void 0 : _c2.file) == null ? void 0 : _d2.path) !== current.file.path;
-        }
+        (p2) => kinded.map((k) => k.path).includes(p2.path)
       );
       if (kinded.length > 0) {
-        fmt.callout("info", "Kinded Pages", {
+        page.callout("info", "Kinded Pages", {
           style: {
             mt: "1rem",
             mb: "1rem"
           },
           content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(current.file.name)} subcategory .`
         });
-        table(
+        page.table(
           ["Page", "Created", "Modified", "Desc", "Links"],
           kinded.map((p2) => {
-            const pg = page(p2);
+            const pg = page.getPage(p2);
             return [
-              createFileLink(pg),
-              show_created_date(pg, "DD"),
-              show_modified_date(pg, "DD"),
-              show_prop(pg, "desc", "description", "about"),
-              show_links(pg)
+              page.createFileLink(pg),
+              page.showCreatedDate(pg, "DD"),
+              page.showModifiedDate(pg, "DD"),
+              page.showProp(pg, "desc", "description", "about"),
+              page.showLinks(pg)
             ];
           })
         );
       } else {
-        paragraph(`### Subcategory Page`);
-        ul(
+        page.paragraph(`### Subcategory Page`);
+        page.ul(
           `no pages which identify as being in this subcategory`,
           `to be listed, a page would need one of the following tag groups:`,
           (l2) => l2.indent(
@@ -20043,24 +20040,24 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         );
       }
       if (other.length > 0) {
-        paragraph(`### Other Back Links`);
-        table(
+        page.paragraph(`### Other Back Links`);
+        page.table(
           ["Page", "Created", "Kind", "Category", "Links"],
           other.map((p2) => {
             const pg = page(p2);
             return [
-              createFileLink(pg),
-              show_created_date(pg, "DD"),
-              show_prop(pg, "kind"),
-              show_prop(pg, "category", "categories"),
-              show_links(pg)
+              page.createFileLink(pg),
+              page.showCreatedDate(pg, "DD"),
+              page.showProp(pg, "kind"),
+              page.showProp(pg, "category", "categories"),
+              page.showLinks(pg)
             ];
           })
         );
       }
-    } else if (isKindedPage(current)) {
+    } else if (page.type === "kinded") {
       let peering = "none";
-      if (subcategory) {
+      if (page.subcategories.length > 0) {
         const peers = links.where(
           (p2) => {
             var _a2;
@@ -20069,7 +20066,7 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         );
         if (peers.length > 0) {
           peering = "subcategory";
-          fmt.callout("info", "Peers", {
+          page.callout("info", "Peers", {
             content: `pages who share the same ${fmt.bold(current.file.name)} ${fmt.italics("subcategory")} as this page`,
             style: {
               mt: "1rem",
@@ -20077,21 +20074,21 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
             },
             fold: ""
           });
-          table(
+          page.table(
             ["Page", "Created", "Modified", "Desc", "Links"],
             peers.map((p2) => {
-              const pg = page(p2);
+              const pg = page.getPage(p2);
               return [
-                createFileLink(pg),
-                show_created_date(pg, "DD"),
-                show_modified_date(pg, "DD"),
-                show_prop(pg, "desc", "description", "about"),
-                show_links(pg)
+                page.createFileLink(pg),
+                page.showCreatedDate(pg, "DD"),
+                page.showModifiedDate(pg, "DD"),
+                page.showProp(pg, "desc", "description", "about"),
+                page.showLinks(pg)
               ];
             })
           );
         }
-      } else if (category && peering === "none") {
+      } else if (page.categories.length > 0) {
         const peers = links.where(
           (p2) => {
             var _a2;
@@ -20101,15 +20098,15 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         if (peers.length > 0) {
           peering = "category";
           if (subcategory) {
-            fmt.callout("info", "Peers", {
+            page.callout("info", "Peers", {
               style: {
                 pt: "1rem"
               },
               content: `no peers with your subcategory ${fmt.bold(subcategory)} found but there are peers with your ${fmt.italics("category")} ${fmt.bold(category)}`
             });
-            paragraph(`> ![note] no peers with your subcategory ${subcategory} found but there are peers with your category of ${category}`);
+            page.paragraph(`> ![note] no peers with your subcategory ${subcategory} found but there are peers with your category of ${category}`);
           } else {
-            fmt.callout("info", "Peers", {
+            page.callout("info", "Peers", {
               style: {
                 mt: "1rem",
                 mb: "1rem"
@@ -20117,16 +20114,16 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
               content: `pages who share the same ${fmt.bold(category)} ${fmt.italics("category")} as this page`
             });
           }
-          table(
+          page.table(
             ["Page", "Created", "Modified", "Desc", "Links"],
             peers.map((p2) => {
-              const pg = page(p2);
+              const pg = page.getPage(p2);
               return [
-                createFileLink(pg),
-                show_created_date(pg, "DD"),
-                show_modified_date(pg, "DD"),
-                show_prop(pg, "desc", "description", "about"),
-                show_links(pg)
+                page.createFileLink(pg),
+                page.showCreatedDate(pg, "DD"),
+                page.showModifiedDate(pg, "DD"),
+                page.showProp(pg, "desc", "description", "about"),
+                page.showLinks(pg)
               ];
             })
           );
@@ -20146,14 +20143,14 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
       );
       if (other.length > 0) {
         if (category || subcategory) {
-          fmt.callout("info", "Other Back Links", {
+          page.callout("info", "Other Back Links", {
             style: {
               mt: "2rem",
               mb: "1rem"
             }
           });
         }
-        table(
+        page.table(
           ["Page", "Created", "Kind", "Category", "Links"],
           other.map((p2) => {
             const pg = page(p2);
@@ -20167,7 +20164,7 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
           })
         );
       }
-    } else if (isKindDefnPage(current)) {
+    } else if (page.type === "kind-defn") {
       const categoryPages = links.where(
         (p2) => {
           var _a2, _b2, _c2;
@@ -20175,21 +20172,21 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         }
       );
       if (categoryPages.length > 0) {
-        fmt.callout("info", "Classification Pages", {
+        page.callout("info", "Classification Pages", {
           style: {
             mt: "1rem",
             mb: "1rem"
           },
           content: `pages that are category pages of this ${fmt.italics("kind definition")} page and their subcategories.`
         });
-        table(
+        page.table(
           ["Category", "Tag", "Subcategories"],
           categoryPages.map((p2) => {
-            const pg = page(p2);
+            const pg = page.getPage(p2);
             return [
-              createFileLink(pg),
-              get_classification(pg).category,
-              show_subcategories_for(pg).join(`, `)
+              page.createFileLink(pg),
+              page.categories.join(`, `),
+              page.subcategories.join(`, `)
             ];
           })
         );
@@ -20201,7 +20198,7 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         }
       );
       if (kindPages.length > 0) {
-        fmt.callout("info", "Kinded Pages", {
+        page.callout("info", "Kinded Pages", {
           style: {
             mt: "1rem",
             mb: "1rem"
@@ -20210,27 +20207,27 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
         });
         const [_, classification2] = get_prop(current, "__classification");
         if (isString$1(classification2) && classification2 === "categories") {
-          table(
+          page.table(
             ["Page", "Categories", "Links"],
             kindPages.map((p2) => {
-              const pg = page(p2);
+              const pg = page.getPage(p2);
               return [
-                createFileLink(pg),
-                show_prop(pg, "categories"),
-                show_links(pg)
+                page.createFileLink(pg),
+                page.showProp(pg, "categories"),
+                page.showLinks(pg)
               ];
             })
           );
         } else {
-          table(
+          page.table(
             ["Page", "Category", "Subcategory", "Links"],
             kindPages.map((p2) => {
-              const pg = page(p2);
+              const pg = page.getPage(p2);
               return [
-                createFileLink(pg),
-                show_prop(pg, "category", "categories"),
-                show_prop(pg, "subcategory"),
-                show_links(pg)
+                page.createFileLink(pg),
+                page.showProp(pg, "category", "categories"),
+                page.showProp(pg, "subcategory"),
+                page.showLinks(pg)
               ];
             })
           );
@@ -20238,7 +20235,7 @@ const back_links = (plg) => (source, container, component, filePath) => async (p
       }
     }
     if (links.length === 0) {
-      renderValue(`- no back links found to this page`).catch((e) => plg.error(`Problem rendering paragraph WRT to no back links`, e));
+      page.renderValue(`- no back links found to this page`).catch((e) => plg.error(`Problem rendering paragraph WRT to no back links`, e));
     }
   }
 };
@@ -104798,7 +104795,7 @@ const book = (p2) => async (source, container, component, filePath) => {
   const page = p2.api.createPageInfoBlock(source, container, component, filePath);
   if (page) {
     const fm = page.page;
-    const fmt2 = p2.api.format;
+    const fmt = p2.api.format;
     let book2 = {
       title: fm.title || ((_a2 = fm["kindle-sync"]) == null ? void 0 : _a2.title) || "unknown",
       subtitle: fm.subtitle,
@@ -104846,33 +104843,33 @@ const book = (p2) => async (source, container, component, filePath) => {
         `</div>`
       ];
       const publisher = book2.publisher ? [
-        fmt2.medium("Publisher:"),
-        fmt2.ul([book2.publisher], { indentation: "default", my: "tight" })
+        fmt.medium("Publisher:"),
+        fmt.ul([book2.publisher], { indentation: "default", my: "tight" })
       ] : [];
       const publicationDate = book2.publishDate ? [
-        fmt2.medium("Publication Date:"),
-        isDateTime(book2.publishDate) ? fmt2.ul([(_f2 = book2 == null ? void 0 : book2.publishDate) == null ? void 0 : _f2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
+        fmt.medium("Publication Date:"),
+        isDateTime(book2.publishDate) ? fmt.ul([(_f2 = book2 == null ? void 0 : book2.publishDate) == null ? void 0 : _f2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
       ] : [];
       const pages = book2.totalPages ? [
-        fmt2.medium("Length:&nbsp;"),
-        fmt2.ul([`${fmt2.normal(book2.totalPages)} ${fmt2.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
+        fmt.medium("Length:&nbsp;"),
+        fmt.ul([`${fmt.normal(book2.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
       ] : [];
       const author = book2.authors.length > 0 ? [
-        fmt2.medium("Written By:"),
-        fmt2.ul(book2.authors, { indentation: "default", my: "tight" })
+        fmt.medium("Written By:"),
+        fmt.ul(book2.authors, { indentation: "default", my: "tight" })
       ] : [];
       const book_ids = [
         `<div class="book-ids">`,
-        fmt2.medium("Book Identifiers:"),
-        fmt2.ul([
-          book2.isbn10 ? `${fmt2.light(book2.isbn10, { ts: "sm" })}&nbsp;${fmt2.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
-          book2.isbn13 ? `${fmt2.light(book2.isbn13, { ts: "sm" })}&nbsp;${fmt2.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
-          book2.asin ? `${fmt2.light(book2.asin, { ts: "sm" })}&nbsp;${fmt2.medium("&nbsp;asin", { ts: "xs" })}` : void 0
+        fmt.medium("Book Identifiers:"),
+        fmt.ul([
+          book2.isbn10 ? `${fmt.light(book2.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
+          book2.isbn13 ? `${fmt.light(book2.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
+          book2.asin ? `${fmt.light(book2.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
         ], { indentation: "default", my: "tight" }),
         `</div>`
       ];
-      const summary = fmt2.blockquote("example", "Summary", {
-        content: fmt2.wrap([
+      const summary = fmt.blockquote("example", "Summary", {
+        content: fmt.wrap([
           ...cover,
           ...author,
           ...publisher,
@@ -104885,14 +104882,14 @@ const book = (p2) => async (source, container, component, filePath) => {
           ml: "8px"
         }
       });
-      const description = fmt2.blockquote("info", "Book Description", {
+      const description = fmt.blockquote("info", "Book Description", {
         fold: "+",
         content: book2.description || "no description found"
       });
       const otherBooks = book2.otherBooks ? [
-        fmt2.blockquote("info", `Books by ${book2.authors[0]}`, {
+        fmt.blockquote("info", `Books by ${book2.authors[0]}`, {
           content: book2.otherBooks.map((b) => {
-            return fmt2.link(
+            return fmt.link(
               b.title,
               b.titleLink,
               { iconUrl: b.imageLink }
@@ -104902,29 +104899,29 @@ const book = (p2) => async (source, container, component, filePath) => {
           fold: "-"
         })
       ] : [];
-      const actions = fmt2.blockquote("info", "Actions / Links", {
-        content: fmt2.wrap([
-          book2.asin ? fmt2.link(
+      const actions = fmt.blockquote("info", "Actions / Links", {
+        content: fmt.wrap([
+          book2.asin ? fmt.link(
             "Open in Kindle",
             `kindle://book?action=open&asin=${book2.asin}`,
             { svgInline: KINDLE_ICON }
           ) : void 0,
-          book2.asin ? fmt2.link(
+          book2.asin ? fmt.link(
             "Amazon",
             `https://www.amazon.com/dp/${book2.asin}`,
             { svgInline: AMAZON }
           ) : void 0,
-          book2.googleBookLink ? fmt2.link(
+          book2.googleBookLink ? fmt.link(
             "Google",
             book2.googleBookLink,
             { svgInline: BOOK_ICON }
           ) : void 0,
-          book2.worldCatBookLink ? fmt2.link(
+          book2.worldCatBookLink ? fmt.link(
             "WorldCat",
             book2.worldCatBookLink,
             { svgInline: BOOK_CATALOG }
           ) : void 0,
-          fmt2.link(
+          fmt.link(
             "Search",
             `https://google.com/search?q=${book2.title} by ${book2.authors.join(", ")}`,
             { svgInline: SEARCH_BOOK }
@@ -104937,12 +104934,12 @@ const book = (p2) => async (source, container, component, filePath) => {
         ], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
         fold: "+"
       });
-      const reviews = fmt2.blockquote("info", "Reviews", {
+      const reviews = fmt.blockquote("info", "Reviews", {
         content: "not available currently",
         fold: "-",
         icon: TIP_ICON
       });
-      const details = fmt2.wrap([
+      const details = fmt.wrap([
         description,
         reviews,
         ...otherBooks,
@@ -104953,7 +104950,7 @@ const book = (p2) => async (source, container, component, filePath) => {
         `<div class="book-summary">`,
         ...book2.subtitle ? [
           `<div class="book-subtitle" style="display:block; width: 100%">`,
-          fmt2.blockquote("quote", book2.subtitle, { style: { mb: "8px" } }),
+          fmt.blockquote("quote", book2.subtitle, { style: { mb: "8px" } }),
           `</div>`
         ] : [],
         // column container
@@ -104996,26 +104993,28 @@ const kind_defn = {
 };
 const kind_table = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
   const dv = createPageInfoBlock(p2)(source, container, component, filePath);
-  const table3 = dv.table;
-  const { createFileLink: createFileLink2, show_when, show_desc, show_links: show_links2, fmt: fmt2 } = dv;
-  const [kind, category2, subcategory2] = scalar;
-  const pages = subcategory2 ? dv.pages(`#${kind}/${category2}/${subcategory2}`) : category2 ? dv.pages(`#${kind}/${category2}`) : dv.pages(`#${kind}`);
-  if (pages.length > 0) {
-    table3(
-      ["Repo", "When", "Desc", "Links"],
-      pages.sort((p22) => p22.file.mday).map((p22) => {
-        const pg = isDvPage(p22) ? p22 : dv.page(p22);
-        return [
-          createFileLink2(pg),
-          show_when(pg),
-          show_desc(pg),
-          show_links2(pg)
-        ];
-      })
-    );
-  } else {
-    const msg2 = subcategory2 ? fmt2.as_tag(`${kind}/${category2}/${subcategory2}`) : category2 ? fmt2.as_tag(`${kind}/${category2}`) : `${fmt2.as_tag(kind)}`;
-    fmt2.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
+  if (dv) {
+    const { table: table3, showWhen: showWhen2, showDesc: showDesc2, showLinks: showLinks2, createFileLink: createFileLink2 } = dv;
+    const fmt = dv.format;
+    const [kind, category2, subcategory2] = scalar;
+    const pages = subcategory2 ? dv.pages(`#${kind}/${category2}/${subcategory2}`) : category2 ? dv.pages(`#${kind}/${category2}`) : dv.pages(`#${kind}`);
+    if (pages.length > 0) {
+      table3(
+        ["Repo", "When", "Desc", "Links"],
+        pages.sort((p22) => p22.file.mday).map((p22) => {
+          const pg = isDvPage(p22) ? p22 : dv.page(p22);
+          return [
+            createFileLink2(pg),
+            showWhen2(pg),
+            showDesc2(pg),
+            showLinks2(pg)
+          ];
+        })
+      );
+    } else {
+      const msg2 = subcategory2 ? fmt.as_tag(`${kind}/${category2}/${subcategory2}`) : category2 ? fmt.as_tag(`${kind}/${category2}`) : `${fmt.as_tag(kind)}`;
+      dv.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
+    }
   }
 };
 const page_entry_defn = {
@@ -105028,7 +105027,7 @@ const page_entry_defn = {
 };
 const page_entry = (p2) => (source, container, component, filePath) => async (_scalar, _opt) => {
   const dv = p2.api.dv_page(source, container, component, filePath);
-  const { fmt: fmt2, current } = dv;
+  const { fmt, current } = dv;
   const banner_img = isUrl(dv.current["_banner"]) ? dv.current["_banner"] : void 0;
   const banner_aspect = isCssAspectRatio(dv.current["_banner_aspect"]) ? dv.current["_banner_aspect"] : "32/12";
   const hasBanner = isUrl(banner_img);
@@ -105039,25 +105038,25 @@ const page_entry = (p2) => (source, container, component, filePath) => async (_s
   const type = current.type ? dv.fmt.internalLink(dv.page(current.type)) : void 0;
   const kind = current.kind ? dv.fmt.internalLink(dv.page(current.kind)) : void 0;
   const category2 = current.category ? dv.fmt.internalLink(dv.page(current.category)) : void 0;
-  const categories = current.categories ? current.categories.map((c) => dv.fmt.internalLink(dv.page(c))).join(fmt2.light(" | ", { opacity: 0.5 })) : void 0;
+  const categories = current.categories ? current.categories.map((c) => dv.fmt.internalLink(dv.page(c))).join(fmt.light(" | ", { opacity: 0.5 })) : void 0;
   const subcategory2 = current.subcategory ? dv.fmt.internalLink(dv.page(current.subcategory)) : void 0;
-  const wiki = isWikipediaUrl(current.wiki) ? fmt2.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt2.link("Wikipedia", current.wikipedia) : void 0;
-  const siblings = dv.get_internal_links(dv.current, "about", "related", "competitors", "partners").map((i) => fmt2.internalLink(i));
-  const parents = dv.get_internal_links(dv.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt2.internalLink(i));
-  const children2 = dv.get_internal_links(dv.current, "child", "children", "son", "daughter").map((i) => fmt2.internalLink(i));
+  const wiki = isWikipediaUrl(current.wiki) ? fmt.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt.link("Wikipedia", current.wikipedia) : void 0;
+  const siblings = dv.get_internal_links(dv.current, "about", "related", "competitors", "partners").map((i) => fmt.internalLink(i));
+  const parents = dv.get_internal_links(dv.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt.internalLink(i));
+  const children2 = dv.get_internal_links(dv.current, "child", "children", "son", "daughter").map((i) => fmt.internalLink(i));
   const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children2.length === 0;
   const repo = find_in(isRepoUrl)(current.repo, current.github, current.git, current.homepage, current.url, current.home);
-  const repo_lnk = repo ? fmt2.link("Repo", repo) : void 0;
+  const repo_lnk = repo ? fmt.link("Repo", repo) : void 0;
   const shouldDisplay = hasIcon || hasDesc || type || kind || category2 || categories;
   if (shouldDisplay) {
     const breadcrumbs = [type, kind, category2, categories, subcategory2].filter((i) => i).join(
-      fmt2.light("&nbsp;>&nbsp;", { opacity: 0.5 })
+      fmt.light("&nbsp;>&nbsp;", { opacity: 0.5 })
     );
     const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
     const title = isString$1(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
     const body = isString$1(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
-    const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt2.light("<i>no classification</i>");
-    await fmt2.callout("example", title, {
+    const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt.light("<i>no classification</i>");
+    await fmt.callout("example", title, {
       style: {
         mt: "0.55rem",
         mb: "1rem"
@@ -105168,7 +105167,7 @@ const video_defn = {
 };
 const video_gallery = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
   const dv = p2.api.dv_page(source, container, component, filePath);
-  const { current, fmt: fmt2 } = dv;
+  const { current, fmt } = dv;
   let videos = [];
   let backLinks = dv.as_array(current.file.inlinks);
   let backPages = await Promise.all(
@@ -105201,11 +105200,11 @@ const video_gallery = (p2) => (source, container, component, filePath) => async 
     }),
     "</div>"
   ].join("\n");
-  fmt2.render(dom);
+  fmt.render(dom);
 };
 const queryHandlers = (k) => ({
   Icons: Icons(k),
-  BackLinks: back_links(k),
+  BackLinks: BackLinks(k),
   Book: book(k),
   Kind: kind_table(k),
   PageEntry: page_entry(k),
@@ -105544,23 +105543,23 @@ const query_error = (p2) => (source, container, component, filePath) => async (q
 const codeblockParser = (plugin4) => {
   let processor = async (source, el, ctx) => {
     el.style.overflowX = "auto";
-    const back_links2 = /BackLinks\((.*)\)/;
+    const back_links = /BackLinks\((.*)\)/;
     const page_entry2 = /PageEntry\((.*)\)/;
     const book2 = /Book\((.*)\)/;
     const kind = /Kind\((.*)\)/;
     const videos = /Videos\((.*)\)/;
     const icons = /Icons\((.*)\)/;
     const {
-      BackLinks,
+      BackLinks: BackLinks2,
       Book,
       PageEntry,
       Kind,
       VideoGallery,
       Icons: Icons2
     } = plugin4.api.queryHandlers;
-    if (back_links2.test(source)) {
-      const [_, params] = Array.from(source.match(back_links2) || []);
-      await BackLinks(source, el, ctx, ctx.sourcePath)(params);
+    if (back_links.test(source)) {
+      const [_, params] = Array.from(source.match(back_links) || []);
+      await BackLinks2(source, el, ctx, ctx.sourcePath)(params);
       plugin4.debug(`back links rendered on "${ctx.sourcePath}"`);
     } else if (page_entry2.test(source)) {
       let p2 = evaluate_query_params(plugin4)(

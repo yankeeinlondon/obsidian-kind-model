@@ -1,4 +1,4 @@
-import KindModelPlugin from "main";
+import KindModelPlugin from "~main";
 
 export const on_layout_change = (plugin: KindModelPlugin) => {
 

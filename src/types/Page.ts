@@ -5,19 +5,19 @@ import { MarkdownView } from "obsidian";
 import { RenderableTreeNode, Node } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
-import { RenderApi, FormattingApi, getPage } from "api";
-import { ShowApi } from "types";
-import { PageCategory, PageSubcategory } from "api/buildingBlocks";
+
+import { ShowApi } from "~/types";
+import { RenderApi, FormattingApi, getPage } from "~/api";
 
 
 export type PageType = "kinded" | "kind-defn" | "type-defn" | "none";
 
 
-export type PageInfo<T extends PageType = PageType> = {
+export type PageInfo = {
 	/** 
 	 * whether page is _kinded_, a _kind definition_, a _type definition_, or none of the above.
 	 */
-	type: T;
+	type: PageType;
 
 	/** the full path to the page */
 	path: string;
@@ -332,3 +332,29 @@ export type PageSuggestion =
 
 
 export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | string;
+
+/**
+ * represents a static "kind" and the categories that a given page has of this
+ * particular kind.
+ */
+export type PageCategory = {
+	kind: string;
+	categories: DvPage[];
+}
+
+/**
+ * represents a static "kind" and "category" and a set of subcategories which
+ * a given page has.
+ */
+export type PageSubcategory = {
+	kind: string;
+	/** the "path" to the category which the subcategories are a part of */
+	categoryPath: string;
+	/** 
+	 * The subcategories associated with this page, kind, and category.
+	 * 
+	 * **Note:** we typically only expect ONE but in order to support future flexibility the
+	 * data structure allows for more.
+	 */
+	subcategories: DvPage[];
+}

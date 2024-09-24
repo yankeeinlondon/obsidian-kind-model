@@ -1,8 +1,8 @@
-import KindModelPlugin from "main";
+import KindModelPlugin from "~/main";
 import { getPath } from "./getPath";
 import { getPage, hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
-import { isDvPage, isPageInfo } from "../type-guards";
-import { PageInfo, PageReference } from "../types";
+import { isDvPage, isPageInfo } from "~/type-guards";
+import { DvPage, PageInfo, PageReference } from "~/types";
 import { 
 	getCategories,
 	getClassification, 
@@ -36,23 +36,21 @@ import { showApi } from "./showApi";
  */
 export const createPageInfo = (p: KindModelPlugin) => (
 	pg: PageReference
-) => {
+): PageInfo | undefined => {
 	const path = getPath(pg);
 
-	if(isPageInfo(pg)) {
-		p.info(`createPageInfo() was passed a PageInfo reference; this is possibly ok but not expected`);
-	}
-
-	if(path &&  hasPageInfo(p)(path)) {
+	if(path && hasPageInfo(p)(path)) {
 		// already in cache
 		return lookupPageInfo(p)(path);
 	}
 
-	const page = isDvPage(pg)
+	const page = (
+		isDvPage(pg)
 		? pg
 		: path 
 			? getPage(p)(path)
-			: undefined;
+			: undefined
+	) as DvPage | undefined;
 
 	if (path && page) {
 		const info: PageInfo  = {

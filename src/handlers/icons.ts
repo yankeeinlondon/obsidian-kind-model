@@ -1,4 +1,4 @@
-import KindModelPlugin from "main";
+import KindModelPlugin from "~main"";
 import { Component, MarkdownPostProcessorContext } from "obsidian";
 
 

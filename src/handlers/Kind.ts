@@ -47,40 +47,43 @@ export const kind_table = (p: KindModelPlugin) => (
 	opt: TOption
 ) => {
 	const dv = createPageInfoBlock(p)(source, container, component, filePath);
-	const table = dv.table;
-	const {createFileLink, show_when, show_desc, show_links, fmt} = dv;
-	const [kind, category, subcategory] = scalar;
-
-		
-	const pages = subcategory 
-		? dv.pages(`#${kind}/${category}/${subcategory}`)
-		: category
-		? dv.pages(`#${kind}/${category}`)
-		: dv.pages(`#${kind}`)
-
-
-	if (pages.length > 0) {
-		table(
-			[ "Repo", "When", "Desc", "Links" ],
-			pages
-				.sort(p => p.file.mday)
-				.map(p => {
-				const pg = isDvPage(p) ? p : dv.page(p) as DvPage;
-
-				return [
-					createFileLink(pg),
-					show_when(pg),
-					show_desc(pg),
-					show_links(pg)
-				]
-			})
-		)
-	} else {
-		const msg = subcategory
-			? fmt.as_tag(`${kind}/${category}/${subcategory}`)
+	if (dv) {
+		const {table, showWhen, showDesc, showLinks, createFileLink} = dv;
+		const fmt = dv.format;
+		const [kind, category, subcategory] = scalar;
+	
+			
+		const pages = subcategory 
+			? dv.pages(`#${kind}/${category}/${subcategory}`)
 			: category
-			? fmt.as_tag(`${kind}/${category}`)
-			: `${fmt.as_tag(kind as string)}`;
-		fmt.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg}</span>`)
+			? dv.pages(`#${kind}/${category}`)
+			: dv.pages(`#${kind}`)
+	
+	
+		if (pages.length > 0) {
+			table(
+				[ "Repo", "When", "Desc", "Links" ],
+				pages
+					.sort(p => p.file.mday)
+					.map(p => {
+					const pg = isDvPage(p) ? p : dv.page(p) as DvPage;
+	
+					return [
+						createFileLink(pg),
+						showWhen(pg),
+						showDesc(pg),
+						showLinks(pg)
+					]
+				})
+			)
+		} else {
+			const msg = subcategory
+				? fmt.as_tag(`${kind}/${category}/${subcategory}`)
+				: category
+				? fmt.as_tag(`${kind}/${category}`)
+				: `${fmt.as_tag(kind as string)}`;
+
+			dv.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg}</span>`)
+		}
 	}
 }

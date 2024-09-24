@@ -11,7 +11,7 @@ export * from "./Obsidian";
 export * from "./ObsidianCallouts";
 export * from "./ObsidianTask";
 export * from "./query";
-export * from "./PageInfo";
+export * from "./Page";
 export * from "./PageContext";
 export * from "./PageMeta";
 export * from "./pdf-api";

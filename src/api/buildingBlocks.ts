@@ -31,7 +31,9 @@ import {
 	Tag, 
 	PageReference, 
 	FileLink,
-	PropertyType
+	PropertyType,
+	PageCategory,
+	PageSubcategory
 } from "../types";
 import { BuildingBlocksApi } from "../types";
 
@@ -319,10 +321,7 @@ export const hasTypeProp = (p: KindModelPlugin) => (pg: PageReference): boolean 
 	return false;
 }
 
-export type PageCategory = {
-	kind: string;
-	categories: DvPage[];
-}
+
 
 /**
  * gets all "categories" associated with page:
@@ -353,18 +352,7 @@ export const getCategories = (p: KindModelPlugin) => (pg: PageReference): PageCa
 	return categories;
 }
 
-export type PageSubcategory = {
-	kind: string;
-	/** the "path" to the category which the subcategories are a part of */
-	categoryPath: string;
-	/** 
-	 * The subcategories associated with this page, kind, and category.
-	 * 
-	 * **Note:** we typically only expect ONE but in order to support future flexibility the
-	 * data structure allows for more.
-	 */
-	subcategories: DvPage[];
-}
+
 
 export const getSubcategories = (p: KindModelPlugin) => (pg: PageReference): PageSubcategory[] => {
 	const classy = getClassification(p)(pg);

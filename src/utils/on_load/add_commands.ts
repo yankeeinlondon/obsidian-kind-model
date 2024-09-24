@@ -1,5 +1,5 @@
 import { update_kinded_page } from "../../commands/update_kinded_page";
-import KindModelPlugin from "main";
+import KindModelPlugin from "~main";
 import { Editor, MarkdownView } from "obsidian";
 
 /**

@@ -1,4 +1,4 @@
-import KindModelPlugin from "main";
+import KindModelPlugin from "~main";
 import { getPage } from "./cache";
 import { InlineSvg } from "inferred-types";
 import { PageReference } from "types";

@@ -4,6 +4,9 @@ import type KindModelPlugin from "../main";
 import type { DvPage } from "../types/dataview_types";
 import { Tag } from "../types/general";
 import { parseParams } from "../helpers/parseParams";
+import { createPageInfo } from "~/api";
+import { hasFileLink, isFileLink } from "~/type-guards";
+import { isKindedPage } from "~/api/buildingBlocks";
 
 
 export const COLUMN_CHOICES = [
@@ -49,7 +52,7 @@ export type BackLinkOptions = {
 /**
  * Renders back links for any obsidian page
  */
-export const back_links = (plg: KindModelPlugin) => (
+export const BackLinks = (plg: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
@@ -57,51 +60,62 @@ export const back_links = (plg: KindModelPlugin) => (
 ) => async(
 	params_str: string = ""
 ) => {
-	const page = plg.api.createPageInfoBlock(source, container, component, filePath);
+	const page = plg.api.createPageInfoBlock(
+		source, container, component, filePath
+	);
 
 	if (page) {
 		const current = page.current;
-		let opt: BackLinkOptions = parseParams(params_str);
+		let opt: BackLinkOptions = parseParams([],{});
 
 
-		/** all in-bound links for the page with the exception of self-references */
+		const fmt = page.format;
+
+		/** 
+		 * all in-bound links for the page with the exception of self-references */
 		const links = current.file.inlinks
 			.sort(p => page.getPage(p)?.file.name)
 			.where(p => page.getPage(p)?.file.path !== current.file.path);
 
-		const categories = page.get
-
+		const categoryPaths = page.categories.flatMap(i => i.categories.map(c => c.file.path));
 	
 	
 		if(page.isCategoryPage) {
 			/** pages which are subcategories of the current category page */
-			const subCategories = page.showSubcategoriesFor(page, page.category);
+			const subCategories = links.where(
+				p => {
+					const pg = createPageInfo(plg)(p);
+					return pg
+						? pg.isSubcategoryPage && pg.fm.category && isFileLink(pg.fm.category) && pg.fm.category.path === page.path
+						: false
+				}
+			);
+
 			/** pages which are _kinded pages_ and belong to this page's category */
 			const kindPages = links.where(p => 
-				isKindedPage(page(p)) && 
-				get_classification(page(p))?.category === category
+				page.type === "kinded" && 
+				categoryPaths.includes(p.path)
 			);
+
+
+			const subPaths = subCategories.map(i => i.path);
+			const kindPaths = kindPages.map(i => i.path);
 			/** 
 			 * any other pages which have inbound links but aren't subcategories 
 			 * or kinded pages 
 			 */
-			const otherPages = links.where(p => 
-				!isKindedPage(page(p), current) &&
-				!(
-					get_classification(page(p))?.isSubcategory ||
-					get_classification(page(p))?.category === category
-				)
-			);
+			const otherPages = links.filter(i => ![...subPaths,kindPaths].includes(i.path));
+
 	
 			if(subCategories.length > 0) {
-				fmt.callout("info", "Subcategories", { 
+				page.callout("info", "Subcategories", { 
 					style: {
 						mt: "1rem",
 						mb: "1rem",
 					},
 					content: `subcategory pages which are part of the ${fmt.bold(category || "")} ${fmt.italics("category")}.`
 				})
-				table(
+				page.table(
 					["Page", "Created", "Modified", "Desc", "Links"],
 					subCategories.map(p => {
 						const pg = page.getPage(p) as DvPage;
@@ -115,7 +129,7 @@ export const back_links = (plg: KindModelPlugin) => (
 					})
 				).catch(e => plg.error(`Problems rendering subcategories table`, e));
 			} else {
-				ul(
+				page.ul(
 					`no subcategories found for this category page`,
 					`to be listed a page would need one of the following tags:`,
 					l => l.indent(
@@ -125,23 +139,23 @@ export const back_links = (plg: KindModelPlugin) => (
 				)
 			}
 			if(kindPages.length > 0) {
-				fmt.callout("info", "Kinded Pages", { 
+				page.callout("info", "Kinded Pages", { 
 					style: {
 						mt: "1rem",
 						mb: "1rem",
 					},
 					content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(category || "")} category.`
 				})
-				table(
+				page.table(
 					["Page", "Created", "Subcategory", "Desc", "Links"],
 					kindPages.map(p => {
-						const pg = page(p) as DvPage;
+						const pg = page.getPage(p) as DvPage;
 						return [
-							createFileLink(pg),
-							show_created_date(pg, "DD"),
-							show_prop(pg, "subcategory"),
-							show_prop(pg, "desc","description","about"),
-							show_links(pg)
+							page.createFileLink(pg),
+							page.showCreatedDate(pg, "DD"),
+							page.showCreatedDate(pg, "subcategory"),
+							page.showProp(pg, "desc","description","about"),
+							page.showLinks(pg)
 						]
 					})
 				).catch(e => plg.error(`Problems rendering table`, e));
@@ -149,7 +163,7 @@ export const back_links = (plg: KindModelPlugin) => (
 	
 			if(otherPages.length > 0) {
 				if(kindPages.length>0 || subCategories.length>0) {
-					fmt.callout("info", "Other Pages", { 
+					page.callout("info", "Other Pages", { 
 						style: {
 							mt: "1rem",
 							mb: "1rem",
@@ -157,58 +171,67 @@ export const back_links = (plg: KindModelPlugin) => (
 						content: `other back links which aren't related directly via their classification`
 					})
 				}
-				table(
+				page.table(
 					["Page", "Created", "Kind", "Category", "Links"],
 					otherPages.map(p => {
-						const pg = page(p) as DvPage;
+						const pg = page.getPage(p) as DvPage;
 						return [
-							createFileLink(pg),
-							show_created_date(pg, "DD"),
-							show_prop(pg, "kind"),
-							show_prop(pg, "category", "categories"),
-							show_links(pg)
+							page.createFileLink(pg),
+							page.showCreatedDate(pg, "DD"),
+							page.showProp(pg, "kind"),
+							page.showProp(pg, "category", "categories"),
+							page.showLinks(pg)
 						]
 					})
 				).catch(e => plg.error(`Problems rendering otherPages table`, e));
 			}
 	
 		} // end Category Page
-		else if (isSubcategory) {
+		else if (page.isSubcategoryPage) {
 			/** kinded pages of the given subcategory */
-			const kinded = links.where(p =>  
-				// isKindedPage(page(p)) &&
-				page(p) && page(p)?.subcategory && 
-				page(page(p)?.subcategory)?.file?.path === current.file.path
+			const kinded = links.where(p => {
+				const pg = page.getPage(p);
+				if (pg) {
+					return isKindedPage(plg)(pg) 
+						? (
+							isFileLink(pg.subcategory) && pg.subcategory.path === current.file.path
+						  ) || (
+							hasFileLink(pg.subcategories) && pg.subcategories.filter(i => isFileLink(i)).map(i => i.path).includes(current.file.path)
+						  )
+						: false
+				}
+				return false
+			})
+			
+			const other = links.where( 
+				p => kinded.map(k => k.path).includes(p.path)
 			);
-			const other = links.where(p => 
-				!page(p)?.subcategory ||
-				page(page(p)?.subcategory)?.file?.path !== current.file.path
-			)
+			
 	
 			if(kinded.length > 0) {
-				fmt.callout("info", "Kinded Pages", { 
+				page.callout("info", "Kinded Pages", { 
 					style: {
 						mt: "1rem",
 						mb: "1rem",
 					},
 					content: `pages that are kinded as ${fmt.bold(kind_tag || "")} ${fmt.italics("and")} are part of the ${fmt.bold(current.file.name)} subcategory .`
 				})
-				table(
+				page.table(
 					["Page", "Created", "Modified", "Desc", "Links"],
 					kinded.map(p => {
-						const pg = page(p) as DvPage;
+						const pg = page.getPage(p) as DvPage;
 						return [
-							createFileLink(pg),
-							show_created_date(pg, "DD"),
-							show_modified_date(pg, "DD"),
-							show_prop(pg, "desc", "description", "about"),
-							show_links(pg)
+							page.createFileLink(pg),
+							page.showCreatedDate(pg, "DD"),
+							page.showModifiedDate(pg, "DD"),
+							page.showProp(pg, "desc", "description", "about"),
+							page.showLinks(pg)
 						]
 					})
 				);
 			} else {
-				paragraph(`### Subcategory Page`)
-				ul(
+				page.paragraph(`### Subcategory Page`)
+				page.ul(
 					`no pages which identify as being in this subcategory`,
 					`to be listed, a page would need one of the following tag groups:`,
 					l => l.indent(
@@ -218,34 +241,34 @@ export const back_links = (plg: KindModelPlugin) => (
 				)
 			}
 			if(other.length > 0) {
-				paragraph(`### Other Back Links`);
-				table(
+				page.paragraph(`### Other Back Links`);
+				page.table(
 					["Page", "Created", "Kind", "Category", "Links"],
 					other.map(p => {
 						const pg = page(p) as DvPage;
 						return [
-							createFileLink(pg),
-							show_created_date(pg, "DD"),
-							show_prop(pg, "kind"),
-							show_prop(pg, "category", "categories"),
-							show_links(pg)
+							page.createFileLink(pg),
+							page.showCreatedDate(pg, "DD"),
+							page.showProp(pg, "kind"),
+							page.showProp(pg, "category", "categories"),
+							page.showLinks(pg)
 						]
 					})
 				);
 			}
 		} // end Subcategory Page
-		else if (isKindedPage(current)) {
+		else if (page.type === "kinded") {
 			// KINDED PAGE
 			let peering: "none" | "subcategory" | "category" = "none";
 	
-			if (subcategory) {
+			if (page.subcategories.length > 0) {
 				// peers from subcategory perspective
 				const peers = links.where(p => 
 					get_classification(page(p))?.subcategory === subcategory
 				)
 				if (peers.length>0) {
 					peering = "subcategory";
-					fmt.callout("info", "Peers", {
+					page.callout("info", "Peers", {
 						content: `pages who share the same ${fmt.bold(current.file.name)} ${fmt.italics("subcategory")} as this page`,
 						style: {
 							mt: "1rem",
@@ -254,21 +277,21 @@ export const back_links = (plg: KindModelPlugin) => (
 						fold: ""
 					})
 	
-					table(
+					page.table(
 						["Page", "Created", "Modified", "Desc", "Links"],
 						peers.map(p => {
-							const pg = page(p) as DvPage;
+							const pg = page.getPage(p) as DvPage;
 							return [
-								createFileLink(pg),
-								show_created_date(pg,"DD"),
-								show_modified_date(pg,"DD"),
-								show_prop(pg, "desc","description","about"),
-								show_links(pg)
+								page.createFileLink(pg),
+								page.showCreatedDate(pg,"DD"),
+								page.showModifiedDate(pg,"DD"),
+								page.showProp(pg, "desc","description","about"),
+								page.showLinks(pg)
 							]
 						})
 					)
 				}
-			} else if (category && peering === "none") {
+			} else if (page.categories.length > 0) {
 				// peers from category perspective
 				const peers = links.where(p => 
 					get_classification(page(p))?.category === category
@@ -276,15 +299,15 @@ export const back_links = (plg: KindModelPlugin) => (
 				if (peers.length>0) {
 					peering = "category";
 					if(subcategory) {
-						fmt.callout("info", "Peers", { 
+						page.callout("info", "Peers", { 
 							style: {
 								pt: "1rem"
 							},
 							content: `no peers with your subcategory ${fmt.bold(subcategory)} found but there are peers with your ${fmt.italics("category")} ${fmt.bold(category)}`
 						})
-						paragraph(`> ![note] no peers with your subcategory ${subcategory} found but there are peers with your category of ${category}`)
+						page.paragraph(`> ![note] no peers with your subcategory ${subcategory} found but there are peers with your category of ${category}`)
 					} else {
-						fmt.callout("info", "Peers", { 
+						page.callout("info", "Peers", { 
 							style: {
 								mt: "1rem",
 								mb: "1rem",
@@ -293,16 +316,16 @@ export const back_links = (plg: KindModelPlugin) => (
 						})
 					}
 	
-					table(
+					page.table(
 						["Page", "Created", "Modified", "Desc", "Links"],
 						peers.map(p => {
-							const pg = page(p) as DvPage;
+							const pg = page.getPage(p) as DvPage;
 							return [
-								createFileLink(pg),
-								show_created_date(pg,"DD"),
-								show_modified_date(pg,"DD"),
-								show_prop(pg, "desc","description","about"),
-								show_links(pg)
+								page.createFileLink(pg),
+								page.showCreatedDate(pg,"DD"),
+								page.showModifiedDate(pg,"DD"),
+								page.showProp(pg, "desc","description","about"),
+								page.showLinks(pg)
 							]
 						})
 					)
@@ -322,7 +345,7 @@ export const back_links = (plg: KindModelPlugin) => (
 			);
 			if(other.length>0) {
 				if(category || subcategory) {
-					fmt.callout("info", "Other Back Links", { 
+					page.callout("info", "Other Back Links", { 
 						style: {
 							mt: "2rem",
 							mb: "1rem",
@@ -331,7 +354,7 @@ export const back_links = (plg: KindModelPlugin) => (
 				}
 	
 	
-				table(
+				page.table(
 					["Page", "Created", "Kind", "Category", "Links"],
 					other.map(p => {
 					const pg = page(p) as DvPage;
@@ -346,14 +369,14 @@ export const back_links = (plg: KindModelPlugin) => (
 				);
 			}
 		} // end Kinded Pages
-		else if (isKindDefnPage(current)) {
+		else if (page.type === "kind-defn") {
 			const categoryPages = links.where(p => 
 				get_classification(page(p))?.isCategory &&
 				get_kind_prop(page(p)).kind?.file?.path === current.file.path
 			);
 	
 			if(categoryPages.length>0) {
-				fmt.callout("info", "Classification Pages", { 
+				page.callout("info", "Classification Pages", { 
 					style: {
 						mt: "1rem",
 						mb: "1rem",
@@ -362,14 +385,14 @@ export const back_links = (plg: KindModelPlugin) => (
 				});
 		
 		
-				table(
+				page.table(
 					["Category", "Tag", "Subcategories"],
 					categoryPages.map(p => {
-						const pg = page(p) as DvPage;
+						const pg = page.getPage(p) as DvPage;
 						return [
-							createFileLink(pg),
-							get_classification(pg).category,
-							show_subcategories_for(pg).join(`, `)
+							page.createFileLink(pg),
+							page.categories.join(`, `),
+							page.subcategories.join(`, `)
 						]
 					})
 				)
@@ -381,7 +404,7 @@ export const back_links = (plg: KindModelPlugin) => (
 			);
 	
 			if(kindPages.length>0) {
-				fmt.callout("info", "Kinded Pages", { 
+				page.callout("info", "Kinded Pages", { 
 					style: {
 						mt: "1rem",
 						mb: "1rem",
@@ -392,29 +415,29 @@ export const back_links = (plg: KindModelPlugin) => (
 				const [_,classification] = get_prop(current, "__classification");
 				
 				if(isString(classification) && classification === "categories") {
-					table(
+					page.table(
 						["Page", "Categories", "Links"],
 						kindPages.map(p => {
-							const pg = page(p) as DvPage;
+							const pg = page.getPage(p) as DvPage;
 							return [
-								createFileLink(pg),
-								show_prop(pg,  "categories"),
-								show_links(pg)
+								page.createFileLink(pg),
+								page.showProp(pg,  "categories"),
+								page.showLinks(pg)
 							]
 						})
 					)
 					
 				} else {
 	
-					table(
+					page.table(
 						["Page", "Category", "Subcategory", "Links"],
 						kindPages.map(p => {
-							const pg = page(p) as DvPage;
+							const pg = page.getPage(p) as DvPage;
 							return [
-								createFileLink(pg),
-								show_prop(pg, "category", "categories"),
-								show_prop(pg, "subcategory"),
-								show_links(pg)
+								page.createFileLink(pg),
+								page.showProp(pg, "category", "categories"),
+								page.showProp(pg, "subcategory"),
+								page.showLinks(pg)
 							]
 						})
 					)
@@ -425,7 +448,7 @@ export const back_links = (plg: KindModelPlugin) => (
 		
 	
 		if(links.length === 0) {
-			renderValue(`- no back links found to this page`).catch(e => plg.error(`Problem rendering paragraph WRT to no back links`, e));
+			page.renderValue(`- no back links found to this page`).catch(e => plg.error(`Problem rendering paragraph WRT to no back links`, e));
 		}
 	}
 

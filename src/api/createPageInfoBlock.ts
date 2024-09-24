@@ -1,7 +1,8 @@
-import KindModelPlugin from "main";
-import { createPageInfo } from "./createPageInfo";
 import { Component, MarkdownPostProcessorContext } from "obsidian";
-import { PageInfoBlock } from "types";
+
+import KindModelPlugin from "~/main";
+import { createPageInfo } from "./createPageInfo";
+import { PageInfoBlock } from "~/types";
 import { renderApi } from "./renderApi";
 
 /**

@@ -1,4 +1,4 @@
-import { getProp, showAbout, showCategoriesFor, showCreatedDate, showDesc, showDueDate, showKind, showLinks, showMetrics, showModifiedDate, showPeers, showProp, showSlider, showSubcategoriesFor, showTags, showWhen } from "api"
+import { getProp, showAbout, showCategoriesFor, showCreatedDate, showDesc, showDueDate, showKind, showLinks, showMetrics, showModifiedDate, showPeers, showProp, showSlider, showSubcategoriesFor, showTags, showWhen } from "~/api"
 
 
 export type ShowApi = {
