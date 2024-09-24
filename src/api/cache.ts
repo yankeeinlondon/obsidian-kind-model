@@ -206,6 +206,19 @@ export const getKindTagsFromCache = (tag?: string) => {
 }
 
 /**
+ * Returns the _first_ path to the Kind tag if it exists, otherwise returns undefined.
+ */
+export const getTagPathFromCache = (p: KindModelPlugin) =>  (tag: string) => {
+	initializeKindedTagCache(p);
+
+	if (KIND_DEFN_TAG_CACHE && tag in KIND_DEFN_TAG_CACHE) {
+		return KIND_DEFN_TAG_CACHE[tag][0]
+	}
+
+	return undefined
+}
+
+/**
  * Get a Kind Definition from the cache.
  * 
  * - you may use optional `at` property to distinguish between two file paths in cases
@@ -315,6 +328,9 @@ export const updatePageInfoCache = (p: KindModelPlugin) => (
 
 	PAGE_INFO_CACHE[path] = info;
 }
+
+
+
 
 
 export const lookupPageInfo = (p: KindModelPlugin) => (

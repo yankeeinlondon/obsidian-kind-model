@@ -15,6 +15,7 @@ export * from "./PageMeta";
 export * from "./pdf-api";
 export * from "./Position";
 export * from "./settings_types";
+export * from "./ShowApi";
 export * from "./ui-builder_types";
 export * from "./video-types";
 export * from "./style";

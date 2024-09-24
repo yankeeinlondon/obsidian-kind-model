@@ -1,10 +1,14 @@
 import { DvPage, Link } from "./dataview_types";
 import { Classification } from "./Classification";
-import { TAbstractFile, TFile } from "./Obsidian";
+import { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
 import { MarkdownView } from "obsidian";
 import { RenderableTreeNode, Node } from "@markdoc/markdoc";
-import { HeadingTag } from "./frontmatter";
+import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
+import { RenderApi, FormattingApi, getPage } from "api";
+import { ShowApi } from "types";
+import { PageCategory, PageSubcategory } from "api/buildingBlocks";
+
 
 export type PageType = "kinded" | "kind-defn" | "type-defn" | "none";
 
@@ -17,6 +21,28 @@ export type PageInfo<T extends PageType = PageType> = {
 
 	/** the full path to the page */
 	path: string;
+
+	/**
+	 * the frontmatter dictionary on the current page
+	 * 
+	 * **Note:** this is just an alias to `.page.file.frontmatter` property.
+	 */
+	fm: Frontmatter;
+
+	/** 
+	 * All of the categories which the current page belongs to.
+	 * 
+	 * - this is drawn from both `category` and `categories` props as well
+	 * - as any category tags found on the page
+	 * - the `PageCategory` return type organizes the categories by the "kind" property
+	 * which the category is a part of.
+	 */
+	categories: PageCategory[];
+
+	/**
+	 * All of the subcategories which the current page belongs to.
+	 */
+	subcategories: PageSubcategory[];
 
 	/** boolean flag indicating whether page is a **category** page for a `kind` */
 	isCategoryPage: boolean;
@@ -73,10 +99,31 @@ export type PageInfo<T extends PageType = PageType> = {
 
 	getSuggestedActions(): PageSuggestion[];
 
+	/**
+	 * The **Formatting API** surface.
+	 */
+	format: FormattingApi;
+
 	/** 
 	 * The `DvPage` API surface for the given page
 	 */
 	page: DvPage;
+
+
+	/**
+	 * Get a `DvPage` from any `PageReference`
+	 */
+	getPage: ReturnType<typeof getPage>
+} & ShowApi;
+
+export type PageInfoBlock = PageInfo & RenderApi & {
+	/** the content of the code block */
+	content: string;
+	/** the Obsidian Component instance */
+	component: ObsidianComponent;
+
+	/** the HTML Element of the code block */
+	container: HTMLElement;
 }
 
 /**
@@ -98,9 +145,6 @@ export type PageDomElements = {
 }
 
 export type MarkdownViewMeta = {
-
-
-
 	/**
 	 * **titleTimestamp**
 	 * 

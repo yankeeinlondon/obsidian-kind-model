@@ -1,24 +1,44 @@
 import KindModelPlugin from "../main";
-import { DvPage } from "../types/dataview_types";
-
-import { dv_page } from "../handlers/dv_page";
-import { queryHandlers } from "./queryHandlers";
 import { buildingBlocks } from "./buildingBlocks";
-import {  isDvPage, isPageInfo } from "type-guards";
-import { PageReference } from "types";
 import { getPath } from "./getPath";
 import { createPageView } from "./createPageView";
 import { createPageInfo } from "./createPageInfo";
 import { getPage } from "./cache";
 import { formattingApi } from "./formattingApi";
-import { HtmlElement } from "inferred-types";
 import { renderApi } from "./renderApi";
-
+import { iconApi } from "./iconApi";
+import { showApi } from "./showApi";
+import { createPageInfoBlock } from "./createPageInfoBlock";
+import { queryHandlers } from "handlers";
 
 export const api = (plugin: KindModelPlugin) => ({
+	/**
+	 * The **Query Handler** API surface.
+	 * 
+	 * - `back_links`
+	 * - `video_gallery`
+	 * - etc.
+	 */
+	queryHandlers: queryHandlers(plugin),
 
 	...buildingBlocks(plugin),
-	...queryHandlers(plugin),
+	...showApi(plugin),
+	...iconApi(plugin),
+
+	/**
+	 * **render**`(el, filePath) -> API`
+	 * 
+	 * You can gain access to the **Render API** if you provide an HTMLElement and filePath.
+	 */
+	render: renderApi(plugin),
+
+
+	/**
+	 * **Formatting API**, designed to help you build useful HTML blocks that work
+	 * well with Obsidian.
+	 */
+	format: formattingApi(plugin),
+
 
 	/**
 	 * Returns a `DvPage` when given a valid path to a file in the vault.
@@ -32,17 +52,7 @@ export const api = (plugin: KindModelPlugin) => ({
 	 */
 	getPath,
 
-	/**
-	 * Formatting to help you build useful HTML blocks that work
-	 * well with Obsidian.
-	 */
-	format: formattingApi(plugin),
 
-	/**
-	 * You can gain access to the Render API if you provide an HTMLElement and filePath.
-	 */
-	render: (el: HTMLElement, filePath: string) => renderApi(plugin,el,filePath),
-	
 	/** 
 	 * Converts a `MarkdownView` to a `PageView`.
 	 * 
@@ -57,7 +67,15 @@ export const api = (plugin: KindModelPlugin) => ({
 	 */
 	createPageView: createPageView(plugin),
 
-	createPageInfoPlus: null,
+	/**
+	 * Creates a `PageInfoBlock` type which builds on the `PageInfo` type but with the benefit of having the following core types of 
+	 * information:
+	 * 
+	 * - the source of the code block
+	 * - the code block's HTML container element
+	 * - Obsidian's `Component` (which we're probably not taking full advantage of yet)
+	 */
+	createPageInfoBlock: createPageInfoBlock(plugin),
 
 	/**
 	 * Converts a `PageReference` into a `PageInfo` which has
@@ -68,28 +86,5 @@ export const api = (plugin: KindModelPlugin) => ({
 	createPageInfo: createPageInfo(plugin),
 
 
-	/**
-	 * **get_dv_page(...)**
-	 * 
-	 * Get a Dataview's conception of a "page". The input provided can be 
-	 * any one of a of page reference variants and the end result is a `DvPage`
-	 * interface.
-	 * 
-	 * **Note:** this uses Dataview to get the page (ignoring the Kind cache)
-	 */
-	get_dv_page: (page: PageReference): DvPage | null => {
-		if (isDvPage(page)) {
-			return page;
-		} else if (isPageInfo(page)) {
-			return page.page;
-		} else {
-			const path = getPath(page);
-			if(path) {
-				return plugin.dv.page(path) || null;
-			}
-	
-			return null;
-		}
-	},
 
 });

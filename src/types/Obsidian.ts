@@ -124,3 +124,50 @@ export interface ObsidianComponent {
 	 */
 	registerInterval(id: number): number;
 }
+
+
+
+
+
+export interface ObsidianSvgElement extends SVGGraphicsElement, SVGFitToViewBox, WindowEventHandlers {
+    currentScale: number;
+    readonly currentTranslate: DOMPointReadOnly;
+    readonly height: SVGAnimatedLength;
+    readonly width: SVGAnimatedLength;
+    readonly x: SVGAnimatedLength;
+    readonly y: SVGAnimatedLength;
+    animationsPaused(): boolean;
+    checkEnclosure(element: SVGElement, rect: DOMRectReadOnly): boolean;
+    checkIntersection(element: SVGElement, rect: DOMRectReadOnly): boolean;
+    createSVGAngle(): SVGAngle;
+    createSVGLength(): SVGLength;
+    createSVGMatrix(): DOMMatrix;
+    createSVGNumber(): SVGNumber;
+    createSVGPoint(): DOMPoint;
+    createSVGRect(): DOMRect;
+    createSVGTransform(): SVGTransform;
+    createSVGTransformFromMatrix(matrix?: DOMMatrix2DInit): SVGTransform;
+    deselectAll(): void;
+    /** @deprecated */
+    forceRedraw(): void;
+    getCurrentTime(): number;
+    getElementById(elementId: string): Element;
+    getEnclosureList(rect: DOMRectReadOnly, referenceElement: SVGElement | null): NodeListOf<SVGCircleElement | SVGEllipseElement | SVGImageElement | SVGLineElement | SVGPathElement | SVGPolygonElement | SVGPolylineElement | SVGRectElement | SVGTextElement | SVGUseElement>;
+    getIntersectionList(rect: DOMRectReadOnly, referenceElement: SVGElement | null): NodeListOf<SVGCircleElement | SVGEllipseElement | SVGImageElement | SVGLineElement | SVGPathElement | SVGPolygonElement | SVGPolylineElement | SVGRectElement | SVGTextElement | SVGUseElement>;
+    pauseAnimations(): void;
+    setCurrentTime(seconds: number): void;
+    /** @deprecated */
+    suspendRedraw(maxWaitMilliseconds: number): number;
+    unpauseAnimations(): void;
+    /** @deprecated */
+    unsuspendRedraw(suspendHandleID: number): void;
+    /** @deprecated */
+    unsuspendRedrawAll(): void;
+    addEventListener<K extends keyof SVGSVGElementEventMap>(type: K, listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    removeEventListener<K extends keyof SVGSVGElementEventMap>(type: K, listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+}
+
+
+export type GetIconFromObsidian = (iconId: string) => ObsidianSvgElement | null;

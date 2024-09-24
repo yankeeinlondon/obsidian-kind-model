@@ -6,6 +6,7 @@ export * from "./isDateTime";
 export * from "./isDvPage";
 export * from "./isError";
 export * from "./isFileLink";
+export * from "./hasFileLink";
 export * from "./isMarkdownView";
 export * from "./isPageContext";
 export * from "./isPageInfo";

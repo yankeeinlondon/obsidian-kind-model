@@ -1,6 +1,10 @@
 import { 
+	getCategories,
 	getClassification, 
-	getKindTags, 
+	getKindPages, 
+	getKindTagsOfPage, 
+	getKnownKindTags, 
+	getMetadata, 
 	hasCategoriesProp, 
 	hasCategoryProp, 
 	hasCategoryTag, 
@@ -87,6 +91,11 @@ export type BuildingBlocksApi = {
 	hasCategoryTag: ReturnType<typeof hasCategoryTag>,
 
 	/**
+	 * gets all categories associated with the page
+	 */
+	getCategories: ReturnType<typeof getCategories>,
+
+	/**
 	 * indicates whether page has a tag which defines itself as a "subcategory"
 	 * (e.g., `#software/subcategory/foo/bar`)
 	 */
@@ -132,7 +141,25 @@ export type BuildingBlocksApi = {
 	 * 
 	 * Note: _the tags do not have the leading `#` symbol_
 	 */
-	getKindTags: ReturnType<typeof getKindTags>,
+	getKnownKindTags: ReturnType<typeof getKnownKindTags>,
+
+
+	/**
+	 * Take a page reference and all the **kind** _tags_ this page has.
+	 */
+	getKindTagsOfPage: ReturnType<typeof getKindTagsOfPage>,
+
+
+	/**
+	 * Provided a valid page reference input, it will return all the kind pages which
+	 * define this page.
+	 */
+	getKindPages: ReturnType<typeof getKindPages>,
+
+	/**
+	 * Provides the _type_ (e.g., `PageType`) of data contained in each property of the page reference passed in.
+	 */
+	getMetadata: ReturnType<typeof getMetadata>,
 
 
 	/** 

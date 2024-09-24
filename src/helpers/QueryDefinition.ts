@@ -23,10 +23,11 @@ import {
 	stripBefore, 
 	TupleToUnion 
 } from "inferred-types";
-import { kind_defn } from "../handlers/kind_table";
+import { kind_defn } from "../handlers/Kind";
 import KindModelPlugin from "../main";
-import { video_defn } from "../handlers/video_gallery";
-import { page_entry_defn } from "../handlers/page_entry";
+import { video_defn } from "../handlers/VideoGallery";
+import { page_entry_defn } from "../handlers/PageEntry";
+import { queryHandlers } from "handlers";
 
 export type Column = `column()`;
 export type Columns = `columns()`;
@@ -44,7 +45,7 @@ export type TypeToken = "string"
 export type ScalarName = string;
 export type ScalarDefn = `${ScalarName} AS ${TypeToken}`;
 
-export type QueryCmd = "Kind" | "PageEntry" | "Videos" | "Book" | "BackLinks" | "Unknown Command";
+export type QueryCmd = keyof ReturnType<typeof queryHandlers> |  "Unknown Command";
 
 export type QueryDefinition = {
 	kind: "query-defn";

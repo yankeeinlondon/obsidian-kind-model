@@ -4,9 +4,11 @@ import { getPage, hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageIn
 import { isDvPage, isPageInfo } from "type-guards";
 import { PageInfo, PageReference } from "types";
 import { 
+	getCategories,
 	getClassification, 
 	getPageBanners, 
 	getPageIcons, 
+	getSubcategories, 
 	getSuggestedActions, 
 	hasCategoryProp, 
 	hasCategoryTag, 
@@ -22,6 +24,8 @@ import {
 	isSubcategoryPage, 
 	isTypeDefnPage 
 } from "./buildingBlocks";
+import { formattingApi } from "./formattingApi";
+import { showApi } from "./showApi";
 
 /**
  * Creates an entry in PAGE_INFO_CACHE for a page in the vault.
@@ -60,7 +64,12 @@ export const createPageInfo = (p: KindModelPlugin) => (
 					? "kinded"
 					: isTypeDefnPage(p)(page)
 					? "type-defn"
-					: "none",
+					: "none",	
+			fm: page.file.frontmatter,
+			categories: getCategories(p)(page),
+			subcategories: getSubcategories(p)(page),
+			classifications: getClassification(p)(page),
+
 			hasCategoryProp: hasCategoryProp(p)(page),
 			hasCategoryTag: hasCategoryTag(p)(page),
 			hasKindProp: hasKindProp(p)(page),
@@ -71,10 +80,12 @@ export const createPageInfo = (p: KindModelPlugin) => (
 			hasTypeDefinitionTag: hasTypeDefinitionTag(p)(page),
 			isCategoryPage: isCategoryPage(p)(page),
 			isSubcategoryPage: isSubcategoryPage(p)(page),
-			classifications: getClassification(p)(page),
 			getBanners: () => getPageBanners(p)(page),
 			getIcons: () => getPageIcons(p)(page),
-			getSuggestedActions: () => getSuggestedActions(p)(page)
+			getSuggestedActions: () => getSuggestedActions(p)(page),
+			format: formattingApi(p),
+			getPage: getPage(p),
+			...showApi(p)
 		}
 
 		updatePageInfoCache(p)(path, info);

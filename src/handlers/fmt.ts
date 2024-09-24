@@ -21,17 +21,13 @@ import {
 	TIP_ICON, 
 	WARN_ICON 
 } from "../constants/obsidian-constants";
-import { BlockQuoteOptions, DvPage, Link, ListStyle, StyleOptions } from "types";
+import { BlockQuoteOptions, DvPage, Link, ListItemsCallback, ListStyle, StyleOptions } from "types";
 import { isDvPage, isLink } from "type-guards";
-import { listStyle, style } from "api";
+import { listStyle, renderListItems, style } from "api";
 
-type WrapperCallback = (items: string) => string;
 
-type ListItemsApi<_W extends WrapperCallback> = {
-	/** indent the list a level using same OL or UL nomenclature */
-	indent: (...items: string[]) => string;
-	done: EscapeFunction
-};
+
+
 
 
 const obsidian_blockquote = (
@@ -120,40 +116,7 @@ const blockquote = (
 };
 
 
-const list_items_api = <
-	W extends WrapperCallback
->(wrapper: W): ListItemsApi<W> => ({
-	indent: (...items: string[]) => render_list_items(wrapper,items),
-	done: createFnWithProps(() => "", { escape: true })
-});
 
-type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(api:T) => unknown;
-
-/** wrap text in `<ol>...</ol>` tags */
-const wrap_ol = (items: string, opts?: ListStyle) => `<ol ${listStyle(opts)}>${items}</ol>`
-
-/** wrap text in `<ul>...</ul>` tags */
-const wrap_ul = (items: string, opts?: ListStyle) => `<ul ${listStyle(opts)}>${items}</ul>`
-
-/** wraps an ordered or unordered list recursively */
-const render_list_items = (
-	wrapper: (items: string, opts?: ListStyle) => string,
-	items: readonly (string | ListItemsCallback | undefined )[],
-	opts?: ListStyle
-) => wrapper(
-	items
-		.filter(i => i !== undefined)
-		.map(i => (
-			isFunction(i)
-				? isFunction((i as TypedFunction)(list_items_api))
-					? ""
-					: (i as TypedFunction)(list_items_api)
-				: `<li ${style((opts?.li ? isFunction(opts?.li) ? opts.li(i ? i : "") : opts.li : {}))}>${i}</li>`
-		) as unknown as string)
-		.filter(i => i !== "")
-		.join("\n") as string,
-	opts
-);
 
 const span = (text: string | number, fmt?: StyleOptions) => {
 	return `<span ${style(fmt || {fw: "400"})}>${text}</span>`
@@ -203,7 +166,7 @@ export const fmt = (p: KindModelPlugin) => (
 	async ul(...items: readonly (string | ListItemsCallback)[]) {
 		
 		return p.dv.renderValue(
-			render_list_items(wrap_ul, items), 
+			renderListItems(wrap_ul, items), 
 			container, p, filePath, false
 		);
 	},
@@ -220,13 +183,13 @@ export const fmt = (p: KindModelPlugin) => (
 	 * returns the HTML for an unordered list but doesn't render
 	 */
 	html_ul(items: readonly (string | ListItemsCallback |undefined )[], opts?: ListStyle) {
-		return render_list_items(wrap_ul, items.filter(i => i !== undefined), opts);
+		return renderListItems(wrap_ul, items.filter(i => i !== undefined), opts);
 	},
 	async ol(...items: readonly (string | ListItemsCallback)[]) {
 		
 		
 		return p.dv.renderValue(
-			render_list_items(wrap_ol, items), 
+			renderListItems(wrap_ol, items), 
 			container, p, filePath, false
 		);
 	},

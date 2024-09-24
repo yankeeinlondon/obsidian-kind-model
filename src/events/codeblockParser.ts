@@ -4,9 +4,9 @@ import KindModelPlugin from "../main";
 import {  Link } from "../types/dataview_types";
 import { query_error } from "../handlers/query_error";
 import { evaluate_query_params } from "../helpers/QueryDefinition";
-import { kind_defn } from "../handlers/kind_table";
-import { video_defn } from "../handlers/video_gallery";
-import { page_entry_defn } from "../handlers/page_entry";
+import { kind_defn } from "../handlers/Kind";
+import { video_defn } from "../handlers/VideoGallery";
+import { page_entry_defn } from "../handlers/PageEntry";
 
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -32,10 +32,20 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 		const book = /Book\((.*)\)/; 
 		const kind = /Kind\((.*)\)/;
 		const videos = /Videos\((.*)\)/;
+		const icons = /Icons\((.*)\)/;
+
+		const { 
+			BackLinks,
+			Book,
+			PageEntry,
+			Kind,
+			VideoGallery,
+			Icons
+		} = plugin.api.queryHandlers
 
 		if (back_links.test(source)) {
 			const [_, params] = Array.from(source.match(back_links) || []);
-			await plugin.api.back_links(source,el,ctx,ctx.sourcePath)(params);
+			await BackLinks(source,el,ctx,ctx.sourcePath)(params);
 			plugin.debug(`back links rendered on "${ctx.sourcePath}"`)
 		}
 		else if (page_entry.test(source)) {
@@ -43,7 +53,7 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 				page_entry, source, page_entry_defn
 			);
 			if (p.isOk) {
-				await plugin.api.page_entry(source,el,ctx,ctx.sourcePath)(p.scalar, p.options);
+				await PageEntry(source,el,ctx,ctx.sourcePath)(p.scalar, p.options);
 				plugin.debug(`page entry rendered on "${ctx.sourcePath}"`);
 			} else {
 				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
@@ -55,14 +65,14 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 			}
 		}
 		else if (book.test(source)) {
-			await plugin.api.book(source,el,ctx,ctx.sourcePath);
+			await Book(source,el,ctx,ctx.sourcePath);
 			plugin.debug(`book rendered on "${ctx.sourcePath}"`);
 		} 
 		else if (kind.test(source)) {
 			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
 			if (p.isOk) {
 				plugin.debug(p)
-				await plugin.api.kind_table(
+				await Kind(
 					source,el,ctx,ctx.sourcePath
 				)(p.scalar, p.options);
 			} else {
@@ -75,14 +85,28 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 			} 
 		}
 		else if (videos.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, video_defn);
+			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
 			if (p.isOk) {
-				await plugin.api.video_gallery(
+				await VideoGallery(
 					source,el,ctx,ctx.sourcePath
 				)(p.scalar, p.options);
 			} else {
 				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"Videos",
+					"VideoGallery",
+					p.error,
+					p.param_str
+				)
+				return
+			} 
+		} else if (icons.test(source)) {
+			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
+			if (p.isOk) {
+				await Icons(
+					source,el,ctx,ctx.sourcePath
+				)(p.scalar, p.options);
+			} else {
+				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
+					"Icons",
 					p.error,
 					p.param_str
 				)

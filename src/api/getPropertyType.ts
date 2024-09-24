@@ -10,7 +10,7 @@ import { PropertyType } from "types";
 
 
 
-export const get_property_type = (value: unknown): PropertyType => {
+export const getPropertyType = (value: unknown): PropertyType => {
 	if(isUrl(value,"https", "http")) {
 		if(isYouTubeUrl(value)) {
 			return `youtube::${getYouTubePageType(value)}`

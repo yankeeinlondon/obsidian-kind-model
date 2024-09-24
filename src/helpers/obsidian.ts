@@ -1,5 +1,6 @@
 import {  Iso8601 } from "inferred-types";
 import { RequestUrlParam } from "obsidian";
+import { GetIconFromObsidian, ObsidianSvgElement } from "types";
 
 export type CommonHeaders = {
 	"cache-control"?: string;
@@ -30,4 +31,12 @@ export const requestUrl = async (req: RequestUrlParam) => {
 	resp.url = req.url;
 
 	return resp as UrlResponse;
+}
+
+/**
+ * The `getIcon` method provided by **Obsidian** on the global object.
+ */
+export const getIcon = (filePath: string): ObsidianSvgElement | null =>  {
+	const getICON =  (globalThis as any).getIcon as  GetIconFromObsidian;
+	return getICON(filePath) as ObsidianSvgElement | null;
 }

@@ -3,7 +3,7 @@ import { FmPropSuggestions, Frontmatter } from "./frontmatter";
 import {  Link as DvLink, Literal, Query, Widget } from "obsidian-dataview";
 import * as Luxon from "luxon";
 import { Tag } from "./general";
-import { ExpandRecursively, TypeGuard, TypedFunction } from "inferred-types";
+import { ExpandDictionary, ExpandRecursively, TypeGuard, TypedFunction } from "inferred-types";
 import { Component, MarkdownPostProcessorContext, Pos } from "obsidian";
 
 export type LuxonWorkspace = {
@@ -401,7 +401,7 @@ export interface TemplateFile  {
  * 
  * A representation of a "page" returned by 
  */
-export type DvPage = { file: DvFileProperties } & FmPropSuggestions;
+export type DvPage = ExpandDictionary<{ file: DvFileProperties } & FmPropSuggestions >;
 
 export type DvPageWithArray = { file:  DvFilePropertiesAsArray } & FmPropSuggestions;
 

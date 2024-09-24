@@ -1,5 +1,5 @@
 import { Node, RenderableTreeNode } from "@markdoc/markdoc";
-import { Scalar } from "inferred-types";
+import { EscapeFunction, Scalar } from "inferred-types";
 
 export type Tag = `#${string}`;
 
@@ -66,3 +66,12 @@ export type Traversable<
 > = (T & { [key: string]: any; children?: T[], parent?: Traversable}) | Scalar
 
 
+type WrapperCallback = (items: string) => string;
+
+export type ListItemsApi<_W extends WrapperCallback> = {
+	/** indent the list a level using same OL or UL nomenclature */
+	indent: (...items: string[]) => string;
+	done: EscapeFunction
+};
+
+export type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(api:T) => unknown;

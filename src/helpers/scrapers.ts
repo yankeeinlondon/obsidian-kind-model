@@ -16,7 +16,7 @@ import {
 	stripTrailing
 } from "inferred-types";
 import KindModelPlugin from "../main";
-import { BookMeta } from "../handlers/book";
+import { BookMeta } from "../handlers/Book";
 import { DateTime } from "luxon";
 // import { loadRemoteDom } from "./network.ts.ignore";
 import { requestUrl } from "./obsidian";

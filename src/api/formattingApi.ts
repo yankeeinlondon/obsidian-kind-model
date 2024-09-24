@@ -1,7 +1,4 @@
 import { listStyle, style } from "api";
-
-
-
 import { 
 	createFnWithProps, 
 	ensureLeading, 
@@ -12,7 +9,6 @@ import {
 import KindModelPlugin from "main";
 import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, StyleOptions } from "types";
 import { isDvPage, isLink } from "type-guards";
-import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { blockquote } from "./formatting/blockquote";
 
 type WrapperCallback = (items: string) => string;
@@ -27,7 +23,7 @@ type ListItemsApi<_W extends WrapperCallback> = {
 const list_items_api = <
 	W extends WrapperCallback
 >(wrapper: W): ListItemsApi<W> => ({
-	indent: (...items: string[]) => render_list_items(wrapper,items),
+	indent: (...items: string[]) => renderListItems(wrapper,items),
 	done: createFnWithProps(() => "", { escape: true })
 });
 
@@ -40,7 +36,7 @@ const wrap_ol = (items: string, opts?: ListStyle) => `<ol ${listStyle(opts)}>${i
 const wrap_ul = (items: string, opts?: ListStyle) => `<ul ${listStyle(opts)}>${items}</ul>`
 
 /** wraps an ordered or unordered list recursively */
-const render_list_items = (
+export const renderListItems = (
 	wrapper: (items: string, opts?: ListStyle) => string,
 	items: readonly (string | ListItemsCallback | undefined )[],
 	opts?: ListStyle
@@ -85,6 +81,13 @@ const normal = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
 	return `<span ${style({...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`
 }
 
+const emptyCallout = (fmt?: StyleOptions) => [
+	`<div class="callout" ${style(fmt)}>`,
+	`<div class="callout-title">&nbsp;</div>`,
+	`<div class="callout-content">&nbsp;</div>`,
+	`</div>`
+	].join("\n");
+
 
 export type LinkOptions = {
 	style?: StyleOptions;
@@ -94,19 +97,15 @@ export type LinkOptions = {
 }
 
 
+
+
 /**
  * An API to help you generate HTML structures which work well
  * in Obsidian.
  */
 export const formattingApi = (p: KindModelPlugin) =>{
 	return {
-		// async ul(...items: readonly (string | ListItemsCallback)[]) {
-		
-		// 	return p.dv.renderValue(
-		// 		render_list_items(wrap_ul, items), 
-		// 		container, p, filePath, false
-		// 	);
-		// },
+
 	
 
 	
@@ -114,23 +113,11 @@ export const formattingApi = (p: KindModelPlugin) =>{
 		 * returns the HTML for an unordered list
 		 */
 		ul(items: readonly (string | ListItemsCallback |undefined )[], opts?: ListStyle) {
-			return render_list_items(wrap_ul, items.filter(i => i !== undefined), opts);
+			return renderListItems(wrap_ul, items.filter(i => i !== undefined), opts);
 		},
 
 
-		// async ol(...items: readonly (string | ListItemsCallback)[]) {
-			
-			
-		// 	return p.dv.renderValue(
-		// 		render_list_items(wrap_ol, items), 
-		// 		container, p, filePath, false
-		// 	);
-		// },
-		
-		// code: (code: string) => p.dv.renderValue(
-		// 	`<code>${code}</code>`, 
-		// 	container,p, filePath, true
-		// ),
+
 	
 	
 		// /**
@@ -187,6 +174,8 @@ export const formattingApi = (p: KindModelPlugin) =>{
 		thin,
 		medium,
 		normal,
+
+		emptyCallout,
 	
 		/**
 		 * Wrap children items with DIV element; gain formatting control for block
@@ -249,19 +238,10 @@ export const formattingApi = (p: KindModelPlugin) =>{
 			opts?: BlockQuoteOptions
 		) => blockquote(kind,title,opts),
 	
-		// /**
-		//  * **callout**`(kind, title, opts)`
-		//  * 
-		//  * Renders a callout to the current block.
-		//  * 
-		//  * **Note:** use `blockquote` for same functionality but 
-		//  * with HTML returned rather than _rendered_.
-		//  */
-		// callout: (kind: ObsidianCalloutColors, title: string, opts?: BlockQuoteOptions) => 
-		// 	p.dv.renderValue(
-		// 		blockquote(kind,title,opts), 
-		// 		container,p, filePath, false
-		// 	),
-	
+		
+		style
 	}
 }
+
+
+export type FormattingApi = ReturnType<typeof formattingApi>;
