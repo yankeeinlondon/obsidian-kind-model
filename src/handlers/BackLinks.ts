@@ -77,8 +77,7 @@ export const BackLinks = (p: KindModelPlugin) => (
 			.sort(p => page.getPage(p)?.file.name)
 			.where(p => page.getPage(p)?.file.path !== current.file.path);
 
-
-		p.info(links.map(i => [
+		p.info("backlinks",links.map(i => [
 			createFileLink(i),
 			showClassifications(i),
 			showDesc(i),

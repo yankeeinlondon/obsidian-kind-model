@@ -36,6 +36,4 @@ export const query_error = (p: KindModelPlugin) => (
 			toRight: page.format.inline_codeblock(` ${query}(${params_str?.trim() || ""}) `)
 		});
 	}
-
-
 }

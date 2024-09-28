@@ -4,7 +4,7 @@ import {  OptionParam, QueryDefinition, ScalarParams } from "~/helpers/QueryDefi
 import { DvPage } from "~/types";
 import KindModelPlugin from "~/main";
 import { isDvPage } from "~/type-guards";
-import { createPageInfoBlock } from "~/api";
+import { createPageInfoBlock, showKind } from "~/api";
 
 export type KindQueryOptions = {
 	category?: string;
@@ -48,10 +48,16 @@ export const kind_table = (p: KindModelPlugin) => (
 ) => {
 	const dv = createPageInfoBlock(p)(source, container, component, filePath);
 	if (dv) {
-		const {table, showWhen, showDesc, showLinks, createFileLink} = dv;
+		const {
+			table, 
+			showCategories, 
+			showSubcategories, 
+			showDesc, 
+			showLinks, 
+			createFileLink
+		} = dv;
 		const fmt = dv.format;
 		const [kind, category, subcategory] = scalar;
-	
 			
 		const pages = subcategory 
 			? dv.pages(`#${kind}/${category}/${subcategory}`)
@@ -62,7 +68,7 @@ export const kind_table = (p: KindModelPlugin) => (
 	
 		if (pages.length > 0) {
 			table(
-				[ "Repo", "When", "Desc", "Links" ],
+				[ "Repo", "Category", "Subcategory", "Desc", "Links" ],
 				pages
 					.sort(p => p.file.mday)
 					.map(p => {
@@ -70,7 +76,8 @@ export const kind_table = (p: KindModelPlugin) => (
 	
 					return [
 						createFileLink(pg),
-						showWhen(pg),
+						showCategories(pg),
+						showSubcategories(pg),
 						showDesc(pg),
 						showLinks(pg)
 					]

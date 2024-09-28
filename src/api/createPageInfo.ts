@@ -1,8 +1,7 @@
 import KindModelPlugin from "~/main";
 import { getPath } from "./getPath";
-import { getPage, hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
-import { isDvPage, isPageInfo } from "~/type-guards";
-import { DvPage, PageInfo, PageReference } from "~/types";
+import {  getPage,  hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
+import { PageInfo, PageReference } from "~/types";
 import { 
 	getCategories,
 	getClassification, 
@@ -44,13 +43,7 @@ export const createPageInfo = (p: KindModelPlugin) => (
 		return lookupPageInfo(p)(path);
 	}
 
-	const page = (
-		isDvPage(pg)
-		? pg
-		: path 
-			? getPage(p)(path)
-			: undefined
-	) as DvPage | undefined;
+	const page = getPage(p)(pg);
 
 	if (path && page) {
 		const info: PageInfo  = {
@@ -58,10 +51,14 @@ export const createPageInfo = (p: KindModelPlugin) => (
 			path,
 			type: isKindDefnPage(p)(page)
 				? "kind-defn"
-				: isKindedPage(p)(page)
+				: isTypeDefnPage(p)(page)
+				? "type-defn"
+				: isKindedPage(p)(page) && isCategoryPage(p)(page)
+					? "kinded > category"
+					: isKindedPage(p)(page) && isSubcategoryPage(p)(page)
+					? "kinded > subcategory"
+					: isKindedPage(p)(page)
 					? "kinded"
-					: isTypeDefnPage(p)(page)
-					? "type-defn"
 					: "none",	
 			fm: page.file.frontmatter,
 			categories: getCategories(p)(page),

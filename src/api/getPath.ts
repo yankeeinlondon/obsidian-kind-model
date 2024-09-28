@@ -5,7 +5,7 @@ import { isDvPage, isLink, isPageInfo, isTAbstractFile, isTFile } from "../type-
 /**
  * Get's a page's "path" from various page reference types.
  */
-export const getPath = <T extends PageReference>(
+export const getPath = <T extends PageReference  | undefined>(
 	pg: T
 ): string | undefined => {
 

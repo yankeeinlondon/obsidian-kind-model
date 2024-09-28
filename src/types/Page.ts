@@ -10,7 +10,7 @@ import { ShowApi } from "~/types";
 import { RenderApi, FormattingApi, getPage } from "~/api";
 
 
-export type PageType = "kinded" | "kind-defn" | "type-defn" | "none";
+export type PageType = "kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn" | "none";
 
 
 export type PageInfo = {
@@ -18,6 +18,11 @@ export type PageInfo = {
 	 * whether page is _kinded_, a _kind definition_, a _type definition_, or none of the above.
 	 */
 	type: PageType;
+
+	/** 
+	 * The obsidian hash value for this file/page
+	 */
+	_hash?: string;
 
 	/** the full path to the page */
 	path: string;
@@ -338,9 +343,18 @@ export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | st
  * particular kind.
  */
 export type PageCategory = {
-	kind: DvPage;
+	/** the tag as it was found on the page */
+	rawTag: string;
+
 	kindTag: string;
-	categories: DvPage[];
+	/** the `DvPage` for the category page */	
+	category: DvPage;
+	/** the **tag** to identify the category */
+	categoryTag: string;
+	/** the **tag**: `[kind]/[cat]` */
+	kindedTag: `${string}/${string}`;
+	/** a _full qualified_ tag path to the category definition: `kind/category/[cat]` */
+	defnTag: `${string}/category/${string}`;
 }
 
 /**
@@ -348,14 +362,17 @@ export type PageCategory = {
  * a given page has.
  */
 export type PageSubcategory = {
-	kind: string;
-	/** the "path" to the category which the subcategories are a part of */
-	categoryPath: string;
+	/** the tag as it was found on the page */
+	rawTag: string;
+
+	kindTag: string;
+	categoryTag: string;
+	subcategoryTag: string;
+	subcategory: DvPage;
+	/** a**tag** of: `[kind]/[cat]/[sub]` */
+	kindedTag: `${string}/${string}/${string}`;
 	/** 
-	 * The subcategories associated with this page, kind, and category.
-	 * 
-	 * **Note:** we typically only expect ONE but in order to support future flexibility the
-	 * data structure allows for more.
+	 * a tag of: `[kind]/subcategory/[cat]/[sub]` 
 	 */
-	subcategories: DvPage[];
+	defnTag: `${string}/subcategory/${string}/${string}`;
 }

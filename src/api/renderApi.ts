@@ -8,18 +8,16 @@ import {
 	isFunction, 
 	isNumber, 
 	isString, 
-	isUndefined, 
-	OptionalSpace, 
-	StripLeading, 
 	TypedFunction 
 } from "inferred-types";
 import KindModelPlugin from "~/main";
 import { isDvPage, isLink } from "~/type-guards";
-import { BlockQuoteOptions, DataArray, DvPage, Grouping, Link, ListItemsCallback, ObsidianCalloutColors, PageReference, PropertyType, SListItem } from "types";
+import { BlockQuoteOptions, DataArray, DvPage, Grouping, Link, ListItemsCallback, ObsidianCalloutColors, PageReference, PropertyType, SListItem } from "~/types";
 import { getClassification, isKindDefnPage, isKindedPage } from "./buildingBlocks";
 import { DateTime, Duration } from "luxon";
 import { getPage } from "./cache";
 import { blockquote } from "./formatting/blockquote";
+import { renderListItems } from "./formattingApi";
 
 export const isKeyOf = <
 	TContainer,
@@ -38,15 +36,7 @@ type UlApi = {
 
 type UlCallback = <T extends UlApi>(api:T) => unknown;
 
-function extractTitle<
-	T extends unknown  | undefined
->(s: T) {
-	return (
-		s && typeof s === "string"
-			? s.replace(/\d{0,4}-\d{2}-\d{2}\s*/, "")
-			: s
-	) as T extends string ? StripLeading<T, `${number}-${number}-${number}${OptionalSpace}`>: T;
-}
+
 
 function removePound(tag: string | undefined){
 	return typeof tag === "string" && tag?.startsWith("#")
@@ -120,14 +110,6 @@ export const renderApi =  (p: KindModelPlugin) => (
 		 */
 		removePound,
 
-
-		/**
-		 * **extractTitle**`(fileName)`
-		 * 
-		 * Simple utility meant to remove a leading date of the form YYYY-MM-DD from
-		 * a page's name to get more of a "title".
-		 */
-		extractTitle,
 
 		/**
 		 * **get_classification**`(page)`
@@ -228,45 +210,7 @@ export const renderApi =  (p: KindModelPlugin) => (
 			return p.dv.duration(str);
 		},
 
-		/**
-		 * **createFileLink**`(pathLike,[embed],[display])`
-		 * 
-		 * A convenience method that can receive multiple inputs and 
-		 * convert them into a `FileLink`.
-		 */
-		createFileLink(pathLike: string | Link | DvPage, embed?: boolean, display?: string) {
-			if(isLink(pathLike)) {
-				const pg = p.dv.page(pathLike.path);
-				if(!pg) {
-					p.error(`createFileLink() had issues creating a link from the passed in parameters`, {pathLike, embed, display});
 
-					return "";
-				}
-				return p.dv.fileLink(
-					pg.file.path,
-					isUndefined(embed) ? false : embed,
-					isUndefined(display) ? extractTitle(pg.file.name) : display
-				);
-			} else if (isDvPage(pathLike)) {
-				return p.dv.fileLink(
-					pathLike.file.path,
-					isUndefined(embed) ? false : embed,
-					isUndefined(display) ? extractTitle(pathLike.file.name) : display
-				);
-			} else if(isString(pathLike)) {
-				const pg = p.dv.page(pathLike);
-				if(!pg) {
-					p.error(`createFileLink() had issues creating a link from the passed in string path`, {pathLike, embed, display});
-
-					return "";
-				}
-				return p.dv.fileLink(
-					pg.file.path,
-					isUndefined(embed) ? false : embed,
-					isUndefined(display) ? extractTitle(pg.file.name) : display
-				);
-			}
-		},
 
 		/**
 		 * **fileLink**`(path, [embed],[display])`
@@ -380,7 +324,7 @@ export const renderApi =  (p: KindModelPlugin) => (
 			
 			
 			return p.dv.renderValue(
-				render_list_items(wrap_ol, items), 
+				renderListItems(wrap_ol, items), 
 				el, p, filePath, false
 			);
 		},

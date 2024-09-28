@@ -21,4 +21,5 @@ export * from "./ShowApi";
 export * from "./ui-builder_types";
 export * from "./video-types";
 export * from "./style";
+export * from "./tags";
 

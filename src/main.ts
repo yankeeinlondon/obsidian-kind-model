@@ -8,7 +8,6 @@ import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
 // import App from "./App.vue";
 import { api } from './api/api';
-import { KindCache } from 'types/KindCache';
 import { csv } from './utils/on_load/csv';
 import { on_editor_change } from './events/on_editor_change';
 import { add_commands } from './utils/on_load/add_commands';
@@ -21,6 +20,7 @@ import {
 	on_file_created,
 	on_file_deleted,
 } from './events';
+import { KindCache } from './types';
 
 
 export default class KindModelPlugin extends Plugin {

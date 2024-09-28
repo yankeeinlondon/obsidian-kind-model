@@ -7,6 +7,7 @@ import { evaluate_query_params } from "../helpers/QueryDefinition";
 import { kind_defn } from "../handlers/Kind";
 import { video_defn } from "../handlers/VideoGallery";
 import { page_entry_defn } from "../handlers/PageEntry";
+import { Page } from "~/handlers/Page";
 
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -24,11 +25,16 @@ export const isPageLink= (v: unknown): v is Link => {
  * - if no handler is found, an error is raised in the UI
  */
 export const codeblockParser = (plugin: KindModelPlugin) => {
-	let processor = async (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+	let processor = async (
+		source: string, 
+		el: HTMLElement, 
+		ctx: MarkdownPostProcessorContext
+	) => {
 		el.style.overflowX = "auto"; 
 		
 		const back_links = /BackLinks\((.*)\)/;
 		const page_entry = /PageEntry\((.*)\)/;
+		const page = /Page\((.*)\)/;
 		const book = /Book\((.*)\)/; 
 		const kind = /Kind\((.*)\)/;
 		const videos = /Videos\((.*)\)/;
@@ -40,7 +46,8 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 			PageEntry,
 			Kind,
 			VideoGallery,
-			Icons
+			Icons,
+			Page
 		} = plugin.api.queryHandlers
 
 		if (back_links.test(source)) {
@@ -58,6 +65,22 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 			} else {
 				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
 					"PageEntry",
+					p.error,
+					p.param_str
+				)
+				return
+			}
+		}
+		else if (page.test(source)) {
+			let p = evaluate_query_params(plugin)(
+				page, source, page_entry_defn
+			);
+			if (p.isOk) {
+				await Page(source,el,ctx,ctx.sourcePath)(p.scalar, p.options);
+				plugin.debug(`Page() meta info rendered on "${ctx.sourcePath}"`);
+			} else {
+				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
+					"Page",
 					p.error,
 					p.param_str
 				)

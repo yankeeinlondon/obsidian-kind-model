@@ -1,8 +1,13 @@
 import { 
 	createFnWithProps, 
+	CssSizing, 
 	ensureLeading, 
 	EscapeFunction, 
 	isFunction, 
+	isString, 
+	isUndefined, 
+	OptionalSpace, 
+	StripLeading, 
 	TypedFunction 
 } from "inferred-types";
 import { getPage, listStyle, style } from "../api";
@@ -18,6 +23,7 @@ type ListItemsApi<_W extends WrapperCallback> = {
 	indent: (...items: string[]) => string;
 	done: EscapeFunction
 };
+
 
 
 export const removePound = (tag: string | undefined) => {
@@ -200,6 +206,8 @@ export const formattingApi = (p: KindModelPlugin) =>{
 				`</div>`
 			].join("\n")
 		},
+
+
 	
 		link: (title: string, url: string, opts?: LinkOptions) => {
 			return [
@@ -225,14 +233,17 @@ export const formattingApi = (p: KindModelPlugin) =>{
 				`</a>`
 			].join("\n")
 		},
-	
+
+
 		/**
 		 * **as_tag**`(text)`
 		 * 
 		 * Puts the provided text into a _code block_ and ensures that the
 		 * leading character is a `#` symbol.
 		 */
-		as_tag: (text: string) => `<code class="tag-reference">${ensureLeading(text, "#")}</code>`,
+		as_tag: (text: string | undefined) => text 
+			? `<code class="tag-reference" style="background-color: transparent">${ensureLeading(text, "#")}</code>`
+			: "",
 	
 		inline_codeblock: (text: string) => `<code class="inline-codeblock" style="display: flex; flex-direction: row;">${text}</code>`,
 	
@@ -250,9 +261,41 @@ export const formattingApi = (p: KindModelPlugin) =>{
 			title: string, 
 			opts?: BlockQuoteOptions
 		) => blockquote(kind,title,opts),
+
+
+		list: (
+			format: StyleOptions,
+			...blocks: string[]
+		) => {
+			const html = [
+				`<div class="list-block" style="${style(format)}">`,
+				blocks.join("\n\t"),
+				`</div>`
+			].join("\n")
+
+			return html;
+		},
+
+		/** draws a two column table using markdown rather than HTML */
+		twoColumnTable: (
+			leftHeading: string | undefined,
+			rightHeading: string | undefined,
+			...data: [left: string, right: string][]
+		) => {
+			let lines: string[] = [];
+			for (const datum of data) {
+				const [left, right] = datum;
+				lines.push(`| ${left} | ${right}|`)
+			}
+			if (!leftHeading && !rightHeading) {
+				return lines.join("\n") + "\n";
+			} else {
+				const preamble = `| ${leftHeading} | ${rightHeading} |\n| --- | --- |\n`; 
+				return preamble + lines.join("\n") + "\n"
+			}
+		}
 	
 		
-		style
 	}
 }
 

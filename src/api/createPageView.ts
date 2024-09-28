@@ -7,7 +7,10 @@ import { getHeadingLevel } from "../utils/getHeadingLevel";
 import { splitContent } from "../utils/splitContent";
 
 
-export const getViewMeta = (p: KindModelPlugin) => (view: MarkdownView, info: PageInfo): MarkdownViewMeta => {
+export const getViewMeta = (p: KindModelPlugin) => (
+	view: MarkdownView, 
+	info: PageInfo
+): MarkdownViewMeta => {
 	const content = view.getViewData();
 	const ast = Markdoc.parse(content) as Node;
 	const renderableTree = Markdoc.transform(ast);

@@ -10,6 +10,7 @@ import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
 import { createPageInfoBlock } from "./createPageInfoBlock";
 import { queryHandlers } from "~/handlers";
+import { obsidianApi } from "./obsidian";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -24,6 +25,7 @@ export const api = (plugin: KindModelPlugin) => ({
 	...buildingBlocks(plugin),
 	...showApi(plugin),
 	...iconApi(plugin),
+	...obsidianApi(plugin),
 
 	/**
 	 * **render**`(el, filePath) -> API`

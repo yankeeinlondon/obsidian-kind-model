@@ -1,4 +1,5 @@
 import { DvPage } from "./dataview_types";
+import { PageCategory, PageSubcategory } from "./Page";
 
 
 export type ClassificationTuple = [tag: string, page: DvPage];
@@ -13,13 +14,14 @@ export type Classification = {
 	/** the "type" which this page is */
 	type?: DvPage;
 	kind: DvPage;
+	kindTag: string;
 	/**
 	 * a single "kind" can have zero or more categories associated
 	 * to the page and the kind.
 	 */
-	categories: ClassificationTuple[];
+	categories: PageCategory[];
 	/**
 	 * a single "kind" can only have a single subcategory
 	 */
-	subcategory?: ClassificationTuple;
+	subcategory?: PageSubcategory;
 }

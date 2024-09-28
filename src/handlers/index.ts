@@ -1,7 +1,7 @@
 import KindModelPlugin from "~/main";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
-import { Icons } from "./Icons";
+import { Icons } from "./icons";
 import { kind_table } from "./Kind";
 import { page_entry } from "./PageEntry";
 import { video_gallery } from "./VideoGallery";

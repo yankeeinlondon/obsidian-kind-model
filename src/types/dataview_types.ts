@@ -401,7 +401,9 @@ export interface TemplateFile  {
  * 
  * A representation of a "page" returned by 
  */
-export type DvPage = ExpandDictionary<{ file: DvFileProperties } & FmPropSuggestions >;
+export type DvPage = ExpandDictionary<
+	{ file: DvFileProperties, _hash?: string } & FmPropSuggestions 
+>;
 
 export type DvPageWithArray = { file:  DvFilePropertiesAsArray } & FmPropSuggestions;
 
