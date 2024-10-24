@@ -3,6 +3,7 @@ import { HEADING_LEVELS } from "../utils/Constants";
 import { TupleToUnion } from "../utils/type-utils";
 import { DataArray, Link } from "./dataview_types";
 import { Relationship } from "./settings_types";
+import { Date,  Iso8601 } from "inferred-types";
 
 
 export type FmPropSuggestions = {
@@ -13,8 +14,17 @@ export type FmPropSuggestions = {
 	subcategory?: Link | string | null;
 	website?: Link | string | null;
 	company?: Link | string | null; 
+	date?: Date;
+	created?: Date | Iso8601;
+	modified?: Date | Iso8601;
+	publish?: boolean;
+	author?: string;
+	title?: string;
+	"exclude-from-search"?: boolean;
+
 	[key: string]: unknown
 }
+
 
 /**
  * **LinkedAsset**

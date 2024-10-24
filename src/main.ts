@@ -56,6 +56,7 @@ export default class KindModelPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		const log = logger(this.settings.log_level);
+		log.info("starting plugin");
 		const { debug, info, warn, error } = log;
 		/** allows you to pull directly from all log endpoints */
 		this.log = log;
@@ -91,7 +92,7 @@ export default class KindModelPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		this.info(`Reloaded`);
+		log.info(`Reloaded Plugin`);
 		
 		this.mount();
 	}

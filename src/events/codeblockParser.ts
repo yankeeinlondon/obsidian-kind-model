@@ -1,3 +1,4 @@
+import { Icons } from "~/handlers/Icons";
 import { isObject,  retainUntil } from "inferred-types";
 import { MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
@@ -122,6 +123,7 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 		} else if (icons.test(source)) {
 			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
 			if (p.isOk) {
+				plugin.warn('about to hand off to Icons')
 				await Icons(
 					source,el,ctx,ctx.sourcePath
 				)(p.scalar, p.options);

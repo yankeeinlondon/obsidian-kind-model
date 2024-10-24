@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 PLUGIN_DIR="${HOME}/obsidian/.obsidian/plugins"
-JS_FILE="${PWD}/main.js"
+ESM_FILE="${PWD}/main.mjs"
+CJS_FILE="${PWD}/dist/main.cjs"
 STYLES="${PWD}/styles.css"
 MANIFEST_FILE="${PWD}/manifest.json"
 
@@ -47,13 +48,14 @@ function has_command() {
 }
 
 function copy_files() {
-	if file_exists "${JS_FILE}"; then
-		cp -f "${JS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
-		touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
-		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+	if file_exists "${ESM_FILE}"; then
+		echo "Converting ESM output into CJS"
+		echo "------------------------------"
+		tsup main.mjs --format=cjs --external obsidian
+		cp -f "${CJS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+
 		if file_exists "${MANIFEST_FILE}"; then
 			cp -f "${MANIFEST_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
-			touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
 		fi
 		if file_exists "${STYLES}"; then
 		 cp -f "${STYLES}" "${PLUGIN_DIR}/obsidian-kind-model"
@@ -62,21 +64,29 @@ function copy_files() {
 		echo ""
 		
 		if has_command "exa"; then
-			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model"
+			exa -lagh --git "./dist/main.cjs"
+			echo ""
+			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js" 
+			exa -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 		elif has_command "eza"; then
-			eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model"
+			eza -lagh --git "./main.js"
+			echo ""
+			eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+			eza -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 		else 
-			ls -la --color "${PLUGIN_DIR}/obsidian-kind-model"
+			ls -la --color "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 		fi
+
+		echo ""
+		
+		touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+		touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
 	else
 		echo "- no JS source file found!"
+		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 	fi
 }
-
-echo "Converting ESM output into CJS"
-echo "------------------------------"
-tsup main.mjs --format=cjs --external obsidian
-cp dist/main.cjs ./main.js
 
 
 echo "Pushing the transpiled JS to Obsidian Vault"

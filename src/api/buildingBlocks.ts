@@ -694,11 +694,14 @@ export const getKindPages = (p: KindModelPlugin) => (
 	return [];
 }
 
+/**
+ * Gets the metadata from a page reference categorized by type of content.
+ */
 export const getMetadata = (p: KindModelPlugin) => (
 	pg: PageReference | undefined | Frontmatter
 ): Record<Partial<PropertyType>,string[]> => {
 	const fm = pg ? getFrontmatter(p)(pg) : undefined;
-
+	
 	if (fm) {
 		let meta: Dictionary<string, any> = {};
 	
@@ -712,6 +715,8 @@ export const getMetadata = (p: KindModelPlugin) => (
 		}
 		
 		return meta as Record<Partial<PropertyType>,string[]>;
+	} else {
+		p.debug(`no metadata found on page ${pg ? pg : "unknown"}`)
 	}
 
 	return {} as Record<Partial<PropertyType>,string[]>;

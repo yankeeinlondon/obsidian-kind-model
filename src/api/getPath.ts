@@ -12,10 +12,10 @@ export const getPath = <T extends PageReference  | undefined>(
 	return isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
 	? pg.path
 	: isDvPage(pg)
-	? pg.file.path
+	? pg?.file?.path
 	: isString(pg)
 	? pg
 	: isPageInfo(pg)
-	? pg.page.file.path
+	? pg.page?.file?.path
 	: undefined;
 }
