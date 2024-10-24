@@ -2,22 +2,26 @@ import {
 	getYouTubePageType,  
 	isString, 
 	isUrl, 
+	isYouTubeCreatorUrl, 
+	isYouTubeFeedUrl, 
 	isYouTubeUrl, 
 	stripLeading, 
 	stripTrailing 
 } from "inferred-types";
-import { PropertyType } from "types";
-
-
+import { PropertyType } from "~/types";
 
 export const getPropertyType = (value: unknown): PropertyType => {
-	if(isUrl(value,"https", "http")) {
-		if(isYouTubeUrl(value)) {
-			return `youtube::${getYouTubePageType(value)}`
-		}
 
-		return "url"
-	} else if (isString(value)) {
+	if(isYouTubeUrl(value)) {
+			if(isYouTubeCreatorUrl(value)) {
+				return `youtube::creator::featured`
+			}
+			if(isYouTubeFeedUrl(value, "history")) {
+
+				return `youtube::feed::history`
+			}
+
+} else if (isString(value)) {
 		// string values
 		if(value.startsWith("[[") && value.endsWith("]]")) {
 			// internal vault link
@@ -28,7 +32,7 @@ export const getPropertyType = (value: unknown): PropertyType => {
 				content.endsWith(".jpg") ||
 				content.endsWith(".jpeg") ||
 				content.endsWith(".gif") ||
-				content.endsWith(".webp") ||
+				content.endsWith(".avif") ||
 				content.endsWith(".webp")
 			) {
 				return "image::vault";

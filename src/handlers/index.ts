@@ -1,9 +1,9 @@
 import KindModelPlugin from "~/main";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
-import { Icons } from "./icons";
+import { Icons } from "./Icons";
 import { kind_table } from "./Kind";
-import { page_entry } from "./PageEntry";
+import { PageEntry } from "./PageEntry";
 import { video_gallery } from "./VideoGallery";
 import { Page } from "./Page";
 
@@ -12,10 +12,20 @@ export const queryHandlers = (k: KindModelPlugin) => ({
 	BackLinks: BackLinks(k),
 	Book: Book(k),
 	Kind: kind_table(k),
-	PageEntry: page_entry(k),
+	PageEntry: PageEntry(k),
 	Page: Page(k),
 	VideoGallery: video_gallery(k),
 });
 
 
 export type QueryHandlers = ReturnType<typeof queryHandlers>;
+
+export {
+	BackLinks,
+	Book,
+	Icons,
+	kind_table,
+	PageEntry,
+	video_gallery,
+	Page
+}

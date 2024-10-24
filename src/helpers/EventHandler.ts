@@ -1,6 +1,6 @@
-import KindModelPlugin from "~main";
+import KindModelPlugin from "~/main";
 import {  WorkspaceLeaf } from "obsidian";
-import { TAbstractFile } from "types";
+import { TAbstractFile } from "~/types";
 
 
 export type CursorPosition = {

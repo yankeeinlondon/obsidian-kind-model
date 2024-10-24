@@ -1,8 +1,7 @@
 import { Tag } from "@markdoc/markdoc";
-import { Link } from "obsidian-dataview";
 import { HEADING_LEVELS } from "../utils/Constants";
 import { TupleToUnion } from "../utils/type-utils";
-import { DataArray } from "./dataview_types";
+import { DataArray, Link } from "./dataview_types";
 import { Relationship } from "./settings_types";
 
 
@@ -41,7 +40,7 @@ export type FmPropMetaSuggestions = {
 
 
 export type Frontmatter = {
-	[key: string]: string | number | boolean | unknown[] | Record<string, unknown>
+	[key: string]: unknown
 } & FmPropSuggestions & FmPropMetaSuggestions;
 
 export interface CommonAttrs {

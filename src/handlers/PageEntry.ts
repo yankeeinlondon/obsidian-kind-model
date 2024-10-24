@@ -29,7 +29,7 @@ export const page_entry_defn = {
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
-export const page_entry = (p: KindModelPlugin) => (
+export const PageEntry = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,

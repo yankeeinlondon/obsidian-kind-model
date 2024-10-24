@@ -24,7 +24,7 @@ import {
 	addTagToCache, 
 } from "./cache";
 
-import {  hasFileLink, isFileLink } from "../type-guards";
+import {  hasFileLink, isDvPage, isFileLink, isFrontmatter, isPageInfo, isPageReference } from "../type-guards";
 import { 
 	DvPage, 
 	Classification, 
@@ -43,7 +43,8 @@ import {
 	DecomposedTag,
 	DecomposedCategoryTag,
 	DecomposedSubcategoryTag,
-	DecomposedKindTag
+	DecomposedKindTag,
+	Frontmatter
 } from "../types";
 import { BuildingBlocksApi } from "../types";
 import { getPropertyType } from "./getPropertyType";
@@ -455,6 +456,31 @@ export const decomposeTag = (p: KindModelPlugin) => (tag: string): DecomposedTag
 
 }
 
+export const getFrontmatter = (p: KindModelPlugin) => (
+	from: PageReference | Frontmatter
+) => {
+	if(isDvPage(from)) {
+		return from.file.frontmatter;
+	} 
+
+	if(isPageInfo(from)) {
+		return from.fm;
+	}
+
+	if(isFrontmatter(from)) {
+		return from;
+	}
+
+	const page = p.api.getPage(from);
+	
+	if(page) {
+		return page.file.frontmatter;
+	} else {
+		p.warn(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, {from})
+		return {};
+	}
+}
+
 
 /**
  * gets all "categories" associated with page:
@@ -668,21 +694,20 @@ export const getKindPages = (p: KindModelPlugin) => (
 	return [];
 }
 
-export const getMetadata = (p: KindModelPlugin) => (pg: PageReference | undefined): Record<Partial<PropertyType>,string[]> => {
-	const page = getPage(p)(pg);
+export const getMetadata = (p: KindModelPlugin) => (
+	pg: PageReference | undefined | Frontmatter
+): Record<Partial<PropertyType>,string[]> => {
+	const fm = pg ? getFrontmatter(p)(pg) : undefined;
 
-	if (page) {
+	if (fm) {
 		let meta: Dictionary<string, any> = {};
-	
-	
-		let fm = page.file.frontmatter;
 	
 		for (const key of Object.keys(fm)) {
 			const type = getPropertyType(fm[key]);
 			if (meta[type]) {
 				meta[type].push(key);
 			} else {
-				meta[type] = [key];
+				meta["other"] = [key];
 			}
 		}
 		

@@ -1,6 +1,6 @@
-import { EventHandler } from "../helpers/EventHandler";
-import KindModelPlugin from "../main";
 import { Notice } from "obsidian";
+import { EventHandler } from "~/helpers/EventHandler";
+import KindModelPlugin from "~/main";
 
 /**
  * event handler triggered when an _existing_ file is _modified_.

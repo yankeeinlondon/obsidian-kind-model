@@ -1,5 +1,5 @@
-import { EventHandler } from "../helpers/EventHandler";
-import KindModelPlugin from "../main";
+import { EventHandler } from "~/helpers/EventHandler";
+import KindModelPlugin from "~/main";
 
 export const on_tab_change = (plugin: KindModelPlugin) => {
 	EventHandler(plugin).onTabChange((evt) => {

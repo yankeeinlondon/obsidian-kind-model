@@ -8,12 +8,15 @@ import {
 	ExpandDictionary,  
 	Filter, 
 	First, 
+	If, 
+	IsEqual, 
 	isObject, 
 	isScalar, 
 	Join, 
 	Keys, 
 	ObjectKey, 
 	OptionalSpace, 
+	RemoveNever, 
 	Retain, 
 	RetainAfter, 
 	Scalar, 
@@ -27,7 +30,8 @@ import { kind_defn } from "../handlers/Kind";
 import KindModelPlugin from "../main";
 import { video_defn } from "../handlers/VideoGallery";
 import { page_entry_defn } from "../handlers/PageEntry";
-import { queryHandlers } from "handlers";
+import { queryHandlers } from "~/handlers";
+
 
 export type Column = `column()`;
 export type Columns = `columns()`;
@@ -53,8 +57,6 @@ export type QueryDefinition = {
 	scalar: ScalarDefn[];
 	options: Record<string, TypeToken>; 
 }
-
-
 
 
 export type ScalarRequired<T extends QueryDefinition> = Filter<
@@ -114,10 +116,18 @@ type _ScalarParams<T extends ScalarDefn[]> =  {
 	: never
 }
 
+
+
+
 /**
  * Determines the _types_ of the scalar parameters for a given `QueryDefinition`
  */
-export type ScalarParams<T extends QueryDefinition> = _ScalarParams<T["scalar"]>;
+export type ScalarParams<T extends QueryDefinition> = If<
+	IsEqual<RemoveNever<_ScalarParams<T["scalar"]>>, any>,
+	[],
+	RemoveNever<_ScalarParams<T["scalar"]>>
+>;
+
 
 type OptionType<T extends string> = Contains<T, "string"> extends true
 ? MaybeOpt<T, string>
@@ -169,7 +179,7 @@ const opt = <T extends ScalarDefn>(value: T) => {
 const enumValues = <T extends ScalarDefn>(v: T) => {
 	let values = stripBefore(v?.trim(), "enum(").slice(0,-1)
 		.split(/,\s{0,1}/)
-		.map(i => `"${i}"`);
+		.map((i: string) => `"${i}"`);
 
 	return values.join(" | ");
 }
@@ -201,7 +211,7 @@ const query_signature = <T extends QueryDefinition>(defn: T)=> {
 
 		return kv
 	});
-	const signature = `${defn.type}(\n  ${scalars.join(",\n  ")},\n  options?: ${opt_hash(defn)}\n) => void`
+	const signature = `${String(defn.type)}(\n  ${scalars.join(",\n  ")},\n  options?: ${opt_hash(defn)}\n) => void`
 
 	return signature as string as QuerySignature<T>;
 }
@@ -265,8 +275,7 @@ type EvaluatedQueryParams<
  * ]
  * ```
  */
-export const evaluate_query_params = <P extends KindModelPlugin>(p: P) => 
-<
+export const evaluate_query_params = <P extends KindModelPlugin>(p: P) => <
 	TRe extends RegExp,
 	TSource extends string,
 	TDefn extends QueryDefinition

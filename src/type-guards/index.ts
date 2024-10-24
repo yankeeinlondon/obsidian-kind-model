@@ -17,3 +17,5 @@ export * from "./isTag";
 export * from "./isValidReference";
 export * from "./isWikipediaUrl";
 
+export * from "./isPageReference";
+export * from "./isFrontmatter";

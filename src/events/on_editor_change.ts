@@ -1,4 +1,4 @@
-import KindModelPlugin from "~main";
+import KindModelPlugin from "~/main";
 
 /**
  * Does some simple find and replace on an editor which has changed.
