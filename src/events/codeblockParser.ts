@@ -1,4 +1,3 @@
-import { Icons } from "~/handlers/Icons";
 import { isObject,  retainUntil } from "inferred-types";
 import { MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
@@ -7,6 +6,7 @@ import { query_error } from "~/handlers/query_error";
 import { evaluate_query_params } from "~/helpers/QueryDefinition";
 import { kind_defn } from "~/handlers/Kind";
 import { page_entry_defn } from "~/handlers/PageEntry";
+import { iconPageDefn } from "~/handlers/IconPage";
 
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -45,7 +45,7 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 			PageEntry,
 			Kind,
 			VideoGallery,
-			Icons,
+			IconPage,
 			Page
 		} = plugin.api.queryHandlers
 
@@ -102,7 +102,7 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 					"Kind",
 					p.error,
 					p.param_str
-				)
+				);
 				return
 			} 
 		}
@@ -117,19 +117,18 @@ export const codeblockParser = (plugin: KindModelPlugin) => {
 					"VideoGallery",
 					p.error,
 					p.param_str
-				)
+				);
 				return
 			} 
 		} else if (icons.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
+			let p = evaluate_query_params(plugin)(kind, source, iconPageDefn);
 			if (p.isOk) {
-				plugin.warn('about to hand off to Icons')
-				await Icons(
+				await IconPage(
 					source,el,ctx,ctx.sourcePath
 				)(p.scalar, p.options);
 			} else {
 				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"Icons",
+					"IconPage",
 					p.error,
 					p.param_str
 				)

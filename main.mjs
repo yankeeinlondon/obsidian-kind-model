@@ -1224,7 +1224,7 @@ function objToLocalTS(obj) {
   return +d;
 }
 function weeksInWeekYear(weekYear) {
-  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last = weekYear - 1, p2 = (last + Math.floor(last / 4) - Math.floor(last / 100) + Math.floor(last / 400)) % 7;
+  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last2 = weekYear - 1, p2 = (last2 + Math.floor(last2 / 4) - Math.floor(last2 / 100) + Math.floor(last2 / 400)) % 7;
   return p1 === 4 || p2 === 3 ? 53 : 52;
 }
 function untruncateYear(year) {
@@ -9597,6 +9597,12 @@ class SettingsTab extends PluginSettingTab {
     ).addDropdown(LOG_LEVELS);
   }
 }
+function createConstant$1(kind) {
+  return {
+    _type: "Constant",
+    kind
+  };
+}
 var NUMERIC_CHAR = [
   "0",
   "1",
@@ -9668,6 +9674,7 @@ var entry = (refType, desc, ...params) => [
   // TODO: get the below working`
   "ContainsSome": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.singularTuple())
 });
+var Never$1 = createConstant$1("never");
 var SIMPLE_SCALAR_TOKENS = [
   "string",
   "number",
@@ -9866,6 +9873,9 @@ var isYouTubeFeedUrl = (val, type = void 0) => {
 var isYouTubeCreatorUrl = (url) => {
   return isString$1(url) && (url.startsWith(`https://www.youtube.com/@`) || url.startsWith(`https://youtube.com/@`) || url.startsWith(`https://www.youtube.com/channel/`));
 };
+var isYouTubeVideosInPlaylist = (val) => {
+  return isString$1(val) && (val.startsWith(`https://www.youtube.com/playlist?`) || val.startsWith(`https://youtube.com/playlist?`)) && hasUrlQueryParameter(val, "list");
+};
 var isRepoUrl = (val) => {
   const baseUrls = valuesOf(REPO_SOURCE_LOOKUP).flat();
   return isString$1(val) && baseUrls.every(
@@ -9914,6 +9924,20 @@ function ensureLeading(content2, ensure) {
   let output = String(content2);
   return output.startsWith(String(ensure)) ? content2 : isString$1(content2) ? `${ensure}${content2}` : Number(`${ensure}${content2}`);
 }
+function toKebabCase(input, _preserveWhitespace) {
+  const [_, preWhite, focus, postWhite] = /^(\s*)(.*?)(\s*)$/.exec(input);
+  const replaceWhitespace = (i) => i.replace(/\s/gs, "-");
+  const replaceUppercase = (i) => i.replace(/[A-Z]/g, (c) => `-${c[0].toLowerCase()}`);
+  const replaceLeadingDash = (i) => i.replace(/^-/s, "");
+  const replaceTrailingDash = (i) => i.replace(/-$/s, "");
+  const replaceUnderscore = (i) => i.replace(/_/g, "-");
+  const removeDupDashes = (i) => i.replace(/-+/g, "-");
+  return removeDupDashes(`${preWhite}${replaceUnderscore(
+    replaceTrailingDash(
+      replaceLeadingDash(removeDupDashes(replaceWhitespace(replaceUppercase(focus))))
+    )
+  )}${postWhite}`);
+}
 function stripAfter(content2, find2) {
   return content2.split(find2).shift();
 }
@@ -9943,6 +9967,12 @@ var createFnWithProps = (fn2, props, narrowing = false) => {
   }
   return isTrue(narrowing) ? fnWithProps : fnWithProps;
 };
+var last = (list2) => {
+  return [...list2].pop();
+};
+var getYouTubePageType = (url) => {
+  return isYouTubeUrl(url) ? isYouTubeVideoUrl(url) && (hasUrlQueryParameter(url, "v") || isYouTubeShareUrl(url)) ? hasUrlQueryParameter(url, "list") ? isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::in-list::share-link::with-timestamp` : `play::video::in-list::share-link` : `play::video::in-list` : isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::solo::share-link::with-timestamp` : `play::video::solo::share-link` : `play::video::solo` : isYouTubeCreatorUrl(url) ? getUrlPath(url).includes("/videos") ? "creator::videos" : getUrlPath(url).includes("/playlists") ? "creator::playlists" : last(getUrlPath(url).split("/")).startsWith("@") || getUrlPath(url).includes("/featured") ? "creator::featured" : "creator::other" : isYouTubeFeedUrl(url) ? isYouTubeFeedUrl(url, "history") ? "feed::history" : isYouTubeFeedUrl(url, "playlists") ? "feed::playlists" : isYouTubeFeedUrl(url, "liked") ? "feed::liked" : isYouTubeFeedUrl(url, "subscriptions") ? "feed::subscriptions" : isYouTubeFeedUrl(url, "trending") ? "feed::trending" : "feed::other" : isYouTubeVideosInPlaylist(url) ? "playlist::show" : "other" : Never$1;
+};
 var youtubeEmbed = (url) => {
   if (hasUrlQueryParameter(url, "v")) {
     const id = getUrlQueryParams(url, "v");
@@ -9959,6 +9989,18 @@ var youtubeEmbed = (url) => {
   }
 };
 Object.values(NETWORK_PROTOCOL_LOOKUP).flat().filter((i) => i !== "");
+var removeUrlProtocol = (url) => {
+  return stripBefore(url, "://");
+};
+var ensurePath = (val) => {
+  const val2 = ensureLeading(val, "/");
+  return val === "" ? "" : stripTrailing(val2, "/");
+};
+var getUrlPath = (url) => {
+  return isUrl(url) ? ensurePath(
+    stripAfter(stripBefore(removeUrlProtocol(url), "/"), "?")
+  ) : Never$1;
+};
 var getUrlQueryParams = (url, specific = void 0) => {
   const qp = stripBefore(url, "?");
   if (specific) {
@@ -10288,13 +10330,15 @@ const lookupPageInfo = (p2) => (pg) => {
 };
 const getPropertyType = (value2) => {
   if (isYouTubeUrl(value2)) {
+    getYouTubePageType(value2);
     if (isYouTubeCreatorUrl(value2)) {
       return `youtube::creator::featured`;
     }
     if (isYouTubeFeedUrl(value2, "history")) {
       return `youtube::feed::history`;
     }
-  } else if (isString$1(value2)) {
+  }
+  if (isString$1(value2)) {
     if (value2.startsWith("[[") && value2.endsWith("]]")) {
       const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
       if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
@@ -10302,13 +10346,20 @@ const getPropertyType = (value2) => {
       } else if (content2.endsWith(".excalidraw")) {
         return "drawing::vault";
       }
-    }
-  } else if (Array.isArray(value2)) {
-    if (value2.every((i) => isUrl(i))) {
-      return "list::url";
+      return "link";
     }
   }
-  return "other";
+  if (isInlineSvg(value2)) {
+    return "svg::inline";
+  } else if (isArray(value2) && value2.length > 0) {
+    const variants = new Set(value2.map(getPropertyType));
+    if (variants.size === 1) {
+      return `list::${Array.from(variants)[0]}`;
+    } else {
+      return `list::mixed::${Array.from(variants).join(",")}`;
+    }
+  }
+  return `other::${toKebabCase(String(typeof value2))}`;
 };
 const getKnownKindTags = (p2) => (tag) => {
   initializeTagCache(p2);
@@ -10551,7 +10602,7 @@ const getFrontmatter = (p2) => (from) => {
   if (page) {
     return page.file.frontmatter;
   } else {
-    p2.warn(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, { from });
+    p2.debug(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, { from });
     return {};
   }
 };
@@ -10669,16 +10720,20 @@ const getKindPages = (p2) => (pg) => {
 };
 const getMetadata = (p2) => (pg) => {
   const fm = pg ? getFrontmatter(p2)(pg) : void 0;
+  const kv = {};
   if (fm) {
     let meta = {};
     for (const key of Object.keys(fm)) {
       const type = getPropertyType(fm[key]);
       if (meta[type]) {
         meta[type].push(key);
+        kv[key] = [fm[key], "${type}"];
       } else {
         meta["other"] = [key];
+        kv[key] = [fm[key], "other"];
       }
     }
+    p2.warn("getMetadata() passed FM", { fm, meta, kv });
     return meta;
   } else {
     p2.debug(`no metadata found on page ${pg ? pg : "unknown"}`);
@@ -14143,11 +14198,11 @@ var require_code = __commonJS({
       if (state.md.options.allowIndentation) {
         return false;
       }
-      var nextLine, last, token;
+      var nextLine, last2, token;
       if (state.sCount[startLine] - state.blkIndent < 4) {
         return false;
       }
-      last = nextLine = startLine + 1;
+      last2 = nextLine = startLine + 1;
       while (nextLine < endLine) {
         if (state.isEmpty(nextLine)) {
           nextLine++;
@@ -14155,14 +14210,14 @@ var require_code = __commonJS({
         }
         if (state.sCount[nextLine] - state.blkIndent >= 4) {
           nextLine++;
-          last = nextLine;
+          last2 = nextLine;
           continue;
         }
         break;
       }
-      state.line = last;
+      state.line = last2;
       token = state.push("code_block", "code", 0);
-      token.content = state.getLines(startLine, last, 4 + state.blkIndent, false) + "\n";
+      token.content = state.getLines(startLine, last2, 4 + state.blkIndent, false) + "\n";
       token.map = [startLine, state.line];
       return true;
     };
@@ -15220,7 +15275,7 @@ var require_state_block = __commonJS({
       return pos;
     };
     StateBlock.prototype.getLines = function getLines(begin, end2, indent, keepLastLF) {
-      var i, lineIndent, ch, first, last, queue, lineStart, line = begin;
+      var i, lineIndent, ch, first, last2, queue, lineStart, line = begin;
       if (begin >= end2) {
         return "";
       }
@@ -15229,11 +15284,11 @@ var require_state_block = __commonJS({
         lineIndent = 0;
         lineStart = first = this.bMarks[line];
         if (line + 1 < end2 || keepLastLF) {
-          last = this.eMarks[line] + 1;
+          last2 = this.eMarks[line] + 1;
         } else {
-          last = this.eMarks[line];
+          last2 = this.eMarks[line];
         }
-        while (first < last && lineIndent < indent) {
+        while (first < last2 && lineIndent < indent) {
           ch = this.src.charCodeAt(first);
           if (isSpace(ch)) {
             if (ch === 9) {
@@ -15249,9 +15304,9 @@ var require_state_block = __commonJS({
           first++;
         }
         if (lineIndent > indent) {
-          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last);
+          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last2);
         } else {
-          queue[i] = this.src.slice(first, last);
+          queue[i] = this.src.slice(first, last2);
         }
       }
       return queue.join("");
@@ -16085,8 +16140,8 @@ var require_balance_pairs = __commonJS({
 var require_text_collapse = __commonJS({
   "node_modules/markdown-it/lib/rules_inline/text_collapse.js"(exports, module) {
     module.exports = function text_collapse(state) {
-      var curr, last, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
-      for (curr = last = 0; curr < max2; curr++) {
+      var curr, last2, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
+      for (curr = last2 = 0; curr < max2; curr++) {
         if (tokens2[curr].nesting < 0)
           level--;
         tokens2[curr].level = level;
@@ -16095,14 +16150,14 @@ var require_text_collapse = __commonJS({
         if (tokens2[curr].type === "text" && curr + 1 < max2 && tokens2[curr + 1].type === "text") {
           tokens2[curr + 1].content = tokens2[curr].content + tokens2[curr + 1].content;
         } else {
-          if (curr !== last) {
-            tokens2[last] = tokens2[curr];
+          if (curr !== last2) {
+            tokens2[last2] = tokens2[curr];
           }
-          last++;
+          last2++;
         }
       }
-      if (curr !== last) {
-        tokens2.length = last;
+      if (curr !== last2) {
+        tokens2.length = last2;
       }
     };
   }
@@ -69152,7 +69207,7 @@ function validateLabel(label, {
     }
   }
   if (checkJoiners) {
-    let last = 0;
+    let last2 = 0;
     for (const [i, ch] of codePoints.entries()) {
       if (ch === "‌" || ch === "‍") {
         if (i > 0) {
@@ -69161,9 +69216,9 @@ function validateLabel(label, {
           }
           if (ch === "‌") {
             const next = codePoints.indexOf("‌", i + 1);
-            const test = next < 0 ? codePoints.slice(last) : codePoints.slice(last, next);
+            const test = next < 0 ? codePoints.slice(last2) : codePoints.slice(last2, next);
             if (regexes.validZWNJ.test(test.join(""))) {
-              last = i + 1;
+              last2 = i + 1;
               continue;
             }
           }
@@ -69748,11 +69803,11 @@ var percentEncoding$1 = {
       }
       parts.pop();
     }
-    const last = parts[parts.length - 1];
-    if (parseIPv4Number(last) !== failure) {
+    const last2 = parts[parts.length - 1];
+    if (parseIPv4Number(last2) !== failure) {
       return true;
     }
-    if (/^[0-9]+$/u.test(last)) {
+    if (/^[0-9]+$/u.test(last2)) {
       return true;
     }
     return false;
@@ -70532,15 +70587,15 @@ function requireUrlencoded() {
   }
   function strictlySplitByteSequence(buf, cp) {
     const list2 = [];
-    let last = 0;
+    let last2 = 0;
     let i = buf.indexOf(cp);
     while (i >= 0) {
-      list2.push(buf.slice(last, i));
-      last = i + 1;
-      i = buf.indexOf(cp, last);
+      list2.push(buf.slice(last2, i));
+      last2 = i + 1;
+      i = buf.indexOf(cp, last2);
     }
-    if (last !== buf.length) {
-      list2.push(buf.slice(last));
+    if (last2 !== buf.length) {
+      list2.push(buf.slice(last2));
     }
     return list2;
   }
@@ -105055,15 +105110,28 @@ const Book = (p2) => async (source, container, component, filePath) => {
     }
   }
 };
-const Icons = (p2) => (source, container, component, filePath) => {
+const iconPageDefn = {
+  kind: "query-defn",
+  type: "IconPage",
+  scalar: [],
+  options: {
+    remove_columns: "enum(when,desc,links)",
+    add_columns: "columns()"
+  }
+};
+const IconPage = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
+  var _a2;
+  p2.debug("entering Icons handler");
   const page = p2.api.createPageInfoBlock(source, container, component, filePath);
   if (page) {
-    const iconProps = p2.api.getIconProperties(page);
+    const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.page[i]}</span>`;
+    const meta = getMetadata(p2)(page);
+    p2.info("Icon Props", { meta });
     page.table(
       ["name", "icon"],
-      iconProps.map((i) => [
+      (_a2 = meta["svg::inline"]) == null ? void 0 : _a2.map((i) => [
         i,
-        page.page[i]
+        icon(i)
       ])
     );
   }
@@ -105344,7 +105412,7 @@ const Page = (p2) => (source, container, component, filePath) => (scalar, obj) =
   }
 };
 const queryHandlers = (k) => ({
-  Icons: Icons(k),
+  IconPage: IconPage(k),
   BackLinks: BackLinks(k),
   Book: Book(k),
   Kind: kind_table(k),
@@ -105725,7 +105793,7 @@ const codeblockParser = (plugin4) => {
       PageEntry: PageEntry2,
       Kind,
       VideoGallery,
-      Icons: Icons2,
+      IconPage: IconPage2,
       Page: Page2
     } = plugin4.api.queryHandlers;
     if (back_links.test(source)) {
@@ -105805,10 +105873,9 @@ const codeblockParser = (plugin4) => {
         return;
       }
     } else if (icons.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(kind, source, kind_defn);
+      let p2 = evaluate_query_params(plugin4)(kind, source, iconPageDefn);
       if (p2.isOk) {
-        plugin4.warn("about to hand off to Icons");
-        await Icons2(
+        await IconPage2(
           source,
           el,
           ctx,
@@ -105816,7 +105883,7 @@ const codeblockParser = (plugin4) => {
         )(p2.scalar, p2.options);
       } else {
         query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "Icons",
+          "IconPage",
           p2.error,
           p2.param_str
         );
@@ -106028,7 +106095,7 @@ class KindModelPlugin extends Plugin$1 {
     statusBarItemEl.setText("Kind Models");
     statusBarItemEl.addClass("clickable");
     this.addSettingTab(new SettingsTab(this.app, this));
-    log.info(`Reloaded Plugin`);
+    log.info(`ready`);
     this.mount();
   }
   mount() {

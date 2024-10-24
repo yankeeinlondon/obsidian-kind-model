@@ -1,3 +1,4 @@
+
 # Kind Model Plugin
 
 ![banner image](./kind-model-banner-1024.png)
@@ -24,10 +25,10 @@ Ok so I can define a **kind**. Why should I care? What does it do? Before we los
 
   - Adobe Lightroom
     - category: "[[Audio Visual]]",
-    - sub_category: "[[Photo Mgmt]]"
+    - subcategory: "[[Photo Mgmt]]"
   - Apple's Final Cut
     - category: "[[Audio Visual]]",
-    - sub_category: "[[Video Production]]"
+    - subcategory: "[[Video Production]]"
 
   Now since both products have been given the same category, you can click through to the _category page_ and it will automatically (via a dataview query) show both products. This means you can focus on the individual items but also get the _aggregation_ for free. The same applies to the sub-category too but in our example here, they vary and so what you'd see is a more fine grained aggregation of the software that matches both the category and subcategory.
 
@@ -41,18 +42,11 @@ Ok so I can define a **kind**. Why should I care? What does it do? Before we los
 
 All three of these are covered in greater detail in the sections below.
 
-## Classification
+## More Details
 
-TBD
+There are more details should you choose to accept your mission of creating a PR, they can be found here:
 
-## Direct Relationships
+- [Caching](docs/caching.md)
+- [Page API](docs/page-api.md)
+- [Query Handlers](docs/handlers.md)
 
-TBD
-
-## Metrics
-
-TBD
-
-## Other Features
-
-TBD

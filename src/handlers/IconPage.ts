@@ -5,28 +5,24 @@ import KindModelPlugin from "~/main";
 import { ObsidianComponent } from "~/types";
 
 
-export const kind_defn = {
+export const iconPageDefn = {
 	kind: "query-defn",
-	type: "Kind",
-	scalar: [
-		"kind AS string",
-		"category AS opt(string)",
-		"subcategory AS opt(string)",
-	],
+	type: "IconPage",
+	scalar: [],
 	options: {
 		remove_columns: "enum(when,desc,links)",
 		add_columns: "columns()"
 	}
 } as const satisfies QueryDefinition;
 
-export const Icons = (p: KindModelPlugin) => (
+export const IconPage = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: ObsidianComponent | MarkdownPostProcessorContext,
 	filePath: string
 ) => async <
-	TScalar extends ScalarParams<typeof kind_defn>,
-	TOption extends OptionParam<typeof kind_defn>
+	TScalar extends ScalarParams<typeof iconPageDefn>,
+	TOption extends OptionParam<typeof iconPageDefn>
 >(
 	scalar: TScalar,
 	opt: TOption

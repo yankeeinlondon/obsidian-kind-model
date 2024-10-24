@@ -19,7 +19,7 @@ type PageTypeUnits =
 | `url::repo::${RepoOrganization}${"" | `::${RepoName}`}` 
 | "url::news" 
 | "url" 
-| "other";
+| `other::${string}`;
 /**
  * **PropertyType**
  * 
@@ -51,7 +51,7 @@ type PageTypeUnits =
  * - `url` - any other URL
  * - `string::phone` - a string which _looks_ like a phone number
  */
-export type PropertyType = PageTypeUnits | `list::${PageTypeUnits}`
+export type PropertyType = PageTypeUnits | `list::${PageTypeUnits}` | `list::mixed::${string}`
 
 
 

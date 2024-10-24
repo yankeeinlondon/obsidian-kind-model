@@ -455,10 +455,17 @@ export const decomposeTag = (p: KindModelPlugin) => (tag: string): DecomposedTag
 	} as DecomposedKindTag
 
 }
-
+/**
+ * higher order function which after passed the plugin, will take a 
+ * _page reference_ or an object representing a frontmatter key/value
+ * object.
+ * 
+ * This function utility is to ensure regardless of the input type that
+ * a valid Frontmatter type is returned.
+ */
 export const getFrontmatter = (p: KindModelPlugin) => (
 	from: PageReference | Frontmatter
-) => {
+): Frontmatter => {
 	if(isDvPage(from)) {
 		return from.file.frontmatter;
 	} 
@@ -476,8 +483,8 @@ export const getFrontmatter = (p: KindModelPlugin) => (
 	if(page) {
 		return page.file.frontmatter;
 	} else {
-		p.warn(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, {from})
-		return {};
+		p.debug(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, {from})
+		return {} as Frontmatter;
 	}
 }
 
@@ -701,19 +708,23 @@ export const getMetadata = (p: KindModelPlugin) => (
 	pg: PageReference | undefined | Frontmatter
 ): Record<Partial<PropertyType>,string[]> => {
 	const fm = pg ? getFrontmatter(p)(pg) : undefined;
+	const kv: Dictionary = {};
 	
 	if (fm) {
 		let meta: Dictionary<string, any> = {};
-	
+		
 		for (const key of Object.keys(fm)) {
 			const type = getPropertyType(fm[key]);
 			if (meta[type]) {
 				meta[type].push(key);
+				kv[key] = [fm[key], "${type}"]
 			} else {
 				meta["other"] = [key];
+				kv[key] = [fm[key], "other"]
 			}
 		}
 		
+		p.warn("getMetadata() passed FM", {fm, meta, kv})
 		return meta as Record<Partial<PropertyType>,string[]>;
 	} else {
 		p.debug(`no metadata found on page ${pg ? pg : "unknown"}`)

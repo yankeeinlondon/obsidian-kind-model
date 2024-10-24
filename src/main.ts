@@ -92,7 +92,7 @@ export default class KindModelPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		log.info(`Reloaded Plugin`);
+		log.info(`ready`);
 		
 		this.mount();
 	}
