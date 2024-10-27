@@ -1,6 +1,6 @@
 import { Scalar, Tag, parse, transform} from "@markdoc/markdoc";
-import { HeadingLevel, HeadingTag } from "types/frontmatter";
-import KindModelPlugin from "~main";
+import { HeadingLevel, HeadingTag } from "~/types/frontmatter";
+import KindModelPlugin from "~/main";
 
 const isTag = <T extends Tag | Scalar>(v: T): v is T & Tag<string,Record<any,any>> => {
   return typeof v === "object" ? true : false

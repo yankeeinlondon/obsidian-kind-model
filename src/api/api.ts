@@ -2,13 +2,13 @@ import KindModelPlugin from "~/main";
 import { buildingBlocks } from "./buildingBlocks";
 import { getPath } from "./getPath";
 import { createPageView } from "./createPageView";
-import { createPageInfo } from "./createPageInfo";
+import { createPageInfo } from "../page/getPageInfo";
 import { getPage } from "./cache";
 import { formattingApi } from "./formattingApi";
 import { renderApi } from "./renderApi";
 import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
-import { createPageInfoBlock } from "./createPageInfoBlock";
+import { createPageInfoBlock } from "../page/getPageBlock";
 import { queryHandlers } from "~/handlers";
 import { obsidianApi } from "./obsidian";
 

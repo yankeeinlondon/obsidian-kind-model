@@ -15,7 +15,6 @@ import {
 	renderMatches, 
 	removeIcon, 
 	prepareSimpleSearch,  
-	prepareQuery,
 	prepareFuzzySearch,
 	parseYaml,
 	parseLinktext,
@@ -37,7 +36,6 @@ import {
 	getFrontMatterInfo,
 	getBlobArrayBuffer,
 	getAllTags,
-	fuzzySearch,
 	finishRenderMath,
 	debounce,
 	base64ToArrayBuffer,
@@ -67,7 +65,6 @@ export const obsidian_api = {
 	 * Flush the MathJax stylesheet.
 	 */
 	finishRenderMath,
-	fuzzySearch,
 	getAllTags,
 	getBlobArrayBuffer,
 	/**
@@ -143,7 +140,6 @@ export const obsidian_api = {
 	 * @return — fn - the callback function to apply the search on.
 	 */
 	prepareFuzzySearch,
-	prepareQuery,
 	/**
 	 * Construct a simple search callback that runs on a target string.
 	 * 

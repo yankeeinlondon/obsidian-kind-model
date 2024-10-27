@@ -6580,7 +6580,7 @@ var Values;
       return { type: "number", value: val };
     else if (isString2(val))
       return { type: "string", value: val };
-    else if (isBoolean(val))
+    else if (isBoolean2(val))
       return { type: "boolean", value: val };
     else if (isDuration(val))
       return { type: "duration", value: val };
@@ -6784,10 +6784,10 @@ var Values;
     return Array.isArray(val);
   }
   Values2.isArray = isArray2;
-  function isBoolean(val) {
+  function isBoolean2(val) {
     return typeof val === "boolean";
   }
-  Values2.isBoolean = isBoolean;
+  Values2.isBoolean = isBoolean2;
   function isLink2(val) {
     return val instanceof Link;
   }
@@ -6864,11 +6864,11 @@ class Link {
   }
   static infer(linkpath, embed = false, display) {
     if (linkpath.includes("#^")) {
-      let split = linkpath.split("#^");
-      return Link.block(split[0], split[1], embed, display);
+      let split2 = linkpath.split("#^");
+      return Link.block(split2[0], split2[1], embed, display);
     } else if (linkpath.includes("#")) {
-      let split = linkpath.split("#");
-      return Link.header(split[0], split[1], embed, display);
+      let split2 = linkpath.split("#");
+      return Link.header(split2[0], split2[1], embed, display);
     } else
       return Link.file(linkpath, embed, display);
   }
@@ -9603,6 +9603,34 @@ function createConstant$1(kind) {
     kind
   };
 }
+var LOWER_ALPHA_CHARS = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z"
+];
 var NUMERIC_CHAR = [
   "0",
   "1",
@@ -9752,10 +9780,77 @@ var SIMPLE_TOKENS = [
   ...SIMPLE_CONTAINER_TOKENS,
   ...SIMPLE_UNION_TOKENS
 ];
+var US_STATE_LOOKUP_STRICT = [
+  { name: "Alabama", abbrev: "AL" },
+  { name: "Alaska", abbrev: "AK" },
+  { name: "Arizona", abbrev: "AZ" },
+  { name: "Arkansas", abbrev: "AR" },
+  { name: "California", abbrev: "CA" },
+  { name: "Colorado", abbrev: "CO" },
+  { name: "Connecticut", abbrev: "CT" },
+  { name: "Delaware", abbrev: "DE" },
+  { name: "Florida", abbrev: "FL" },
+  { name: "Georgia", abbrev: "GA" },
+  { name: "Hawaii", abbrev: "HI" },
+  { name: "Idaho", abbrev: "ID" },
+  { name: "Illinois", abbrev: "IL" },
+  { name: "Indiana", abbrev: "IN" },
+  { name: "Iowa", abbrev: "IA" },
+  { name: "Kansas", abbrev: "KS" },
+  { name: "Kentucky", abbrev: "KY" },
+  { name: "Louisiana", abbrev: "LA" },
+  { name: "Maine", abbrev: "ME" },
+  { name: "Maryland", abbrev: "MD" },
+  { name: "Massachusetts", abbrev: "MA" },
+  { name: "Michigan", abbrev: "MI" },
+  { name: "Minnesota", abbrev: "MN" },
+  { name: "Mississippi", abbrev: "MS" },
+  { name: "Missouri", abbrev: "MO" },
+  { name: "Montana", abbrev: "MT" },
+  { name: "Nebraska", abbrev: "NE" },
+  { name: "Nevada", abbrev: "NV" },
+  { name: "New Hampshire", abbrev: "NH" },
+  { name: "New Jersey", abbrev: "NJ" },
+  { name: "New Mexico", abbrev: "NM" },
+  { name: "New York", abbrev: "NY" },
+  { name: "North Carolina", abbrev: "NC" },
+  { name: "North Dakota", abbrev: "ND" },
+  { name: "Ohio", abbrev: "OH" },
+  { name: "Oklahoma", abbrev: "OK" },
+  { name: "Oregon", abbrev: "OR" },
+  { name: "Pennsylvania", abbrev: "PA" },
+  { name: "Rhode Island", abbrev: "RI" },
+  { name: "South Carolina", abbrev: "SC" },
+  { name: "South Dakota", abbrev: "SD" },
+  { name: "Tennessee", abbrev: "TN" },
+  { name: "Texas", abbrev: "TX" },
+  { name: "Utah", abbrev: "UT" },
+  { name: "Vermont", abbrev: "VT" },
+  { name: "Virginia", abbrev: "VA" },
+  { name: "Washington", abbrev: "WA" },
+  { name: "West Virginia", abbrev: "WV" },
+  { name: "Wisconsin", abbrev: "WI" },
+  { name: "Wyoming", abbrev: "WY" }
+];
+var US_STATE_LOOKUP_PROVINCES = [
+  { name: "Puerto Rico", abbrev: "PR" },
+  { name: "Virgin Islands", abbrev: "VI" },
+  { name: "Palau", abbrev: "PW" },
+  { name: "Federated States of Micronesia", abbrev: "FM" },
+  { name: "Northern Mariana Islands", abbrev: "MP" },
+  { name: "District of Columbia", abbrev: "DC" },
+  { name: "Marshall Islands", abbrev: "MH" },
+  { name: "American Samoa", abbrev: "AS" },
+  { name: "Guam", abbrev: "GU" }
+];
+var US_STATE_LOOKUP = [
+  ...US_STATE_LOOKUP_STRICT,
+  ...US_STATE_LOOKUP_PROVINCES
+];
 var REPO_SOURCE_LOOKUP = {
-  "github": [`github.com`, "github.io"],
-  "bitbucket": ["bitbucket.com"],
-  "gitlab": ["gitlab.com"],
+  "github": [`https://github.com`, "https://github.io"],
+  "bitbucket": ["https://bitbucket.org"],
+  "gitlab": ["https://gitlab.com"],
   "codecommit": ["https://aws.amazon.com/codecommit/"],
   "local": []
 };
@@ -9767,6 +9862,913 @@ var NETWORK_PROTOCOL_LOOKUP = {
   ssh: ["", "ssh"],
   "scp": ["", "scp"]
 };
+var WHITESPACE_CHARS = [
+  " ",
+  "\n",
+  "	",
+  "\b"
+];
+var AMAZON_DNS = [
+  "www.amazon.com",
+  `www.amazon.co.uk`,
+  `www.amazon.fr`,
+  `www.amazon.de`,
+  `www.amazon.it`,
+  `www.amazon.es`
+];
+var APPLE_DNS = [
+  "store.apple.com",
+  "www.apple.com"
+];
+var HOME_DEPOT_DNS = [
+  "www.homedepot.com",
+  "www.homedepot.ca"
+];
+var EBAY_DNS = [
+  "www.ebay.com",
+  "www.ebay.co.uk",
+  "www.ebay.fr",
+  "www.ebay.de",
+  "www.ebay.it"
+];
+var TARGET_DNS = [
+  "www.target.com"
+];
+var ETSY_DNS = [
+  "www.etsy.com"
+];
+var COSTCO_DNS = [
+  "www.costco.com",
+  "www.costco.co.uk",
+  "www.costco.ca"
+];
+var BEST_BUY_DNS = [
+  "www.bestbuy.com",
+  "www.bestbuy.ca"
+];
+var WAYFAIR_DNS = [
+  "www.wayfair.com",
+  "www.wayfair.ca",
+  "www.wayfair.co.uk"
+];
+var NIKE_DNS = [
+  "www.nike.com"
+];
+var MACYS_DNS = [
+  "www.macys.com"
+];
+var DELL_DNS = [
+  "www.dell.com"
+];
+var HM_DNS = [
+  "www2.hm.com"
+];
+var ZARA_DNS = [
+  "www.zara.com"
+];
+var KROGER_DNS = [
+  "www.kroger.com"
+];
+var WALGREENS_DNS = [
+  "www.walgreens.com"
+];
+var CVS_DNS = [
+  "www.cvs.com"
+];
+var WHOLE_FOODS_DNS = [
+  "www.wholefoodsmarket.com",
+  "www.wholefoodsmarket.co.uk"
+];
+var ISO3166_1 = [
+  { name: "Afghanistan", alpha2: "AF", countryCode: "004", alpha3: "AFG" },
+  { name: "Albania", alpha2: "AL", countryCode: "008", alpha3: "ALB" },
+  { name: "Algeria", alpha2: "DZ", countryCode: "012", alpha3: "DZA" },
+  { name: "Andorra", alpha2: "AD", countryCode: "020", alpha3: "AND" },
+  { name: "Angola", alpha2: "AO", countryCode: "024", alpha3: "AGO" },
+  { name: "Argentina", alpha2: "AR", countryCode: "032", alpha3: "ARG" },
+  { name: "Australia", alpha2: "AU", countryCode: "036", alpha3: "AUS" },
+  { name: "Austria", alpha2: "AT", countryCode: "040", alpha3: "AUT" },
+  { name: "Azerbaijan", alpha2: "AZ", countryCode: "031", alpha3: "AZE" },
+  { name: "Bahamas", alpha2: "BS", countryCode: "044", alpha3: "BHS" },
+  { name: "Bangladesh", alpha2: "BD", countryCode: "050", alpha3: "BGD" },
+  { name: "Belgium", alpha2: "BE", countryCode: "056", alpha3: "BEL" },
+  { name: "Belize", alpha2: "BZ", countryCode: "084", alpha3: "BLZ" },
+  { name: "Benin", alpha2: "BJ", countryCode: "204", alpha3: "BEN" },
+  { name: "Bhutan", alpha2: "BT", countryCode: "064", alpha3: "BTN" },
+  { name: "Bolivia", alpha2: "BO", countryCode: "068", alpha3: "BOL" },
+  { name: "Bosnia and Herzegovina", alpha2: "BA", countryCode: "070", alpha3: "BIH" },
+  { name: "Botswana", alpha2: "BW", countryCode: "072", alpha3: "BWA" },
+  { name: "Brazil", alpha2: "BR", countryCode: "076", alpha3: "BRA" },
+  { name: "Brunei Darussalam", alpha2: "BN", countryCode: "096", alpha3: "BRN" },
+  { name: "Bulgaria", alpha2: "BG", countryCode: "100", alpha3: "BGR" },
+  { name: "Burkina Faso", alpha2: "BF", countryCode: "854", alpha3: "BFA" },
+  { name: "Burundi", alpha2: "BI", countryCode: "108", alpha3: "BDI" },
+  { name: "Cambodia", alpha2: "KH", countryCode: "116", alpha3: "KHM" },
+  { name: "Cameroon", alpha2: "CM", countryCode: "120", alpha3: "CMR" },
+  { name: "Canada", alpha2: "CA", countryCode: "124", alpha3: "CAN" },
+  { name: "Afghanistan", alpha2: "AF", countryCode: "004", alpha3: "AFG" },
+  { name: "Albania", alpha2: "AL", countryCode: "008", alpha3: "ALB" },
+  { name: "Algeria", alpha2: "DZ", countryCode: "012", alpha3: "DZA" },
+  { name: "Andorra", alpha2: "AD", countryCode: "020", alpha3: "AND" },
+  { name: "Angola", alpha2: "AO", countryCode: "024", alpha3: "AGO" },
+  { name: "Argentina", alpha2: "AR", countryCode: "032", alpha3: "ARG" },
+  { name: "Australia", alpha2: "AU", countryCode: "036", alpha3: "AUS" },
+  { name: "Austria", alpha2: "AT", countryCode: "040", alpha3: "AUT" },
+  { name: "Azerbaijan", alpha2: "AZ", countryCode: "031", alpha3: "AZE" },
+  { name: "Bahamas", alpha2: "BS", countryCode: "044", alpha3: "BHS" },
+  { name: "Bangladesh", alpha2: "BD", countryCode: "050", alpha3: "BGD" },
+  { name: "Belgium", alpha2: "BE", countryCode: "056", alpha3: "BEL" },
+  { name: "Belize", alpha2: "BZ", countryCode: "084", alpha3: "BLZ" },
+  { name: "Benin", alpha2: "BJ", countryCode: "204", alpha3: "BEN" },
+  { name: "Bhutan", alpha2: "BT", countryCode: "064", alpha3: "BTN" },
+  { name: "Bolivia", alpha2: "BO", countryCode: "068", alpha3: "BOL" },
+  { name: "Bosnia and Herzegovina", alpha2: "BA", countryCode: "070", alpha3: "BIH" },
+  { name: "Botswana", alpha2: "BW", countryCode: "072", alpha3: "BWA" },
+  { name: "Brazil", alpha2: "BR", countryCode: "076", alpha3: "BRA" },
+  { name: "Brunei Darussalam", alpha2: "BN", countryCode: "096", alpha3: "BRN" },
+  { name: "Bulgaria", alpha2: "BG", countryCode: "100", alpha3: "BGR" },
+  { name: "Burkina Faso", alpha2: "BF", countryCode: "854", alpha3: "BFA" },
+  { name: "Burundi", alpha2: "BI", countryCode: "108", alpha3: "BDI" },
+  { name: "Cambodia", alpha2: "KH", countryCode: "116", alpha3: "KHM" },
+  { name: "Cameroon", alpha2: "CM", countryCode: "120", alpha3: "CMR" },
+  { name: "Canada", alpha2: "CA", countryCode: "124", alpha3: "CAN" },
+  { name: "Maldives", alpha2: "MV", countryCode: "462", alpha3: "MDV" },
+  { name: "Mali", alpha2: "ML", countryCode: "466", alpha3: "MLI" },
+  { name: "Malta", alpha2: "MT", countryCode: "470", alpha3: "MLT" },
+  { name: "Marshall Islands", alpha2: "MH", countryCode: "584", alpha3: "MHL" },
+  { name: "Mauritania", alpha2: "MR", countryCode: "478", alpha3: "MRT" },
+  { name: "Mauritius", alpha2: "MU", countryCode: "480", alpha3: "MUS" },
+  { name: "Mexico", alpha2: "MX", countryCode: "484", alpha3: "MEX" },
+  { name: "Micronesia (Federated States of)", alpha2: "FM", countryCode: "583", alpha3: "FSM" },
+  { name: "Moldova (Republic of)", alpha2: "MD", countryCode: "498", alpha3: "MDA" },
+  { name: "Monaco", alpha2: "MC", countryCode: "492", alpha3: "MCO" },
+  { name: "Mongolia", alpha2: "MN", countryCode: "496", alpha3: "MNG" },
+  { name: "Montenegro", alpha2: "ME", countryCode: "499", alpha3: "MNE" },
+  { name: "Morocco", alpha2: "MA", countryCode: "504", alpha3: "MAR" },
+  { name: "Mozambique", alpha2: "MZ", countryCode: "508", alpha3: "MOZ" },
+  { name: "Myanmar", alpha2: "MM", countryCode: "104", alpha3: "MMR" },
+  { name: "Namibia", alpha2: "NA", countryCode: "516", alpha3: "NAM" },
+  { name: "Nauru", alpha2: "NR", countryCode: "520", alpha3: "NRU" },
+  { name: "Nepal", alpha2: "NP", countryCode: "524", alpha3: "NPL" },
+  { name: "Netherlands", alpha2: "NL", countryCode: "528", alpha3: "NLD" },
+  { name: "New Zealand", alpha2: "NZ", countryCode: "554", alpha3: "NZL" },
+  { name: "Nicaragua", alpha2: "NI", countryCode: "558", alpha3: "NIC" },
+  { name: "Niger", alpha2: "NE", countryCode: "562", alpha3: "NER" },
+  { name: "Nigeria", alpha2: "NG", countryCode: "566", alpha3: "NGA" },
+  { name: "North Macedonia", alpha2: "MK", countryCode: "807", alpha3: "MKD" },
+  { name: "Norway", alpha2: "NO", countryCode: "578", alpha3: "NOR" },
+  { name: "Oman", alpha2: "OM", countryCode: "512", alpha3: "OMN" },
+  { name: "Pakistan", alpha2: "PK", countryCode: "586", alpha3: "PAK" },
+  { name: "Palau", alpha2: "PW", countryCode: "585", alpha3: "PLW" },
+  { name: "Panama", alpha2: "PA", countryCode: "591", alpha3: "PAN" },
+  { name: "Papua New Guinea", alpha2: "PG", countryCode: "598", alpha3: "PNG" },
+  { name: "Paraguay", alpha2: "PY", countryCode: "600", alpha3: "PRY" },
+  { name: "Peru", alpha2: "PE", countryCode: "604", alpha3: "PER" },
+  { name: "Philippines", alpha2: "PH", countryCode: "608", alpha3: "PHL" },
+  { name: "Poland", alpha2: "PL", countryCode: "616", alpha3: "POL" },
+  { name: "Portugal", alpha2: "PT", countryCode: "620", alpha3: "PRT" },
+  { name: "Qatar", alpha2: "QA", countryCode: "634", alpha3: "QAT" },
+  { name: "Romania", alpha2: "RO", countryCode: "642", alpha3: "ROU" },
+  { name: "Russian Federation", alpha2: "RU", countryCode: "643", alpha3: "RUS" },
+  { name: "Rwanda", alpha2: "RW", countryCode: "646", alpha3: "RWA" },
+  { name: "Saint Kitts and Nevis", alpha2: "KN", countryCode: "659", alpha3: "KNA" },
+  { name: "Saint Lucia", alpha2: "LC", countryCode: "662", alpha3: "LCA" },
+  { name: "Saint Vincent and the Grenadines", alpha2: "VC", countryCode: "670", alpha3: "VCT" },
+  { name: "Samoa", alpha2: "WS", countryCode: "882", alpha3: "WSM" },
+  { name: "San Marino", alpha2: "SM", countryCode: "674", alpha3: "SMR" },
+  { name: "Sao Tome and Principe", alpha2: "ST", countryCode: "678", alpha3: "STP" },
+  { name: "Saudi Arabia", alpha2: "SA", countryCode: "682", alpha3: "SAU" },
+  { name: "Senegal", alpha2: "SN", countryCode: "686", alpha3: "SEN" },
+  { name: "Serbia", alpha2: "RS", countryCode: "688", alpha3: "SRB" },
+  { name: "Seychelles", alpha2: "SC", countryCode: "690", alpha3: "SYC" },
+  { name: "Sierra Leone", alpha2: "SL", countryCode: "694", alpha3: "SLE" },
+  { name: "Singapore", alpha2: "SG", countryCode: "702", alpha3: "SGP" },
+  { name: "Slovakia", alpha2: "SK", countryCode: "703", alpha3: "SVK" },
+  { name: "Slovenia", alpha2: "SI", countryCode: "705", alpha3: "SVN" },
+  { name: "Solomon Islands", alpha2: "SB", countryCode: "090", alpha3: "SLB" },
+  { name: "Somalia", alpha2: "SO", countryCode: "706", alpha3: "SOM" },
+  { name: "South Africa", alpha2: "ZA", countryCode: "710", alpha3: "ZAF" },
+  { name: "South Sudan", alpha2: "SS", countryCode: "728", alpha3: "SSD" },
+  { name: "Spain", alpha2: "ES", countryCode: "724", alpha3: "ESP" },
+  { name: "Sri Lanka", alpha2: "LK", countryCode: "144", alpha3: "LKA" },
+  { name: "Sudan", alpha2: "SD", countryCode: "729", alpha3: "SDN" },
+  { name: "Suriname", alpha2: "SR", countryCode: "740", alpha3: "SUR" },
+  { name: "Sweden", alpha2: "SE", countryCode: "752", alpha3: "SWE" },
+  { name: "Switzerland", alpha2: "CH", countryCode: "756", alpha3: "CHE" },
+  { name: "Syrian Arab Republic", alpha2: "SY", countryCode: "760", alpha3: "SYR" },
+  { name: "Taiwan", alpha2: "TW", countryCode: "158", alpha3: "TWN" },
+  { name: "Tajikistan", alpha2: "TJ", countryCode: "762", alpha3: "TJK" },
+  { name: "Tanzania", alpha2: "TZ", countryCode: "834", alpha3: "TZA" },
+  { name: "Thailand", alpha2: "TH", countryCode: "764", alpha3: "THA" },
+  { name: "Timor-Leste", alpha2: "TL", countryCode: "626", alpha3: "TLS" },
+  { name: "Togo", alpha2: "TG", countryCode: "768", alpha3: "TGO" },
+  { name: "Tonga", alpha2: "TO", countryCode: "776", alpha3: "TON" },
+  { name: "Tonga", alpha2: "TO", countryCode: "776", alpha3: "TON" },
+  { name: "Trinidad and Tobago", alpha2: "TT", countryCode: "780", alpha3: "TTO" },
+  { name: "Tunisia", alpha2: "TN", countryCode: "788", alpha3: "TUN" },
+  { name: "Turkey", alpha2: "TR", countryCode: "792", alpha3: "TUR" },
+  { name: "Turkmenistan", alpha2: "TM", countryCode: "795", alpha3: "TKM" },
+  { name: "Tuvalu", alpha2: "TV", countryCode: "798", alpha3: "TUV" },
+  { name: "Uganda", alpha2: "UG", countryCode: "800", alpha3: "UGA" },
+  { name: "Ukraine", alpha2: "UA", countryCode: "804", alpha3: "UKR" },
+  { name: "United Arab Emirates", alpha2: "AE", countryCode: "784", alpha3: "ARE" },
+  { name: "United Kingdom", alpha2: "GB", countryCode: "826", alpha3: "GBR" },
+  { name: "United States of America", alpha2: "US", countryCode: "840", alpha3: "USA" },
+  { name: "Uruguay", alpha2: "UY", countryCode: "858", alpha3: "URY" },
+  { name: "Uzbekistan", alpha2: "UZ", countryCode: "860", alpha3: "UZB" },
+  { name: "Vanuatu", alpha2: "VU", countryCode: "548", alpha3: "VUT" },
+  { name: "Venezuela", alpha2: "VE", countryCode: "862", alpha3: "VEN" },
+  { name: "Viet Nam", alpha2: "VN", countryCode: "704", alpha3: "VNM" },
+  { name: "Yemen", alpha2: "YE", countryCode: "887", alpha3: "YEM" },
+  { name: "Zambia", alpha2: "ZM", countryCode: "894", alpha3: "ZMB" },
+  { name: "Zimbabwe", alpha2: "ZW", countryCode: "716", alpha3: "ZWE" }
+];
+var DISTANCE_METRICS_LOOKUP = [
+  { abbrev: "km", name: "kilometer" },
+  { abbrev: "mi", name: "mile" },
+  { abbrev: "mm", name: "millimeter" },
+  { abbrev: "cm", name: "centimeter" },
+  { abbrev: "yd", name: "yard" },
+  { abbrev: "ft", name: "foot" },
+  { abbrev: "in", name: "inch" },
+  { abbrev: "m", name: "meter" },
+  { abbrev: "nm", name: "nautical mile" },
+  { abbrev: "nmi", name: "nanometer" },
+  { abbrev: "µm", name: "micrometer" },
+  { abbrev: "dm", name: "decimeter" },
+  { abbrev: "AU", name: "astronomical unit" },
+  { abbrev: "ly", name: "light year" },
+  { abbrev: "pc", name: "parsec" }
+];
+var MASS_METRICS_LOOKUP = [
+  { abbrev: "g", name: "gram" },
+  { abbrev: "kg", name: "kilogram" },
+  { abbrev: "mg", name: "milligram" },
+  { abbrev: "µg", name: "microgram" },
+  { abbrev: "t", name: "tonne" },
+  { abbrev: "lb", name: "pound" },
+  { abbrev: "oz", name: "ounce" },
+  { abbrev: "st", name: "stone" },
+  { abbrev: "ct", name: "carat" },
+  { abbrev: "Mt", name: "megatonne" },
+  { abbrev: "gt", name: "gigatonne" },
+  { abbrev: "slug", name: "slug" },
+  { abbrev: "dr", name: "dram" },
+  { abbrev: "gr", name: "grain" },
+  { abbrev: "q", name: "quintal" }
+];
+var SPEED_METRICS_LOOKUP = [
+  { abbrev: "m/s", name: "meters per second" },
+  { abbrev: "km/h", name: "kilometers per hour" },
+  { abbrev: "mph", name: "miles per hour" },
+  { abbrev: "kn", name: "knot" },
+  { abbrev: "ft/s", name: "feet per second" },
+  { abbrev: "c", name: "speed of light" },
+  { abbrev: "mach", name: "mach" },
+  { abbrev: "cm/s", name: "centimeters per second" },
+  { abbrev: "in/s", name: "inches per second" },
+  { abbrev: "ly/y", name: "light years per year" }
+];
+var ACCELERATION_METRICS_LOOKUP = [
+  { abbrev: "m/s²", name: "meters per second squared" },
+  { abbrev: "ft/s²", name: "feet per second squared" },
+  { abbrev: "g", name: "g-force" },
+  { abbrev: "Gal", name: "galileo" },
+  { abbrev: "cm/s²", name: "centimeters per second squared" },
+  { abbrev: "km/h²", name: "kilometers per hour squared" },
+  { abbrev: "in/s²", name: "inches per second squared" },
+  { abbrev: "mi/h²", name: "miles per hour squared" },
+  { abbrev: "kn/s²", name: "knots per second squared" }
+];
+var TEMPERATURE_METRICS_LOOKUP = [
+  { abbrev: "°C", name: "celsius" },
+  { abbrev: "°F", name: "fahrenheit" },
+  { abbrev: "K", name: "kelvin" }
+];
+var PRESSURE_METRICS_LOOKUP = [
+  { abbrev: "Pa", name: "pascal" },
+  { abbrev: "bar", name: "bar" },
+  { abbrev: "atm", name: "atmosphere" },
+  { abbrev: "mmHg", name: "millimeters of mercury" },
+  { abbrev: "psi", name: "pounds per square inch" }
+];
+var ENERGY_METRICS_LOOKUP = [
+  { abbrev: "J", name: "joule" },
+  { abbrev: "cal", name: "calorie" },
+  { abbrev: "kcal", name: "kilocalorie" },
+  { abbrev: "kWh", name: "kilowatt-hour" },
+  { abbrev: "BTU", name: "british thermal unit" },
+  { abbrev: "eV", name: "electronvolt" }
+];
+var TIME_METRICS_LOOKUP = [
+  { abbrev: "s", name: "second" },
+  { abbrev: "m", name: "minute" },
+  { abbrev: "h", name: "hour" },
+  { abbrev: "day", name: "day" },
+  { abbrev: "week", name: "week" },
+  { abbrev: "mo", name: "month" },
+  { abbrev: "ms", name: "millisecond" },
+  { abbrev: "µs", name: "microsecond" },
+  { abbrev: "ns", name: "nanosecond" }
+];
+var POWER_METRICS_LOOKUP = [
+  { abbrev: "W", name: "Watt" },
+  { abbrev: "kW", name: "kilowatt" },
+  { abbrev: "MW", name: "megawatt" },
+  { abbrev: "hp", name: "horsepower" },
+  { abbrev: "GW", name: "gigawatt" }
+];
+var FREQUENCY_METRICS_LOOKUP = [
+  { abbrev: "Hz", name: "hertz" },
+  { abbrev: "kHz", name: "kilohertz" },
+  { abbrev: "MHz", name: "megahertz" },
+  { abbrev: "GHz", name: "gigahertz" },
+  { abbrev: "THz", name: "terahertz" }
+];
+var VOLTAGE_METRICS_LOOKUP = [
+  { abbrev: "V", name: "volt" },
+  { abbrev: "kV", name: "kilovolt" },
+  { abbrev: "mV", name: "millivolt" },
+  { abbrev: "µV", name: "microvolt" }
+];
+var CURRENT_METRICS_LOOKUP = [
+  { abbrev: "A", name: "ampere" },
+  { abbrev: "mA", name: "milliampere" },
+  { abbrev: "µA", name: "microampere" },
+  { abbrev: "kA", name: "kiloampere" }
+];
+var LUMINOSITY_METRICS_LOOKUP = [
+  { abbrev: "cd", name: "candela" },
+  { abbrev: "lm", name: "lumen" },
+  { abbrev: "lx", name: "lux" }
+];
+var AREA_METRICS_LOOKUP = [
+  { abbrev: "m²", name: "square meter" },
+  { abbrev: "cm²", name: "square centimeter" },
+  { abbrev: "mm²", name: "square millimeter" },
+  { abbrev: "km²", name: "square kilometer" },
+  { abbrev: "ft²", name: "square foot" },
+  { abbrev: "in²", name: "square inch" },
+  { abbrev: "acre", name: "acre" },
+  { abbrev: "ha", name: "hectare" }
+];
+var US_NEWS = [
+  { company: "New York Times", baseUrls: ["www.nytimes.com"] },
+  { company: "CNN", baseUrls: ["www.cnn.com"] },
+  { company: "Fox News", baseUrls: ["www.foxnews.com"] },
+  { company: "NBC News", baseUrls: ["www.nbcnews.com", "www.msnbc.com"] },
+  { company: "ABC News", baseUrls: ["abcnews.go.com"] },
+  { company: "The Washington Post", baseUrls: ["www.washingtonpost.com"] },
+  { company: "USA Today", baseUrls: ["www.usatoday.com"] },
+  { company: "Bloomberg", baseUrls: ["www.bloomberg.com"] },
+  { company: "NPR", baseUrls: ["www.npr.org"] },
+  { company: "CBS News", baseUrls: ["www.cbsnews.com"] },
+  { company: "The Wall Street Journal", baseUrls: ["www.wsj.com"] },
+  { company: "Associated Press (AP)", baseUrls: ["www.apnews.com", "www.ap.org"] },
+  { company: "Reuters", baseUrls: ["www.reuters.com"] },
+  { company: "Newsweek", baseUrls: ["www.newsweek.com"] },
+  { company: "Politico", baseUrls: ["www.politico.com"] },
+  { company: "The Atlantic", baseUrls: ["www.theatlantic.com"] },
+  { company: "Nexstar Media Group", baseUrls: ["www.nexstar.tv"] },
+  { company: "PBS News", baseUrls: ["www.pbs.org"] },
+  { company: "HuffPost", baseUrls: ["www.huffpost.com"] },
+  { company: "The Boston Globe", baseUrls: ["www.bostonglobe.com"] }
+];
+var UK_NEWS = [
+  { company: "BBC", baseUrls: ["www.bbc.co.uk", "www.bbc.com"] },
+  { company: "The Guardian", baseUrls: ["www.theguardian.com/uk"] },
+  { company: "The Daily Mail", baseUrls: ["www.dailymail.co.uk"] },
+  { company: "The Sun", baseUrls: ["www.thesun.co.uk"] },
+  { company: "The Times", baseUrls: ["www.thetimes.co.uk"] },
+  { company: "Sky News", baseUrls: ["news.sky.com"] },
+  { company: "The Telegraph", baseUrls: ["www.telegraph.co.uk"] },
+  { company: "ITV News", baseUrls: ["www.itv.com/news"] },
+  { company: "Financial Times", baseUrls: ["www.ft.com"] },
+  { company: "Metro", baseUrls: ["www.metro.co.uk"] },
+  { company: "The Independent", baseUrls: ["www.independent.co.uk"] },
+  { company: "Evening Standard", baseUrls: ["www.standard.co.uk"] },
+  { company: "Daily Mirror", baseUrls: ["www.mirror.co.uk"] },
+  { company: "Channel 4 News", baseUrls: ["www.channel4.com/news"] },
+  { company: "LBC", baseUrls: ["www.lbc.co.uk"] },
+  { company: "Daily Express", baseUrls: ["www.express.co.uk"] },
+  { company: "Birmingham Mail", baseUrls: ["www.birminghammail.co.uk"] },
+  { company: "Manchester Evening News", baseUrls: ["www.manchestereveningnews.co.uk"] },
+  { company: "The Scotsman", baseUrls: ["www.scotsman.com"] },
+  { company: "Daily Record", baseUrls: ["www.dailyrecord.co.uk"] }
+];
+var GERMAN_NEWS = [
+  { company: "BILD", baseUrls: ["www.bild.de"] },
+  { company: "Die Zeit", baseUrls: ["www.zeit.de"] },
+  { company: "Frankfurter Allgemeine Zeitung", baseUrls: ["www.faz.net"] },
+  { company: "Süddeutsche Zeitung", baseUrls: ["www.sueddeutsche.de"] },
+  { company: "Der Spiegel", baseUrls: ["www.spiegel.de"] },
+  { company: "Die Welt", baseUrls: ["www.welt.de"] },
+  { company: "Tagesschau", baseUrls: ["www.tagesschau.de"] },
+  { company: "t-online", baseUrls: ["www.t-online.de"] },
+  { company: "n-tv", baseUrls: ["www.n-tv.de"] },
+  { company: "Handelsblatt", baseUrls: ["www.handelsblatt.com"] },
+  { company: "Focus Online", baseUrls: ["www.focus.de"] },
+  { company: "Frankfurter Rundschau", baseUrls: ["www.fr.de", "www.fr-online.de"] },
+  { company: "taz - die tageszeitung", baseUrls: ["www.taz.de"] },
+  { company: "Der Tagesspiegel", baseUrls: ["www.tagesspiegel.de"] },
+  { company: "Rheinische Post", baseUrls: ["www.rp-online.de"] },
+  { company: "Express", baseUrls: ["www.express.de"] },
+  { company: "Münchner Merkur", baseUrls: ["www.merkur.de"] },
+  { company: "Stuttgarter Zeitung", baseUrls: ["www.stuttgarter-zeitung.de"] },
+  { company: "Hamburger Abendblatt", baseUrls: ["www.abendblatt.de"] },
+  { company: "Deutsche Welle", baseUrls: ["www.dw.com"] }
+];
+var FRENCH_NEWS = [
+  { company: "Le Figaro", baseUrls: ["www.lefigaro.fr"] },
+  { company: "Le Monde", baseUrls: ["www.lemonde.fr"] },
+  { company: "France 24", baseUrls: ["www.france24.com"] },
+  { company: "Libération", baseUrls: ["www.liberation.fr"] },
+  { company: "Les Echos", baseUrls: ["www.lesechos.fr"] },
+  { company: "Ouest-France", baseUrls: ["www.ouest-france.fr"] },
+  { company: "Le Parisien", baseUrls: ["www.leparisien.fr"] },
+  { company: "Mediapart", baseUrls: ["www.mediapart.fr"] },
+  { company: "L'Express", baseUrls: ["www.lexpress.fr"] },
+  { company: "La Croix", baseUrls: ["www.la-croix.com"] },
+  { company: "20 Minutes", baseUrls: ["www.20minutes.fr"] },
+  { company: "Courrier International", baseUrls: ["www.courrierinternational.com"] },
+  { company: "Le Point", baseUrls: ["www.lepoint.fr"] },
+  { company: "Marianne", baseUrls: ["www.marianne.net"] },
+  { company: "BFM TV", baseUrls: ["www.bfmtv.com"] },
+  { company: "RTL France", baseUrls: ["www.rtl.fr"] },
+  { company: "Charlie Hebdo", baseUrls: ["www.charliehebdo.fr"] },
+  { company: "Challenges", baseUrls: ["www.challenges.fr"] },
+  { company: "Télérama", baseUrls: ["www.telerama.fr"] },
+  { company: "L'Obs", baseUrls: ["www.nouvelobs.com"] }
+];
+var CANADIAN_NEWS = [
+  { company: "CBC News", baseUrls: ["www.cbc.ca"] },
+  { company: "CTV News", baseUrls: ["www.ctvnews.ca"] },
+  { company: "The Globe and Mail", baseUrls: ["www.theglobeandmail.com"] },
+  { company: "Global News", baseUrls: ["www.globalnews.ca"] },
+  { company: "Toronto Star", baseUrls: ["www.thestar.com"] },
+  { company: "National Post", baseUrls: ["www.nationalpost.com"] },
+  { company: "La Presse", baseUrls: ["www.lapresse.ca"] },
+  { company: "Radio-Canada", baseUrls: ["ici.radio-canada.ca"] },
+  { company: "The Canadian Press", baseUrls: ["www.thecanadianpress.com"] },
+  { company: "Financial Post", baseUrls: ["financialpost.com"] },
+  { company: "The Weather Network", baseUrls: ["www.theweathernetwork.com"] },
+  { company: "Le Devoir", baseUrls: ["www.ledevoir.com"] },
+  { company: "TVA Nouvelles", baseUrls: ["www.tvanouvelles.ca"] },
+  { company: "Journal de Montréal", baseUrls: ["www.journaldemontreal.com"] },
+  { company: "CityNews", baseUrls: ["www.citynews.ca"] },
+  { company: "BNN Bloomberg", baseUrls: ["www.bnnbloomberg.ca"] },
+  { company: "The Hamilton Spectator", baseUrls: ["www.thespec.com"] },
+  { company: "Ottawa Citizen", baseUrls: ["ottawacitizen.com"] },
+  { company: "Windsor Star", baseUrls: ["windsorstar.com"] },
+  { company: "Edmonton Journal", baseUrls: ["edmontonjournal.com"] }
+];
+var DUTCH_NEWS = [
+  { company: "Algemeen Dagblad (AD)", baseUrls: ["www.ad.nl"] },
+  { company: "NOS", baseUrls: ["www.nos.nl"] },
+  { company: "De Telegraaf", baseUrls: ["www.telegraaf.nl"] },
+  { company: "NU.nl", baseUrls: ["www.nu.nl"] },
+  { company: "Volkskrant", baseUrls: ["www.volkskrant.nl"] },
+  { company: "NRC Handelsblad", baseUrls: ["www.nrc.nl"] },
+  { company: "Trouw", baseUrls: ["www.trouw.nl"] },
+  { company: "Het Parool", baseUrls: ["www.parool.nl"] },
+  { company: "RTL Nieuws", baseUrls: ["www.rtlnieuws.nl"] },
+  { company: "BNR Nieuwsradio", baseUrls: ["www.bnr.nl"] },
+  { company: "Emerce", baseUrls: ["www.emerce.nl"] },
+  { company: "VPRO", baseUrls: ["www.vpro.nl"] },
+  { company: "De Gelderlander", baseUrls: ["www.gelderlander.nl"] },
+  { company: "Friesch Dagblad", baseUrls: ["www.frieschdagblad.nl"] },
+  { company: "De Stentor", baseUrls: ["www.destentor.nl"] },
+  { company: "Metro Nieuws", baseUrls: ["www.metronieuws.nl"] },
+  { company: "ANP", baseUrls: ["www.anp.nl"] },
+  { company: "Dagblad van het Noorden", baseUrls: ["www.dvhn.nl"] },
+  { company: "Reformatorisch Dagblad", baseUrls: ["www.rd.nl"] },
+  { company: "Financieele Dagblad", baseUrls: ["www.fd.nl"] }
+];
+var ITALIAN_NEWS = [
+  { company: "ANSA", baseUrls: ["www.ansa.it", "www.ansamed.info"] },
+  { company: "Corriere della Sera", baseUrls: ["www.corriere.it"] },
+  { company: "la Repubblica", baseUrls: ["www.repubblica.it"] },
+  { company: "Il Sole 24 Ore", baseUrls: ["www.ilsole24ore.com"] },
+  { company: "La Stampa", baseUrls: ["www.lastampa.it"] },
+  { company: "Il Messaggero", baseUrls: ["www.ilmessaggero.it"] },
+  { company: "Il Giornale", baseUrls: ["www.ilgiornale.it"] },
+  { company: "Avvenire", baseUrls: ["www.avvenire.it"] },
+  { company: "Il Fatto Quotidiano", baseUrls: ["www.ilfattoquotidiano.it"] },
+  { company: "La Nazione", baseUrls: ["www.lanazione.it"] },
+  { company: "TgCom24", baseUrls: ["www.tgcom24.mediaset.it"] },
+  { company: "Sky TG24", baseUrls: ["tg24.sky.it"] },
+  { company: "Rai News", baseUrls: ["www.rainews.it"] },
+  { company: "Gazzetta dello Sport", baseUrls: ["www.gazzetta.it"] },
+  { company: "Il Resto del Carlino", baseUrls: ["www.ilrestodelcarlino.it"] },
+  { company: "Il Mattino", baseUrls: ["www.ilmattino.it"] },
+  { company: "Il Secolo XIX", baseUrls: ["www.ilsecoloxix.it"] },
+  { company: "Italia Oggi", baseUrls: ["www.italiaoggi.it"] },
+  { company: "Libero", baseUrls: ["www.liberoquotidiano.it"] },
+  { company: "Il Tirreno", baseUrls: ["www.iltirreno.it"] }
+];
+var BELGIUM_NEWS = [
+  { company: "Het Laatste Nieuws (HLN)", baseUrls: ["www.hln.be"] },
+  { company: "Nieuwsblad", baseUrls: ["www.nieuwsblad.be"] },
+  { company: "RTBF", baseUrls: ["www.rtbf.be"] },
+  { company: "Sudinfo", baseUrls: ["www.sudinfo.be"] },
+  { company: "7sur7", baseUrls: ["www.7sur7.be"] },
+  { company: "Le Soir", baseUrls: ["www.lesoir.be"] },
+  { company: "De Standaard", baseUrls: ["www.standaard.be"] },
+  { company: "VRT NWS", baseUrls: ["www.vrt.be"] },
+  { company: "La Libre", baseUrls: ["www.lalibre.be"] },
+  { company: "Gazet van Antwerpen", baseUrls: ["www.gva.be"] },
+  { company: "Het Belang van Limburg", baseUrls: ["www.hbvl.be"] },
+  { company: "De Morgen", baseUrls: ["www.demorgen.be"] },
+  { company: "L'Avenir", baseUrls: ["www.lavenir.net"] },
+  { company: "The Brussels Times", baseUrls: ["www.brusselstimes.com"] },
+  { company: "Metro Belgique", baseUrls: ["nl.metrotime.be"] },
+  { company: "Sudpresse", baseUrls: ["www.sudpress.be"] },
+  { company: "Flamish Radio and TV Broadcasting Organization (VRT)", baseUrls: ["www.vrt.be"] },
+  { company: "Knack", baseUrls: ["www.knack.be"] },
+  { company: "De Tijd", baseUrls: ["www.tijd.be"] },
+  { company: "BX1", baseUrls: ["www.bx1.be"] }
+];
+var MEXICAN_NEWS = [
+  { company: "Televisa", baseUrls: ["www.televisa.news"] },
+  { company: "El Universal", baseUrls: ["www.eluniversal.com.mx"] },
+  { company: "Milenio", baseUrls: ["www.milenio.com"] },
+  { company: "Excélsior", baseUrls: ["www.excelsior.com.mx"] },
+  { company: "Reforma", baseUrls: ["www.reforma.com"] },
+  { company: "La Jornada", baseUrls: ["www.jornada.com.mx"] },
+  { company: "El Financiero", baseUrls: ["www.elfinanciero.com.mx"] },
+  { company: "Proceso", baseUrls: ["www.proceso.com.mx"] },
+  { company: "SDP Noticias", baseUrls: ["www.sdpnoticias.com"] },
+  { company: "Diario de Yucatán", baseUrls: ["www.yucatan.com.mx"] },
+  { company: "El Economista", baseUrls: ["www.eleconomista.com.mx"] },
+  { company: "El Heraldo de México", baseUrls: ["www.heraldodemexico.com.mx"] },
+  { company: "Noticieros Televisa", baseUrls: ["noticieros.televisa.com"] },
+  { company: "Expansión", baseUrls: ["expansion.mx"] },
+  { company: "La Razón", baseUrls: ["www.razon.com.mx"] },
+  { company: "Noroeste", baseUrls: ["www.noroeste.com.mx"] },
+  { company: "Uniradio Noticias", baseUrls: ["www.uniradionoticias.com"] },
+  { company: "El Imparcial", baseUrls: ["www.elimparcial.com"] },
+  { company: "Publimetro México", baseUrls: ["www.publimetro.com.mx"] },
+  { company: "Notimex", baseUrls: ["www.notimex.gob.mx"] }
+];
+var SPANISH_NEWS = [
+  { company: "El País", baseUrls: ["www.elpais.com"] },
+  { company: "El Mundo", baseUrls: ["www.elmundo.es"] },
+  { company: "ABC", baseUrls: ["www.abc.es"] },
+  { company: "La Vanguardia", baseUrls: ["www.lavanguardia.com"] },
+  { company: "El Confidencial", baseUrls: ["www.elconfidencial.com"] },
+  { company: "La Razón", baseUrls: ["www.larazon.es"] },
+  { company: "20 Minutos", baseUrls: ["www.20minutos.es"] },
+  { company: "Agencia EFE", baseUrls: ["www.efe.com"] },
+  { company: "Europa Press", baseUrls: ["www.europapress.es"] },
+  { company: "Diario AS", baseUrls: ["www.as.com"] },
+  { company: "Mundo Deportivo", baseUrls: ["www.mundodeportivo.com"] },
+  { company: "El Periódico", baseUrls: ["www.elperiodico.com"] },
+  { company: "Cinco Días", baseUrls: ["www.cincodias.com"] },
+  { company: "Expansión", baseUrls: ["www.expansion.com"] },
+  { company: "La Información", baseUrls: ["www.lainformacion.com"] },
+  { company: "OK Diario", baseUrls: ["www.okdiario.com"] },
+  { company: "Heraldo de Aragón", baseUrls: ["www.heraldo.es"] },
+  { company: "Faro de Vigo", baseUrls: ["www.farodevigo.es"] },
+  { company: "El Correo", baseUrls: ["www.elcorreo.com"] },
+  { company: "Diario Sur", baseUrls: ["www.diariosur.es"] }
+];
+var INDIAN_NEWS = [
+  { company: "The Times of India", baseUrls: ["timesofindia.indiatimes.com"] },
+  { company: "The Hindu", baseUrls: ["www.thehindu.com"] },
+  { company: "Hindustan Times", baseUrls: ["www.hindustantimes.com"] },
+  { company: "NDTV", baseUrls: ["www.ndtv.com"] },
+  { company: "India Today", baseUrls: ["www.indiatoday.in"] },
+  { company: "Zee News", baseUrls: ["zeenews.india.com"] },
+  { company: "Indian Express", baseUrls: ["indianexpress.com"] },
+  { company: "The Economic Times", baseUrls: ["economictimes.indiatimes.com"] },
+  { company: "Deccan Herald", baseUrls: ["www.deccanherald.com"] },
+  { company: "DNA India", baseUrls: ["www.dnaindia.com"] },
+  { company: "The Print", baseUrls: ["theprint.in"] },
+  { company: "News18", baseUrls: ["www.news18.com"] },
+  { company: "Scroll.in", baseUrls: ["scroll.in"] },
+  { company: "Asian News International (ANI)", baseUrls: ["www.aninews.in"] },
+  { company: "Outlook India", baseUrls: ["www.outlookindia.com"] },
+  { company: "Business Standard", baseUrls: ["www.business-standard.com"] },
+  { company: "Mint", baseUrls: ["www.livemint.com"] },
+  { company: "OneIndia", baseUrls: ["www.oneindia.com"] },
+  { company: "Quint", baseUrls: ["www.thequint.com"] },
+  { company: "Free Press Journal", baseUrls: ["www.freepressjournal.in"] }
+];
+var CHINESE_NEWS = [
+  { company: "Xinhua News Agency", baseUrls: ["www.xinhuanet.com"] },
+  { company: "China Central Television (CCTV)", baseUrls: ["www.cctv.com"] },
+  { company: "China Daily", baseUrls: ["www.chinadaily.com.cn"] },
+  { company: "CGTN (China Global Television Network)", baseUrls: ["www.cgtn.com"] },
+  { company: "People's Daily", baseUrls: ["www.people.cn"] },
+  { company: "Global Times", baseUrls: ["www.globaltimes.cn"] },
+  { company: "South China Morning Post", baseUrls: ["www.scmp.com"] },
+  { company: "Shanghai Daily", baseUrls: ["www.shanghaidaily.com"] },
+  { company: "China News Service", baseUrls: ["www.ecns.cn"] },
+  { company: "Caixin", baseUrls: ["www.caixinglobal.com"] },
+  { company: "The Paper", baseUrls: ["www.thepaper.cn"] },
+  { company: "Yicai Global", baseUrls: ["www.yicaiglobal.com"] },
+  { company: "Economic Daily", baseUrls: ["www.ce.cn"] },
+  { company: "21st Century Business Herald", baseUrls: ["www.21jingji.com"] },
+  { company: "Beijing Review", baseUrls: ["www.bjreview.com"] },
+  { company: "China Economic Net", baseUrls: ["www.ce.cn"] },
+  { company: "Tencent News", baseUrls: ["news.qq.com"] },
+  { company: "Sina News", baseUrls: ["news.sina.com.cn"] },
+  { company: "NetEase News", baseUrls: ["news.163.com"] },
+  { company: "Phoenix TV", baseUrls: ["www.ifeng.com"] }
+];
+var DANISH_NEWS = [
+  { company: "Politiken", baseUrls: ["www.politiken.dk"] },
+  { company: "Berlingske", baseUrls: ["www.berlingske.dk"] },
+  { company: "Jyllands-Posten", baseUrls: ["jyllands-posten.dk"] },
+  { company: "Ekstra Bladet", baseUrls: ["ekstrabladet.dk"] },
+  { company: "Information", baseUrls: ["www.information.dk"] },
+  { company: "BT", baseUrls: ["www.bt.dk"] },
+  { company: "Weekendavisen", baseUrls: ["www.weekendavisen.dk"] },
+  { company: "Fyens Stiftstidende", baseUrls: ["fyens.dk"] },
+  { company: "Kristeligt Dagblad", baseUrls: ["www.kristeligt-dagblad.dk"] },
+  { company: "Copenhagen Post", baseUrls: ["cphpost.dk"] },
+  { company: "Nordjyske Stiftstidende", baseUrls: ["nordjyske.dk"] },
+  { company: "Århus Stiftstidende", baseUrls: ["stiften.dk"] },
+  { company: "Dagbladet Børsen", baseUrls: ["borsen.dk"] },
+  { company: "Lokalavisen", baseUrls: ["lokalavisen.dk"] },
+  { company: "TV2 Nyheder", baseUrls: ["tv2.dk"] },
+  { company: "DR Nyheder", baseUrls: ["dr.dk"] },
+  { company: "Avisen Danmark", baseUrls: ["avisen.dk"] },
+  { company: "Fagbladet 3F", baseUrls: ["fagbladet3f.dk"] },
+  { company: "Herning Folkeblad", baseUrls: ["herningfolkeblad.dk"] },
+  { company: "Midtjyllands Avis", baseUrls: ["midtjyllandsavis.dk"] }
+];
+var SWISS_NEWS = [
+  { company: "Neue Zürcher Zeitung (NZZ)", baseUrls: ["www.nzz.ch"], type: ["newspaper", "digital"] },
+  { company: "Swissinfo", baseUrls: ["www.swissinfo.ch"], type: ["digital-first"] },
+  { company: "20 Minuten", baseUrls: ["www.20min.ch"], type: ["newspaper", "digital"] },
+  { company: "Blick", baseUrls: ["www.blick.ch"], type: ["newspaper", "digital"] },
+  { company: "Le Temps", baseUrls: ["www.letemps.ch"], type: ["newspaper", "digital"] },
+  { company: "Tages-Anzeiger", baseUrls: ["www.tagesanzeiger.ch"], type: ["newspaper", "digital"] },
+  { company: "SRF News", baseUrls: ["www.srf.ch"], type: ["television", "radio", "digital"] },
+  { company: "Luzerner Zeitung", baseUrls: ["www.luzernerzeitung.ch"], type: ["newspaper", "digital"] },
+  { company: "La Tribune de Genève", baseUrls: ["www.tdg.ch"], type: ["newspaper", "digital"] },
+  { company: "Aargauer Zeitung", baseUrls: ["www.aargauerzeitung.ch"], type: ["newspaper", "digital"] },
+  { company: "24 Heures", baseUrls: ["www.24heures.ch"], type: ["newspaper", "digital"] },
+  { company: "Radio Télévision Suisse (RTS)", baseUrls: ["www.rts.ch"], type: ["television", "radio", "digital"] },
+  { company: "Der Bund", baseUrls: ["www.derbund.ch"], type: ["newspaper", "digital"] },
+  { company: "Schweizer Radio und Fernsehen (SRF)", baseUrls: ["www.srf.ch"], type: ["television", "radio", "digital"] },
+  { company: "Basler Zeitung", baseUrls: ["www.bazonline.ch"], type: ["newspaper", "digital"] },
+  { company: "Handelszeitung", baseUrls: ["www.handelszeitung.ch"], type: ["newspaper", "digital"] },
+  { company: "Watson", baseUrls: ["www.watson.ch"], type: ["digital-first"] },
+  { company: "Le Matin", baseUrls: ["www.lematin.ch"], type: ["newspaper", "digital"] },
+  { company: "La Liberté", baseUrls: ["www.laliberte.ch"], type: ["newspaper", "digital"] },
+  { company: "The Swiss Times", baseUrls: ["www.theswisstimes.ch"], type: ["digital-first"] }
+];
+var AUSTRALIAN_NEWS = [
+  { company: "ABC News", baseUrls: ["www.abc.net.au"], type: ["television", "radio", "digital"] },
+  { company: "The Sydney Morning Herald", baseUrls: ["www.smh.com.au"], type: ["newspaper", "digital"] },
+  { company: "The Australian", baseUrls: ["www.theaustralian.com.au"], type: ["newspaper", "digital"] },
+  { company: "Herald Sun", baseUrls: ["www.heraldsun.com.au"], type: ["newspaper", "digital"] },
+  { company: "9News", baseUrls: ["www.9news.com.au"], type: ["television", "digital"] },
+  { company: "SBS News", baseUrls: ["www.sbs.com.au"], type: ["television", "digital", "multicultural"] },
+  { company: "The Age", baseUrls: ["www.theage.com.au"], type: ["newspaper", "digital"] },
+  { company: "Sky News Australia", baseUrls: ["www.skynews.com.au"], type: ["television", "digital"] },
+  { company: "Australian Financial Review", baseUrls: ["www.afr.com"], type: ["newspaper", "digital"] },
+  { company: "news.com.au", baseUrls: ["www.news.com.au"], type: ["digital-first"] },
+  { company: "The Courier-Mail", baseUrls: ["www.couriermail.com.au"], type: ["newspaper", "digital"] },
+  { company: "7NEWS", baseUrls: ["7news.com.au"], type: ["television", "digital"] },
+  { company: "The West Australian", baseUrls: ["www.thewest.com.au"], type: ["newspaper", "digital"] },
+  { company: "Daily Telegraph", baseUrls: ["www.dailytelegraph.com.au"], type: ["newspaper", "digital"] },
+  { company: "Guardian Australia", baseUrls: ["www.theguardian.com/au"], type: ["digital-first"] },
+  { company: "Crikey", baseUrls: ["www.crikey.com.au"], type: ["digital-first", "independent"] },
+  { company: "AAP (Australian Associated Press)", baseUrls: ["www.aap.com.au"], type: ["news agency", "digital"] },
+  { company: "NT News", baseUrls: ["www.ntnews.com.au"], type: ["newspaper", "digital"] },
+  { company: "The Canberra Times", baseUrls: ["www.canberratimes.com.au"], type: ["newspaper", "digital"] },
+  { company: "Brisbane Times", baseUrls: ["www.brisbanetimes.com.au"], type: ["digital-first"] }
+];
+var JAPANESE_NEWS = [
+  { company: "The Asahi Shimbun", baseUrls: ["www.asahi.com"], type: ["newspaper", "digital"] },
+  { company: "Yomiuri Shimbun", baseUrls: ["www.yomiuri.co.jp"], type: ["newspaper", "digital"] },
+  { company: "Nikkei", baseUrls: ["www.nikkei.com"], type: ["newspaper", "digital"] },
+  { company: "Mainichi Shimbun", baseUrls: ["mainichi.jp"], type: ["newspaper", "digital"] },
+  { company: "Kyodo News", baseUrls: ["www.kyodonews.jp"], type: ["news agency", "digital"] },
+  { company: "Japan Times", baseUrls: ["www.japantimes.co.jp"], type: ["newspaper", "digital"] },
+  { company: "NHK", baseUrls: ["www.nhk.or.jp"], type: ["television", "radio", "digital"] },
+  { company: "Fuji News Network (FNN)", baseUrls: ["www.fnn.jp"], type: ["television", "digital"] },
+  { company: "Sankei Shimbun", baseUrls: ["www.sankei.com"], type: ["newspaper", "digital"] },
+  { company: "Toyo Keizai", baseUrls: ["www.toyokeizai.net"], type: ["digital", "business magazine"] },
+  { company: "Hokkaido Shimbun", baseUrls: ["www.hokkaido-np.co.jp"], type: ["newspaper", "digital"] },
+  { company: "Shizuoka Shimbun", baseUrls: ["www.at-s.com"], type: ["newspaper", "digital"] },
+  { company: "Tokyo Shimbun", baseUrls: ["www.tokyo-np.co.jp"], type: ["newspaper", "digital"] },
+  { company: "Yahoo Japan News", baseUrls: ["news.yahoo.co.jp"], type: ["digital-first"] },
+  { company: "TBS News", baseUrls: ["news.tbs.co.jp"], type: ["television", "digital"] },
+  { company: "Nippon TV News 24 Japan", baseUrls: ["www.news24.jp"], type: ["television", "digital"] },
+  { company: "Jiji Press", baseUrls: ["www.jiji.com"], type: ["news agency", "digital"] },
+  { company: "TV Asahi News", baseUrls: ["news.tv-asahi.co.jp"], type: ["television", "digital"] },
+  { company: "WOWOW Prime News", baseUrls: ["www.wowow.co.jp"], type: ["television", "digital"] },
+  { company: "Kansai Telecasting Corporation (KTV)", baseUrls: ["www.ktv.jp"], type: ["television", "digital"] }
+];
+var SOUTH_KOREAN_NEWS = [
+  { company: "Yonhap News Agency", baseUrls: ["www.yonhapnews.co.kr"], type: ["news agency", "digital"] },
+  { company: "The Korea Herald", baseUrls: ["www.koreaherald.com"], type: ["newspaper", "digital"] },
+  { company: "The Korea Times", baseUrls: ["www.koreatimes.co.kr"], type: ["newspaper", "digital"] },
+  { company: "Chosun Ilbo", baseUrls: ["www.chosun.com"], type: ["newspaper", "digital"] },
+  { company: "JoongAng Ilbo", baseUrls: ["www.joongang.co.kr"], type: ["newspaper", "digital"] },
+  { company: "Dong-A Ilbo", baseUrls: ["www.donga.com"], type: ["newspaper", "digital"] },
+  { company: "MBC News", baseUrls: ["www.imnews.imbc.com"], type: ["television", "digital"] },
+  { company: "SBS News", baseUrls: ["news.sbs.co.kr"], type: ["television", "digital"] },
+  { company: "KBS News", baseUrls: ["news.kbs.co.kr"], type: ["television", "radio", "digital"] },
+  { company: "Hankyoreh", baseUrls: ["english.hani.co.kr"], type: ["newspaper", "digital"] },
+  { company: "Maeil Business Newspaper", baseUrls: ["www.mk.co.kr"], type: ["newspaper", "digital"] },
+  { company: "MoneyToday", baseUrls: ["www.mt.co.kr"], type: ["digital-first", "business"] },
+  { company: "Seoul Shinmun", baseUrls: ["www.seoul.co.kr"], type: ["newspaper", "digital"] },
+  { company: "OhmyNews", baseUrls: ["www.ohmynews.com"], type: ["digital-first"] },
+  { company: "News1 Korea", baseUrls: ["www.news1.kr"], type: ["news agency", "digital"] },
+  { company: "Asia Business Daily", baseUrls: ["www.asiae.co.kr"], type: ["newspaper", "digital"] },
+  { company: "Herald Business", baseUrls: ["biz.heraldcorp.com"], type: ["newspaper", "digital"] },
+  { company: "eDaily", baseUrls: ["www.edaily.co.kr"], type: ["digital-first", "business"] },
+  { company: "Seoul Economic Daily", baseUrls: ["www.sedaily.com"], type: ["newspaper", "digital"] },
+  { company: "JTBC News", baseUrls: ["news.jtbc.co.kr"], type: ["television", "digital"] }
+];
+var TURKISH_NEWS = [
+  { company: "Anadolu Agency (AA)", baseUrls: ["www.aa.com.tr"], type: ["news agency", "digital"] },
+  { company: "Hürriyet", baseUrls: ["www.hurriyet.com.tr"], type: ["newspaper", "digital"] },
+  { company: "Sabah", baseUrls: ["www.sabah.com.tr"], type: ["newspaper", "digital"] },
+  { company: "Milliyet", baseUrls: ["www.milliyet.com.tr"], type: ["newspaper", "digital"] },
+  { company: "TRT World", baseUrls: ["www.trtworld.com"], type: ["television", "digital"] },
+  { company: "CNN Türk", baseUrls: ["www.cnnturk.com"], type: ["television", "digital"] },
+  { company: "Sozcu", baseUrls: ["www.sozcu.com.tr"], type: ["newspaper", "digital"] },
+  { company: "Daily Sabah", baseUrls: ["www.dailysabah.com"], type: ["newspaper", "digital"] },
+  { company: "Yeni Şafak", baseUrls: ["www.yenisafak.com"], type: ["newspaper", "digital"] },
+  { company: "Habertürk", baseUrls: ["www.haberturk.com"], type: ["television", "digital"] },
+  { company: "BirGün", baseUrls: ["www.birgun.net"], type: ["newspaper", "digital"] },
+  { company: "Türkiye Gazetesi", baseUrls: ["www.turkiyegazetesi.com.tr"], type: ["newspaper", "digital"] },
+  { company: "Cumhuriyet", baseUrls: ["www.cumhuriyet.com.tr"], type: ["newspaper", "digital"] },
+  { company: "Diken", baseUrls: ["www.diken.com.tr"], type: ["digital-first"] },
+  { company: "NTV", baseUrls: ["www.ntv.com.tr"], type: ["television", "digital"] },
+  { company: "Ensonhaber", baseUrls: ["www.ensonhaber.com"], type: ["digital-first"] },
+  { company: "T24", baseUrls: ["www.t24.com.tr"], type: ["digital-first"] },
+  { company: "Karar", baseUrls: ["www.karar.com"], type: ["newspaper", "digital"] },
+  { company: "Gazete Duvar", baseUrls: ["www.gazeteduvar.com.tr"], type: ["digital-first"] },
+  { company: "Bloomberg HT", baseUrls: ["www.bloomberght.com"], type: ["television", "digital"] }
+];
+var NORWEGIAN_NEWS = [
+  { company: "Aftenposten", baseUrls: ["www.aftenposten.no"], type: ["newspaper", "digital"] },
+  { company: "Verdens Gang (VG)", baseUrls: ["www.vg.no"], type: ["newspaper", "digital"] },
+  { company: "Dagbladet", baseUrls: ["www.dagbladet.no"], type: ["newspaper", "digital"] },
+  { company: "NRK", baseUrls: ["www.nrk.no"], type: ["television", "radio", "digital"] },
+  { company: "Dagens Næringsliv", baseUrls: ["www.dn.no"], type: ["newspaper", "digital"] },
+  { company: "Nettavisen", baseUrls: ["www.nettavisen.no"], type: ["digital-first"] },
+  { company: "Klassekampen", baseUrls: ["www.klassekampen.no"], type: ["newspaper", "digital"] },
+  { company: "Morgenbladet", baseUrls: ["www.morgenbladet.no"], type: ["newspaper", "digital"] },
+  { company: "E24", baseUrls: ["www.e24.no"], type: ["digital-first", "business"] },
+  { company: "TV2", baseUrls: ["www.tv2.no"], type: ["television", "digital"] },
+  { company: "Bergens Tidende", baseUrls: ["www.bt.no"], type: ["newspaper", "digital"] },
+  { company: "Adresseavisen", baseUrls: ["www.adressa.no"], type: ["newspaper", "digital"] },
+  { company: "Stavanger Aftenblad", baseUrls: ["www.aftenbladet.no"], type: ["newspaper", "digital"] },
+  { company: "Fædrelandsvennen", baseUrls: ["www.fvn.no"], type: ["newspaper", "digital"] },
+  { company: "ABC Nyheter", baseUrls: ["www.abcnyheter.no"], type: ["digital-first"] },
+  { company: "Romerikes Blad", baseUrls: ["www.rb.no"], type: ["newspaper", "digital"] },
+  { company: "Sunnmørsposten", baseUrls: ["www.smp.no"], type: ["newspaper", "digital"] },
+  { company: "Finansavisen", baseUrls: ["www.finansavisen.no"], type: ["newspaper", "digital"] },
+  { company: "Nordlys", baseUrls: ["www.nordlys.no"], type: ["newspaper", "digital"] },
+  { company: "Hamar Arbeiderblad", baseUrls: ["www.h-a.no"], type: ["newspaper", "digital"] }
+];
+var SOCIAL_MEDIA = [
+  {
+    name: "Facebook",
+    description: "Connect with friends, family, and communities worldwide on one of the largest social networks.",
+    baseUrls: ["https://www.facebook.com"],
+    profileUrl: "https://www.facebook.com/:user_id",
+    approximateUserSize: 3e9,
+    // 3 billion
+    tickerSymbol: "META"
+  },
+  {
+    name: "YouTube",
+    description: "A platform for sharing and watching videos, connecting creators with audiences globally.",
+    baseUrls: ["https://www.youtube.com"],
+    profileUrl: "https://www.youtube.com/user/:user_id",
+    approximateUserSize: 25e8,
+    // 2.5 billion
+    tickerSymbol: "GOOGL"
+  },
+  {
+    name: "WhatsApp",
+    description: "A secure messaging app for personal and business communication.",
+    baseUrls: ["https://www.whatsapp.com", "https://wa.me"],
+    profileUrl: "https://wa.me/:user_id",
+    approximateUserSize: 2e9,
+    // 2 billion
+    tickerSymbol: "META"
+  },
+  {
+    name: "Instagram",
+    description: "Share photos and videos with friends and followers through posts, stories, and reels.",
+    baseUrls: ["https://www.instagram.com"],
+    profileUrl: "https://www.instagram.com/:user_id",
+    approximateUserSize: 2e9,
+    // 2 billion
+    tickerSymbol: "META"
+  },
+  {
+    name: "TikTok",
+    description: "A short-form video platform known for its highly engaging content and viral trends.",
+    baseUrls: ["https://www.tiktok.com"],
+    profileUrl: "https://www.tiktok.com/@:user_id",
+    approximateUserSize: 16e8
+    // 1.6 billion
+  },
+  {
+    name: "WeChat",
+    description: "China's popular messaging and lifestyle app, integrating social media and mobile payments.",
+    baseUrls: ["https://www.wechat.com"],
+    profileUrl: "https://www.wechat.com/:user_id",
+    // Profile URLs typically restricted in China
+    approximateUserSize: 13e8
+    // 1.3 billion
+  },
+  {
+    name: "Facebook Messenger",
+    description: "A messaging app used for personal and business interactions, seamlessly integrated with Facebook.",
+    baseUrls: ["https://www.messenger.com"],
+    profileUrl: "https://www.messenger.com/t/:user_id",
+    approximateUserSize: 1e9,
+    // 1 billion
+    tickerSymbol: "META"
+  },
+  {
+    name: "Telegram",
+    description: "A messaging platform focused on privacy, with channels and group capabilities.",
+    baseUrls: ["https://www.telegram.org", "https://t.me"],
+    profileUrl: "https://t.me/:user_id",
+    approximateUserSize: 9e8
+    // 900 million
+  },
+  {
+    name: "Snapchat",
+    description: "A multimedia app popular for its disappearing messages and creative filters.",
+    baseUrls: ["https://www.snapchat.com"],
+    profileUrl: "https://www.snapchat.com/add/:user_id",
+    approximateUserSize: 8e8,
+    // 800 million
+    tickerSymbol: "SNAP"
+  },
+  {
+    name: "Douyin",
+    description: "The Chinese version of TikTok, with similar short-form video content tailored for China.",
+    baseUrls: ["https://www.douyin.com"],
+    profileUrl: "https://www.douyin.com/user/:user_id",
+    approximateUserSize: 75e7
+    // 750 million
+  },
+  {
+    name: "LinkedIn",
+    description: "The largest professional networking platform, where users connect for career opportunities, insights, and business networking.",
+    baseUrls: ["https://www.linkedin.com"],
+    profileUrl: "https://www.linkedin.com/in/:user_id",
+    approximateUserSize: 93e7,
+    // 930 million
+    tickerSymbol: "MSFT"
+  },
+  {
+    name: "X (formerly Twitter)",
+    description: "A platform for real-time updates, news sharing, and public discourse with a focus on brief, impactful posts.",
+    baseUrls: ["https://www.twitter.com", "https://x.com"],
+    profileUrl: "https://twitter.com/:user_id",
+    approximateUserSize: 54e7
+    // 540 million
+  },
+  {
+    name: "Pinterest",
+    description: "A visually-driven platform for sharing ideas, DIY projects, fashion, and more.",
+    baseUrls: ["https://www.pinterest.com"],
+    profileUrl: "https://www.pinterest.com/:user_id",
+    approximateUserSize: 46e7,
+    // 460 million
+    tickerSymbol: "PINS"
+  },
+  {
+    name: "Reddit",
+    description: "A community-driven platform organized into niche forums or 'subreddits' focused on various topics.",
+    baseUrls: ["https://www.reddit.com"],
+    profileUrl: "https://www.reddit.com/user/:user_id",
+    approximateUserSize: 43e7
+    // 430 million
+  },
+  {
+    name: "Clubhouse",
+    description: "A voice-based social network where users engage in live audio conversations on various topics.",
+    baseUrls: ["https://www.clubhouse.com"],
+    profileUrl: "https://www.clubhouse.com/:user_id",
+    approximateUserSize: 1e7
+    // 10 million
+  },
+  {
+    name: "Discord",
+    description: "Originally aimed at gamers, Discord is now widely used by various communities for group chat, video, and voice calls.",
+    baseUrls: ["https://www.discord.com", "https://discord.com"],
+    profileUrl: "https://discord.com/users/:user_id",
+    approximateUserSize: 3e8
+    // 300 million
+  }
+];
 var toFinalizedConfig = (config) => {
   return { ...config, finalized: true };
 };
@@ -9804,18 +10806,15 @@ function keysOf(container) {
   const keys = Array.isArray(container) ? Object.keys(container).map((i) => Number(i)) : isObject(container) ? isRef(container) ? ["value"] : Object.keys(container) : [];
   return keys;
 }
-var valuesOf = (obj) => {
-  const values = [];
-  for (const k of Object.keys(obj)) {
-    values.push(obj[k]);
-  }
-  return values;
-};
+var identity = (...values) => values.length === 1 ? values[0] : values.length === 0 ? void 0 : values;
 function isDefined(value2) {
   return typeof value2 === "undefined" ? false : true;
 }
 function isUndefined(value2) {
   return typeof value2 === "undefined" ? true : false;
+}
+function isBoolean(value2) {
+  return typeof value2 === "boolean";
 }
 function isObject(value2) {
   return typeof value2 === "object" && value2 !== null && Array.isArray(value2) === false;
@@ -9831,6 +10830,13 @@ function isContainer$1(value2) {
 }
 function isRef(value2) {
   return isObject(value2) && "value" in value2 && Array.from(Object.keys(value2)).includes("_value");
+}
+function split(str, sep = "") {
+  return str.split(sep);
+}
+function isNumberLike(value2) {
+  const numericChars = [...NUMERIC_CHAR];
+  return typeof value2 === "string" && split(value2).every((i) => numericChars.includes(i)) ? true : typeof value2 === "number" ? true : false;
 }
 function isFunction$2(value2) {
   return typeof value2 === "function" ? true : false;
@@ -9855,6 +10861,219 @@ var isCssAspectRatio = (val) => {
 var isInlineSvg = (v) => {
   return isString$1(v) && v.trim().startsWith(`<svg`) && v.trim().endsWith(`</svg>`);
 };
+var hasUrlQueryParameter = (val, prop) => {
+  return isString$1(getUrlQueryParams(val, prop));
+};
+var asChars = (str) => {
+  return str.split("");
+};
+var isEmail = (val) => {
+  var _a2;
+  if (!isString$1(val)) {
+    return false;
+  }
+  const parts = val == null ? void 0 : val.split("@");
+  const domain = (_a2 = parts[1]) == null ? void 0 : _a2.split(".");
+  const tld = domain ? domain.pop() : "";
+  const firstChar = val[0].toLowerCase();
+  return isString$1(val) && (LOWER_ALPHA_CHARS.includes(firstChar) && parts.length === 2 && domain.length >= 1 && tld.length >= 2);
+};
+var isPhoneNumber = (val) => {
+  let svelte = String(val).trim();
+  let chars = svelte.split("");
+  let numeric = retainChars(svelte, ...NUMERIC_CHAR);
+  let valid = ["+", "(", ...NUMERIC_CHAR];
+  let nothing = stripChars(svelte, ...[
+    ...NUMERIC_CHAR,
+    ...WHITESPACE_CHARS,
+    "(",
+    ")",
+    "+",
+    ".",
+    "-"
+  ]);
+  return chars.every((i) => valid.includes(i)) && svelte.startsWith(`+`) ? numeric.length >= 8 : svelte.startsWith(`00`) ? numeric.length >= 10 : numeric.length >= 7 && nothing === "";
+};
+SIMPLE_TOKENS.map((i) => i.split("TOKEN"));
+SIMPLE_SCALAR_TOKENS.map((i) => i.split("TOKEN"));
+var isIso3166CountryCode = (val) => {
+  const codes = ISO3166_1.map((i) => i["countryCode"]);
+  return isString$1(val) && codes.includes(val);
+};
+var isIso3166CountryName = (val) => {
+  const codes = ISO3166_1.map((i) => i["name"]);
+  return isString$1(val) && codes.includes(val);
+};
+var isZipCode5 = (val) => {
+  if (isNumber$1(val)) {
+    return isZipCode5(`${val}`);
+  }
+  return isString$1(val) && val.trim().length === 5 && isNumberLike(val.trim());
+};
+var isZipPlus4 = (val) => {
+  if (isString$1(val)) {
+    const first = retainWhile(val.trim(), ...NUMERIC_CHAR);
+    const next = stripChars(val.trim().replace(first, "").trim(), "-");
+    return first.length === 5 && next.length === 4 && isNumberLike(next);
+  }
+  return false;
+};
+var isZipCode = (val) => {
+  return isZipCode5(val) || isZipPlus4(val);
+};
+US_STATE_LOOKUP.map((i) => i.abbrev);
+US_STATE_LOOKUP.map((i) => i.name);
+var separate = (s2) => {
+  return stripWhile(s2.toLowerCase(), ...NUMERIC_CHAR).trim();
+};
+var isAreaMetric = (val) => {
+  return isString$1(val) && AREA_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isLuminosityMetric = (val) => {
+  return isString$1(val) && LUMINOSITY_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isCurrentMetric = (val) => {
+  return isString$1(val) && CURRENT_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isVoltageMetric = (val) => {
+  return isString$1(val) && VOLTAGE_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isFrequencyMetric = (val) => {
+  return isString$1(val) && FREQUENCY_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isPowerMetric = (val) => {
+  return isString$1(val) && POWER_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isTimeMetric = (val) => {
+  return isString$1(val) && TIME_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isEnergyMetric = (val) => {
+  return isString$1(val) && ENERGY_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isPressureMetric = (val) => {
+  return isString$1(val) && PRESSURE_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isTemperatureMetric = (val) => {
+  return isString$1(val) && TEMPERATURE_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isAccelerationMetric = (val) => {
+  return isString$1(val) && ACCELERATION_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isSpeedMetric = (val) => {
+  const speed = SPEED_METRICS_LOOKUP.map((i) => i.abbrev);
+  return isString$1(val) && speed.includes(separate(val));
+};
+var isMassMetric = (val) => {
+  return isString$1(val) && MASS_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isDistanceMetric = (val) => {
+  return isString$1(val) && DISTANCE_METRICS_LOOKUP.map((i) => i.abbrev).includes(separate(val));
+};
+var isMetric = (val) => {
+  return isDistanceMetric(val) || isMassMetric(val) || isSpeedMetric(val) || isAccelerationMetric(val) || isVoltageMetric(val) || isTemperatureMetric(val) || isPressureMetric(val) || isEnergyMetric(val) || isTimeMetric(val) || isPowerMetric(val) || isFrequencyMetric(val) || isVoltageMetric(val) || isCurrentMetric(val) || isLuminosityMetric(val) || isAreaMetric(val);
+};
+var URL$5 = SOCIAL_MEDIA.flatMap((i) => i.baseUrls);
+SOCIAL_MEDIA.map((i) => i.profileUrl);
+var isSocialMediaUrl = (val) => {
+  return isString$1(val) && URL$5.some((i) => val.startsWith(i));
+};
+var isGithubUrl = (val) => {
+  const valid = [
+    "https://github.com",
+    "https://www.github.com",
+    "https://github.io"
+  ];
+  return isString$1(val) && valid.some(
+    (i) => val === i || val.startsWith(`${i}/`) || val.startsWith(`${i}?`)
+  );
+};
+var stripper = (s2) => {
+  return stripTrailing(
+    stripLeading(s2, "https://github.com/"),
+    "/"
+  );
+};
+var isGithubRepoUrl = (val) => {
+  return isString$1(val) && (val.startsWith("https://github.com/") && stripper(val).split("/").length === 2) ? true : false;
+};
+var isBitbucketUrl = (val) => {
+  const valid = REPO_SOURCE_LOOKUP["bitbucket"];
+  return isString$1(val) && valid.some(
+    (i) => val === i || val.startsWith(`${i}/`) || val.startsWith(`${i}?`)
+  );
+};
+var isCodeCommitUrl = (val) => {
+  const valid = REPO_SOURCE_LOOKUP["codecommit"];
+  return isString$1(val) && valid.some(
+    (i) => val === i || val.startsWith(`${i}/`) || val.startsWith(`${i}?`)
+  );
+};
+var isRepoUrl = (val) => {
+  return isGithubUrl(val) || isBitbucketUrl(val) || isCodeCommitUrl(val);
+};
+var isWholeFoodsUrl = (val) => {
+  return isString$1(val) && WHOLE_FOODS_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isCvsUrl = (val) => {
+  return isString$1(val) && CVS_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isWalgreensUrl = (val) => {
+  return isString$1(val) && WALGREENS_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isKrogersUrl = (val) => {
+  return isString$1(val) && KROGER_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isZaraUrl = (val) => {
+  return isString$1(val) && ZARA_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isHmUrl = (val) => {
+  return isString$1(val) && HM_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isDellUrl = (val) => {
+  return isString$1(val) && DELL_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isIkeaUrl = (val) => {
+  return isString$1(val) && KROGER_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isLowesUrl = (val) => {
+  return isString$1(val) && KROGER_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isNikeUrl = (val) => {
+  return isString$1(val) && NIKE_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isWayfairUrl = (val) => {
+  return isString$1(val) && WAYFAIR_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isBestBuyUrl = (val) => {
+  return isString$1(val) && BEST_BUY_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isCostCoUrl = (val) => {
+  return isString$1(val) && COSTCO_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isEtsyUrl = (val) => {
+  return isString$1(val) && ETSY_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isTargetUrl = (val) => {
+  return isString$1(val) && TARGET_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isEbayUrl = (val) => {
+  return isString$1(val) && EBAY_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isHomeDepotUrl = (val) => {
+  return isString$1(val) && HOME_DEPOT_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isMacysUrl = (val) => {
+  return isString$1(val) && MACYS_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isAppleUrl = (val) => {
+  return isString$1(val) && APPLE_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isAmazonUrl = (val) => {
+  return isString$1(val) && AMAZON_DNS.some((i) => val.startsWith(`https://${i}`));
+};
+var isRetailUrl = (val) => {
+  return isAmazonUrl(val) || isWalgreensUrl(val) || isAppleUrl(val) || isMacysUrl(val) || isEbayUrl(val) || isHomeDepotUrl(val) || isTargetUrl(val) || isEtsyUrl(val) || isCostCoUrl(val) || isBestBuyUrl(val) || isWayfairUrl(val) || isNikeUrl(val) || isLowesUrl(val) || isIkeaUrl(val) || isDellUrl(val) || isHmUrl(val) || isZaraUrl(val) || isKrogersUrl(val) || isWalgreensUrl(val) || isCvsUrl(val) || isWholeFoodsUrl(val);
+};
 var isYouTubeUrl = (val) => {
   return isString$1(val) && (val.startsWith("https://www.youtube.com") || val.startsWith("https://youtube.com") || val.startsWith("https://youtu.be"));
 };
@@ -9867,7 +11086,7 @@ var isYouTubeVideoUrl = (val) => {
 var feed_map = (type) => {
   return isUndefined(type) ? `/feed` : type === "liked" ? `/playlist?list=LL` : ["history", "playlists", "trending", "subscriptions"].includes(type) ? `/feed/${type}` : `/feed/`;
 };
-var isYouTubeFeedUrl = (val, type = void 0) => {
+var isYouTubeFeedUrl = (val, type) => {
   return isString$1(val) && (val.startsWith(`https://www.youtube.com${feed_map(type)}`) || val.startsWith(`https://youtube.com${feed_map(type)}`));
 };
 var isYouTubeCreatorUrl = (url) => {
@@ -9876,26 +11095,82 @@ var isYouTubeCreatorUrl = (url) => {
 var isYouTubeVideosInPlaylist = (val) => {
   return isString$1(val) && (val.startsWith(`https://www.youtube.com/playlist?`) || val.startsWith(`https://youtube.com/playlist?`)) && hasUrlQueryParameter(val, "list");
 };
-var isRepoUrl = (val) => {
-  const baseUrls = valuesOf(REPO_SOURCE_LOOKUP).flat();
-  return isString$1(val) && baseUrls.every(
-    (u) => val === u || val.startsWith(`${u}/`)
-  );
+var URL2 = AUSTRALIAN_NEWS.flatMap((i) => i.baseUrls);
+var isAustralianNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL2.includes(val) || URL2.some((i) => i.startsWith(`${i}/`)));
 };
-var isGithubRepoUrl = (val) => {
-  const baseUrls = [""];
-  return isString$1(val) && baseUrls.every(
-    (u) => val === u || val.startsWith(`${u}/`)
-  );
+var URL3 = BELGIUM_NEWS.flatMap((i) => i.baseUrls);
+var isBelgiumNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL3.includes(val) || URL3.some((i) => i.startsWith(`${i}/`)));
 };
-var hasUrlQueryParameter = (val, prop) => {
-  return isString$1(getUrlQueryParams(val, prop));
+var URL4 = CANADIAN_NEWS.flatMap((i) => i.baseUrls);
+var isCanadianNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL4.includes(val) || URL4.some((i) => i.startsWith(`${i}/`)));
 };
-var asChars = (str) => {
-  return str.split("");
+var URL5 = DANISH_NEWS.flatMap((i) => i.baseUrls);
+var isDanishNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL5.includes(val) || URL5.some((i) => i.startsWith(`${i}/`)));
 };
-SIMPLE_TOKENS.map((i) => i.split("TOKEN"));
-SIMPLE_SCALAR_TOKENS.map((i) => i.split("TOKEN"));
+var URL6 = DUTCH_NEWS.flatMap((i) => i.baseUrls);
+var isDutchNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL6.includes(val) || URL6.some((i) => i.startsWith(`${i}/`)));
+};
+var URL7 = FRENCH_NEWS.flatMap((i) => i.baseUrls);
+var isFrenchNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL7.includes(val) || URL7.some((i) => i.startsWith(`${i}/`)));
+};
+var URL8 = GERMAN_NEWS.flatMap((i) => i.baseUrls);
+var isGermanNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL8.includes(val) || URL8.some((i) => i.startsWith(`${i}/`)));
+};
+var URL9 = INDIAN_NEWS.flatMap((i) => i.baseUrls);
+var isIndianNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL9.includes(val) || URL9.some((i) => i.startsWith(`${i}/`)));
+};
+var URL10 = ITALIAN_NEWS.flatMap((i) => i.baseUrls);
+var isItalianNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL10.includes(val) || URL10.some((i) => i.startsWith(`${i}/`)));
+};
+var URL11 = JAPANESE_NEWS.flatMap((i) => i.baseUrls);
+var isJapaneseNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL11.includes(val) || URL11.some((i) => i.startsWith(`${i}/`)));
+};
+var URL12 = MEXICAN_NEWS.flatMap((i) => i.baseUrls);
+var isMexicanNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL12.includes(val) || URL12.some((i) => i.startsWith(`${i}/`)));
+};
+var URL13 = NORWEGIAN_NEWS.flatMap((i) => i.baseUrls);
+var isNorwegianNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL13.includes(val) || URL13.some((i) => i.startsWith(`${i}/`)));
+};
+var URL14 = SOUTH_KOREAN_NEWS.flatMap((i) => i.baseUrls);
+var isSouthKoreanNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL14.includes(val) || URL14.some((i) => i.startsWith(`${i}/`)));
+};
+var URL15 = SPANISH_NEWS.flatMap((i) => i.baseUrls);
+var isSpanishNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL15.includes(val) || URL15.some((i) => i.startsWith(`${i}/`)));
+};
+var URL16 = SWISS_NEWS.flatMap((i) => i.baseUrls);
+var isSwissNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL16.includes(val) || URL16.some((i) => i.startsWith(`${i}/`)));
+};
+var URL17 = TURKISH_NEWS.flatMap((i) => i.baseUrls);
+var isTurkishNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL17.includes(val) || URL17.some((i) => i.startsWith(`${i}/`)));
+};
+var URL18 = UK_NEWS.flatMap((i) => i.baseUrls);
+var isUkNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL18.includes(val) || URL18.some((i) => i.startsWith(`${i}/`)));
+};
+var URL19 = US_NEWS.flatMap((i) => i.baseUrls);
+var isUsNewsUrl = (val) => {
+  return isString$1(val) && val.startsWith("https://") && (URL19.includes(val) || URL19.some((i) => i.startsWith(`${i}/`)));
+};
+CHINESE_NEWS.flatMap((i) => i.baseUrls);
+var isNewsUrl = (val) => {
+  return isAustralianNewsUrl(val) || isBelgiumNewsUrl(val) || isCanadianNewsUrl(val) || isDanishNewsUrl(val) || isDutchNewsUrl(val) || isFrenchNewsUrl(val) || isGermanNewsUrl(val) || isIndianNewsUrl(val) || isItalianNewsUrl(val) || isJapaneseNewsUrl(val) || isMexicanNewsUrl(val) || isNorwegianNewsUrl(val) || isSouthKoreanNewsUrl(val) || isSpanishNewsUrl(val) || isSwissNewsUrl(val) || isTurkishNewsUrl(val) || isUkNewsUrl(val) || isUsNewsUrl(val);
+};
 function stripTrailing(content2, ...strip) {
   let output = String(content2);
   for (const s2 of strip) {
@@ -9948,6 +11223,14 @@ var stripUntil = (content2, ...until) => {
   const stopIdx = asChars(content2).findIndex((c) => until.includes(c));
   return content2.slice(stopIdx);
 };
+var retainChars = (content2, ...retain2) => {
+  let chars = asChars(content2);
+  return chars.filter((c) => retain2.includes(c)).join("");
+};
+var stripChars = (content2, ...strip) => {
+  let chars = asChars(content2);
+  return chars.filter((c) => !strip.includes(c)).join("");
+};
 var retainWhile = (content2, ...retain2) => {
   const stopIdx = asChars(content2).findIndex((c) => !retain2.includes(c));
   return content2.slice(0, stopIdx);
@@ -9960,6 +11243,10 @@ function retainUntil(content2, ...find2) {
   }
   return idx === 0 ? "" : content2.slice(0, idx);
 }
+var stripWhile = (content2, ...match2) => {
+  const stopIdx = asChars(content2).findIndex((c) => !match2.includes(c));
+  return content2.slice(stopIdx);
+};
 var createFnWithProps = (fn2, props, narrowing = false) => {
   let fnWithProps = fn2;
   for (let prop of Object.keys(props)) {
@@ -10013,6 +11300,18 @@ var getUrlQueryParams = (url, specific = void 0) => {
   }
   return qp === "" ? qp : `?${qp}`;
 };
+identity({
+  string: "<<string>>",
+  number: "<<number>>",
+  boolean: "<<boolean>>",
+  true: "<<true>>",
+  false: "<<false>>",
+  null: "<<null>>",
+  undefined: "<<undefined>>",
+  unknown: "<<unknown>>",
+  any: "<<any>>",
+  never: "<<never>>"
+});
 const find_in = (tg) => (...values) => {
   const found = values.find((v) => tg(v));
   return found;
@@ -10346,11 +11645,53 @@ const getPropertyType = (value2) => {
       } else if (content2.endsWith(".excalidraw")) {
         return "drawing::vault";
       }
-      return "link";
     }
+    if (isPhoneNumber(value2)) {
+      return "phoneNumber";
+    }
+    if (isEmail(value2)) {
+      return "email";
+    }
+    if (isInlineSvg(value2)) {
+      return "svg::inline";
+    }
+    if (isMetric(value2)) {
+      return "metric";
+    }
+    if (isZipCode(value2)) {
+      return "geo::zip-code";
+    }
+    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
+      return "geo::country";
+    }
+    if (isUrl(value2)) {
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      if (isRepoUrl(value2)) {
+        return "url::repo";
+      }
+      if (isRetailUrl(value2)) {
+        return "url::retail";
+      }
+      if (isNewsUrl(value2)) {
+        return "url::news";
+      }
+      if (isYouTubeUrl(value2)) {
+        return "url::youtube";
+      }
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      return "url";
+    }
+    return "string";
   }
-  if (isInlineSvg(value2)) {
-    return "svg::inline";
+  if (isNumber$1(value2)) {
+    return "number";
+  }
+  if (isBoolean(value2)) {
+    return "boolean";
   } else if (isArray(value2) && value2.length > 0) {
     const variants = new Set(value2.map(getPropertyType));
     if (variants.size === 1) {
@@ -10725,12 +12066,12 @@ const getMetadata = (p2) => (pg) => {
     let meta = {};
     for (const key of Object.keys(fm)) {
       const type = getPropertyType(fm[key]);
-      if (meta[type]) {
-        meta[type].push(key);
-        kv[key] = [fm[key], "${type}"];
+      if (type && !type.startsWith("other")) {
+        meta[type] = meta[type] ? [...meta[type], key] : [key];
+        kv[key] = [fm[key], type];
       } else {
-        meta["other"] = [key];
-        kv[key] = [fm[key], "other"];
+        meta["other"] = meta.other ? [...meta.other, key] : [key];
+        kv[key] = [fm[key], type];
       }
     }
     p2.warn("getMetadata() passed FM", { fm, meta, kv });
@@ -20397,7 +21738,7 @@ var _function = {};
   };
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.dual = exports.getEndomorphismMonoid = exports.SK = exports.hole = exports.constVoid = exports.constUndefined = exports.constNull = exports.constFalse = exports.constTrue = exports.unsafeCoerce = exports.apply = exports.getRing = exports.getSemiring = exports.getMonoid = exports.getSemigroup = exports.getBooleanAlgebra = void 0;
-  exports.identity = identity;
+  exports.identity = identity2;
   exports.constant = constant;
   exports.flip = flip2;
   exports.flow = flow;
@@ -20508,10 +21849,10 @@ var _function = {};
     };
   };
   exports.apply = apply;
-  function identity(a) {
+  function identity2(a) {
     return a;
   }
-  exports.unsafeCoerce = identity;
+  exports.unsafeCoerce = identity2;
   function constant(a) {
     return function() {
       return a;
@@ -20649,7 +21990,7 @@ var _function = {};
       concat: function(first, second) {
         return flow(first, second);
       },
-      empty: identity
+      empty: identity2
     };
   };
   exports.getEndomorphismMonoid = getEndomorphismMonoid;
@@ -71481,7 +72822,7 @@ function requireURLImpl() {
       return;
     }
     const ctorRegistry = utils2.initCtorRegistry(globalObject);
-    class URL3 {
+    class URL21 {
       constructor(url) {
         if (arguments.length < 1) {
           throw new globalObject.TypeError(
@@ -71747,7 +73088,7 @@ function requireURLImpl() {
         return Impl.implementation.canParse(...args);
       }
     }
-    Object.defineProperties(URL3.prototype, {
+    Object.defineProperties(URL21.prototype, {
       toJSON: { enumerable: true },
       href: { enumerable: true },
       toString: { enumerable: true },
@@ -71764,18 +73105,18 @@ function requireURLImpl() {
       hash: { enumerable: true },
       [Symbol.toStringTag]: { value: "URL", configurable: true }
     });
-    Object.defineProperties(URL3, { canParse: { enumerable: true } });
-    ctorRegistry[interfaceName] = URL3;
+    Object.defineProperties(URL21, { canParse: { enumerable: true } });
+    ctorRegistry[interfaceName] = URL21;
     Object.defineProperty(globalObject, interfaceName, {
       configurable: true,
       writable: true,
-      value: URL3
+      value: URL21
     });
     if (globalNames.includes("Window")) {
       Object.defineProperty(globalObject, "webkitURL", {
         configurable: true,
         writable: true,
-        value: URL3
+        value: URL21
       });
     }
   };
@@ -97658,7 +98999,7 @@ class MessagePort extends EventTarget {
   close() {
   }
 }
-let URL$1 = class URL2 extends URL_1 {
+let URL$1 = class URL20 extends URL_1 {
   /**
    * Creates a string containing a URL representing the object given in the parameter.
    *

@@ -1,6 +1,6 @@
 import { MarkdownView } from "obsidian";
 import Markdoc, { Node } from "@markdoc/markdoc";
-import { createPageInfo } from "./createPageInfo";
+import { createPageInfo } from "../page/getPageInfo";
 import { MarkdownViewMeta, PageInfo, PageView } from "../types";
 import KindModelPlugin from "../main";
 import { getHeadingLevel } from "../utils/getHeadingLevel";

@@ -715,12 +715,12 @@ export const getMetadata = (p: KindModelPlugin) => (
 		
 		for (const key of Object.keys(fm)) {
 			const type = getPropertyType(fm[key]);
-			if (meta[type]) {
-				meta[type].push(key);
-				kv[key] = [fm[key], "${type}"]
+			if (type && !type.startsWith("other")) {
+				meta[type] = meta[type] ? [...meta[type], key] : [key];
+				kv[key] = [fm[key], type]
 			} else {
-				meta["other"] = [key];
-				kv[key] = [fm[key], "other"]
+				meta["other"] = meta.other ? [...meta.other, key] : [key];;
+				kv[key] = [fm[key], type]
 			}
 		}
 		

@@ -98,5 +98,5 @@ The key thing to understand here is that these API features are _higher level_ a
 ## Other Documentation
 
 - [Overview Docs](../README.md)
-- [Page APIs][../page-apis.md]
+- [Page APIs](../page-apis.md)
 - [Query Handlers](./handlers.md)

@@ -55,7 +55,6 @@ export type PageInfo = {
 	hasCategoryTag: boolean;
 	hasCategoryProp: boolean;
 
-
 	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
 	isSubcategoryPage: boolean;
 	/**

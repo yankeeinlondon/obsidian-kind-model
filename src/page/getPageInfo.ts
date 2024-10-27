@@ -1,6 +1,6 @@
 import KindModelPlugin from "~/main";
-import { getPath } from "./getPath";
-import {  getPage,  hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "./cache";
+import { getPath } from "../api/getPath";
+import {  getPage,  hasPageInfo, lookupPageInfo, removeFromPageCache, updatePageInfoCache } from "../api/cache";
 import { PageInfo, PageReference } from "~/types";
 import { 
 	getCategories,
@@ -22,9 +22,9 @@ import {
 	isKindedPage, 
 	isSubcategoryPage, 
 	isTypeDefnPage 
-} from "./buildingBlocks";
-import { formattingApi } from "./formattingApi";
-import { showApi } from "./showApi";
+} from "../api/buildingBlocks";
+import { formattingApi } from "../api/formattingApi";
+import { showApi } from "../api/showApi";
 
 /**
  * Creates an entry in PAGE_INFO_CACHE for a page in the vault.
