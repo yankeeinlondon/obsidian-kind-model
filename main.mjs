@@ -11350,859 +11350,14 @@ const getPath = (pg) => {
 const toArray = (arrayLike) => {
   return Array.from(arrayLike);
 };
-let PAGE_CACHE = {};
-let PAGE_INFO_CACHE = {};
-let TAG_CACHE = null;
-const pushPage = (pg) => {
-  if (pg) {
-    PAGE_CACHE[pg.file.path] = pg;
-    return pg;
-  }
-};
-const initializeTagCache = (p2) => {
-  var _a2;
-  if (!TAG_CACHE) {
-    TAG_CACHE = {};
-    const kindDefn = p2.dv.pages(`#kind`);
-    const typeDefn = p2.dv.pages(`#type`);
-    for (const pg of kindDefn) {
-      const path = pg.file.path;
-      const tag = (_a2 = pg.file.etags.find(
-        (i) => i.startsWith(`#kind/`)
-      )) == null ? void 0 : _a2.split("/")[1];
-      if (tag) {
-        if (`kind/${tag}` in TAG_CACHE) {
-          TAG_CACHE[`kind/${tag}`].add(path);
-        } else {
-          TAG_CACHE[`kind/${tag}`] = new Set(path);
-        }
-      } else {
-        p2.info(`no kind: ${pg.file.name}`, toArray(pg.file.etags));
-      }
-    }
-    for (const pg of typeDefn) {
-      const path = pg.file.path;
-      const typeTag = pg.file.etags.find((i) => decomposeTag(p2)(i).type === "kind");
-      const tag = typeTag ? decomposeTag(p2)(typeTag) : void 0;
-      if (tag && tag.type === "type") {
-        if (tag.typeDefnTag in TAG_CACHE) {
-          TAG_CACHE[tag.typeDefnTag].add(path);
-        } else {
-          TAG_CACHE[tag.typeDefnTag] = new Set(path);
-        }
-      }
-    }
-    const sample = Object.keys(TAG_CACHE).slice(0, 8).join(", ") + ` ...`;
-    p2.info(`Initialized Tag cache [${Object.keys(TAG_CACHE).length}]`, sample);
-  } else {
-    p2.debug(`Kind Tag Cache already cached`);
-  }
-};
-const lookupKindTags = (p2) => {
-  initializeTagCache(p2);
-  return TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith(`kind/`)).map((i) => i.replace(`kind/`, "")) : [];
-};
-let classificationTags = false;
-const initializeClassificationTags = (p2) => {
-  initializeTagCache(p2);
-  const kinds = lookupKindTags(p2);
-  if (!classificationTags && TAG_CACHE) {
-    classificationTags = true;
-    let cats = 0;
-    let subs = 0;
-    for (const kind of kinds) {
-      const categoryPages = kind ? toArray(
-        p2.dv.pages(`#${kind}/category`)
-      ) : [];
-      const subcategoryPages = toArray(
-        p2.dv.pages(`#${kind}/subcategory`)
-      );
-      subs = subs + subcategoryPages.length;
-      for (const c of categoryPages) {
-        const tags = getCategoryTags(p2)(c);
-        for (const tag of tags) {
-          cats = cats + 1;
-          const cat = tag == null ? void 0 : tag.defnTag;
-          if (!cat) {
-            p2.warn(`Missing tag definition`, {
-              tag,
-              page: c.file.name
-            });
-          } else {
-            if (cat in TAG_CACHE) {
-              TAG_CACHE[cat].add(c.file.path);
-            } else if (TAG_CACHE) {
-              TAG_CACHE[cat] = new Set(c.file.path);
-            }
-          }
-        }
-      }
-      for (const c of subcategoryPages) {
-        const tags = getSubcategoryTags(p2)(c);
-        for (const tag of tags) {
-          const cat = tag.defnTag;
-          if (cat in TAG_CACHE) {
-            TAG_CACHE[cat].add(c.file.path);
-          } else if (TAG_CACHE) {
-            TAG_CACHE[cat] = new Set(c.file.path);
-          }
-        }
-      }
-    }
-    const catSample = Object.keys(TAG_CACHE).filter((i) => i.includes("category/")).slice(0, 8);
-    const subSample = Object.keys(TAG_CACHE).filter((i) => i.includes("subcategory/")).slice(0, 8);
-    p2.info(`Initialized Classification Tags`, {
-      categories: cats,
-      subcategories: subs,
-      catSample,
-      subSample,
-      all: Object.keys(TAG_CACHE)
-    });
-    classificationTags = true;
-  }
-};
-const getKindTagsFromPage = (p2) => (ref) => {
-  const page = p2.api.getPage(ref);
-  if (page) {
-    return Array.from(page.file.etags).filter((i) => isKindTag()(i)).map(
-      (i) => i.replace(`#kind/`, "")
-    );
-  }
-  return [];
-};
-const getKindTagsFromCache = (tag) => {
-  const tags = TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith("kind/")) : [];
-  if (tag) {
-    return tags.filter((i) => i.includes(tag)).map((i) => i.replace(`#kind/`, ""));
-  } else {
-    return tags.map((i) => i.replace(`#kind/`, ""));
-  }
-};
-const getTagPathFromCache = (p2) => (tag) => {
-  initializeTagCache(p2);
-  if (TAG_CACHE && tag in TAG_CACHE) {
-    return Array.from(TAG_CACHE[tag])[0];
-  }
-  return void 0;
-};
-const lookupTagSuggestions = (p2) => (tag) => {
-  initializeClassificationTags(p2);
-  if (TAG_CACHE) {
-    const safeTag = stripLeading(tag, "#");
-    const withTags = safeTag.split("/").filter(
-      (i) => !["category", "subcategory"].includes(i)
-    );
-    return Object.keys(TAG_CACHE).filter((i) => withTags.some((t) => i.includes(t)));
-  }
-  return [];
-};
-const lookupPageFromTag = (p2) => (tag) => {
-  initializeTagCache(p2);
-  let rebuiltTag = void 0;
-  if (TAG_CACHE) {
-    const safeTag = stripLeading(tag, "#");
-    const parts = decomposeTag(p2)(safeTag);
-    rebuiltTag = parts.type === "kind" ? parts.kindTag : parts.type === "category" ? parts.categoryDefnTag : parts.type === "subcategory" ? parts.subcategoryDefnTag : void 0;
-    if (!rebuiltTag) {
-      p2.info("invalid tag", `lookupPageFromTag(${tag}) called but this is an unknown tag (aka, not kind, category, or subcategory)`, parts);
-      return void 0;
-    }
-    if (rebuiltTag in TAG_CACHE) {
-      const pathOptions = TAG_CACHE[rebuiltTag];
-      if (!pathOptions) {
-        p2.warn(`Missing Tag`, { tag, rebuiltTag, keys: Object.keys(TAG_CACHE) });
-      }
-      const path = Array.from(pathOptions).pop();
-      if (pathOptions.size > 1) {
-        p2.debug(`call to lookupPageFromTag(${tag}) resolved to MORE than one [${pathOptions.size}] path but we returned the first one: "${path}"`);
-      }
-      const page = pathOptions.size > 0 ? getPage(p2)(path) : void 0;
-      if (pathOptions && !page) {
-        p2.warn(`call to lookupPageFromTag(${tag}) and the path was resolved as "${path}" but no page could be found at this location!`);
-      }
-      return page;
-    }
-    initializeClassificationTags(p2);
-    if (rebuiltTag in TAG_CACHE) {
-      const path = TAG_CACHE[stripLeading(tag, "#")];
-      return path.size > 0 ? getPage(p2)(Array.from(path.values())[0]) : void 0;
-    } else {
-      p2.warn(`Tag ${tag} not Found!`, {
-        rebuiltTag,
-        suggestions: lookupTagSuggestions(p2)(rebuiltTag)
-      });
-      return void 0;
-    }
-  }
-  p2.warn(`Call to lookupPageFromTag() found empty cache after initialization!`);
-  return void 0;
-};
-const addTagToCache = (p2) => (tag, path) => {
-  initializeTagCache(p2);
-  if (TAG_CACHE) {
-    p2.debug("adding tag to cache", { tag, path });
-    if (tag in TAG_CACHE) {
-      TAG_CACHE[tag].add(path);
-    } else {
-      TAG_CACHE[tag] = new Set(path);
-    }
-  }
-};
-const getKindDefnFromCache = (p2) => (tag, at) => {
-  if (!TAG_CACHE) {
-    initializeTagCache(p2);
-  }
-  if (TAG_CACHE && tag in TAG_CACHE && TAG_CACHE[tag].size > 0) {
-    return at ? Array.from(TAG_CACHE[tag]).find((p22) => p22 === at) : Array.from(TAG_CACHE[tag])[0];
-  }
-};
 const getPage = (p2) => (pg, force) => {
   var _a2;
   const path = getPath(pg);
   const fc = (_a2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _a2.fileCache;
-  const file = isObject(fc) && path && path in fc ? fc[path] : void 0;
+  isObject(fc) && path && path in fc ? fc[path] : void 0;
   const page = path ? p2.dv.page(path) : void 0;
-  if (page && TAG_CACHE) {
-    page.file.etags.map(
-      (tag) => {
-        const t = decomposeTag(p2)(tag);
-        if (t.type === "category") {
-          if (t.isCategoryDefn) {
-            addTagToCache(p2)(t.categoryDefnTag, page.file.path);
-          }
-        }
-        if (t.type === "subcategory") {
-          if (t.isSubcategoryDefn) {
-            addTagToCache(p2)(t.subcategoryDefnTag, page.file.path);
-          }
-        }
-      }
-    );
-  }
-  if (isDvPage(pg)) {
-    return file ? { ...pushPage(pg), _hash: file.hash } : pushPage(pg);
-  }
-  if (isPageInfo(pg)) {
-    return pg.page;
-  }
-  if (isUndefined(pg)) {
-    return void 0;
-  }
-  if (path) {
-    if (path in PAGE_INFO_CACHE) {
-      return file ? { ...PAGE_INFO_CACHE[path].page, _hash: file.hash } : PAGE_INFO_CACHE[path].page;
-    } else if (path in PAGE_CACHE) {
-      return file ? { ...PAGE_CACHE[path], _hash: file.hash } : PAGE_CACHE[path];
-    } else {
-      return pushPage(p2.dv.page(path));
-    }
-  }
-  return void 0;
+  return page;
 };
-const removeFromPageCache = (p2) => (pg) => {
-  const path = getPath(pg);
-  if (PAGE_CACHE && path && path in PAGE_CACHE) {
-    delete PAGE_CACHE[path];
-  }
-};
-const hasPageInfo = (p2) => (pg) => {
-  const path = getPath(pg);
-  return path && path in PAGE_INFO_CACHE ? true : false;
-};
-const updatePageInfoCache = (p2) => (path, info2) => {
-  if (!PAGE_INFO_CACHE) {
-    PAGE_INFO_CACHE = {};
-  }
-  PAGE_INFO_CACHE[path] = info2;
-};
-const lookupPageInfo = (p2) => (pg) => {
-  let path = getPath(pg);
-  if (!path) {
-    p2.warn(`failed to identify a valid file path from the page representation passed to lookupPageType()`, p2);
-    return void 0;
-  }
-  if (path in PAGE_INFO_CACHE) {
-    return PAGE_INFO_CACHE[path];
-  } else {
-    return void 0;
-  }
-};
-const getPropertyType = (value2) => {
-  if (isYouTubeUrl(value2)) {
-    getYouTubePageType(value2);
-    if (isYouTubeCreatorUrl(value2)) {
-      return `youtube::creator::featured`;
-    }
-    if (isYouTubeFeedUrl(value2, "history")) {
-      return `youtube::feed::history`;
-    }
-  }
-  if (isString$1(value2)) {
-    if (value2.startsWith("[[") && value2.endsWith("]]")) {
-      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
-      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
-        return "image::vault";
-      } else if (content2.endsWith(".excalidraw")) {
-        return "drawing::vault";
-      }
-    }
-    if (isPhoneNumber(value2)) {
-      return "phoneNumber";
-    }
-    if (isEmail(value2)) {
-      return "email";
-    }
-    if (isInlineSvg(value2)) {
-      return "svg::inline";
-    }
-    if (isMetric(value2)) {
-      return "metric";
-    }
-    if (isZipCode(value2)) {
-      return "geo::zip-code";
-    }
-    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
-      return "geo::country";
-    }
-    if (isUrl(value2)) {
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      if (isRepoUrl(value2)) {
-        return "url::repo";
-      }
-      if (isRetailUrl(value2)) {
-        return "url::retail";
-      }
-      if (isNewsUrl(value2)) {
-        return "url::news";
-      }
-      if (isYouTubeUrl(value2)) {
-        return "url::youtube";
-      }
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      return "url";
-    }
-    return "string";
-  }
-  if (isNumber$1(value2)) {
-    return "number";
-  }
-  if (isBoolean(value2)) {
-    return "boolean";
-  } else if (isArray(value2) && value2.length > 0) {
-    const variants = new Set(value2.map(getPropertyType));
-    if (variants.size === 1) {
-      return `list::${Array.from(variants)[0]}`;
-    } else {
-      return `list::mixed::${Array.from(variants).join(",")}`;
-    }
-  }
-  return `other::${toKebabCase(String(typeof value2))}`;
-};
-const getKnownKindTags = (p2) => (tag) => {
-  initializeTagCache(p2);
-  return getKindTagsFromCache(tag);
-};
-const isKeyOf = (container, key) => {
-  return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
-};
-const isKindTag = (p2) => (tag) => {
-  const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
-  const parts = safeTag.split("/");
-  const valid = getKindTagsFromCache();
-  return valid.includes(`kind/${parts[0]}`);
-};
-const hasCategoryTagDefn = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const hasBareCategory = page.file.etags.find((t) => t.startsWith(`#category/`)) ? true : false;
-    const hasKindCategory = page.file.etags.find((t) => t.split("/")[1] === "category" && t.split("/").length === 3);
-    return hasBareCategory || hasKindCategory ? true : false;
-  }
-  return false;
-};
-const hasSubcategoryTagDefn = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const hasBareSubcategory = page.file.etags.find((t) => t.startsWith(`#subcategory/`)) ? true : false;
-    const hasKindSubcategory = page.file.etags.find((t) => t.split("/")[2] === "subcategory" && t.split("/").length === 4);
-    return hasBareSubcategory || hasKindSubcategory ? true : false;
-  }
-  return false;
-};
-const hasCategoryTag = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const kindTags = Array.from(page.file.tags).filter((t) => isKindTag(stripLeading(t.split("/")[0], "#")));
-    const withCategory = kindTags.filter((t) => t.split("/").length > 1).map((t) => t.split("/")[1]);
-    return withCategory.length > 0;
-  }
-  return false;
-};
-const hasCategoryProp = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return page.category && isFileLink(page.category);
-  }
-  return false;
-};
-const hasCategoriesProp = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return page.categories && Array.isArray(page.categories) && page.categories.filter(isFileLink).length > 0 ? true : false;
-  }
-  return false;
-};
-const isCategoryPage = (p2) => (pg) => {
-  var _a2;
-  const page = getPage(p2)(pg);
-  const cat = getPage(p2)(getKindDefnFromCache(p2)("category"));
-  if (page) {
-    return hasCategoryTagDefn(p2)(page) || page.role && isFileLink(page.role) && page.role.path === ((_a2 = cat == null ? void 0 : cat.file) == null ? void 0 : _a2.path) ? true : false;
-  }
-  return false;
-};
-const isSubcategoryPage = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.etags.find((i) => isSubcategoryDefnTag()(i) || isSubcategoryPage(p2)(i));
-    return tags ? true : false;
-  }
-  return false;
-};
-const hasMultipleKinds = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.tags;
-    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
-    return kindTags.length > 1 ? true : false;
-  }
-  return false;
-};
-const hasKindTag = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.etags;
-    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
-    return kindTags.length > 0 ? true : false;
-  }
-  return false;
-};
-const hasKindDefinitionTag = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.tags.filter((t) => t.startsWith(`#kind/`));
-    return tags.length > 0 ? true : false;
-  }
-  return false;
-};
-const hasTypeDefinitionTag = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.tags.filter((t) => t.startsWith(`#type/`));
-    return tags.length > 0 ? true : false;
-  }
-  return false;
-};
-const hasKindProp = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return isDefined(page.kind) && isFileLink(page.kind);
-  }
-  return false;
-};
-const hasKindsProp = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return isDefined(page.kinds) && isArray(page.kinds) && page.kinds.some((p22) => isFileLink(p22));
-  }
-  return false;
-};
-const hasTypeProp = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return isDefined(page.type) && isFileLink(page.type);
-  }
-  return false;
-};
-const isCategoryDefnTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 3 && parts[1] === "category" ? true : false;
-};
-const isSubcategoryDefnTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 4 && parts[1] === "subcategory" ? true : false;
-};
-const isKindedWithCategoryTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 2 && isKindTag()(parts[0]);
-};
-const isKindedWithSubcategoryTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 3 && !["category", "subcategory"].includes(parts[1]) && isKindTag()(parts[0]) ? true : false;
-};
-const decomposeTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  if (!isKindTag()(parts[0])) {
-    return {
-      type: "unknown",
-      tag,
-      safeTag,
-      suggestions: lookupTagSuggestions(p2)(safeTag)
-    };
-  }
-  const partial2 = {
-    tag,
-    safeTag,
-    kindTag: parts[0],
-    kindDefnTag: `kind/${parts[0]}`
-  };
-  if (isCategoryDefnTag()(safeTag)) {
-    return {
-      type: "category",
-      ...partial2,
-      categoryTag: parts[2],
-      categoryDefnTag: safeTag,
-      isCategoryDefn: true,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isKindedWithCategoryTag()(safeTag)) {
-    return {
-      type: "category",
-      ...partial2,
-      categoryTag: parts[1],
-      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isKindedWithSubcategoryTag()(safeTag)) {
-    return {
-      type: "subcategory",
-      ...partial2,
-      categoryTag: parts[1],
-      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
-      subcategoryTag: parts[2],
-      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isSubcategoryDefnTag()(safeTag)) {
-    return {
-      type: "subcategory",
-      ...partial2,
-      categoryTag: parts[2],
-      categoryDefnTag: `${parts[0]}/category/${parts[2]}`,
-      subcategoryTag: parts[3],
-      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}/${parts[3]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: true,
-      isKindDefn: false
-    };
-  } else if (isTypeDefnPage(p2)(safeTag)) {
-    return {
-      type: "type",
-      typeDefnTag: `type/${parts[1]}`,
-      typeTag: parts[1],
-      tag,
-      safeTag,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  }
-  return {
-    type: "kind",
-    ...partial2,
-    isCategoryDefn: false,
-    isSubcategoryDefn: false,
-    isKindDefn: safeTag.includes("kind/")
-  };
-};
-const getFrontmatter = (p2) => (from) => {
-  if (isDvPage(from)) {
-    return from.file.frontmatter;
-  }
-  if (isPageInfo(from)) {
-    return from.fm;
-  }
-  if (isFrontmatter(from)) {
-    return from;
-  }
-  const page = p2.api.getPage(from);
-  if (page) {
-    return page.file.frontmatter;
-  } else {
-    p2.debug(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, { from });
-    return {};
-  }
-};
-const getCategories = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
-  const categories = [];
-  if (page) {
-    if (hasPageInfo()(page)) {
-      return lookupPageInfo(p2)(page).categories;
-    }
-    const tags = getCategoryTags(p2)(page);
-    return tags.map((t) => {
-      return {
-        ...t,
-        category: lookupPageFromTag(p2)(t.defnTag)
-      };
-    });
-  }
-  return categories;
-};
-const getSubcategories = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
-  if (page) {
-    const tags = getSubcategoryTags(p2)(page).map((t) => {
-      const subcategory = lookupPageFromTag(p2)(t.defnTag);
-      if (subcategory) {
-        return {
-          ...t,
-          subcategory
-        };
-      }
-      return void 0;
-    }).filter((i) => i);
-    return tags;
-  }
-  return [];
-};
-const getPageIcons = (p2) => (pg) => {
-  return {
-    hasIcon: false
-  };
-};
-const getPageBanners = (p2) => (pg) => {
-  return {
-    hasBanner: false
-  };
-};
-const getSuggestedActions = (p2) => (pg) => {
-  return [];
-};
-const isKindedPage = (p2) => (pg) => {
-  let info2 = lookupPageInfo(p2)(pg);
-  if (info2) {
-    return info2.type === "kinded";
-  }
-  const page = getPage(p2)(pg);
-  if (page) {
-    return hasKindProp(p2)(page) && !hasKindDefinitionTag(p2)(page) ? true : hasKindTag(p2)(page) ? true : false;
-  }
-  const err = new Error(`Call to isKindedPage() was unable to resolve the page reference to a page in the vault: ${JSON.stringify(page)}`);
-  p2.error(err);
-  return false;
-};
-const isKindDefnPage = (p2) => (pg) => {
-  let info2 = lookupPageInfo(p2)(pg);
-  if (info2) {
-    return info2.type === "kind-defn" ? true : false;
-  }
-  const page = getPage(p2)(pg);
-  const kindMaster = getPage(p2)(getKindDefnFromCache(p2)("kind"));
-  if (page) {
-    const kindProp = isFileLink(page == null ? void 0 : page.kind) ? getPage(p2)(page.kind.path) : void 0;
-    return hasKindDefinitionTag(p2)(page) ? true : kindProp && kindProp.file.path === (kindMaster == null ? void 0 : kindMaster.file.path) ? true : false;
-  }
-  return false;
-};
-const isTypeDefnPage = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    if (hasTypeDefinitionTag(p2)(page)) {
-      return true;
-    }
-  }
-  return false;
-};
-const getKindTagsOfPage = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.etags.filter((t) => isKindTag()(t));
-    return Array.from(tags).map((t) => t.replace("#kind/", ""));
-  }
-  return [];
-};
-const getKindPages = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = getKindTagsOfPage(p2)(page);
-    const paths = new Set(...tags.map(
-      (t) => getTagPathFromCache(p2)(t)
-    ).filter((i) => i));
-    if (page.kind && isFileLink(page.kind) && !paths.has(page.kind.path)) {
-      paths.add(page.kind.path);
-    }
-    if (page.kinds && Array.isArray(page.kinds) && page.kinds.some((i) => isFileLink(i))) {
-      const links = page.kinds.filter((i) => isFileLink(i));
-      for (const link2 of links) {
-        if (!paths.has(link2.path)) {
-          paths.add(link2.path);
-        }
-      }
-    }
-    return Array.from(paths).map((path) => getPage(p2)(path)).filter((i) => i);
-  }
-  return [];
-};
-const getMetadata = (p2) => (pg) => {
-  const fm = pg ? getFrontmatter(p2)(pg) : void 0;
-  const kv = {};
-  if (fm) {
-    let meta = {};
-    for (const key of Object.keys(fm)) {
-      const type = getPropertyType(fm[key]);
-      if (type && !type.startsWith("other")) {
-        meta[type] = meta[type] ? [...meta[type], key] : [key];
-        kv[key] = [fm[key], type];
-      } else {
-        meta["other"] = meta.other ? [...meta.other, key] : [key];
-        kv[key] = [fm[key], type];
-      }
-    }
-    p2.warn("getMetadata() passed FM", { fm, meta, kv });
-    return meta;
-  } else {
-    p2.debug(`no metadata found on page ${pg ? pg : "unknown"}`);
-  }
-  return {};
-};
-const getSubcategoryTags = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
-  if (page) {
-    const tags = page.file.etags.filter(
-      (t) => isKindedWithSubcategoryTag()(t) || isSubcategoryDefnTag()(t)
-    );
-    return toArray(tags).map((t) => {
-      const tag = decomposeTag(p2)(t);
-      if (tag.type === "subcategory") {
-        return {
-          rawTag: tag.tag,
-          kindTag: tag.kindTag,
-          categoryTag: tag.categoryTag,
-          subcategoryTag: tag.subcategoryTag,
-          defnTag: tag.subcategoryDefnTag,
-          kindedTag: `${tag.kindTag}/${tag.categoryTag}/${tag.subcategoryTag}`
-        };
-      } else {
-        return void 0;
-      }
-    }).filter((i) => i);
-  }
-  return [];
-};
-const getCategoryTags = (p2) => (pg, filterByKindTag) => {
-  const page = p2.api.getPage(pg);
-  if (page) {
-    const tags = toArray(page.file.etags).map(
-      (t) => decomposeTag(p2)(t)
-    ).filter((t) => t.type === "category" || t.type === "subcategory");
-    const cats = [];
-    for (const tag of tags) {
-      if (tag.type === "category" || tag.type === "subcategory") {
-        if (page.file.etags.find((t) => t === `#${tag.categoryDefnTag}`)) {
-          addTagToCache(p2)(tag.categoryDefnTag, page.file.path);
-        }
-        if (filterByKindTag === void 0 || tag.kindTag === filterByKindTag) {
-          cats.push({
-            rawTag: tag.tag,
-            kindTag: tag.kindTag,
-            categoryTag: tag.categoryTag,
-            defnTag: tag.categoryDefnTag,
-            kindedTag: `${tag.kindTag}/${tag.categoryTag}`
-          });
-        }
-      }
-    }
-    return cats;
-  }
-  return [];
-};
-const getClassification = (p2) => (pg) => {
-  const page = pg ? getPage(p2)(pg) : void 0;
-  if (page) {
-    if (hasPageInfo()(page)) {
-      return lookupPageInfo(p2)(page).classifications;
-    } else {
-      const kinds = getKindPages(p2)(page);
-      const classification2 = [];
-      for (const kind of kinds) {
-        const kindTag = getKindTagsFromPage(p2)(kind)[0];
-        const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
-        const partial2 = getSubcategoryTags(p2)(page.subcategory)[0];
-        const subcategory = partial2 ? {
-          ...partial2,
-          subcategory: lookupPageFromTag(p2)(partial2.defnTag)
-        } : void 0;
-        const categories = getCategoryTags(p2)(page, kindTag).map(
-          (c) => {
-            if (page.file.etags.includes(`#${c.defnTag}`)) {
-              addTagToCache(p2)(c.defnTag, page.file.path);
-              return {
-                ...c,
-                category: page
-              };
-            } else {
-              return {
-                ...c,
-                category: lookupPageFromTag(p2)(c.defnTag)
-              };
-            }
-          }
-        );
-        classification2.push({
-          type,
-          kind,
-          kindTag,
-          categories,
-          subcategory
-        });
-      }
-      p2.info("classification", classification2);
-      return classification2;
-    }
-  }
-  return [];
-};
-const buildingBlocks = (plugin4) => ({
-  isKeyOf,
-  hasCategoryProp: hasCategoryProp(plugin4),
-  hasCategoriesProp: hasCategoriesProp(plugin4),
-  hasTypeDefinitionTag: hasTypeDefinitionTag(plugin4),
-  hasKindDefinitionTag: hasKindDefinitionTag(plugin4),
-  hasKindProp: hasKindProp(plugin4),
-  hasKindsProp: hasKindsProp(plugin4),
-  hasTypeProp: hasTypeProp(plugin4),
-  hasMultipleKinds: hasMultipleKinds(plugin4),
-  hasCategoryTagDefn: hasCategoryTagDefn(plugin4),
-  hasCategoryTag: hasCategoryTag(plugin4),
-  getCategories: getCategories(plugin4),
-  hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
-  isCategoryPage: isCategoryPage(plugin4),
-  isSubcategoryPage: isSubcategoryPage(plugin4),
-  isKindedPage: isKindedPage(plugin4),
-  isKindDefnPage: isKindDefnPage(plugin4),
-  getClassification: getClassification(plugin4),
-  getKnownKindTags: getKnownKindTags(plugin4),
-  getKindPages: getKindPages(plugin4),
-  getMetadata: getMetadata(plugin4),
-  getKindTagsOfPage: getKindTagsOfPage(plugin4),
-  isKindTag: isKindTag()
-});
 var __create = Object.create;
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -20516,6 +19671,141 @@ Markdoc.validate = validate;
 Markdoc.createElement = createElement$1;
 Markdoc.truthy = truthy;
 Markdoc.format = format;
+const isTag = (v) => {
+  return typeof v === "object" ? true : false;
+};
+const getHeadingLevel = (file, content2, level, plugin4) => {
+  const root = transform2(parse3(content2 || ""));
+  let headings = [];
+  if (isTag(root)) {
+    const nodes = root.children;
+    headings = nodes.filter((n2) => isTag(n2) && n2.name === `h${level}`).map((h) => {
+      const content22 = h.children.join("\n");
+      const name2 = content22.replaceAll(/<(.+)>/gs, "").trim();
+      return {
+        level,
+        name: name2,
+        content: content22,
+        link: plugin4.dv.fileLink(`${file}#${content22}`, false, name2),
+        attributes: h.attributes
+      };
+    });
+    plugin4.debug(
+      `H${level} tags`,
+      () => `${nodes.length} total nodes, ${nodes.filter((i) => isTag(i)).length} are tags, the rest are scalar items.`,
+      `Of these tags, ${headings.length} are H${level} tags.`,
+      headings
+    );
+  } else {
+    plugin4.error(`The page content passed in did not result in a renderable tag node!`);
+  }
+  return headings;
+};
+const splitContent = (c) => {
+  const re = /^(---.*\n---\s*\n){0,1}(.*)$/s;
+  const result = c.trimStart().match(re);
+  if (!result) {
+    throw new Error(`Invalid Content passed to splitContent(${c})`);
+  }
+  const [_, yaml, body] = Array.from(result);
+  const [preH1, h1, postH1] = `
+${body}`.includes("\n# ") ? [
+    stripTrailing(stripAfter(`
+${body}`, "\n# "), "\n#"),
+    stripAfter(stripBefore(`
+${body}`, "\n#"), "\n").trim(),
+    stripBefore(stripBefore(`
+${body}`, "\n#"), "\n")
+  ] : [
+    void 0,
+    void 0,
+    body
+  ];
+  const blocks = (h1 ? postH1 : body).replace(/\n## (.*)\n/g, "\n## $1:::\n").slice(1).split(/\n## /).map((blk) => {
+    if (/.+:::/.test(blk)) {
+      let [name2, ...rest] = blk.split("\n");
+      name2 = name2.replace(/(.*):::/, "$1");
+      let content2 = rest.join("\n").replace(/^\n(.*)/, "$1").trim();
+      return { name: name2, content: content2 };
+    } else {
+      return { name: "anonymous", content: blk };
+    }
+  });
+  return { yaml, body, blocks, preH1, postH1, h1 };
+};
+const getViewMeta = (p2) => (view, info2) => {
+  var _a2, _b2, _c2;
+  const content2 = view.getViewData();
+  const ast = Markdoc.parse(content2);
+  const renderableTree = Markdoc.transform(ast);
+  return {
+    iconAssigned: view.icon,
+    mode: view.currentMode,
+    leaf: view.leaf,
+    leaf_height: (_a2 = view.leaf) == null ? void 0 : _a2.height,
+    leaf_width: (_b2 = view.leaf) == null ? void 0 : _b2.width,
+    leaf_id: ((_c2 = view.leaf) == null ? void 0 : _c2.id) || "",
+    popover: view.hoverPopover,
+    allowNoFile: view.allowNoFile,
+    previewMode: view.previewMode,
+    viewType: view.getViewType(),
+    navigation: view.navigation,
+    editor: view.editor,
+    requestSave: view.requestSave,
+    load: view.load,
+    onLoadFile: view.onLoadFile,
+    onUnloadFile: view.onUnloadFile,
+    onResize: view.onResize,
+    onRename: view.onRename,
+    onPaneMenu: view.onPaneMenu,
+    register: view.register,
+    registerDomEvent: view.registerDomEvent,
+    registerEvent: view.registerEvent,
+    registerInterval: view.registerInterval,
+    getEphemeralState: view.getEphemeralState,
+    getState: view.getState,
+    getViewData: view.getViewData,
+    getViewType: view.getViewType,
+    content: content2,
+    showBackLinks: view == null ? void 0 : view.showBackLinks,
+    contentStructure: {
+      ast,
+      renderableTree,
+      h2_tags: getHeadingLevel(info2.path, content2, 2, p2),
+      ...splitContent(content2)
+    }
+  };
+};
+const getDomMeta = (view, info2) => ({
+  container: view.containerEl,
+  content: view.contentEl,
+  icon: view == null ? void 0 : view.iconEl,
+  backButton: view == null ? void 0 : view.backButtonEl,
+  forwardButton: view == null ? void 0 : view.forwardButtonEl,
+  title: view == null ? void 0 : view.titleEl,
+  titleContainer: view == null ? void 0 : view.titleContainerEl,
+  titleParent: view == null ? void 0 : view.titleParentEl,
+  inlineTitle: view == null ? void 0 : view.inlineTitleEl,
+  actions: view == null ? void 0 : view.actionsEl,
+  modeButton: view == null ? void 0 : view.modeButtonEl,
+  backlinks: view == null ? void 0 : view.backlinksEl
+});
+const createPageView = (p2) => (view) => {
+  var _a2;
+  if ((_a2 = view == null ? void 0 : view.file) == null ? void 0 : _a2.path) {
+    const info2 = createPageInfo(p2)(view.file.path);
+    if (info2) {
+      const viewMeta = {
+        view: getViewMeta(p2)(view, info2),
+        dom: getDomMeta(view)
+      };
+      return {
+        ...info2,
+        ...viewMeta
+      };
+    }
+  }
+};
 const style$1 = (opts) => {
   let fmt = [];
   if (opts == null ? void 0 : opts.pb) {
@@ -20677,6 +19967,57 @@ const listStyle = (opts = {}) => {
     fmt.push(`margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
   }
   return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
+};
+const defaultLinkIcons = {
+  documentation: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M8 13h8v-2H8Zm0 3h8v-2H8Zm0 3h5v-2H8Zm-2 3q-.825 0-1.412-.587Q4 20.825 4 20V4q0-.825.588-1.413Q5.175 2 6 2h8l6 6v12q0 .825-.587 1.413Q18.825 22 18 22Zm7-13h5l-5-5Z"/></svg>`,
+  repo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16"><path fill="#a3a3a3" d="M14 4a2 2 0 1 0-2.47 1.94V7a.48.48 0 0 1-.27.44L8.49 8.88l-2.76-1.4A.49.49 0 0 1 5.46 7V5.94a2 2 0 1 0-1 0V7a1.51 1.51 0 0 0 .82 1.34L8 9.74v1.32a2 2 0 1 0 1 0V9.74l2.7-1.36A1.49 1.49 0 0 0 12.52 7V5.92A2 2 0 0 0 14 4zM4 4a1 1 0 1 1 2 0a1 1 0 0 1-2 0zm5.47 9a1 1 0 1 1-2 0a1 1 0 0 1 2 0zM12 5a1 1 0 1 1 0-2a1 1 0 0 1 0 2z"/></svg>`,
+  review: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 14 14"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.87" cy="5" r="4.5"/><circle cx="6.87" cy="5" r="2"/><path d="m6 9.42l-.88 3.7a.51.51 0 0 1-.26.33a.54.54 0 0 1-.43 0L1.11 12a.51.51 0 0 1-.18-.78L3.5 8M8 9.37l.9 3.75a.5.5 0 0 0 .27.33a.51.51 0 0 0 .42 0l3.3-1.45a.5.5 0 0 0 .28-.35a.48.48 0 0 0-.1-.43l-2.68-3.41"/></g></svg>`,
+  company: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M11 15v-2h2v2h-2Zm-1-9h4V4h-4v2ZM4 21q-.825 0-1.413-.588T2 19v-4h7v1q0 .425.288.713T10 17h4q.425 0 .713-.288T15 16v-1h7v4q0 .825-.588 1.413T20 21H4Zm-2-8V8q0-.825.588-1.413T4 6h4V4q0-.825.588-1.413T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v5h-7v-1q0-.425-.288-.713T14 11h-4q-.425 0-.713.288T9 12v1H2Z"/></svg>`,
+  link: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`,
+  link_broken: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14 11.998C14 9.506 11.683 7 8.857 7H7.143C4.303 7 2 9.238 2 11.998c0 2.378 1.71 4.368 4 4.873a5.3 5.3 0 0 0 1.143.124M16.857 7c.393 0 .775.043 1.143.124c2.29.505 4 2.495 4 4.874a4.92 4.92 0 0 1-1.634 3.653"/><path d="M10 11.998c0 2.491 2.317 4.997 5.143 4.997M18 22.243l2.121-2.122m0 0L22.243 18m-2.122 2.121L18 18m2.121 2.121l2.122 2.122"/></g></svg>`,
+  api: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M13.26 10.5h2v1h-2z"/><path fill="#888888" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M8.4 15L8 13.77H6.06L5.62 15H4l2.2-6h1.62L10 15Zm8.36-3.5a1.47 1.47 0 0 1-1.5 1.5h-2v2h-1.5V9h3.5a1.47 1.47 0 0 1 1.5 1.5ZM20 15h-1.5V9H20Z"/><path fill="#888888" d="M6.43 12.77h1.16l-.58-1.59z"/></svg>`,
+  article: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#888888" d="M88 112a8 8 0 0 1 8-8h80a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h80a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m136-88v120a24 24 0 0 1-24 24H32a24 24 0 0 1-24-23.89V88a8 8 0 0 1 16 0v96a8 8 0 0 0 16 0V64a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16m-16 0H56v120a23.84 23.84 0 0 1-1.37 8H208a8 8 0 0 0 8-8Z"/></svg>`,
+  you_tube: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M0 0h24v24H0z"/><path fill="#888888" d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9"/></g></svg>`,
+  website: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="#a3a3a3"><path fill-rule="evenodd" d="M14 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-4Zm3 2h-2v6h2V9Z" clip-rule="evenodd"/><path d="M6 7a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2H6Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H6Zm-1 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/><path fill-rule="evenodd" d="M4 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4Zm16 2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></g></svg>`,
+  wikipedia: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="m14.97 18.95l-2.56-6.03c-1.02 1.99-2.14 4.08-3.1 6.03c-.01.01-.47 0-.47 0C7.37 15.5 5.85 12.1 4.37 8.68C4.03 7.84 2.83 6.5 2 6.5v-.45h5.06v.45c-.6 0-1.62.4-1.36 1.05c.72 1.54 3.24 7.51 3.93 9.03c.47-.94 1.8-3.42 2.37-4.47c-.45-.88-1.87-4.18-2.29-5c-.32-.54-1.13-.61-1.75-.61c0-.15.01-.25 0-.44l4.46.01v.4c-.61.03-1.18.24-.92.82c.6 1.24.95 2.13 1.5 3.28c.17-.34 1.07-2.19 1.5-3.16c.26-.65-.13-.91-1.21-.91c.01-.12.01-.33.01-.43c1.39-.01 3.48-.01 3.85-.02v.42c-.71.03-1.44.41-1.82.99L13.5 11.3c.18.51 1.96 4.46 2.15 4.9l3.85-8.83c-.3-.72-1.16-.87-1.5-.87v-.45l4 .03v.42c-.88 0-1.43.5-1.75 1.25c-.8 1.79-3.25 7.49-4.85 11.2z"/></svg>`,
+  playground: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 50 50"><path fill="#888888" d="M7.206 31.141c2.885 0 5.219-2.399 5.219-5.368c0-2.953-2.334-5.353-5.219-5.353C4.333 20.42 2 22.82 2 25.773c0 2.968 2.333 5.368 5.206 5.368m29.23 9.216a.53.53 0 0 1 .741.117l.965 1.372a.578.578 0 0 1-.116.766l-7.08 5.287a.536.536 0 0 1-.743-.118l-.962-1.372a.575.575 0 0 1 .116-.764zm-8.003-6.817l-2.808-5.063l-1.474 1.107l2.808 5.09zm-6.551-11.827L10.962 2l-2.089.014l11.522 20.82zm10.281 10.43C32.78 31.682 34.192 31 35 31h10c1.974 0 3 1.986 3 4.004C48 37.034 46.974 38 45 38h-9l-10.836 8.502c-3.808 2.819-6.116-.278-6.116-.278l-8.483-8.729c-1.423-1.753-1.115-5.089.591-6.566l11.739-8.597c1.166-1 2.897-.843 3.885.343c.976 1.2.822 2.994-.346 3.996l-7.515 5.657l5.399 5.484z"/></svg>`,
+  pin: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M12 20.556q-.235 0-.47-.077t-.432-.25q-1.067-.98-2.163-2.185q-1.097-1.204-1.992-2.493t-1.467-2.633t-.572-2.622q0-3.173 2.066-5.234T12 3t5.03 2.062t2.066 5.234q0 1.279-.572 2.613q-.572 1.333-1.458 2.632q-.885 1.3-1.981 2.494T12.92 20.21q-.191.173-.434.26t-.487.086m.003-8.825q.668 0 1.14-.476t.472-1.143t-.475-1.14t-1.143-.472t-1.14.476t-.472 1.143t.475 1.14t1.143.472"/></svg>`,
+  map: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M14.485 19.737L9 17.823l-3.902 1.509q-.21.083-.401.053t-.354-.132t-.252-.274Q4 18.806 4 18.583V6.41q0-.282.13-.499t.378-.303l3.957-1.345q.124-.05.257-.075T9 4.163t.278.025t.257.075L15 6.177l3.902-1.509q.21-.083.401-.053t.354.132t.252.274q.091.173.091.396v12.259q0 .284-.159.495t-.426.298l-3.9 1.287q-.13.05-.256.065q-.125.016-.26.016t-.26-.025t-.254-.075m.015-1.033v-11.7l-5-1.746v11.7zm1 0L19 17.55V5.7l-3.5 1.304zM5 18.3l3.5-1.342v-11.7L5 6.45zM15.5 7.004v11.7zm-7-1.746v11.7z"/></svg>`,
+  home: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M6 19h3v-5q0-.425.288-.712T10 13h4q.425 0 .713.288T15 14v5h3v-9l-6-4.5L6 10zm-2 0v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-4q-.425 0-.712-.288T13 20v-5h-2v5q0 .425-.288.713T10 21H6q-.825 0-1.412-.587T4 19m8-6.75"/></svg>`,
+  office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`
+};
+const iconApi = (p2) => {
+  const linkIcons = getPage(p2)("Link Icons") || defaultLinkIcons;
+  return {
+    /**
+     * The designated page for _link icons_ with a backup of core icons so 
+     * even if `Link Icons` page is missing we'll have a decent selection.
+     */
+    linkIcons,
+    /**
+     * Returns the current icon associated with a page.
+     * 
+     * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
+     */
+    currentIcon: (pg) => {
+      const page = getPage(p2)(pg);
+      if (page) {
+        const path = getPath(page);
+        return getIcon(path);
+      }
+      return "broken-link";
+    },
+    /**
+     * Returns all the properties which have inline SVG definitions
+     */
+    getIconProperties: (pg) => {
+      const page = getPage(p2)(pg);
+      if (page) {
+        return getMetadata(p2)(page)["svg::inline"];
+      }
+      return [];
+    }
+  };
 };
 const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
 const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
@@ -20956,69 +20297,6 @@ const renderApi = (p2) => (el, filePath) => {
       filePath,
       true
     )
-  };
-};
-const createPageInfoBlock = (p2) => (source, container, component, filePath) => {
-  const page = createPageInfo(p2)(filePath);
-  if (page) {
-    return {
-      ...page,
-      content: source,
-      container,
-      component,
-      ...renderApi(p2)(container, filePath)
-    };
-  }
-};
-const defaultLinkIcons = {
-  documentation: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M8 13h8v-2H8Zm0 3h8v-2H8Zm0 3h5v-2H8Zm-2 3q-.825 0-1.412-.587Q4 20.825 4 20V4q0-.825.588-1.413Q5.175 2 6 2h8l6 6v12q0 .825-.587 1.413Q18.825 22 18 22Zm7-13h5l-5-5Z"/></svg>`,
-  repo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16"><path fill="#a3a3a3" d="M14 4a2 2 0 1 0-2.47 1.94V7a.48.48 0 0 1-.27.44L8.49 8.88l-2.76-1.4A.49.49 0 0 1 5.46 7V5.94a2 2 0 1 0-1 0V7a1.51 1.51 0 0 0 .82 1.34L8 9.74v1.32a2 2 0 1 0 1 0V9.74l2.7-1.36A1.49 1.49 0 0 0 12.52 7V5.92A2 2 0 0 0 14 4zM4 4a1 1 0 1 1 2 0a1 1 0 0 1-2 0zm5.47 9a1 1 0 1 1-2 0a1 1 0 0 1 2 0zM12 5a1 1 0 1 1 0-2a1 1 0 0 1 0 2z"/></svg>`,
-  review: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 14 14"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.87" cy="5" r="4.5"/><circle cx="6.87" cy="5" r="2"/><path d="m6 9.42l-.88 3.7a.51.51 0 0 1-.26.33a.54.54 0 0 1-.43 0L1.11 12a.51.51 0 0 1-.18-.78L3.5 8M8 9.37l.9 3.75a.5.5 0 0 0 .27.33a.51.51 0 0 0 .42 0l3.3-1.45a.5.5 0 0 0 .28-.35a.48.48 0 0 0-.1-.43l-2.68-3.41"/></g></svg>`,
-  company: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M11 15v-2h2v2h-2Zm-1-9h4V4h-4v2ZM4 21q-.825 0-1.413-.588T2 19v-4h7v1q0 .425.288.713T10 17h4q.425 0 .713-.288T15 16v-1h7v4q0 .825-.588 1.413T20 21H4Zm-2-8V8q0-.825.588-1.413T4 6h4V4q0-.825.588-1.413T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v5h-7v-1q0-.425-.288-.713T14 11h-4q-.425 0-.713.288T9 12v1H2Z"/></svg>`,
-  link: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`,
-  link_broken: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14 11.998C14 9.506 11.683 7 8.857 7H7.143C4.303 7 2 9.238 2 11.998c0 2.378 1.71 4.368 4 4.873a5.3 5.3 0 0 0 1.143.124M16.857 7c.393 0 .775.043 1.143.124c2.29.505 4 2.495 4 4.874a4.92 4.92 0 0 1-1.634 3.653"/><path d="M10 11.998c0 2.491 2.317 4.997 5.143 4.997M18 22.243l2.121-2.122m0 0L22.243 18m-2.122 2.121L18 18m2.121 2.121l2.122 2.122"/></g></svg>`,
-  api: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M13.26 10.5h2v1h-2z"/><path fill="#888888" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M8.4 15L8 13.77H6.06L5.62 15H4l2.2-6h1.62L10 15Zm8.36-3.5a1.47 1.47 0 0 1-1.5 1.5h-2v2h-1.5V9h3.5a1.47 1.47 0 0 1 1.5 1.5ZM20 15h-1.5V9H20Z"/><path fill="#888888" d="M6.43 12.77h1.16l-.58-1.59z"/></svg>`,
-  article: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#888888" d="M88 112a8 8 0 0 1 8-8h80a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h80a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m136-88v120a24 24 0 0 1-24 24H32a24 24 0 0 1-24-23.89V88a8 8 0 0 1 16 0v96a8 8 0 0 0 16 0V64a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16m-16 0H56v120a23.84 23.84 0 0 1-1.37 8H208a8 8 0 0 0 8-8Z"/></svg>`,
-  you_tube: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M0 0h24v24H0z"/><path fill="#888888" d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9"/></g></svg>`,
-  website: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="#a3a3a3"><path fill-rule="evenodd" d="M14 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-4Zm3 2h-2v6h2V9Z" clip-rule="evenodd"/><path d="M6 7a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2H6Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H6Zm-1 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/><path fill-rule="evenodd" d="M4 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4Zm16 2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></g></svg>`,
-  wikipedia: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="m14.97 18.95l-2.56-6.03c-1.02 1.99-2.14 4.08-3.1 6.03c-.01.01-.47 0-.47 0C7.37 15.5 5.85 12.1 4.37 8.68C4.03 7.84 2.83 6.5 2 6.5v-.45h5.06v.45c-.6 0-1.62.4-1.36 1.05c.72 1.54 3.24 7.51 3.93 9.03c.47-.94 1.8-3.42 2.37-4.47c-.45-.88-1.87-4.18-2.29-5c-.32-.54-1.13-.61-1.75-.61c0-.15.01-.25 0-.44l4.46.01v.4c-.61.03-1.18.24-.92.82c.6 1.24.95 2.13 1.5 3.28c.17-.34 1.07-2.19 1.5-3.16c.26-.65-.13-.91-1.21-.91c.01-.12.01-.33.01-.43c1.39-.01 3.48-.01 3.85-.02v.42c-.71.03-1.44.41-1.82.99L13.5 11.3c.18.51 1.96 4.46 2.15 4.9l3.85-8.83c-.3-.72-1.16-.87-1.5-.87v-.45l4 .03v.42c-.88 0-1.43.5-1.75 1.25c-.8 1.79-3.25 7.49-4.85 11.2z"/></svg>`,
-  playground: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 50 50"><path fill="#888888" d="M7.206 31.141c2.885 0 5.219-2.399 5.219-5.368c0-2.953-2.334-5.353-5.219-5.353C4.333 20.42 2 22.82 2 25.773c0 2.968 2.333 5.368 5.206 5.368m29.23 9.216a.53.53 0 0 1 .741.117l.965 1.372a.578.578 0 0 1-.116.766l-7.08 5.287a.536.536 0 0 1-.743-.118l-.962-1.372a.575.575 0 0 1 .116-.764zm-8.003-6.817l-2.808-5.063l-1.474 1.107l2.808 5.09zm-6.551-11.827L10.962 2l-2.089.014l11.522 20.82zm10.281 10.43C32.78 31.682 34.192 31 35 31h10c1.974 0 3 1.986 3 4.004C48 37.034 46.974 38 45 38h-9l-10.836 8.502c-3.808 2.819-6.116-.278-6.116-.278l-8.483-8.729c-1.423-1.753-1.115-5.089.591-6.566l11.739-8.597c1.166-1 2.897-.843 3.885.343c.976 1.2.822 2.994-.346 3.996l-7.515 5.657l5.399 5.484z"/></svg>`,
-  pin: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M12 20.556q-.235 0-.47-.077t-.432-.25q-1.067-.98-2.163-2.185q-1.097-1.204-1.992-2.493t-1.467-2.633t-.572-2.622q0-3.173 2.066-5.234T12 3t5.03 2.062t2.066 5.234q0 1.279-.572 2.613q-.572 1.333-1.458 2.632q-.885 1.3-1.981 2.494T12.92 20.21q-.191.173-.434.26t-.487.086m.003-8.825q.668 0 1.14-.476t.472-1.143t-.475-1.14t-1.143-.472t-1.14.476t-.472 1.143t.475 1.14t1.143.472"/></svg>`,
-  map: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M14.485 19.737L9 17.823l-3.902 1.509q-.21.083-.401.053t-.354-.132t-.252-.274Q4 18.806 4 18.583V6.41q0-.282.13-.499t.378-.303l3.957-1.345q.124-.05.257-.075T9 4.163t.278.025t.257.075L15 6.177l3.902-1.509q.21-.083.401-.053t.354.132t.252.274q.091.173.091.396v12.259q0 .284-.159.495t-.426.298l-3.9 1.287q-.13.05-.256.065q-.125.016-.26.016t-.26-.025t-.254-.075m.015-1.033v-11.7l-5-1.746v11.7zm1 0L19 17.55V5.7l-3.5 1.304zM5 18.3l3.5-1.342v-11.7L5 6.45zM15.5 7.004v11.7zm-7-1.746v11.7z"/></svg>`,
-  home: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M6 19h3v-5q0-.425.288-.712T10 13h4q.425 0 .713.288T15 14v5h3v-9l-6-4.5L6 10zm-2 0v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-4q-.425 0-.712-.288T13 20v-5h-2v5q0 .425-.288.713T10 21H6q-.825 0-1.412-.587T4 19m8-6.75"/></svg>`,
-  office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`
-};
-const iconApi = (p2) => {
-  const linkIcons = getPage(p2)("Link Icons") || defaultLinkIcons;
-  return {
-    /**
-     * The designated page for _link icons_ with a backup of core icons so 
-     * even if `Link Icons` page is missing we'll have a decent selection.
-     */
-    linkIcons,
-    /**
-     * Returns the current icon associated with a page.
-     * 
-     * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
-     */
-    currentIcon: (pg) => {
-      const page = getPage(p2)(pg);
-      if (page) {
-        const path = getPath(page);
-        return getIcon(path);
-      }
-      return "broken-link";
-    },
-    /**
-     * Returns all the properties which have inline SVG definitions
-     */
-    getIconProperties: (pg) => {
-      const page = getPage(p2)(pg);
-      if (page) {
-        return getMetadata(p2)(page)["svg::inline"];
-      }
-      return [];
-    }
   };
 };
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
@@ -21544,141 +20822,822 @@ const createPageInfo = (p2) => (pg) => {
     removeFromPageCache()(path);
   }
 };
-const isTag = (v) => {
-  return typeof v === "object" ? true : false;
+const createPageInfoBlock = (p2) => (source, container, component, filePath) => {
+  const page = createPageInfo(p2)(filePath);
+  if (page) {
+    return {
+      ...page,
+      content: source,
+      container,
+      component,
+      ...renderApi(p2)(container, filePath)
+    };
+  }
 };
-const getHeadingLevel = (file, content2, level, plugin4) => {
-  const root = transform2(parse3(content2 || ""));
-  let headings = [];
-  if (isTag(root)) {
-    const nodes = root.children;
-    headings = nodes.filter((n2) => isTag(n2) && n2.name === `h${level}`).map((h) => {
-      const content22 = h.children.join("\n");
-      const name2 = content22.replaceAll(/<(.+)>/gs, "").trim();
-      return {
-        level,
-        name: name2,
-        content: content22,
-        link: plugin4.dv.fileLink(`${file}#${content22}`, false, name2),
-        attributes: h.attributes
-      };
-    });
-    plugin4.debug(
-      `H${level} tags`,
-      () => `${nodes.length} total nodes, ${nodes.filter((i) => isTag(i)).length} are tags, the rest are scalar items.`,
-      `Of these tags, ${headings.length} are H${level} tags.`,
-      headings
-    );
+let PAGE_CACHE = {};
+let PAGE_INFO_CACHE = {};
+let TAG_CACHE = null;
+const initializeTagCache = (p2) => {
+  var _a2;
+  if (!TAG_CACHE) {
+    TAG_CACHE = {};
+    const kindDefn = p2.dv.pages(`#kind`);
+    const typeDefn = p2.dv.pages(`#type`);
+    for (const pg of kindDefn) {
+      const path = pg.file.path;
+      const tag = (_a2 = pg.file.etags.find(
+        (i) => i.startsWith(`#kind/`)
+      )) == null ? void 0 : _a2.split("/")[1];
+      if (tag) {
+        if (`kind/${tag}` in TAG_CACHE) {
+          TAG_CACHE[`kind/${tag}`].add(path);
+        } else {
+          TAG_CACHE[`kind/${tag}`] = new Set(path);
+        }
+      } else {
+        p2.info(`no kind: ${pg.file.name}`, toArray(pg.file.etags));
+      }
+    }
+    for (const pg of typeDefn) {
+      const path = pg.file.path;
+      const typeTag = pg.file.etags.find((i) => decomposeTag(p2)(i).type === "kind");
+      const tag = typeTag ? decomposeTag(p2)(typeTag) : void 0;
+      if (tag && tag.type === "type") {
+        if (tag.typeDefnTag in TAG_CACHE) {
+          TAG_CACHE[tag.typeDefnTag].add(path);
+        } else {
+          TAG_CACHE[tag.typeDefnTag] = new Set(path);
+        }
+      }
+    }
+    const sample = Object.keys(TAG_CACHE).slice(0, 8).join(", ") + ` ...`;
+    p2.info(`Initialized Tag cache [${Object.keys(TAG_CACHE).length}]`, sample);
   } else {
-    plugin4.error(`The page content passed in did not result in a renderable tag node!`);
+    p2.debug(`Kind Tag Cache already cached`);
   }
-  return headings;
 };
-const splitContent = (c) => {
-  const re = /^(---.*\n---\s*\n){0,1}(.*)$/s;
-  const result = c.trimStart().match(re);
-  if (!result) {
-    throw new Error(`Invalid Content passed to splitContent(${c})`);
+const lookupKindTags = (p2) => {
+  initializeTagCache(p2);
+  return TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith(`kind/`)).map((i) => i.replace(`kind/`, "")) : [];
+};
+let classificationTags = false;
+const initializeClassificationTags = (p2) => {
+  initializeTagCache(p2);
+  const kinds = lookupKindTags(p2);
+  if (!classificationTags && TAG_CACHE) {
+    classificationTags = true;
+    let cats = 0;
+    let subs = 0;
+    for (const kind of kinds) {
+      const categoryPages = kind ? toArray(
+        p2.dv.pages(`#${kind}/category`)
+      ) : [];
+      const subcategoryPages = toArray(
+        p2.dv.pages(`#${kind}/subcategory`)
+      );
+      subs = subs + subcategoryPages.length;
+      for (const c of categoryPages) {
+        const tags = getCategoryTags(p2)(c);
+        for (const tag of tags) {
+          cats = cats + 1;
+          const cat = tag == null ? void 0 : tag.defnTag;
+          if (!cat) {
+            p2.warn(`Missing tag definition`, {
+              tag,
+              page: c.file.name
+            });
+          } else {
+            if (cat in TAG_CACHE) {
+              TAG_CACHE[cat].add(c.file.path);
+            } else if (TAG_CACHE) {
+              TAG_CACHE[cat] = new Set(c.file.path);
+            }
+          }
+        }
+      }
+      for (const c of subcategoryPages) {
+        const tags = getSubcategoryTags(p2)(c);
+        for (const tag of tags) {
+          const cat = tag.defnTag;
+          if (cat in TAG_CACHE) {
+            TAG_CACHE[cat].add(c.file.path);
+          } else if (TAG_CACHE) {
+            TAG_CACHE[cat] = new Set(c.file.path);
+          }
+        }
+      }
+    }
+    const catSample = Object.keys(TAG_CACHE).filter((i) => i.includes("category/")).slice(0, 8);
+    const subSample = Object.keys(TAG_CACHE).filter((i) => i.includes("subcategory/")).slice(0, 8);
+    p2.info(`Initialized Classification Tags`, {
+      categories: cats,
+      subcategories: subs,
+      catSample,
+      subSample,
+      all: Object.keys(TAG_CACHE)
+    });
+    classificationTags = true;
   }
-  const [_, yaml, body] = Array.from(result);
-  const [preH1, h1, postH1] = `
-${body}`.includes("\n# ") ? [
-    stripTrailing(stripAfter(`
-${body}`, "\n# "), "\n#"),
-    stripAfter(stripBefore(`
-${body}`, "\n#"), "\n").trim(),
-    stripBefore(stripBefore(`
-${body}`, "\n#"), "\n")
-  ] : [
-    void 0,
-    void 0,
-    body
-  ];
-  const blocks = (h1 ? postH1 : body).replace(/\n## (.*)\n/g, "\n## $1:::\n").slice(1).split(/\n## /).map((blk) => {
-    if (/.+:::/.test(blk)) {
-      let [name2, ...rest] = blk.split("\n");
-      name2 = name2.replace(/(.*):::/, "$1");
-      let content2 = rest.join("\n").replace(/^\n(.*)/, "$1").trim();
-      return { name: name2, content: content2 };
+};
+const getKindTagsFromPage = (p2) => (ref) => {
+  const page = p2.api.getPage(ref);
+  if (page) {
+    return Array.from(page.file.etags).filter((i) => isKindTag()(i)).map(
+      (i) => i.replace(`#kind/`, "")
+    );
+  }
+  return [];
+};
+const getKindTagsFromCache = (tag) => {
+  const tags = TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith("kind/")) : [];
+  if (tag) {
+    return tags.filter((i) => i.includes(tag)).map((i) => i.replace(`#kind/`, ""));
+  } else {
+    return tags.map((i) => i.replace(`#kind/`, ""));
+  }
+};
+const getTagPathFromCache = (p2) => (tag) => {
+  initializeTagCache(p2);
+  if (TAG_CACHE && tag in TAG_CACHE) {
+    return Array.from(TAG_CACHE[tag])[0];
+  }
+  return void 0;
+};
+const lookupTagSuggestions = (p2) => (tag) => {
+  initializeClassificationTags(p2);
+  if (TAG_CACHE) {
+    const safeTag = stripLeading(tag, "#");
+    const withTags = safeTag.split("/").filter(
+      (i) => !["category", "subcategory"].includes(i)
+    );
+    return Object.keys(TAG_CACHE).filter((i) => withTags.some((t) => i.includes(t)));
+  }
+  return [];
+};
+const lookupPageFromTag = (p2) => (tag) => {
+  initializeTagCache(p2);
+  let rebuiltTag = void 0;
+  if (TAG_CACHE) {
+    const safeTag = stripLeading(tag, "#");
+    const parts = decomposeTag(p2)(safeTag);
+    rebuiltTag = parts.type === "kind" ? parts.kindTag : parts.type === "category" ? parts.categoryDefnTag : parts.type === "subcategory" ? parts.subcategoryDefnTag : void 0;
+    if (!rebuiltTag) {
+      p2.info("invalid tag", `lookupPageFromTag(${tag}) called but this is an unknown tag (aka, not kind, category, or subcategory)`, parts);
+      return void 0;
+    }
+    if (rebuiltTag in TAG_CACHE) {
+      const pathOptions = TAG_CACHE[rebuiltTag];
+      if (!pathOptions) {
+        p2.warn(`Missing Tag`, { tag, rebuiltTag, keys: Object.keys(TAG_CACHE) });
+      }
+      const path = Array.from(pathOptions).pop();
+      if (pathOptions.size > 1) {
+        p2.debug(`call to lookupPageFromTag(${tag}) resolved to MORE than one [${pathOptions.size}] path but we returned the first one: "${path}"`);
+      }
+      const page = pathOptions.size > 0 ? getPage(p2)(path) : void 0;
+      if (pathOptions && !page) {
+        p2.warn(`call to lookupPageFromTag(${tag}) and the path was resolved as "${path}" but no page could be found at this location!`);
+      }
+      return page;
+    }
+    initializeClassificationTags(p2);
+    if (rebuiltTag in TAG_CACHE) {
+      const path = TAG_CACHE[stripLeading(tag, "#")];
+      return path.size > 0 ? getPage(p2)(Array.from(path.values())[0]) : void 0;
     } else {
-      return { name: "anonymous", content: blk };
+      p2.warn(`Tag ${tag} not Found!`, {
+        rebuiltTag,
+        suggestions: lookupTagSuggestions(p2)(rebuiltTag)
+      });
+      return void 0;
     }
-  });
-  return { yaml, body, blocks, preH1, postH1, h1 };
+  }
+  p2.warn(`Call to lookupPageFromTag() found empty cache after initialization!`);
+  return void 0;
 };
-const getViewMeta = (p2) => (view, info2) => {
-  var _a2, _b2, _c2;
-  const content2 = view.getViewData();
-  const ast = Markdoc.parse(content2);
-  const renderableTree = Markdoc.transform(ast);
-  return {
-    iconAssigned: view.icon,
-    mode: view.currentMode,
-    leaf: view.leaf,
-    leaf_height: (_a2 = view.leaf) == null ? void 0 : _a2.height,
-    leaf_width: (_b2 = view.leaf) == null ? void 0 : _b2.width,
-    leaf_id: ((_c2 = view.leaf) == null ? void 0 : _c2.id) || "",
-    popover: view.hoverPopover,
-    allowNoFile: view.allowNoFile,
-    previewMode: view.previewMode,
-    viewType: view.getViewType(),
-    navigation: view.navigation,
-    editor: view.editor,
-    requestSave: view.requestSave,
-    load: view.load,
-    onLoadFile: view.onLoadFile,
-    onUnloadFile: view.onUnloadFile,
-    onResize: view.onResize,
-    onRename: view.onRename,
-    onPaneMenu: view.onPaneMenu,
-    register: view.register,
-    registerDomEvent: view.registerDomEvent,
-    registerEvent: view.registerEvent,
-    registerInterval: view.registerInterval,
-    getEphemeralState: view.getEphemeralState,
-    getState: view.getState,
-    getViewData: view.getViewData,
-    getViewType: view.getViewType,
-    content: content2,
-    showBackLinks: view == null ? void 0 : view.showBackLinks,
-    contentStructure: {
-      ast,
-      renderableTree,
-      h2_tags: getHeadingLevel(info2.path, content2, 2, p2),
-      ...splitContent(content2)
+const addTagToCache = (p2) => (tag, path) => {
+  initializeTagCache(p2);
+  if (TAG_CACHE) {
+    p2.debug("adding tag to cache", { tag, path });
+    if (tag in TAG_CACHE) {
+      TAG_CACHE[tag].add(path);
+    } else {
+      TAG_CACHE[tag] = new Set(path);
     }
+  }
+};
+const getKindDefnFromCache = (p2) => (tag, at) => {
+  if (!TAG_CACHE) {
+    initializeTagCache(p2);
+  }
+  if (TAG_CACHE && tag in TAG_CACHE && TAG_CACHE[tag].size > 0) {
+    return at ? Array.from(TAG_CACHE[tag]).find((p22) => p22 === at) : Array.from(TAG_CACHE[tag])[0];
+  }
+};
+const removeFromPageCache = (p2) => (pg) => {
+  const path = getPath(pg);
+  if (PAGE_CACHE && path && path in PAGE_CACHE) {
+    delete PAGE_CACHE[path];
+  }
+};
+const hasPageInfo = (p2) => (pg) => {
+  const path = getPath(pg);
+  return path && path in PAGE_INFO_CACHE ? true : false;
+};
+const updatePageInfoCache = (p2) => (path, info2) => {
+  if (!PAGE_INFO_CACHE) {
+    PAGE_INFO_CACHE = {};
+  }
+  PAGE_INFO_CACHE[path] = info2;
+};
+const lookupPageInfo = (p2) => (pg) => {
+  let path = getPath(pg);
+  if (!path) {
+    p2.warn(`failed to identify a valid file path from the page representation passed to lookupPageType()`, p2);
+    return void 0;
+  }
+  if (path in PAGE_INFO_CACHE) {
+    return PAGE_INFO_CACHE[path];
+  } else {
+    return void 0;
+  }
+};
+const getPropertyType = (value2) => {
+  if (isYouTubeUrl(value2)) {
+    getYouTubePageType(value2);
+    if (isYouTubeCreatorUrl(value2)) {
+      return `youtube::creator::featured`;
+    }
+    if (isYouTubeFeedUrl(value2, "history")) {
+      return `youtube::feed::history`;
+    }
+  }
+  if (isString$1(value2)) {
+    if (value2.startsWith("[[") && value2.endsWith("]]")) {
+      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
+      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
+        return "image::vault";
+      } else if (content2.endsWith(".excalidraw")) {
+        return "drawing::vault";
+      }
+    }
+    if (isPhoneNumber(value2)) {
+      return "phoneNumber";
+    }
+    if (isEmail(value2)) {
+      return "email";
+    }
+    if (isInlineSvg(value2)) {
+      return "svg::inline";
+    }
+    if (isMetric(value2)) {
+      return "metric";
+    }
+    if (isZipCode(value2)) {
+      return "geo::zip-code";
+    }
+    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
+      return "geo::country";
+    }
+    if (isUrl(value2)) {
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      if (isRepoUrl(value2)) {
+        return "url::repo";
+      }
+      if (isRetailUrl(value2)) {
+        return "url::retail";
+      }
+      if (isNewsUrl(value2)) {
+        return "url::news";
+      }
+      if (isYouTubeUrl(value2)) {
+        return "url::youtube";
+      }
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      return "url";
+    }
+    return "string";
+  }
+  if (isNumber$1(value2)) {
+    return "number";
+  }
+  if (isBoolean(value2)) {
+    return "boolean";
+  } else if (isArray(value2) && value2.length > 0) {
+    const variants = new Set(value2.map(getPropertyType));
+    if (variants.size === 1) {
+      return `list::${Array.from(variants)[0]}`;
+    } else {
+      return `list::mixed::${Array.from(variants).join(",")}`;
+    }
+  }
+  return `other::${toKebabCase(String(typeof value2))}`;
+};
+const getKnownKindTags = (p2) => (tag) => {
+  initializeTagCache(p2);
+  return getKindTagsFromCache(tag);
+};
+const isKeyOf = (container, key) => {
+  return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
+};
+const isKindTag = (p2) => (tag) => {
+  const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
+  const parts = safeTag.split("/");
+  const valid = getKindTagsFromCache();
+  return valid.includes(`kind/${parts[0]}`);
+};
+const hasCategoryTagDefn = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const hasBareCategory = page.file.etags.find((t) => t.startsWith(`#category/`)) ? true : false;
+    const hasKindCategory = page.file.etags.find((t) => t.split("/")[1] === "category" && t.split("/").length === 3);
+    return hasBareCategory || hasKindCategory ? true : false;
+  }
+  return false;
+};
+const hasSubcategoryTagDefn = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const hasBareSubcategory = page.file.etags.find((t) => t.startsWith(`#subcategory/`)) ? true : false;
+    const hasKindSubcategory = page.file.etags.find((t) => t.split("/")[2] === "subcategory" && t.split("/").length === 4);
+    return hasBareSubcategory || hasKindSubcategory ? true : false;
+  }
+  return false;
+};
+const hasCategoryTag = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const kindTags = Array.from(page.file.tags).filter((t) => isKindTag(stripLeading(t.split("/")[0], "#")));
+    const withCategory = kindTags.filter((t) => t.split("/").length > 1).map((t) => t.split("/")[1]);
+    return withCategory.length > 0;
+  }
+  return false;
+};
+const hasCategoryProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return page.category && isFileLink(page.category);
+  }
+  return false;
+};
+const hasCategoriesProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return page.categories && Array.isArray(page.categories) && page.categories.filter(isFileLink).length > 0 ? true : false;
+  }
+  return false;
+};
+const isCategoryPage = (p2) => (pg) => {
+  var _a2;
+  const page = getPage(p2)(pg);
+  const cat = getPage(p2)(getKindDefnFromCache(p2)("category"));
+  if (page) {
+    return hasCategoryTagDefn(p2)(page) || page.role && isFileLink(page.role) && page.role.path === ((_a2 = cat == null ? void 0 : cat.file) == null ? void 0 : _a2.path) ? true : false;
+  }
+  return false;
+};
+const isSubcategoryPage = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.etags.find((i) => isSubcategoryDefnTag()(i) || isSubcategoryPage(p2)(i));
+    return tags ? true : false;
+  }
+  return false;
+};
+const hasMultipleKinds = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.tags;
+    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
+    return kindTags.length > 1 ? true : false;
+  }
+  return false;
+};
+const hasKindTag = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.etags;
+    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
+    return kindTags.length > 0 ? true : false;
+  }
+  return false;
+};
+const hasKindDefinitionTag = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.tags.filter((t) => t.startsWith(`#kind/`));
+    return tags.length > 0 ? true : false;
+  }
+  return false;
+};
+const hasTypeDefinitionTag = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.tags.filter((t) => t.startsWith(`#type/`));
+    return tags.length > 0 ? true : false;
+  }
+  return false;
+};
+const hasKindProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return isDefined(page.kind) && isFileLink(page.kind);
+  }
+  return false;
+};
+const hasKindsProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return isDefined(page.kinds) && isArray(page.kinds) && page.kinds.some((p22) => isFileLink(p22));
+  }
+  return false;
+};
+const hasTypeProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return isDefined(page.type) && isFileLink(page.type);
+  }
+  return false;
+};
+const isCategoryDefnTag = (p2) => (tag) => {
+  const safeTag = stripLeading(tag, "#");
+  const parts = safeTag.split("/");
+  return parts.length === 3 && parts[1] === "category" ? true : false;
+};
+const isSubcategoryDefnTag = (p2) => (tag) => {
+  const safeTag = stripLeading(tag, "#");
+  const parts = safeTag.split("/");
+  return parts.length === 4 && parts[1] === "subcategory" ? true : false;
+};
+const isKindedWithCategoryTag = (p2) => (tag) => {
+  const safeTag = stripLeading(tag, "#");
+  const parts = safeTag.split("/");
+  return parts.length === 2 && isKindTag()(parts[0]);
+};
+const isKindedWithSubcategoryTag = (p2) => (tag) => {
+  const safeTag = stripLeading(tag, "#");
+  const parts = safeTag.split("/");
+  return parts.length === 3 && !["category", "subcategory"].includes(parts[1]) && isKindTag()(parts[0]) ? true : false;
+};
+const decomposeTag = (p2) => (tag) => {
+  const safeTag = stripLeading(tag, "#");
+  const parts = safeTag.split("/");
+  if (!isKindTag()(parts[0])) {
+    return {
+      type: "unknown",
+      tag,
+      safeTag,
+      suggestions: lookupTagSuggestions(p2)(safeTag)
+    };
+  }
+  const partial2 = {
+    tag,
+    safeTag,
+    kindTag: parts[0],
+    kindDefnTag: `kind/${parts[0]}`
+  };
+  if (isCategoryDefnTag()(safeTag)) {
+    return {
+      type: "category",
+      ...partial2,
+      categoryTag: parts[2],
+      categoryDefnTag: safeTag,
+      isCategoryDefn: true,
+      isSubcategoryDefn: false,
+      isKindDefn: false
+    };
+  } else if (isKindedWithCategoryTag()(safeTag)) {
+    return {
+      type: "category",
+      ...partial2,
+      categoryTag: parts[1],
+      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
+      isCategoryDefn: false,
+      isSubcategoryDefn: false,
+      isKindDefn: false
+    };
+  } else if (isKindedWithSubcategoryTag()(safeTag)) {
+    return {
+      type: "subcategory",
+      ...partial2,
+      categoryTag: parts[1],
+      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
+      subcategoryTag: parts[2],
+      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}`,
+      isCategoryDefn: false,
+      isSubcategoryDefn: false,
+      isKindDefn: false
+    };
+  } else if (isSubcategoryDefnTag()(safeTag)) {
+    return {
+      type: "subcategory",
+      ...partial2,
+      categoryTag: parts[2],
+      categoryDefnTag: `${parts[0]}/category/${parts[2]}`,
+      subcategoryTag: parts[3],
+      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}/${parts[3]}`,
+      isCategoryDefn: false,
+      isSubcategoryDefn: true,
+      isKindDefn: false
+    };
+  } else if (isTypeDefnPage(p2)(safeTag)) {
+    return {
+      type: "type",
+      typeDefnTag: `type/${parts[1]}`,
+      typeTag: parts[1],
+      tag,
+      safeTag,
+      isCategoryDefn: false,
+      isSubcategoryDefn: false,
+      isKindDefn: false
+    };
+  }
+  return {
+    type: "kind",
+    ...partial2,
+    isCategoryDefn: false,
+    isSubcategoryDefn: false,
+    isKindDefn: safeTag.includes("kind/")
   };
 };
-const getDomMeta = (view, info2) => ({
-  container: view.containerEl,
-  content: view.contentEl,
-  icon: view == null ? void 0 : view.iconEl,
-  backButton: view == null ? void 0 : view.backButtonEl,
-  forwardButton: view == null ? void 0 : view.forwardButtonEl,
-  title: view == null ? void 0 : view.titleEl,
-  titleContainer: view == null ? void 0 : view.titleContainerEl,
-  titleParent: view == null ? void 0 : view.titleParentEl,
-  inlineTitle: view == null ? void 0 : view.inlineTitleEl,
-  actions: view == null ? void 0 : view.actionsEl,
-  modeButton: view == null ? void 0 : view.modeButtonEl,
-  backlinks: view == null ? void 0 : view.backlinksEl
-});
-const createPageView = (p2) => (view) => {
-  var _a2;
-  if ((_a2 = view == null ? void 0 : view.file) == null ? void 0 : _a2.path) {
-    const info2 = createPageInfo(p2)(view.file.path);
-    if (info2) {
-      const viewMeta = {
-        view: getViewMeta(p2)(view, info2),
-        dom: getDomMeta(view)
-      };
-      return {
-        ...info2,
-        ...viewMeta
-      };
-    }
+const getFrontmatter = (p2) => (from) => {
+  if (isDvPage(from)) {
+    return from.file.frontmatter;
+  }
+  if (isPageInfo(from)) {
+    return from.fm;
+  }
+  if (isFrontmatter(from)) {
+    return from;
+  }
+  const page = p2.api.getPage(from);
+  if (page) {
+    return page.file.frontmatter;
+  } else {
+    p2.debug(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, { from });
+    return {};
   }
 };
+const getCategories = (p2) => (pg) => {
+  const page = p2.api.getPage(pg);
+  const categories = [];
+  if (page) {
+    if (hasPageInfo()(page)) {
+      return lookupPageInfo(p2)(page).categories;
+    }
+    const tags = getCategoryTags(p2)(page);
+    return tags.map((t) => {
+      return {
+        ...t,
+        category: lookupPageFromTag(p2)(t.defnTag)
+      };
+    });
+  }
+  return categories;
+};
+const getSubcategories = (p2) => (pg) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const tags = getSubcategoryTags(p2)(page).map((t) => {
+      const subcategory = lookupPageFromTag(p2)(t.defnTag);
+      if (subcategory) {
+        return {
+          ...t,
+          subcategory
+        };
+      }
+      return void 0;
+    }).filter((i) => i);
+    return tags;
+  }
+  return [];
+};
+const getPageIcons = (p2) => (pg) => {
+  return {
+    hasIcon: false
+  };
+};
+const getPageBanners = (p2) => (pg) => {
+  return {
+    hasBanner: false
+  };
+};
+const getSuggestedActions = (p2) => (pg) => {
+  return [];
+};
+const isKindedPage = (p2) => (pg) => {
+  let info2 = lookupPageInfo(p2)(pg);
+  if (info2) {
+    return info2.type === "kinded";
+  }
+  const page = getPage(p2)(pg);
+  if (page) {
+    return hasKindProp(p2)(page) && !hasKindDefinitionTag(p2)(page) ? true : hasKindTag(p2)(page) ? true : false;
+  }
+  const err = new Error(`Call to isKindedPage() was unable to resolve the page reference to a page in the vault: ${JSON.stringify(page)}`);
+  p2.error(err);
+  return false;
+};
+const isKindDefnPage = (p2) => (pg) => {
+  let info2 = lookupPageInfo(p2)(pg);
+  if (info2) {
+    return info2.type === "kind-defn" ? true : false;
+  }
+  const page = getPage(p2)(pg);
+  const kindMaster = getPage(p2)(getKindDefnFromCache(p2)("kind"));
+  if (page) {
+    const kindProp = isFileLink(page == null ? void 0 : page.kind) ? getPage(p2)(page.kind.path) : void 0;
+    return hasKindDefinitionTag(p2)(page) ? true : kindProp && kindProp.file.path === (kindMaster == null ? void 0 : kindMaster.file.path) ? true : false;
+  }
+  return false;
+};
+const isTypeDefnPage = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    if (hasTypeDefinitionTag(p2)(page)) {
+      return true;
+    }
+  }
+  return false;
+};
+const getKindTagsOfPage = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = page.file.etags.filter((t) => isKindTag()(t));
+    return Array.from(tags).map((t) => t.replace("#kind/", ""));
+  }
+  return [];
+};
+const getKindPages = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const tags = getKindTagsOfPage(p2)(page);
+    const paths = new Set(...tags.map(
+      (t) => getTagPathFromCache(p2)(t)
+    ).filter((i) => i));
+    if (page.kind && isFileLink(page.kind) && !paths.has(page.kind.path)) {
+      paths.add(page.kind.path);
+    }
+    if (page.kinds && Array.isArray(page.kinds) && page.kinds.some((i) => isFileLink(i))) {
+      const links = page.kinds.filter((i) => isFileLink(i));
+      for (const link2 of links) {
+        if (!paths.has(link2.path)) {
+          paths.add(link2.path);
+        }
+      }
+    }
+    return Array.from(paths).map((path) => getPage(p2)(path)).filter((i) => i);
+  }
+  return [];
+};
+const getMetadata = (p2) => (pg) => {
+  const fm = pg ? getFrontmatter(p2)(pg) : void 0;
+  const kv = {};
+  if (fm) {
+    let meta = {};
+    for (const key of Object.keys(fm)) {
+      const type = getPropertyType(fm[key]);
+      if (type && !type.startsWith("other")) {
+        meta[type] = meta[type] ? [...meta[type], key] : [key];
+        kv[key] = [fm[key], type];
+      } else {
+        meta["other"] = meta.other ? [...meta.other, key] : [key];
+        kv[key] = [fm[key], type];
+      }
+    }
+    p2.warn("getMetadata() passed FM", { fm, meta, kv });
+    return meta;
+  } else {
+    p2.debug(`no metadata found on page ${pg ? pg : "unknown"}`);
+  }
+  return {};
+};
+const getSubcategoryTags = (p2) => (pg) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const tags = page.file.etags.filter(
+      (t) => isKindedWithSubcategoryTag()(t) || isSubcategoryDefnTag()(t)
+    );
+    return toArray(tags).map((t) => {
+      const tag = decomposeTag(p2)(t);
+      if (tag.type === "subcategory") {
+        return {
+          rawTag: tag.tag,
+          kindTag: tag.kindTag,
+          categoryTag: tag.categoryTag,
+          subcategoryTag: tag.subcategoryTag,
+          defnTag: tag.subcategoryDefnTag,
+          kindedTag: `${tag.kindTag}/${tag.categoryTag}/${tag.subcategoryTag}`
+        };
+      } else {
+        return void 0;
+      }
+    }).filter((i) => i);
+  }
+  return [];
+};
+const getCategoryTags = (p2) => (pg, filterByKindTag) => {
+  const page = p2.api.getPage(pg);
+  if (page) {
+    const tags = toArray(page.file.etags).map(
+      (t) => decomposeTag(p2)(t)
+    ).filter((t) => t.type === "category" || t.type === "subcategory");
+    const cats = [];
+    for (const tag of tags) {
+      if (tag.type === "category" || tag.type === "subcategory") {
+        if (page.file.etags.find((t) => t === `#${tag.categoryDefnTag}`)) {
+          addTagToCache(p2)(tag.categoryDefnTag, page.file.path);
+        }
+        if (filterByKindTag === void 0 || tag.kindTag === filterByKindTag) {
+          cats.push({
+            rawTag: tag.tag,
+            kindTag: tag.kindTag,
+            categoryTag: tag.categoryTag,
+            defnTag: tag.categoryDefnTag,
+            kindedTag: `${tag.kindTag}/${tag.categoryTag}`
+          });
+        }
+      }
+    }
+    return cats;
+  }
+  return [];
+};
+const getClassification = (p2) => (pg) => {
+  const page = pg ? getPage(p2)(pg) : void 0;
+  if (page) {
+    if (hasPageInfo()(page)) {
+      return lookupPageInfo(p2)(page).classifications;
+    } else {
+      const kinds = getKindPages(p2)(page);
+      const classification2 = [];
+      for (const kind of kinds) {
+        const kindTag = getKindTagsFromPage(p2)(kind)[0];
+        const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
+        const partial2 = getSubcategoryTags(p2)(page.subcategory)[0];
+        const subcategory = partial2 ? {
+          ...partial2,
+          subcategory: lookupPageFromTag(p2)(partial2.defnTag)
+        } : void 0;
+        const categories = getCategoryTags(p2)(page, kindTag).map(
+          (c) => {
+            if (page.file.etags.includes(`#${c.defnTag}`)) {
+              addTagToCache(p2)(c.defnTag, page.file.path);
+              return {
+                ...c,
+                category: page
+              };
+            } else {
+              return {
+                ...c,
+                category: lookupPageFromTag(p2)(c.defnTag)
+              };
+            }
+          }
+        );
+        classification2.push({
+          type,
+          kind,
+          kindTag,
+          categories,
+          subcategory
+        });
+      }
+      p2.info("classification", classification2);
+      return classification2;
+    }
+  }
+  return [];
+};
+const buildingBlocks = (plugin4) => ({
+  isKeyOf,
+  hasCategoryProp: hasCategoryProp(plugin4),
+  hasCategoriesProp: hasCategoriesProp(plugin4),
+  hasTypeDefinitionTag: hasTypeDefinitionTag(plugin4),
+  hasKindDefinitionTag: hasKindDefinitionTag(plugin4),
+  hasKindProp: hasKindProp(plugin4),
+  hasKindsProp: hasKindsProp(plugin4),
+  hasTypeProp: hasTypeProp(plugin4),
+  hasMultipleKinds: hasMultipleKinds(plugin4),
+  hasCategoryTagDefn: hasCategoryTagDefn(plugin4),
+  hasCategoryTag: hasCategoryTag(plugin4),
+  getCategories: getCategories(plugin4),
+  hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
+  isCategoryPage: isCategoryPage(plugin4),
+  isSubcategoryPage: isSubcategoryPage(plugin4),
+  isKindedPage: isKindedPage(plugin4),
+  isKindDefnPage: isKindDefnPage(plugin4),
+  getClassification: getClassification(plugin4),
+  getKnownKindTags: getKnownKindTags(plugin4),
+  getKindPages: getKindPages(plugin4),
+  getMetadata: getMetadata(plugin4),
+  getKindTagsOfPage: getKindTagsOfPage(plugin4),
+  isKindTag: isKindTag()
+});
 const BackLinks = (p2) => (source, container, component, filePath) => async (params_str = "") => {
   const page = p2.api.createPageInfoBlock(
     source,

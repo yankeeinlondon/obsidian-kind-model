@@ -7,7 +7,8 @@ import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
 
 import { ShowApi } from "~/types";
-import { RenderApi, FormattingApi, getPage } from "~/api";
+import { RenderApi, FormattingApi } from "~/api";
+import { getPage } from "~/page";
 
 
 export type PageType = "kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn" | "none";

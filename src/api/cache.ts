@@ -1,12 +1,12 @@
-import { isObject, isUndefined, stripLeading } from "inferred-types";
+import { stripLeading } from "inferred-types";
 import KindModelPlugin from "../main";
 
 import { DvPage } from "../types";
 import { getPath } from "./getPath"
-import { isDvPage, isPageInfo } from "../type-guards";
 import { PageInfo, PageReference } from "../types";
 import { decomposeTag, getCategoryTags, getSubcategoryTags, isKindTag } from "./buildingBlocks";
 import { toArray } from "~/helpers/toArray";
+import { getPage } from "~/page";
 
 /**
  * caching of `DvPage`'s we're interested in
@@ -417,72 +417,6 @@ export const kindDefinitionsWithDuplicates = (p: KindModelPlugin) => () => {
 	return [];
 }
 
-
-/**
- * returns a `DvPage` from the page cache _or_ the page info cache (when available); otherwise 
- * will run a query to get it and ensure that's placed in the page cache.
- */
-export const getPage = (p: KindModelPlugin) => (
-	pg: PageReference | undefined,
-	force?: boolean
-): DvPage | undefined => {
-	const path = getPath(pg);
-	const fc = p?.api?.fileCache;
-	const file = isObject(fc) && path && path in fc
-		? fc[path]
-		: undefined;
-	const page = path 
-		? p.dv.page(path)
-		: undefined;
-
-	// opportunistically cache tags for categories and subcategories
-	if(page && TAG_CACHE) {
-		page.file.etags.map(
-			tag => {
-				const t = decomposeTag(p)(tag);
-				if (t.type === "category") {
-					if(t.isCategoryDefn) {
-						addTagToCache(p)(t.categoryDefnTag, page.file.path);
-					}
-				}
-				if (t.type === "subcategory") {
-					if(t.isSubcategoryDefn) {
-						addTagToCache(p)(t.subcategoryDefnTag, page.file.path);
-					}
-				}
-			}
-		);
-	}
-
-	if (isDvPage(pg)) {
-		return file 
-			? {...pushPage(pg), _hash: file.hash} as DvPage
-			: pushPage(pg) as DvPage;
-	}
-	if (isPageInfo(pg)) {
-		return pg.page;
-	}
-	
-	if (isUndefined(pg)) {
-		return undefined;
-	}
-	
-	if (path) {
-		if (path in PAGE_INFO_CACHE) {
-			return file
-				? {...PAGE_INFO_CACHE[path].page, _hash: file.hash}
-				: PAGE_INFO_CACHE[path].page;
-		} else if (path in PAGE_CACHE) {
-			return file
-				? {...PAGE_CACHE[path], _hash: file.hash}
-				: PAGE_CACHE[path];
-		} else {
-			return pushPage(p.dv.page(path))
-		}
-	}
-
-	return undefined;
-}
 
 /** remove an item from the PAGE cache */
 export const removeFromPageCache = (p: KindModelPlugin) => (

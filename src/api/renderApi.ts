@@ -15,9 +15,9 @@ import { isDvPage, isLink } from "~/type-guards";
 import { BlockQuoteOptions, DataArray, DvPage, Grouping, Link, ListItemsCallback, ObsidianCalloutColors, PageReference, PropertyType, SListItem } from "~/types";
 import { getClassification, isKindDefnPage, isKindedPage } from "./buildingBlocks";
 import { DateTime, Duration } from "luxon";
-import { getPage } from "./cache";
 import { blockquote } from "./formatting/blockquote";
 import { renderListItems } from "./formattingApi";
+import { getPage } from "~/page";
 
 export const isKeyOf = <
 	TContainer,

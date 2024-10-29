@@ -14,7 +14,6 @@ import {
 	getKindDefnFromCache, 
 	getKindTagsFromPage, 
 	getKindTagsFromCache, 
-	getPage, 
 	getTagPathFromCache, 
 	initializeTagCache, 
 	lookupPageFromTag, 
@@ -49,7 +48,7 @@ import {
 import { BuildingBlocksApi } from "../types";
 import { getPropertyType } from "./getPropertyType";
 import { toArray } from "~/helpers/toArray";
-import { log } from "console";
+import { getPage } from "~/page";
 
 /**
  * returns all Kind tags which have `tag` as part of them; all tags 

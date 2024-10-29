@@ -1,20 +1,21 @@
 import { 
 	createFnWithProps, 
-	CssSizing, 
 	ensureLeading, 
 	EscapeFunction, 
 	isFunction, 
-	isString, 
-	isUndefined, 
-	OptionalSpace, 
-	StripLeading, 
 	TypedFunction 
 } from "inferred-types";
-import { getPage, listStyle, style } from "../api";
+import {  listStyle, style } from "../api";
 import KindModelPlugin from "../main";
-import { BlockQuoteOptions, DvPage, Link, ListStyle, ObsidianCalloutColors, PageReference, StyleOptions } from "../types";
-import { isDvPage, isLink } from "../type-guards";
+import { 
+	BlockQuoteOptions,  
+	ListStyle, 
+	ObsidianCalloutColors, 
+	PageReference, 
+	StyleOptions 
+} from "../types";
 import { blockquote } from "./formatting/blockquote";
+import { getPage } from "~/page";
 
 type WrapperCallback = (items: string) => string;
 
