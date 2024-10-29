@@ -29,7 +29,7 @@ The most common, least expensive, and first call you should understand is `getPa
 - `Link` is a format provided by the [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/) which provides simple metadata that allows for building a _link_ to another page in the vault
 - `Page`'s passed in will simply be proxied back
 
-This method returns a `Page` object which closely resembles the `DvPage` you may be familiar with if you're fluent with **Dataview Queries** but adds on many helper methods. It is also "cache aware" so it can potentially resolve information slightly quicker than a straight up dataview query.
+This method returns a `Page` object which closely resembles the `DvPage` you may be familiar with if you're fluent with **Dataview Queries** but adds on many helper methods. In many regards this is just a slightly enhanced version of the `page(name)` query that [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/) that you'll probably already know but it should be preferred over using the **DataView** variant in all use-cases where you're working inside this repo.
 
 #### Resolving `string` references
 
@@ -45,7 +45,23 @@ For `string` types passed in we must resolve multiple _reference types_ and we w
 
 ### `getPageInfo(ref) → PageInfo`
 
-This method provides everything that `Page` does but adds additional meta properties based on analyzing the frontmatter on the page. Because it does take some calculation effort, this is kept separate from `Page` and you can easily upgrade to it as `getPageInfo(ref)` takes any reference that `getPage(ref)` does plus it can proxy through an already existing `PageInfo`.
+The `getPageInfo(ref)` endpoint allows the same document reference types that `getPage(ref)` does but rather than resolving to a `Page` type it resolves to `PageInfo` which is a superset.
+
+To understand the full delta's between `Page` and `PageInfo` it's always best to just rely on the types themselves as they self document this and are guaranteed to be up-to-date but here are a few characteristics of `PageInfo`:
+
+- the `page` property on a `PageInfo` dictionary is in fact the `Page` api
+- there are relational properties like:
+  - `categories`
+  - `subcategories`
+  - and a complete structured view via `classifications`
+- there are many _conditional properties_ to help identify characteristics about the referenced page, including:
+  - `hasCategoryProp`
+  - `hasCategoryTag`
+  - `hasMultipleKinds`
+  - etc.
+
+There isn't a ton of "cost" in producing the additional attributes that a `PageInfo` adds beyond a `Page` but there will be plenty of times where all you need is provided by `Page` so there's no need to add this incremental cost to your render or calculation.
+
 
 ### `getPageBlock(ref, view) → PageBlock`
 
@@ -54,5 +70,6 @@ This method provides quite a bit more than `PageInfo` but it requires that an Ob
 ## Other Documentation
 
 - [Overview Docs](../README.md)
-- [Caching][../caching.md]
+- [Caching](./caching.md)
 - [Query Handlers](./handlers.md)
+
