@@ -54,28 +54,30 @@ export const BackLinks = (p: KindModelPlugin) => (
 ) => async(
 	params_str: string = ""
 ) => {
-	const page = p.api.createPageInfoBlock(
+	const page = p.api.getPageInfoBlock(
 		source, container, component, filePath
 	);
 
 	if (page) {
 		const current = page.current;
-		// let [scalar, opt] = parseParams(params_str);
 
 		const {	
 			table,
 			renderValue,
+		} = page;
+
+		const {
 			createFileLink,
 			showDesc,
 			showLinks,
 			showClassifications
-		} = page;
+		} = p.api;
 
 		/** 
 		 * all in-bound links for the page with the exception of self-references */
 		const links = current.file.inlinks
-			.sort(p => page.getPage(p)?.file.name)
-			.where(p => page.getPage(p)?.file.path !== current.file.path);
+			.sort(p => p?.path)
+			.where(p => p.path !== current.file.path);
 
 		p.info("backlinks",links.map(i => [
 			createFileLink(i),

@@ -5,7 +5,7 @@ import KindModelPlugin from "../main";
 import { PageContent, pageContent } from "../helpers/pageContent";
 import { PagePath } from "../types/general";
 import { OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
-import { createPageInfoBlock } from "~/api";
+import { getPageInfoBlock } from "~/api";
 
 export const video_defn = {
 	kind: "query-defn",
@@ -31,7 +31,7 @@ export const video_gallery = (p: KindModelPlugin) => (
 	scalar: TScalar,
 	opt: TOption
 ) => {
-	const page = createPageInfoBlock(p)(source, container, component, filePath);
+	const page = getPageInfoBlock(p)(source, container, component, filePath);
 
 	if(page) {
 		const { page: current, format: fmt } = page;
@@ -44,7 +44,7 @@ export const video_gallery = (p: KindModelPlugin) => (
 		// all the videos found on pages which link to current page
 		let videos: Video[] = []
 		
-		let backLinks = page.as_array(current.file.inlinks);
+		let backLinks = page.as_array(current?.file?.inlinks || []);
 		let backPages: PageContent[]  = await Promise.all(
 			backLinks.map(i => pageContent(p)(i))
 		).then(pgs => pgs.filter(i => i) as PageContent[])

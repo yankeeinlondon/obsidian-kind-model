@@ -1,7 +1,15 @@
 
-import { Link } from "obsidian-dataview";
-import { CARDINALITY_TYPES, CLASSIFICATION, LOG_LEVELS, TAG_HANDLING, UOM_TYPES } from "utils/Constants";
-import { Mutable, TupleToUnion } from "utils/type-utils";
+
+import { 
+	CARDINALITY_TYPES, 
+	CLASSIFICATION, 
+	LOG_LEVELS, 
+	TAG_HANDLING, 
+	UOM_TYPES 
+} from "~/utils/Constants";
+import { Mutable, TupleToUnion } from "~/utils/type-utils";
+import { TypeDefinition } from "inferred-types";
+import { KindDefinition } from "./KindDefinition";
 
 export type KindClassification = TupleToUnion<Mutable<typeof CLASSIFICATION>>;
 export interface ClassificationMeta {
@@ -58,58 +66,6 @@ export interface ItemReln extends Relationship {
 }
 
 
-
-export type Kind<T extends string = string> = {
-	name: T;
-	type?: string | Link;
-	tag: string;
-	/** should this kind always allow the CWD to be where a page is saved? */
-	_folder_include_cwd: boolean;
-	/** each kind model can specify one folder as their "favorite" */
-	_folder_favorite?: string;
-	/** should subdirectories of "folder_choices" or CWD be included too? */
-	_folder_choices_sub_dirs?: boolean;
-	/** 
-	 * determines whether just the favorite and CWD directories are shown or
-	 * if there sub directories are shown too
-	 */
-	_show_sub_dirs?: boolean;
-
-	/**
-	 * Indicates whether pages of this kind should have their names
-	 * prefixed with a date.
-	 */
-	_filename_date_prefix?: boolean;
-
-	/** direct relationships a kind has with another */
-	_relationships: Relationship[];
-
-	/**
-	 * The abstracted classification types this "kind" will use
-	 */
-	_classification_type: KindClassification;
-
-	/** Metric properties associated with a Kind */
-	_metric_props: Metric[];
-
-	/**
-	 * The icon to use if no other icon matching rules matched first
-	 */
-	_icon?: string | undefined;
-
-	_cover?: string | undefined;
-
-	/**
-	 * When set, this indicates that the "kind" (or page) should have plural aliases
-	 * added to all pages. If the page name is already plural then nothing is done.
-	 */
-	_aliases_plural: boolean;
-	/**
-	 * When set, an alias is created for all 
-	 */
-	_aliases_lowercase: boolean;
-}
-
 export type TagHandler = TupleToUnion<typeof TAG_HANDLING>;
 
 export interface TypeGrouping {
@@ -140,22 +96,21 @@ export interface PageBlock {
 
 export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
 
-
+/**
+ * The settings which get saved for mobile and desktop configurations
+ * for a given vault.
+ */
 export interface KindModelSettings {
-	kinds: Record<string, Kind>;
-	kind_folder: string;
+	/** used to populate the kinds cache */
+	kinds?: KindDefinition[];
+	/** used to populate the types cache */
+	types?: TypeDefinition[];
+	/** the default folder for kind definitions */
+	kind_folder?: string;
 	handle_tags: TagHandler;
-	types: Record<string, TypeGrouping>;
 	default_classification: KindClassification;
-	/**
-	 * The "cache" of pages and lookups which this plugin 
-	 * is responsible for managing.
-	 */
-	cache:  null;
-	url_props: UrlProp[];
-	url_patterns: UrlPattern[];
 
-	page_blocks: PageBlock[];
+	page_blocks?: PageBlock[];
 	/** 
 	 * the **log level** being reported to the developer console 
 	 */

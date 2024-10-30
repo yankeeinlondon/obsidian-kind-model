@@ -16,6 +16,6 @@ export const getPath = <T extends PageReference  | undefined>(
 	: isString(pg)
 	? pg
 	: isPageInfo(pg)
-	? pg.page?.file?.path
+	? pg.current?.file?.path
 	: undefined;
 }

@@ -18,7 +18,7 @@ export const query_error = (p: KindModelPlugin) => (
 	err: Error,
 	params_str: string
 ) => {
-	const page = p.api.createPageInfoBlock(source, container, component, filePath);
+	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 	p.warn(err);
 	
 	if (page) {

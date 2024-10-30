@@ -19,3 +19,4 @@ export * from "./isWikipediaUrl";
 
 export * from "./isPageReference";
 export * from "./isFrontmatter";
+export * from "./isTagKindDefinition";

@@ -1,6 +1,6 @@
 import { MarkdownView } from "obsidian";
 import Markdoc, { Node } from "@markdoc/markdoc";
-import { createPageInfo } from "../page/getPageInfo";
+import { getPageInfo } from "../page/getPageInfo";
 import { MarkdownViewMeta, PageInfo, PageView } from "../types";
 import KindModelPlugin from "../main";
 import { getHeadingLevel } from "../utils/getHeadingLevel";
@@ -79,7 +79,7 @@ const getDomMeta = (view: MarkdownView, info: PageInfo) => ({
  */
 export const createPageView = (p: KindModelPlugin) => (view: MarkdownView) => {
 	if (view?.file?.path) {
-		const info = createPageInfo(p)(view.file.path);
+		const info = getPageInfo(p)(view.file.path);
 		if (info) {
 
 

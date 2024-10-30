@@ -151,7 +151,7 @@ export const Book =  (p: KindModelPlugin) => async(
 	filePath: string
 ) =>  {
 	// const dv = p.dv;
-	const page = p.api.createPageInfoBlock(source, container, component, filePath);
+	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 	if (page) {
 
 	const fmt = page.format;

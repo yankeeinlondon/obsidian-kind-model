@@ -41,7 +41,7 @@ export const PageEntry = (p: KindModelPlugin) => (
 _scalar: TScalar,
 _opt: TOption
 ) => {
-	const page = p.api.createPageInfoBlock(source, container, component, filePath);
+	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 	if(page) {
 		const fmt = page?.format;
 		const current = page.current;

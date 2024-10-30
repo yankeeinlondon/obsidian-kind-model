@@ -425,7 +425,7 @@ class IANAZone extends Zone {
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: zone }).format();
       return true;
-    } catch (e) {
+    } catch (e2) {
       return false;
     }
   }
@@ -551,7 +551,7 @@ function parseLocaleString(localeStr) {
     try {
       options2 = getCachedDTF(localeStr).resolvedOptions();
       selectedStr = localeStr;
-    } catch (e) {
+    } catch (e2) {
       const smaller = localeStr.substring(0, uIndex);
       options2 = getCachedDTF(smaller).resolvedOptions();
       selectedStr = smaller;
@@ -1090,8 +1090,8 @@ class Settings {
    * Set whether Luxon will throw when it encounters invalid DateTimes, Durations, or Intervals
    * @type {boolean}
    */
-  static set throwOnInvalid(t) {
-    throwOnInvalid = t;
+  static set throwOnInvalid(t2) {
+    throwOnInvalid = t2;
   }
   /**
    * Reset Luxon's global caches. Should only be necessary in testing scenarios.
@@ -1120,7 +1120,7 @@ function isDate(o) {
 function hasRelative() {
   try {
     return typeof Intl !== "undefined" && !!Intl.RelativeTimeFormat;
-  } catch (e) {
+  } catch (e2) {
     return false;
   }
 }
@@ -1689,7 +1689,7 @@ class Formatter {
     }, tokens2 = Formatter.parseFormat(fmt), realTokens = tokens2.reduce(
       (found, { literal, val }) => literal ? found : found.concat(val),
       []
-    ), collapsed = dur.shiftTo(...realTokens.map(tokenToField).filter((t) => t));
+    ), collapsed = dur.shiftTo(...realTokens.map(tokenToField).filter((t2) => t2));
     return stringifyTokens(tokens2, tokenToString(collapsed));
   }
 }
@@ -2812,27 +2812,27 @@ class Interval {
    * @return {Interval}
    */
   static fromISO(text2, opts) {
-    const [s2, e] = (text2 || "").split("/", 2);
-    if (s2 && e) {
+    const [s2, e2] = (text2 || "").split("/", 2);
+    if (s2 && e2) {
       let start2, startIsValid;
       try {
         start2 = DateTime.fromISO(s2, opts);
         startIsValid = start2.isValid;
-      } catch (e2) {
+      } catch (e3) {
         startIsValid = false;
       }
       let end2, endIsValid;
       try {
-        end2 = DateTime.fromISO(e, opts);
+        end2 = DateTime.fromISO(e2, opts);
         endIsValid = end2.isValid;
-      } catch (e2) {
+      } catch (e3) {
         endIsValid = false;
       }
       if (startIsValid && endIsValid) {
         return Interval.fromDateTimes(start2, end2);
       }
       if (startIsValid) {
-        const dur = Duration.fromISO(e, opts);
+        const dur = Duration.fromISO(e2, opts);
         if (dur.isValid) {
           return Interval.after(start2, dur);
         }
@@ -3064,11 +3064,11 @@ class Interval {
    */
   intersection(other) {
     if (!this.isValid) return this;
-    const s2 = this.s > other.s ? this.s : other.s, e = this.e < other.e ? this.e : other.e;
-    if (s2 >= e) {
+    const s2 = this.s > other.s ? this.s : other.s, e2 = this.e < other.e ? this.e : other.e;
+    if (s2 >= e2) {
       return null;
     } else {
-      return Interval.fromDateTimes(s2, e);
+      return Interval.fromDateTimes(s2, e2);
     }
   }
   /**
@@ -3079,8 +3079,8 @@ class Interval {
    */
   union(other) {
     if (!this.isValid) return this;
-    const s2 = this.s < other.s ? this.s : other.s, e = this.e > other.e ? this.e : other.e;
-    return Interval.fromDateTimes(s2, e);
+    const s2 = this.s < other.s ? this.s : other.s, e2 = this.e > other.e ? this.e : other.e;
+    return Interval.fromDateTimes(s2, e2);
   }
   /**
    * Merge an array of Intervals into a equivalent minimal set of Intervals.
@@ -3546,11 +3546,11 @@ function escapeToken(value2) {
   return value2.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
 }
 function unitForToken(token, loc) {
-  const one = digitRegex(loc), two = digitRegex(loc, "{2}"), three = digitRegex(loc, "{3}"), four = digitRegex(loc, "{4}"), six = digitRegex(loc, "{6}"), oneOrTwo = digitRegex(loc, "{1,2}"), oneToThree = digitRegex(loc, "{1,3}"), oneToSix = digitRegex(loc, "{1,6}"), oneToNine = digitRegex(loc, "{1,9}"), twoToFour = digitRegex(loc, "{2,4}"), fourToSix = digitRegex(loc, "{4,6}"), literal = (t) => ({ regex: RegExp(escapeToken(t.val)), deser: ([s2]) => s2, literal: true }), unitate = (t) => {
+  const one = digitRegex(loc), two = digitRegex(loc, "{2}"), three = digitRegex(loc, "{3}"), four = digitRegex(loc, "{4}"), six = digitRegex(loc, "{6}"), oneOrTwo = digitRegex(loc, "{1,2}"), oneToThree = digitRegex(loc, "{1,3}"), oneToSix = digitRegex(loc, "{1,6}"), oneToNine = digitRegex(loc, "{1,9}"), twoToFour = digitRegex(loc, "{2,4}"), fourToSix = digitRegex(loc, "{4,6}"), literal = (t2) => ({ regex: RegExp(escapeToken(t2.val)), deser: ([s2]) => s2, literal: true }), unitate = (t2) => {
     if (token.literal) {
-      return literal(t);
+      return literal(t2);
     }
-    switch (t.val) {
+    switch (t2.val) {
       case "G":
         return oneOf(loc.eras("short"), 0);
       case "GG":
@@ -3650,7 +3650,7 @@ function unitForToken(token, loc) {
       case " ":
         return simple(/[^\S\n\r]/);
       default:
-        return literal(t);
+        return literal(t2);
     }
   };
   const unit = unitate(token) || {
@@ -3849,10 +3849,10 @@ function maybeExpandMacroToken(token, locale) {
   return tokens2;
 }
 function expandMacroTokens(tokens2, locale) {
-  return Array.prototype.concat(...tokens2.map((t) => maybeExpandMacroToken(t, locale)));
+  return Array.prototype.concat(...tokens2.map((t2) => maybeExpandMacroToken(t2, locale)));
 }
 function explainFromTokens(locale, input, format2) {
-  const tokens2 = expandMacroTokens(Formatter.parseFormat(format2), locale), units = tokens2.map((t) => unitForToken(t, locale)), disqualifyingUnit = units.find((t) => t.invalidReason);
+  const tokens2 = expandMacroTokens(Formatter.parseFormat(format2), locale), units = tokens2.map((t2) => unitForToken(t2, locale)), disqualifyingUnit = units.find((t2) => t2.invalidReason);
   if (disqualifyingUnit) {
     return { input, tokens: tokens2, invalidReason: disqualifyingUnit.invalidReason };
   } else {
@@ -4642,7 +4642,7 @@ class DateTime {
    */
   static parseFormatForOpts(formatOpts, localeOpts = {}) {
     const tokenList = formatOptsToTokens(formatOpts, Locale.fromObject(localeOpts));
-    return !tokenList ? null : tokenList.map((t) => t ? t.val : null).join("");
+    return !tokenList ? null : tokenList.map((t2) => t2 ? t2.val : null).join("");
   }
   /**
    * Produce the the fully expanded format token for the locale
@@ -4653,7 +4653,7 @@ class DateTime {
    */
   static expandFormat(fmt, localeOpts = {}) {
     const expanded = expandMacroTokens(Formatter.parseFormat(fmt), Locale.fromObject(localeOpts));
-    return expanded.map((t) => t.val).join("");
+    return expanded.map((t2) => t2.val).join("");
   }
   // INFO
   /**
@@ -5933,64 +5933,64 @@ var Result;
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof commonjsGlobal$1 !== "undefined" ? commonjsGlobal$1 : typeof self !== "undefined" ? self : {};
 var parsimmon_umd_min = { exports: {} };
 (function(module, exports) {
-  !function(n2, t) {
-    module.exports = t();
+  !function(n2, t2) {
+    module.exports = t2();
   }("undefined" != typeof self ? self : commonjsGlobal, function() {
     return function(n2) {
-      var t = {};
-      function r(e) {
-        if (t[e]) return t[e].exports;
-        var u = t[e] = { i: e, l: false, exports: {} };
-        return n2[e].call(u.exports, u, u.exports, r), u.l = true, u.exports;
+      var t2 = {};
+      function r(e2) {
+        if (t2[e2]) return t2[e2].exports;
+        var u = t2[e2] = { i: e2, l: false, exports: {} };
+        return n2[e2].call(u.exports, u, u.exports, r), u.l = true, u.exports;
       }
-      return r.m = n2, r.c = t, r.d = function(n3, t2, e) {
-        r.o(n3, t2) || Object.defineProperty(n3, t2, { configurable: false, enumerable: true, get: e });
+      return r.m = n2, r.c = t2, r.d = function(n3, t3, e2) {
+        r.o(n3, t3) || Object.defineProperty(n3, t3, { configurable: false, enumerable: true, get: e2 });
       }, r.r = function(n3) {
         Object.defineProperty(n3, "__esModule", { value: true });
       }, r.n = function(n3) {
-        var t2 = n3 && n3.__esModule ? function() {
+        var t3 = n3 && n3.__esModule ? function() {
           return n3.default;
         } : function() {
           return n3;
         };
-        return r.d(t2, "a", t2), t2;
-      }, r.o = function(n3, t2) {
-        return Object.prototype.hasOwnProperty.call(n3, t2);
+        return r.d(t3, "a", t3), t3;
+      }, r.o = function(n3, t3) {
+        return Object.prototype.hasOwnProperty.call(n3, t3);
       }, r.p = "", r(r.s = 0);
-    }([function(n2, t, r) {
-      function e(n3) {
-        if (!(this instanceof e)) return new e(n3);
+    }([function(n2, t2, r) {
+      function e2(n3) {
+        if (!(this instanceof e2)) return new e2(n3);
         this._ = n3;
       }
-      var u = e.prototype;
-      function o(n3, t2) {
-        for (var r2 = 0; r2 < n3; r2++) t2(r2);
+      var u = e2.prototype;
+      function o(n3, t3) {
+        for (var r2 = 0; r2 < n3; r2++) t3(r2);
       }
-      function i(n3, t2, r2) {
-        return function(n4, t3) {
-          o(t3.length, function(r3) {
-            n4(t3[r3], r3, t3);
+      function i(n3, t3, r2) {
+        return function(n4, t4) {
+          o(t4.length, function(r3) {
+            n4(t4[r3], r3, t4);
           });
-        }(function(r3, e2, u2) {
-          t2 = n3(t2, r3, e2, u2);
-        }, r2), t2;
+        }(function(r3, e3, u2) {
+          t3 = n3(t3, r3, e3, u2);
+        }, r2), t3;
       }
-      function a(n3, t2) {
-        return i(function(t3, r2, e2, u2) {
-          return t3.concat([n3(r2, e2, u2)]);
-        }, [], t2);
+      function a(n3, t3) {
+        return i(function(t4, r2, e3, u2) {
+          return t4.concat([n3(r2, e3, u2)]);
+        }, [], t3);
       }
-      function f(n3, t2) {
-        var r2 = { v: 0, buf: t2 };
+      function f(n3, t3) {
+        var r2 = { v: 0, buf: t3 };
         return o(n3, function() {
           var n4;
           r2 = { v: r2.v << 1 | (n4 = r2.buf, n4[0] >> 7), buf: function(n5) {
-            var t3 = i(function(n6, t4, r3, e2) {
-              return n6.concat(r3 === e2.length - 1 ? Buffer.from([t4, 0]).readUInt16BE(0) : e2.readUInt16BE(r3));
+            var t4 = i(function(n6, t5, r3, e3) {
+              return n6.concat(r3 === e3.length - 1 ? Buffer.from([t5, 0]).readUInt16BE(0) : e3.readUInt16BE(r3));
             }, [], n5);
             return Buffer.from(a(function(n6) {
               return (n6 << 1 & 65535) >> 8;
-            }, t3));
+            }, t4));
           }(r2.buf) };
         }), r2;
       }
@@ -6002,55 +6002,55 @@ var parsimmon_umd_min = { exports: {} };
       }
       function l2(n3) {
         s2();
-        var t2 = i(function(n4, t3) {
-          return n4 + t3;
+        var t3 = i(function(n4, t4) {
+          return n4 + t4;
         }, 0, n3);
-        if (t2 % 8 != 0) throw new Error("The bits [" + n3.join(", ") + "] add up to " + t2 + " which is not an even number of bytes; the total should be divisible by 8");
-        var r2, u2 = t2 / 8, o2 = (r2 = function(n4) {
+        if (t3 % 8 != 0) throw new Error("The bits [" + n3.join(", ") + "] add up to " + t3 + " which is not an even number of bytes; the total should be divisible by 8");
+        var r2, u2 = t3 / 8, o2 = (r2 = function(n4) {
           return n4 > 48;
-        }, i(function(n4, t3) {
-          return n4 || (r2(t3) ? t3 : n4);
+        }, i(function(n4, t4) {
+          return n4 || (r2(t4) ? t4 : n4);
         }, null, n3));
         if (o2) throw new Error(o2 + " bit range requested exceeds 48 bit (6 byte) Number max.");
-        return new e(function(t3, r3) {
-          var e2 = u2 + r3;
-          return e2 > t3.length ? x2(r3, u2.toString() + " bytes") : b(e2, i(function(n4, t4) {
-            var r4 = f(t4, n4.buf);
+        return new e2(function(t4, r3) {
+          var e3 = u2 + r3;
+          return e3 > t4.length ? x2(r3, u2.toString() + " bytes") : b(e3, i(function(n4, t5) {
+            var r4 = f(t5, n4.buf);
             return { coll: n4.coll.concat(r4.v), buf: r4.buf };
-          }, { coll: [], buf: t3.slice(r3, e2) }, n3).coll);
+          }, { coll: [], buf: t4.slice(r3, e3) }, n3).coll);
         });
       }
-      function h(n3, t2) {
-        return new e(function(r2, e2) {
-          return s2(), e2 + t2 > r2.length ? x2(e2, t2 + " bytes for " + n3) : b(e2 + t2, r2.slice(e2, e2 + t2));
+      function h(n3, t3) {
+        return new e2(function(r2, e3) {
+          return s2(), e3 + t3 > r2.length ? x2(e3, t3 + " bytes for " + n3) : b(e3 + t3, r2.slice(e3, e3 + t3));
         });
       }
-      function p2(n3, t2) {
-        if ("number" != typeof (r2 = t2) || Math.floor(r2) !== r2 || t2 < 0 || t2 > 6) throw new Error(n3 + " requires integer length in range [0, 6].");
+      function p2(n3, t3) {
+        if ("number" != typeof (r2 = t3) || Math.floor(r2) !== r2 || t3 < 0 || t3 > 6) throw new Error(n3 + " requires integer length in range [0, 6].");
         var r2;
       }
       function d(n3) {
-        return p2("uintBE", n3), h("uintBE(" + n3 + ")", n3).map(function(t2) {
-          return t2.readUIntBE(0, n3);
+        return p2("uintBE", n3), h("uintBE(" + n3 + ")", n3).map(function(t3) {
+          return t3.readUIntBE(0, n3);
         });
       }
       function v(n3) {
-        return p2("uintLE", n3), h("uintLE(" + n3 + ")", n3).map(function(t2) {
-          return t2.readUIntLE(0, n3);
+        return p2("uintLE", n3), h("uintLE(" + n3 + ")", n3).map(function(t3) {
+          return t3.readUIntLE(0, n3);
         });
       }
       function g(n3) {
-        return p2("intBE", n3), h("intBE(" + n3 + ")", n3).map(function(t2) {
-          return t2.readIntBE(0, n3);
+        return p2("intBE", n3), h("intBE(" + n3 + ")", n3).map(function(t3) {
+          return t3.readIntBE(0, n3);
         });
       }
       function m(n3) {
-        return p2("intLE", n3), h("intLE(" + n3 + ")", n3).map(function(t2) {
-          return t2.readIntLE(0, n3);
+        return p2("intLE", n3), h("intLE(" + n3 + ")", n3).map(function(t3) {
+          return t3.readIntLE(0, n3);
         });
       }
       function y2(n3) {
-        return n3 instanceof e;
+        return n3 instanceof e2;
       }
       function E(n3) {
         return "[object Array]" === {}.toString.call(n3);
@@ -6058,52 +6058,52 @@ var parsimmon_umd_min = { exports: {} };
       function w(n3) {
         return c() && Buffer.isBuffer(n3);
       }
-      function b(n3, t2) {
-        return { status: true, index: n3, value: t2, furthest: -1, expected: [] };
+      function b(n3, t3) {
+        return { status: true, index: n3, value: t3, furthest: -1, expected: [] };
       }
-      function x2(n3, t2) {
-        return E(t2) || (t2 = [t2]), { status: false, index: -1, value: null, furthest: n3, expected: t2 };
+      function x2(n3, t3) {
+        return E(t3) || (t3 = [t3]), { status: false, index: -1, value: null, furthest: n3, expected: t3 };
       }
-      function B(n3, t2) {
-        if (!t2) return n3;
-        if (n3.furthest > t2.furthest) return n3;
-        var r2 = n3.furthest === t2.furthest ? function(n4, t3) {
+      function B(n3, t3) {
+        if (!t3) return n3;
+        if (n3.furthest > t3.furthest) return n3;
+        var r2 = n3.furthest === t3.furthest ? function(n4, t4) {
           if (function() {
-            if (void 0 !== e._supportsSet) return e._supportsSet;
+            if (void 0 !== e2._supportsSet) return e2._supportsSet;
             var n5 = "undefined" != typeof Set;
-            return e._supportsSet = n5, n5;
+            return e2._supportsSet = n5, n5;
           }() && Array.from) {
-            for (var r3 = new Set(n4), u2 = 0; u2 < t3.length; u2++) r3.add(t3[u2]);
+            for (var r3 = new Set(n4), u2 = 0; u2 < t4.length; u2++) r3.add(t4[u2]);
             var o2 = Array.from(r3);
             return o2.sort(), o2;
           }
           for (var i2 = {}, a2 = 0; a2 < n4.length; a2++) i2[n4[a2]] = true;
-          for (var f2 = 0; f2 < t3.length; f2++) i2[t3[f2]] = true;
+          for (var f2 = 0; f2 < t4.length; f2++) i2[t4[f2]] = true;
           var c2 = [];
           for (var s3 in i2) ({}).hasOwnProperty.call(i2, s3) && c2.push(s3);
           return c2.sort(), c2;
-        }(n3.expected, t2.expected) : t2.expected;
-        return { status: n3.status, index: n3.index, value: n3.value, furthest: t2.furthest, expected: r2 };
+        }(n3.expected, t3.expected) : t3.expected;
+        return { status: n3.status, index: n3.index, value: n3.value, furthest: t3.furthest, expected: r2 };
       }
       var j = {};
-      function S(n3, t2) {
-        if (w(n3)) return { offset: t2, line: -1, column: -1 };
+      function S(n3, t3) {
+        if (w(n3)) return { offset: t3, line: -1, column: -1 };
         n3 in j || (j[n3] = {});
-        for (var r2 = j[n3], e2 = 0, u2 = 0, o2 = 0, i2 = t2; i2 >= 0; ) {
+        for (var r2 = j[n3], e3 = 0, u2 = 0, o2 = 0, i2 = t3; i2 >= 0; ) {
           if (i2 in r2) {
-            e2 = r2[i2].line, 0 === o2 && (o2 = r2[i2].lineStart);
+            e3 = r2[i2].line, 0 === o2 && (o2 = r2[i2].lineStart);
             break;
           }
           ("\n" === n3.charAt(i2) || "\r" === n3.charAt(i2) && "\n" !== n3.charAt(i2 + 1)) && (u2++, 0 === o2 && (o2 = i2 + 1)), i2--;
         }
-        var a2 = e2 + u2, f2 = t2 - o2;
-        return r2[t2] = { line: a2, lineStart: o2 }, { offset: t2, line: a2 + 1, column: f2 + 1 };
+        var a2 = e3 + u2, f2 = t3 - o2;
+        return r2[t3] = { line: a2, lineStart: o2 }, { offset: t3, line: a2 + 1, column: f2 + 1 };
       }
       function _(n3) {
         if (!y2(n3)) throw new Error("not a parser: " + n3);
       }
-      function L(n3, t2) {
-        return "string" == typeof n3 ? n3.charAt(t2) : n3[t2];
+      function L(n3, t3) {
+        return "string" == typeof n3 ? n3.charAt(t3) : n3[t3];
       }
       function O(n3) {
         if ("number" != typeof n3) throw new Error("not a number: " + n3);
@@ -6115,153 +6115,153 @@ var parsimmon_umd_min = { exports: {} };
         if ("string" != typeof n3) throw new Error("not a string: " + n3);
       }
       var q = 2, A = 3, I = 8, F = 5 * I, M = 4 * I, z = "  ";
-      function R(n3, t2) {
-        return new Array(t2 + 1).join(n3);
+      function R(n3, t3) {
+        return new Array(t3 + 1).join(n3);
       }
-      function U(n3, t2, r2) {
-        var e2 = t2 - n3.length;
-        return e2 <= 0 ? n3 : R(r2, e2) + n3;
+      function U(n3, t3, r2) {
+        var e3 = t3 - n3.length;
+        return e3 <= 0 ? n3 : R(r2, e3) + n3;
       }
-      function W(n3, t2, r2, e2) {
-        return { from: n3 - t2 > 0 ? n3 - t2 : 0, to: n3 + r2 > e2 ? e2 : n3 + r2 };
+      function W(n3, t3, r2, e3) {
+        return { from: n3 - t3 > 0 ? n3 - t3 : 0, to: n3 + r2 > e3 ? e3 : n3 + r2 };
       }
-      function D(n3, t2) {
-        var r2, e2, u2, o2, f2, c2 = t2.index, s3 = c2.offset, l3 = 1;
+      function D(n3, t3) {
+        var r2, e3, u2, o2, f2, c2 = t3.index, s3 = c2.offset, l3 = 1;
         if (s3 === n3.length) return "Got the end of the input";
         if (w(n3)) {
           var h2 = s3 - s3 % I, p3 = s3 - h2, d2 = W(h2, F, M + I, n3.length), v2 = a(function(n4) {
             return a(function(n5) {
               return U(n5.toString(16), 2, "0");
             }, n4);
-          }, function(n4, t3) {
-            var r3 = n4.length, e3 = [], u3 = 0;
-            if (r3 <= t3) return [n4.slice()];
-            for (var o3 = 0; o3 < r3; o3++) e3[u3] || e3.push([]), e3[u3].push(n4[o3]), (o3 + 1) % t3 == 0 && u3++;
-            return e3;
+          }, function(n4, t4) {
+            var r3 = n4.length, e4 = [], u3 = 0;
+            if (r3 <= t4) return [n4.slice()];
+            for (var o3 = 0; o3 < r3; o3++) e4[u3] || e4.push([]), e4[u3].push(n4[o3]), (o3 + 1) % t4 == 0 && u3++;
+            return e4;
           }(n3.slice(d2.from, d2.to).toJSON().data, I));
           o2 = function(n4) {
             return 0 === n4.from && 1 === n4.to ? { from: n4.from, to: n4.to } : { from: n4.from / I, to: Math.floor(n4.to / I) };
-          }(d2), e2 = h2 / I, r2 = 3 * p3, p3 >= 4 && (r2 += 1), l3 = 2, u2 = a(function(n4) {
+          }(d2), e3 = h2 / I, r2 = 3 * p3, p3 >= 4 && (r2 += 1), l3 = 2, u2 = a(function(n4) {
             return n4.length <= 4 ? n4.join(" ") : n4.slice(0, 4).join(" ") + "  " + n4.slice(4).join(" ");
           }, v2), (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2);
         } else {
           var g2 = n3.split(/\r\n|[\n\r\u2028\u2029]/);
-          r2 = c2.column - 1, e2 = c2.line - 1, o2 = W(e2, q, A, g2.length), u2 = g2.slice(o2.from, o2.to), f2 = o2.to.toString().length;
+          r2 = c2.column - 1, e3 = c2.line - 1, o2 = W(e3, q, A, g2.length), u2 = g2.slice(o2.from, o2.to), f2 = o2.to.toString().length;
         }
-        var m2 = e2 - o2.from;
-        return w(n3) && (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2), i(function(t3, e3, u3) {
+        var m2 = e3 - o2.from;
+        return w(n3) && (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2), i(function(t4, e4, u3) {
           var i2, a2 = u3 === m2, c3 = a2 ? "> " : z;
-          return i2 = w(n3) ? U((8 * (o2.from + u3)).toString(16), f2, "0") : U((o2.from + u3 + 1).toString(), f2, " "), [].concat(t3, [c3 + i2 + " | " + e3], a2 ? [z + R(" ", f2) + " | " + U("", r2, " ") + R("^", l3)] : []);
+          return i2 = w(n3) ? U((8 * (o2.from + u3)).toString(16), f2, "0") : U((o2.from + u3 + 1).toString(), f2, " "), [].concat(t4, [c3 + i2 + " | " + e4], a2 ? [z + R(" ", f2) + " | " + U("", r2, " ") + R("^", l3)] : []);
         }, [], u2).join("\n");
       }
-      function N(n3, t2) {
-        return ["\n", "-- PARSING FAILED " + R("-", 50), "\n\n", D(n3, t2), "\n\n", (r2 = t2.expected, 1 === r2.length ? "Expected:\n\n" + r2[0] : "Expected one of the following: \n\n" + r2.join(", ")), "\n"].join("");
+      function N(n3, t3) {
+        return ["\n", "-- PARSING FAILED " + R("-", 50), "\n\n", D(n3, t3), "\n\n", (r2 = t3.expected, 1 === r2.length ? "Expected:\n\n" + r2[0] : "Expected one of the following: \n\n" + r2.join(", ")), "\n"].join("");
         var r2;
       }
       function G(n3) {
         return void 0 !== n3.flags ? n3.flags : [n3.global ? "g" : "", n3.ignoreCase ? "i" : "", n3.multiline ? "m" : "", n3.unicode ? "u" : "", n3.sticky ? "y" : ""].join("");
       }
       function C() {
-        for (var n3 = [].slice.call(arguments), t2 = n3.length, r2 = 0; r2 < t2; r2 += 1) _(n3[r2]);
-        return e(function(r3, e2) {
-          for (var u2, o2 = new Array(t2), i2 = 0; i2 < t2; i2 += 1) {
-            if (!(u2 = B(n3[i2]._(r3, e2), u2)).status) return u2;
-            o2[i2] = u2.value, e2 = u2.index;
+        for (var n3 = [].slice.call(arguments), t3 = n3.length, r2 = 0; r2 < t3; r2 += 1) _(n3[r2]);
+        return e2(function(r3, e3) {
+          for (var u2, o2 = new Array(t3), i2 = 0; i2 < t3; i2 += 1) {
+            if (!(u2 = B(n3[i2]._(r3, e3), u2)).status) return u2;
+            o2[i2] = u2.value, e3 = u2.index;
           }
-          return B(b(e2, o2), u2);
+          return B(b(e3, o2), u2);
         });
       }
       function J() {
         var n3 = [].slice.call(arguments);
         if (0 === n3.length) throw new Error("seqMap needs at least one argument");
-        var t2 = n3.pop();
-        return k(t2), C.apply(null, n3).map(function(n4) {
-          return t2.apply(null, n4);
+        var t3 = n3.pop();
+        return k(t3), C.apply(null, n3).map(function(n4) {
+          return t3.apply(null, n4);
         });
       }
       function T() {
-        var n3 = [].slice.call(arguments), t2 = n3.length;
-        if (0 === t2) return Y("zero alternates");
-        for (var r2 = 0; r2 < t2; r2 += 1) _(n3[r2]);
-        return e(function(t3, r3) {
-          for (var e2, u2 = 0; u2 < n3.length; u2 += 1) if ((e2 = B(n3[u2]._(t3, r3), e2)).status) return e2;
-          return e2;
+        var n3 = [].slice.call(arguments), t3 = n3.length;
+        if (0 === t3) return Y("zero alternates");
+        for (var r2 = 0; r2 < t3; r2 += 1) _(n3[r2]);
+        return e2(function(t4, r3) {
+          for (var e3, u2 = 0; u2 < n3.length; u2 += 1) if ((e3 = B(n3[u2]._(t4, r3), e3)).status) return e3;
+          return e3;
         });
       }
-      function V(n3, t2) {
-        return H(n3, t2).or(X([]));
+      function V(n3, t3) {
+        return H(n3, t3).or(X([]));
       }
-      function H(n3, t2) {
-        return _(n3), _(t2), J(n3, t2.then(n3).many(), function(n4, t3) {
-          return [n4].concat(t3);
+      function H(n3, t3) {
+        return _(n3), _(t3), J(n3, t3.then(n3).many(), function(n4, t4) {
+          return [n4].concat(t4);
         });
       }
       function K(n3) {
         P(n3);
-        var t2 = "'" + n3 + "'";
-        return e(function(r2, e2) {
-          var u2 = e2 + n3.length, o2 = r2.slice(e2, u2);
-          return o2 === n3 ? b(u2, o2) : x2(e2, t2);
+        var t3 = "'" + n3 + "'";
+        return e2(function(r2, e3) {
+          var u2 = e3 + n3.length, o2 = r2.slice(e3, u2);
+          return o2 === n3 ? b(u2, o2) : x2(e3, t3);
         });
       }
-      function Q(n3, t2) {
+      function Q(n3, t3) {
         !function(n4) {
           if (!(n4 instanceof RegExp)) throw new Error("not a regexp: " + n4);
-          for (var t3 = G(n4), r3 = 0; r3 < t3.length; r3++) {
-            var e2 = t3.charAt(r3);
-            if ("i" !== e2 && "m" !== e2 && "u" !== e2 && "s" !== e2) throw new Error('unsupported regexp flag "' + e2 + '": ' + n4);
+          for (var t4 = G(n4), r3 = 0; r3 < t4.length; r3++) {
+            var e3 = t4.charAt(r3);
+            if ("i" !== e3 && "m" !== e3 && "u" !== e3 && "s" !== e3) throw new Error('unsupported regexp flag "' + e3 + '": ' + n4);
           }
-        }(n3), arguments.length >= 2 ? O(t2) : t2 = 0;
+        }(n3), arguments.length >= 2 ? O(t3) : t3 = 0;
         var r2 = function(n4) {
           return RegExp("^(?:" + n4.source + ")", G(n4));
         }(n3), u2 = "" + n3;
-        return e(function(n4, e2) {
-          var o2 = r2.exec(n4.slice(e2));
+        return e2(function(n4, e3) {
+          var o2 = r2.exec(n4.slice(e3));
           if (o2) {
-            if (0 <= t2 && t2 <= o2.length) {
-              var i2 = o2[0], a2 = o2[t2];
-              return b(e2 + i2.length, a2);
+            if (0 <= t3 && t3 <= o2.length) {
+              var i2 = o2[0], a2 = o2[t3];
+              return b(e3 + i2.length, a2);
             }
-            return x2(e2, "valid match group (0 to " + o2.length + ") in " + u2);
+            return x2(e3, "valid match group (0 to " + o2.length + ") in " + u2);
           }
-          return x2(e2, u2);
+          return x2(e3, u2);
         });
       }
       function X(n3) {
-        return e(function(t2, r2) {
+        return e2(function(t3, r2) {
           return b(r2, n3);
         });
       }
       function Y(n3) {
-        return e(function(t2, r2) {
+        return e2(function(t3, r2) {
           return x2(r2, n3);
         });
       }
       function Z(n3) {
-        if (y2(n3)) return e(function(t2, r2) {
-          var e2 = n3._(t2, r2);
-          return e2.index = r2, e2.value = "", e2;
+        if (y2(n3)) return e2(function(t3, r2) {
+          var e3 = n3._(t3, r2);
+          return e3.index = r2, e3.value = "", e3;
         });
         if ("string" == typeof n3) return Z(K(n3));
         if (n3 instanceof RegExp) return Z(Q(n3));
         throw new Error("not a string, regexp, or parser: " + n3);
       }
       function $(n3) {
-        return _(n3), e(function(t2, r2) {
-          var e2 = n3._(t2, r2), u2 = t2.slice(r2, e2.index);
-          return e2.status ? x2(r2, 'not "' + u2 + '"') : b(r2, null);
+        return _(n3), e2(function(t3, r2) {
+          var e3 = n3._(t3, r2), u2 = t3.slice(r2, e3.index);
+          return e3.status ? x2(r2, 'not "' + u2 + '"') : b(r2, null);
         });
       }
       function nn(n3) {
-        return k(n3), e(function(t2, r2) {
-          var e2 = L(t2, r2);
-          return r2 < t2.length && n3(e2) ? b(r2 + 1, e2) : x2(r2, "a character/byte matching " + n3);
+        return k(n3), e2(function(t3, r2) {
+          var e3 = L(t3, r2);
+          return r2 < t3.length && n3(e3) ? b(r2 + 1, e3) : x2(r2, "a character/byte matching " + n3);
         });
       }
-      function tn(n3, t2) {
-        arguments.length < 2 && (t2 = n3, n3 = void 0);
-        var r2 = e(function(n4, e2) {
-          return r2._ = t2()._, r2._(n4, e2);
+      function tn(n3, t3) {
+        arguments.length < 2 && (t3 = n3, n3 = void 0);
+        var r2 = e2(function(n4, e3) {
+          return r2._ = t3()._, r2._(n4, e3);
         });
         return n3 ? r2.desc(n3) : r2;
       }
@@ -6270,24 +6270,24 @@ var parsimmon_umd_min = { exports: {} };
       }
       u.parse = function(n3) {
         if ("string" != typeof n3 && !w(n3)) throw new Error(".parse must be called with a string or Buffer as its argument");
-        var t2, r2 = this.skip(an)._(n3, 0);
-        return t2 = r2.status ? { status: true, value: r2.value } : { status: false, index: S(n3, r2.furthest), expected: r2.expected }, delete j[n3], t2;
+        var t3, r2 = this.skip(an)._(n3, 0);
+        return t3 = r2.status ? { status: true, value: r2.value } : { status: false, index: S(n3, r2.furthest), expected: r2.expected }, delete j[n3], t3;
       }, u.tryParse = function(n3) {
-        var t2 = this.parse(n3);
-        if (t2.status) return t2.value;
-        var r2 = N(n3, t2), e2 = new Error(r2);
-        throw e2.type = "ParsimmonError", e2.result = t2, e2;
-      }, u.assert = function(n3, t2) {
+        var t3 = this.parse(n3);
+        if (t3.status) return t3.value;
+        var r2 = N(n3, t3), e3 = new Error(r2);
+        throw e3.type = "ParsimmonError", e3.result = t3, e3;
+      }, u.assert = function(n3, t3) {
         return this.chain(function(r2) {
-          return n3(r2) ? X(r2) : Y(t2);
+          return n3(r2) ? X(r2) : Y(t3);
         });
       }, u.or = function(n3) {
         return T(this, n3);
       }, u.trim = function(n3) {
         return this.wrap(n3, n3);
-      }, u.wrap = function(n3, t2) {
-        return J(n3, this, t2, function(n4, t3) {
-          return t3;
+      }, u.wrap = function(n3, t3) {
+        return J(n3, this, t3, function(n4, t4) {
+          return t4;
         });
       }, u.thru = function(n3) {
         return n3(this);
@@ -6297,34 +6297,34 @@ var parsimmon_umd_min = { exports: {} };
         });
       }, u.many = function() {
         var n3 = this;
-        return e(function(t2, r2) {
-          for (var e2 = [], u2 = void 0; ; ) {
-            if (!(u2 = B(n3._(t2, r2), u2)).status) return B(b(r2, e2), u2);
+        return e2(function(t3, r2) {
+          for (var e3 = [], u2 = void 0; ; ) {
+            if (!(u2 = B(n3._(t3, r2), u2)).status) return B(b(r2, e3), u2);
             if (r2 === u2.index) throw new Error("infinite loop detected in .many() parser --- calling .many() on a parser which can accept zero characters is usually the cause");
-            r2 = u2.index, e2.push(u2.value);
+            r2 = u2.index, e3.push(u2.value);
           }
         });
       }, u.tieWith = function(n3) {
-        return P(n3), this.map(function(t2) {
+        return P(n3), this.map(function(t3) {
           if (function(n4) {
             if (!E(n4)) throw new Error("not an array: " + n4);
-          }(t2), t2.length) {
-            P(t2[0]);
-            for (var r2 = t2[0], e2 = 1; e2 < t2.length; e2++) P(t2[e2]), r2 += n3 + t2[e2];
+          }(t3), t3.length) {
+            P(t3[0]);
+            for (var r2 = t3[0], e3 = 1; e3 < t3.length; e3++) P(t3[e3]), r2 += n3 + t3[e3];
             return r2;
           }
           return "";
         });
       }, u.tie = function() {
         return this.tieWith("");
-      }, u.times = function(n3, t2) {
+      }, u.times = function(n3, t3) {
         var r2 = this;
-        return arguments.length < 2 && (t2 = n3), O(n3), O(t2), e(function(e2, u2) {
+        return arguments.length < 2 && (t3 = n3), O(n3), O(t3), e2(function(e3, u2) {
           for (var o2 = [], i2 = void 0, a2 = void 0, f2 = 0; f2 < n3; f2 += 1) {
-            if (a2 = B(i2 = r2._(e2, u2), a2), !i2.status) return a2;
+            if (a2 = B(i2 = r2._(e3, u2), a2), !i2.status) return a2;
             u2 = i2.index, o2.push(i2.value);
           }
-          for (; f2 < t2 && (a2 = B(i2 = r2._(e2, u2), a2), i2.status); f2 += 1) u2 = i2.index, o2.push(i2.value);
+          for (; f2 < t3 && (a2 = B(i2 = r2._(e3, u2), a2), i2.status); f2 += 1) u2 = i2.index, o2.push(i2.value);
           return B(b(u2, o2), a2);
         });
       }, u.result = function(n3) {
@@ -6334,36 +6334,36 @@ var parsimmon_umd_min = { exports: {} };
       }, u.atMost = function(n3) {
         return this.times(0, n3);
       }, u.atLeast = function(n3) {
-        return J(this.times(n3), this.many(), function(n4, t2) {
-          return n4.concat(t2);
+        return J(this.times(n3), this.many(), function(n4, t3) {
+          return n4.concat(t3);
         });
       }, u.map = function(n3) {
         k(n3);
-        var t2 = this;
-        return e(function(r2, e2) {
-          var u2 = t2._(r2, e2);
+        var t3 = this;
+        return e2(function(r2, e3) {
+          var u2 = t3._(r2, e3);
           return u2.status ? B(b(u2.index, n3(u2.value)), u2) : u2;
         });
       }, u.contramap = function(n3) {
         k(n3);
-        var t2 = this;
-        return e(function(r2, e2) {
-          var u2 = t2.parse(n3(r2.slice(e2)));
-          return u2.status ? b(e2 + r2.length, u2.value) : u2;
+        var t3 = this;
+        return e2(function(r2, e3) {
+          var u2 = t3.parse(n3(r2.slice(e3)));
+          return u2.status ? b(e3 + r2.length, u2.value) : u2;
         });
-      }, u.promap = function(n3, t2) {
-        return k(n3), k(t2), this.contramap(n3).map(t2);
+      }, u.promap = function(n3, t3) {
+        return k(n3), k(t3), this.contramap(n3).map(t3);
       }, u.skip = function(n3) {
         return C(this, n3).map(function(n4) {
           return n4[0];
         });
       }, u.mark = function() {
-        return J(en, this, en, function(n3, t2, r2) {
-          return { start: n3, value: t2, end: r2 };
+        return J(en, this, en, function(n3, t3, r2) {
+          return { start: n3, value: t3, end: r2 };
         });
       }, u.node = function(n3) {
-        return J(en, this, en, function(t2, r2, e2) {
-          return { name: n3, value: r2, start: t2, end: e2 };
+        return J(en, this, en, function(t3, r2, e3) {
+          return { name: n3, value: r2, start: t3, end: e3 };
         });
       }, u.sepBy = function(n3) {
         return V(this, n3);
@@ -6375,121 +6375,121 @@ var parsimmon_umd_min = { exports: {} };
         return this.skip($(n3));
       }, u.desc = function(n3) {
         E(n3) || (n3 = [n3]);
-        var t2 = this;
-        return e(function(r2, e2) {
-          var u2 = t2._(r2, e2);
+        var t3 = this;
+        return e2(function(r2, e3) {
+          var u2 = t3._(r2, e3);
           return u2.status || (u2.expected = n3), u2;
         });
       }, u.fallback = function(n3) {
         return this.or(X(n3));
       }, u.ap = function(n3) {
-        return J(n3, this, function(n4, t2) {
-          return n4(t2);
+        return J(n3, this, function(n4, t3) {
+          return n4(t3);
         });
       }, u.chain = function(n3) {
-        var t2 = this;
-        return e(function(r2, e2) {
-          var u2 = t2._(r2, e2);
+        var t3 = this;
+        return e2(function(r2, e3) {
+          var u2 = t3._(r2, e3);
           return u2.status ? B(n3(u2.value)._(r2, u2.index), u2) : u2;
         });
       }, u.concat = u.or, u.empty = rn, u.of = X, u["fantasy-land/ap"] = u.ap, u["fantasy-land/chain"] = u.chain, u["fantasy-land/concat"] = u.concat, u["fantasy-land/empty"] = u.empty, u["fantasy-land/of"] = u.of, u["fantasy-land/map"] = u.map;
-      var en = e(function(n3, t2) {
-        return b(t2, S(n3, t2));
-      }), un = e(function(n3, t2) {
-        return t2 >= n3.length ? x2(t2, "any character/byte") : b(t2 + 1, L(n3, t2));
-      }), on = e(function(n3, t2) {
-        return b(n3.length, n3.slice(t2));
-      }), an = e(function(n3, t2) {
-        return t2 < n3.length ? x2(t2, "EOF") : b(t2, null);
+      var en = e2(function(n3, t3) {
+        return b(t3, S(n3, t3));
+      }), un = e2(function(n3, t3) {
+        return t3 >= n3.length ? x2(t3, "any character/byte") : b(t3 + 1, L(n3, t3));
+      }), on = e2(function(n3, t3) {
+        return b(n3.length, n3.slice(t3));
+      }), an = e2(function(n3, t3) {
+        return t3 < n3.length ? x2(t3, "EOF") : b(t3, null);
       }), fn2 = Q(/[0-9]/).desc("a digit"), cn = Q(/[0-9]*/).desc("optional digits"), sn = Q(/[a-z]/i).desc("a letter"), ln = Q(/[a-z]*/i).desc("optional letters"), hn = Q(/\s*/).desc("optional whitespace"), pn = Q(/\s+/).desc("whitespace"), dn = K("\r"), vn = K("\n"), gn = K("\r\n"), mn = T(gn, vn, dn).desc("newline"), yn = T(mn, an);
-      e.all = on, e.alt = T, e.any = un, e.cr = dn, e.createLanguage = function(n3) {
-        var t2 = {};
+      e2.all = on, e2.alt = T, e2.any = un, e2.cr = dn, e2.createLanguage = function(n3) {
+        var t3 = {};
         for (var r2 in n3) ({}).hasOwnProperty.call(n3, r2) && function(r3) {
-          t2[r3] = tn(function() {
-            return n3[r3](t2);
+          t3[r3] = tn(function() {
+            return n3[r3](t3);
           });
         }(r2);
-        return t2;
-      }, e.crlf = gn, e.custom = function(n3) {
-        return e(n3(b, x2));
-      }, e.digit = fn2, e.digits = cn, e.empty = rn, e.end = yn, e.eof = an, e.fail = Y, e.formatError = N, e.index = en, e.isParser = y2, e.lazy = tn, e.letter = sn, e.letters = ln, e.lf = vn, e.lookahead = Z, e.makeFailure = x2, e.makeSuccess = b, e.newline = mn, e.noneOf = function(n3) {
-        return nn(function(t2) {
-          return n3.indexOf(t2) < 0;
-        }).desc("none of '" + n3 + "'");
-      }, e.notFollowedBy = $, e.of = X, e.oneOf = function(n3) {
-        for (var t2 = n3.split(""), r2 = 0; r2 < t2.length; r2++) t2[r2] = "'" + t2[r2] + "'";
+        return t3;
+      }, e2.crlf = gn, e2.custom = function(n3) {
+        return e2(n3(b, x2));
+      }, e2.digit = fn2, e2.digits = cn, e2.empty = rn, e2.end = yn, e2.eof = an, e2.fail = Y, e2.formatError = N, e2.index = en, e2.isParser = y2, e2.lazy = tn, e2.letter = sn, e2.letters = ln, e2.lf = vn, e2.lookahead = Z, e2.makeFailure = x2, e2.makeSuccess = b, e2.newline = mn, e2.noneOf = function(n3) {
         return nn(function(t3) {
-          return n3.indexOf(t3) >= 0;
-        }).desc(t2);
-      }, e.optWhitespace = hn, e.Parser = e, e.range = function(n3, t2) {
+          return n3.indexOf(t3) < 0;
+        }).desc("none of '" + n3 + "'");
+      }, e2.notFollowedBy = $, e2.of = X, e2.oneOf = function(n3) {
+        for (var t3 = n3.split(""), r2 = 0; r2 < t3.length; r2++) t3[r2] = "'" + t3[r2] + "'";
+        return nn(function(t4) {
+          return n3.indexOf(t4) >= 0;
+        }).desc(t3);
+      }, e2.optWhitespace = hn, e2.Parser = e2, e2.range = function(n3, t3) {
         return nn(function(r2) {
-          return n3 <= r2 && r2 <= t2;
-        }).desc(n3 + "-" + t2);
-      }, e.regex = Q, e.regexp = Q, e.sepBy = V, e.sepBy1 = H, e.seq = C, e.seqMap = J, e.seqObj = function() {
-        for (var n3, t2 = {}, r2 = 0, u2 = (n3 = arguments, Array.prototype.slice.call(n3)), o2 = u2.length, i2 = 0; i2 < o2; i2 += 1) {
+          return n3 <= r2 && r2 <= t3;
+        }).desc(n3 + "-" + t3);
+      }, e2.regex = Q, e2.regexp = Q, e2.sepBy = V, e2.sepBy1 = H, e2.seq = C, e2.seqMap = J, e2.seqObj = function() {
+        for (var n3, t3 = {}, r2 = 0, u2 = (n3 = arguments, Array.prototype.slice.call(n3)), o2 = u2.length, i2 = 0; i2 < o2; i2 += 1) {
           var a2 = u2[i2];
           if (!y2(a2)) {
             if (E(a2) && 2 === a2.length && "string" == typeof a2[0] && y2(a2[1])) {
               var f2 = a2[0];
-              if (Object.prototype.hasOwnProperty.call(t2, f2)) throw new Error("seqObj: duplicate key " + f2);
-              t2[f2] = true, r2++;
+              if (Object.prototype.hasOwnProperty.call(t3, f2)) throw new Error("seqObj: duplicate key " + f2);
+              t3[f2] = true, r2++;
               continue;
             }
             throw new Error("seqObj arguments must be parsers or [string, parser] array pairs.");
           }
         }
         if (0 === r2) throw new Error("seqObj expects at least one named parser, found zero");
-        return e(function(n4, t3) {
-          for (var r3, e2 = {}, i3 = 0; i3 < o2; i3 += 1) {
+        return e2(function(n4, t4) {
+          for (var r3, e3 = {}, i3 = 0; i3 < o2; i3 += 1) {
             var a3, f3;
-            if (E(u2[i3]) ? (a3 = u2[i3][0], f3 = u2[i3][1]) : (a3 = null, f3 = u2[i3]), !(r3 = B(f3._(n4, t3), r3)).status) return r3;
-            a3 && (e2[a3] = r3.value), t3 = r3.index;
+            if (E(u2[i3]) ? (a3 = u2[i3][0], f3 = u2[i3][1]) : (a3 = null, f3 = u2[i3]), !(r3 = B(f3._(n4, t4), r3)).status) return r3;
+            a3 && (e3[a3] = r3.value), t4 = r3.index;
           }
-          return B(b(t3, e2), r3);
+          return B(b(t4, e3), r3);
         });
-      }, e.string = K, e.succeed = X, e.takeWhile = function(n3) {
-        return k(n3), e(function(t2, r2) {
-          for (var e2 = r2; e2 < t2.length && n3(L(t2, e2)); ) e2++;
-          return b(e2, t2.slice(r2, e2));
+      }, e2.string = K, e2.succeed = X, e2.takeWhile = function(n3) {
+        return k(n3), e2(function(t3, r2) {
+          for (var e3 = r2; e3 < t3.length && n3(L(t3, e3)); ) e3++;
+          return b(e3, t3.slice(r2, e3));
         });
-      }, e.test = nn, e.whitespace = pn, e["fantasy-land/empty"] = rn, e["fantasy-land/of"] = X, e.Binary = { bitSeq: l2, bitSeqObj: function(n3) {
+      }, e2.test = nn, e2.whitespace = pn, e2["fantasy-land/empty"] = rn, e2["fantasy-land/of"] = X, e2.Binary = { bitSeq: l2, bitSeqObj: function(n3) {
         s2();
-        var t2 = {}, r2 = 0, e2 = a(function(n4) {
+        var t3 = {}, r2 = 0, e3 = a(function(n4) {
           if (E(n4)) {
-            var e3 = n4;
-            if (2 !== e3.length) throw new Error("[" + e3.join(", ") + "] should be length 2, got length " + e3.length);
-            if (P(e3[0]), O(e3[1]), Object.prototype.hasOwnProperty.call(t2, e3[0])) throw new Error("duplicate key in bitSeqObj: " + e3[0]);
-            return t2[e3[0]] = true, r2++, e3;
+            var e4 = n4;
+            if (2 !== e4.length) throw new Error("[" + e4.join(", ") + "] should be length 2, got length " + e4.length);
+            if (P(e4[0]), O(e4[1]), Object.prototype.hasOwnProperty.call(t3, e4[0])) throw new Error("duplicate key in bitSeqObj: " + e4[0]);
+            return t3[e4[0]] = true, r2++, e4;
           }
           return O(n4), [null, n4];
         }, n3);
         if (r2 < 1) throw new Error("bitSeqObj expects at least one named pair, got [" + n3.join(", ") + "]");
         var u2 = a(function(n4) {
           return n4[0];
-        }, e2);
+        }, e3);
         return l2(a(function(n4) {
           return n4[1];
-        }, e2)).map(function(n4) {
-          return i(function(n5, t3) {
-            return null !== t3[0] && (n5[t3[0]] = t3[1]), n5;
-          }, {}, a(function(t3, r3) {
-            return [t3, n4[r3]];
+        }, e3)).map(function(n4) {
+          return i(function(n5, t4) {
+            return null !== t4[0] && (n5[t4[0]] = t4[1]), n5;
+          }, {}, a(function(t4, r3) {
+            return [t4, n4[r3]];
           }, u2));
         });
       }, byte: function(n3) {
         if (s2(), O(n3), n3 > 255) throw new Error("Value specified to byte constructor (" + n3 + "=0x" + n3.toString(16) + ") is larger in value than a single byte.");
-        var t2 = (n3 > 15 ? "0x" : "0x0") + n3.toString(16);
-        return e(function(r2, e2) {
-          var u2 = L(r2, e2);
-          return u2 === n3 ? b(e2 + 1, u2) : x2(e2, t2);
+        var t3 = (n3 > 15 ? "0x" : "0x0") + n3.toString(16);
+        return e2(function(r2, e3) {
+          var u2 = L(r2, e3);
+          return u2 === n3 ? b(e3 + 1, u2) : x2(e3, t3);
         });
       }, buffer: function(n3) {
         return h("buffer", n3).map(function(n4) {
           return Buffer.from(n4);
         });
-      }, encodedString: function(n3, t2) {
-        return h("string", t2).map(function(t3) {
-          return t3.toString(n3);
+      }, encodedString: function(n3, t3) {
+        return h("string", t3).map(function(t4) {
+          return t4.toString(n3);
         });
       }, uintBE: d, uint8BE: d(1), uint16BE: d(2), uint32BE: d(4), uintLE: v, uint8LE: v(1), uint16LE: v(2), uint32LE: v(4), intBE: g, int8BE: g(1), int16BE: g(2), int32BE: g(4), intLE: m, int8LE: m(1), int16LE: m(2), int32LE: m(4), floatBE: h("floatBE", 4).map(function(n3) {
         return n3.readFloatBE(0);
@@ -6499,7 +6499,7 @@ var parsimmon_umd_min = { exports: {} };
         return n3.readDoubleBE(0);
       }), doubleLE: h("doubleLE", 8).map(function(n3) {
         return n3.readDoubleLE(0);
-      }) }, n2.exports = e;
+      }) }, n2.exports = e2;
     }]);
   });
 })(parsimmon_umd_min);
@@ -6562,7 +6562,7 @@ var Values;
           result += "]";
         return result;
       case "object":
-        return "{ " + Object.entries(wrapped.value).map((e) => e[0] + ": " + toString(e[1], setting, true)).join(", ") + " }";
+        return "{ " + Object.entries(wrapped.value).map((e2) => e2[0] + ": " + toString(e2[1], setting, true)).join(", ") + " }";
       case "date":
         if (wrapped.value.second == 0 && wrapped.value.hour == 0 && wrapped.value.minute == 0) {
           return wrapped.value.toFormat(setting.defaultDateFormat);
@@ -7270,7 +7270,7 @@ const EXPRESSION = parsimmon_umd_minExports.createLanguage({
   datePlus: (q) => parsimmon_umd_minExports.alt(q.dateShorthand.map((d) => DATE_SHORTHANDS[d]()), q.date).desc("date in format YYYY-MM[-DDTHH-MM-SS.MS] or in shorthand"),
   // A duration of time.
   durationType: (_) => parsimmon_umd_minExports.alt(...Object.keys(DURATION_TYPES).sort((a, b) => b.length - a.length).map(parsimmon_umd_minExports.string)),
-  duration: (q) => parsimmon_umd_minExports.seqMap(q.number, parsimmon_umd_minExports.optWhitespace, q.durationType, (count, _, t) => DURATION_TYPES[t].mapUnits((x2) => x2 * count)).sepBy1(parsimmon_umd_minExports.string(",").trim(parsimmon_umd_minExports.optWhitespace).or(parsimmon_umd_minExports.optWhitespace)).map((durations) => durations.reduce((p2, c) => p2.plus(c))).desc("duration like 4hr2min"),
+  duration: (q) => parsimmon_umd_minExports.seqMap(q.number, parsimmon_umd_minExports.optWhitespace, q.durationType, (count, _, t2) => DURATION_TYPES[t2].mapUnits((x2) => x2 * count)).sepBy1(parsimmon_umd_minExports.string(",").trim(parsimmon_umd_minExports.optWhitespace).or(parsimmon_umd_minExports.optWhitespace)).map((durations) => durations.reduce((p2, c) => p2.plus(c))).desc("duration like 4hr2min"),
   // A raw null value.
   rawNull: (_) => parsimmon_umd_minExports.string("null"),
   // Source parsing.
@@ -7396,7 +7396,7 @@ function captureRaw(base2) {
   });
 }
 function stripNewlines(text2) {
-  return text2.split(/[\r\n]+/).map((t) => t.trim()).join("");
+  return text2.split(/[\r\n]+/).map((t2) => t2.trim()).join("");
 }
 function precededByWhitespaceIfNotEof(if_eof, parser2) {
   return parsimmon_umd_minExports.eof.map(if_eof).or(parsimmon_umd_minExports.whitespace.then(parser2));
@@ -9073,10 +9073,10 @@ const debug$1 = (level) => (...args) => {
   if (level !== "debug") {
     return;
   }
-  console.groupCollapsed(`Kind Model(d) (${trunc(msg(args))})`);
+  console.groupCollapsed(`KM(dbg): ${trunc(msg(args))}`);
   args.forEach((a) => {
     if (typeof a === "function") {
-      console.log(a());
+      console.log(`fn → `, a());
     } else if (typeof a === "object" && a !== null) {
       Object.keys(a).map((k) => console.info({ [k]: a[k] }));
     } else {
@@ -9089,10 +9089,10 @@ const info = (level) => (...args) => {
   if (["debug"].includes(level)) {
     return;
   }
-  console.groupCollapsed(`Kind Model(i): ${trunc(msg(args))}`);
+  console.groupCollapsed(`KM(i): ${trunc(msg(args))}`);
   args.forEach((a) => {
     if (typeof a === "function") {
-      console.info(a);
+      console.log(`fn → `, a());
     } else if (typeof a === "object" && a !== null) {
       Object.keys(a).map((k) => console.info({ [k]: a[k] }));
     } else {
@@ -9105,7 +9105,7 @@ const warn = (level) => (...args) => {
   if (["error"].includes(level)) {
     return;
   }
-  console.group("Kind Model(warn)");
+  console.group("KM(warn)");
   args.forEach((a) => {
     console.warn(a);
   });
@@ -9113,7 +9113,7 @@ const warn = (level) => (...args) => {
 };
 const error$3 = (level) => (...args) => {
   console.groupEnd();
-  new Notification(`Kind Model(err): ${msg(args) || ""}`, { body: "see developer console for more details" });
+  new Notification(`KM(err): ${msg(args) || ""}`, { body: "see developer console for more details" });
   class KindModelError extends Error {
     constructor(msg2) {
       super(msg2);
@@ -9218,11 +9218,11 @@ ${JSON.stringify(base2, null, 2)}`);
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
     addToggleSwitch(opt2 = {}) {
-      s2.addToggle((t) => {
+      s2.addToggle((t2) => {
         if (isNotNull(prop, base2)) {
-          t.setValue(base2[prop]);
+          t2.setValue(base2[prop]);
         }
-        t.onChange((v) => {
+        t2.onChange((v) => {
           if (isNotNull(prop, base2)) {
             s2.setName(resolve$1(name2));
             s2.setDesc(resolve$1(desc));
@@ -9245,11 +9245,11 @@ ${JSON.stringify(base2, null, 2)}`);
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
     addTextInput(opt2 = {}) {
-      s2.addText((t) => {
+      s2.addText((t2) => {
         if (isNotNull(prop, base2)) {
-          t.setValue(base2[prop]);
+          t2.setValue(base2[prop]);
         }
-        t.onChange((v) => {
+        t2.onChange((v) => {
           if (isNotNull(prop, base2)) {
             base2[prop] = v;
           } else {
@@ -9274,13 +9274,13 @@ ${JSON.stringify(base2, null, 2)}`);
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
     addFolderSearch(opt2 = {}) {
-      s2.addSearch((t) => {
-        new FolderSuggest(t.inputEl);
-        t.setPlaceholder(opt2.placeholder || "Example: folder1/folder2");
+      s2.addSearch((t2) => {
+        new FolderSuggest(t2.inputEl);
+        t2.setPlaceholder(opt2.placeholder || "Example: folder1/folder2");
         if (isNotNull(prop, base2)) {
-          t.setValue(base2[prop]);
+          t2.setValue(base2[prop]);
         }
-        t.onChange((v) => {
+        t2.onChange((v) => {
           s2.setName(resolve$1(name2));
           s2.setDesc(resolve$1(desc));
           if (isNotNull(prop, base2)) {
@@ -9671,36 +9671,36 @@ var entry = (refType, desc, ...params) => [
   )
 ];
 ({
-  "Extends": entry((t) => t.unknown(), "extends the type", (t) => t.unknown()),
-  "NotExtends": entry((t) => t.unknown(), "does not extent the type", (t) => t.unknown()),
-  "Equals": entry((t) => t.unknown(), "equals the type", (t) => t.unknown()),
-  "NotEqual": entry((t) => t.unknown(), "does not equal the type", (t) => t.unknown()),
-  "Truthy": entry((t) => t.unknown(), "must be a truthy value"),
-  "Falsy": entry((t) => t.unknown(), "must be a falsy value"),
-  "IsSomething": entry((t) => t.unknown(), "must be 'something' (aka, not null or undefined)"),
-  "IsNothing": entry((t) => t.unknown(), "must be 'nothing' (aka, null or undefined)"),
-  "IsString": entry((t) => t.string(), "must extend a string type"),
-  "IsNumber": entry((t) => t.number(), "must extend a number type"),
-  "IsBoolean": entry((t) => t.boolean(), "must extend a boolean type"),
+  "Extends": entry((t2) => t2.unknown(), "extends the type", (t2) => t2.unknown()),
+  "NotExtends": entry((t2) => t2.unknown(), "does not extent the type", (t2) => t2.unknown()),
+  "Equals": entry((t2) => t2.unknown(), "equals the type", (t2) => t2.unknown()),
+  "NotEqual": entry((t2) => t2.unknown(), "does not equal the type", (t2) => t2.unknown()),
+  "Truthy": entry((t2) => t2.unknown(), "must be a truthy value"),
+  "Falsy": entry((t2) => t2.unknown(), "must be a falsy value"),
+  "IsSomething": entry((t2) => t2.unknown(), "must be 'something' (aka, not null or undefined)"),
+  "IsNothing": entry((t2) => t2.unknown(), "must be 'nothing' (aka, null or undefined)"),
+  "IsString": entry((t2) => t2.string(), "must extend a string type"),
+  "IsNumber": entry((t2) => t2.number(), "must extend a number type"),
+  "IsBoolean": entry((t2) => t2.boolean(), "must extend a boolean type"),
   // numeric
-  "GreaterThan": entry((t) => t.number(), "must be a numeric literal greater than [[0]]", (t) => t.number()),
-  "LessThan": entry((t) => t.number(), "must be a numeric literal less than [[0]]", (t) => t.number()),
+  "GreaterThan": entry((t2) => t2.number(), "must be a numeric literal greater than [[0]]", (t2) => t2.number()),
+  "LessThan": entry((t2) => t2.number(), "must be a numeric literal less than [[0]]", (t2) => t2.number()),
   // string
-  "StartsWith": entry((t) => t.string(), "must be a string literal that starts with '[[0]]'", (t) => t.string()),
-  "EndsWith": entry((t) => t.string(), "must be a string literal that ends with '[[0]]'", (t) => t.string()),
-  "Includes": entry((t) => t.string(), "must be a string literal that includes the substring '[[0]]'", (t) => t.string()),
+  "StartsWith": entry((t2) => t2.string(), "must be a string literal that starts with '[[0]]'", (t2) => t2.string()),
+  "EndsWith": entry((t2) => t2.string(), "must be a string literal that ends with '[[0]]'", (t2) => t2.string()),
+  "Includes": entry((t2) => t2.string(), "must be a string literal that includes the substring '[[0]]'", (t2) => t2.string()),
   // function
-  "ReturnsSomething": entry((t) => t.function(), "must be a function which returns 'something' (aka, not null or undefined)"),
-  "ReturnsNothing": entry((t) => t.function(), "must be a function which returns 'nothing' (aka, null or undefined)"),
-  "ReturnsTrue": entry((t) => t.function(), "must be a function which returns 'true'"),
-  "ReturnsFalse": entry((t) => t.function(), "must be a function which returns 'false'"),
-  "ReturnsTruthy": entry((t) => t.function(), "must be a function which returns a 'truthy' value"),
-  "ReturnsFalsy": entry((t) => t.function(), "must be a function which returns a 'falsy' value"),
-  "ReturnsExtends": entry((t) => t.unknown(), "must be a function which returns a value which extends [[0]]", (t) => t.unknown()),
-  "ReturnsEquals": entry((t) => t.unknown(), "must be a function which returns a value which equals [[0]]", (t) => t.unknown()),
-  "Contains": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.unknown()),
+  "ReturnsSomething": entry((t2) => t2.function(), "must be a function which returns 'something' (aka, not null or undefined)"),
+  "ReturnsNothing": entry((t2) => t2.function(), "must be a function which returns 'nothing' (aka, null or undefined)"),
+  "ReturnsTrue": entry((t2) => t2.function(), "must be a function which returns 'true'"),
+  "ReturnsFalse": entry((t2) => t2.function(), "must be a function which returns 'false'"),
+  "ReturnsTruthy": entry((t2) => t2.function(), "must be a function which returns a 'truthy' value"),
+  "ReturnsFalsy": entry((t2) => t2.function(), "must be a function which returns a 'falsy' value"),
+  "ReturnsExtends": entry((t2) => t2.unknown(), "must be a function which returns a value which extends [[0]]", (t2) => t2.unknown()),
+  "ReturnsEquals": entry((t2) => t2.unknown(), "must be a function which returns a value which equals [[0]]", (t2) => t2.unknown()),
+  "Contains": entry((t2) => t2.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t2) => t2.unknown()),
   // TODO: get the below working`
-  "ContainsSome": entry((t) => t.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t) => t.singularTuple())
+  "ContainsSome": entry((t2) => t2.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t2) => t2.singularTuple())
 });
 var Never$1 = createConstant$1("never");
 var SIMPLE_SCALAR_TOKENS = [
@@ -11340,24 +11340,163 @@ const isTFile = (v) => {
 const isWikipediaUrl = (val) => {
   return isString$1(val) && val.startsWith("https://") && val.includes("wikipedia.org/");
 };
+const isPageReference = (v) => {
+  return isDvPage(v) || isFileLink(v) || isPageInfo(v) || isTFile(v) || isTAbstractFile(v) || isString$1(v);
+};
 const isFrontmatter = (v) => {
   return isObject(v) && !isFunction$2(v);
 };
-const getPath = (pg) => {
-  var _a2, _b2, _c2;
-  return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? (_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.path : isString$1(pg) ? pg : isPageInfo(pg) ? (_c2 = (_b2 = pg.page) == null ? void 0 : _b2.file) == null ? void 0 : _c2.path : void 0;
+const isTagKindDefinition = (val) => {
+  return isObject(val) && "tag" in val && typeof val.tag === "string";
+};
+const getPropertyType = (value2) => {
+  if (isYouTubeUrl(value2)) {
+    getYouTubePageType(value2);
+    if (isYouTubeCreatorUrl(value2)) {
+      return `youtube::creator::featured`;
+    }
+    if (isYouTubeFeedUrl(value2, "history")) {
+      return `youtube::feed::history`;
+    }
+  }
+  if (isString$1(value2)) {
+    if (value2.startsWith("[[") && value2.endsWith("]]")) {
+      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
+      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
+        return "image::vault";
+      } else if (content2.endsWith(".excalidraw")) {
+        return "drawing::vault";
+      }
+    }
+    if (isPhoneNumber(value2)) {
+      return "phoneNumber";
+    }
+    if (isEmail(value2)) {
+      return "email";
+    }
+    if (isInlineSvg(value2)) {
+      return "svg::inline";
+    }
+    if (isMetric(value2)) {
+      return "metric";
+    }
+    if (isZipCode(value2)) {
+      return "geo::zip-code";
+    }
+    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
+      return "geo::country";
+    }
+    if (isUrl(value2)) {
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      if (isRepoUrl(value2)) {
+        return "url::repo";
+      }
+      if (isRetailUrl(value2)) {
+        return "url::retail";
+      }
+      if (isNewsUrl(value2)) {
+        return "url::news";
+      }
+      if (isYouTubeUrl(value2)) {
+        return "url::youtube";
+      }
+      if (isSocialMediaUrl(value2)) {
+        return "url::social";
+      }
+      return "url";
+    }
+    return "string";
+  }
+  if (isNumber$1(value2)) {
+    return "number";
+  }
+  if (isBoolean(value2)) {
+    return "boolean";
+  } else if (isArray(value2) && value2.length > 0) {
+    const variants = new Set(value2.map(getPropertyType));
+    if (variants.size === 1) {
+      return `list::${Array.from(variants)[0]}`;
+    } else {
+      return `list::mixed::${Array.from(variants).join(",")}`;
+    }
+  }
+  return `other::${toKebabCase(String(typeof value2))}`;
 };
 const toArray = (arrayLike) => {
   return Array.from(arrayLike);
 };
-const getPage = (p2) => (pg, force) => {
-  var _a2;
+const getPath = (pg) => {
+  var _a2, _b2, _c2;
+  return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? (_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.path : isString$1(pg) ? pg : isPageInfo(pg) ? (_c2 = (_b2 = pg.current) == null ? void 0 : _b2.file) == null ? void 0 : _c2.path : void 0;
+};
+const getPage = (p2) => (pg) => {
+  var _a2, _b2, _c2;
+  if (isString$1(pg) && (pg.includes("/category/") || pg.includes("/subcategory/") || pg.includes("kind/") || pg.includes("type/") || Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).some(
+    (i) => i.startsWith(stripLeading(pg, "#"))
+  ))) {
+    return p2.dv.page(ensureLeading(pg, "#"));
+  }
   const path = getPath(pg);
-  const fc = (_a2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _a2.fileCache;
+  const fc = (_c2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _c2.fileCache;
   isObject(fc) && path && path in fc ? fc[path] : void 0;
   const page = path ? p2.dv.page(path) : void 0;
   return page;
 };
+const getPageInfo = (p2) => (pg) => {
+  const path = getPath(pg);
+  const page = getPage(p2)(pg);
+  if (path && page) {
+    const meta = {
+      categories: getCategories(p2)(page),
+      subcategories: getSubcategories(p2)(page),
+      classifications: getClassification(p2)(page),
+      hasCategoryProp: hasCategoryProp(p2)(page),
+      hasCategoryTag: hasCategoryTag(p2)(page),
+      hasSubcategoryTag: hasSubcategoryTag(p2)(page),
+      hasSubcategoryDefnTag: hasSubcategoryTagDefn(p2)(page),
+      hasKindProp: hasKindProp(p2)(page),
+      hasKindsProperty: hasKindsProp(p2)(page),
+      hasKindTag: hasKindTag(p2)(page),
+      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
+      hasMultipleKinds: hasMultipleKinds(p2)(page),
+      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
+      isCategoryPage: isCategoryPage(p2)(page),
+      isSubcategoryPage: isSubcategoryPage(p2)(page),
+      isKindDefnPage: isKindDefnPage(p2)(page),
+      isTypeDefnPage: isTypeDefnPage(p2)(page),
+      isKindedPage: isKindedPage(p2)(page)
+    };
+    const info2 = {
+      current: page,
+      path,
+      name: page.file.name,
+      ext: page.file.ext,
+      type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
+      fm: page.file.frontmatter,
+      ...meta
+    };
+    return info2;
+  }
+};
+const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
+const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
+const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-quote"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>`;
+const INFO_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-info"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>`;
+const TIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
+const SUMMARY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="M200.12 55.87A102 102 0 1 0 55.88 200.12A102 102 0 1 0 200.12 55.87M94 211.37V152a2 2 0 0 1 2-2h64a2 2 0 0 1 2 2v59.37a90.49 90.49 0 0 1-68 0M146 138h-36V99.71l36-18Zm45.64 53.64A90.93 90.93 0 0 1 174 205.39V152a14 14 0 0 0-14-14h-2V72a6 6 0 0 0-8.68-5.37l-48 24A6 6 0 0 0 98 96v42h-2a14 14 0 0 0-14 14v53.39a90.93 90.93 0 0 1-17.64-13.75a90 90 0 1 1 127.28 0"/></svg>`;
+const BUG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-bug"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>`;
+const EXAMPLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+const QUESTION_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>`;
+const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-check"><path d="M20 6 9 17l-5-5"></path></svg>`;
+const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>`;
+const BOOK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M14 9.9V8.2q.825-.35 1.688-.525T17.5 7.5q.65 0 1.275.1T20 7.85v1.6q-.6-.225-1.213-.337T17.5 9q-.95 0-1.825.238T14 9.9m0 5.5v-1.7q.825-.35 1.688-.525T17.5 13q.65 0 1.275.1t1.225.25v1.6q-.6-.225-1.213-.338T17.5 14.5q-.95 0-1.825.225T14 15.4m0-2.75v-1.7q.825-.35 1.688-.525t1.812-.175q.65 0 1.275.1T20 10.6v1.6q-.6-.225-1.213-.338T17.5 11.75q-.95 0-1.825.238T14 12.65M6.5 16q1.175 0 2.288.263T11 17.05V7.2q-1.025-.6-2.175-.9T6.5 6q-.9 0-1.788.175T3 6.7v9.9q.875-.3 1.738-.45T6.5 16m6.5 1.05q1.1-.525 2.213-.787T17.5 16q.9 0 1.763.15T21 16.6V6.7q-.825-.35-1.713-.525T17.5 6q-1.175 0-2.325.3T13 7.2zM12 20q-1.2-.95-2.6-1.475T6.5 18q-1.05 0-2.062.275T2.5 19.05q-.525.275-1.012-.025T1 18.15V6.1q0-.275.138-.525T1.55 5.2q1.15-.6 2.4-.9T6.5 4q1.45 0 2.838.375T12 5.5q1.275-.75 2.663-1.125T17.5 4q1.3 0 2.55.3t2.4.9q.275.125.413.375T23 6.1v12.05q0 .575-.487.875t-1.013.025q-.925-.5-1.937-.775T17.5 18q-1.5 0-2.9.525T12 20m-5-8.35"/></svg>`;
+const KINDLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.944 37.03a56.3 56.3 0 0 1 9.696-.751c4.318 0 11.836 1.626 20.316 4.879"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.167 36.547c1.52-.212 3.833-2.679 3.833-2.679a15 15 0 0 0 2.237-1.57l2.179 2.124v1.24l1.29.885l3.589-2.96s-.379-1.293-1.262-1.64c-.042-.62-2.748-5.06-3-5.425m-6.589.533a15 15 0 0 0 2.44 1.542c.392.028 6.532-4.093 6.532-4.093a4.73 4.73 0 0 0 2.13-1.122a2.7 2.7 0 0 0 .225-1.15s.365-.476.365-.645s.28-1.01.28-1.093"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24.855 24.504s.701.869.925.869s5.103-2.58 5.215-3.14m-10.828 6.532c.09-.084 2.644-1.444 2.644-1.444"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18.154 21.868c.477 1.907 3.673 5.453 3.673 5.453l3.365-3.294s-2.832-3.028-3.169-3.953s-.785-2.524-1.682-2.916s-4.458-2.243-4.458-2.243l-.673 1.233a11.73 11.73 0 0 0-5.13 9.673c0 6.561.756 8.804.756 8.804s4.85-1.037 6.589-2.888s2.742-2.972 2.742-2.972l.353-3.004"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11.597 34.44a3.44 3.44 0 0 0 1.423 1.93m19.701-2.31a15.5 15.5 0 0 0 3.391 4.532a17 17 0 0 0 2.25 1.304M30.03 36.28c.573.756 2.396 2.817 2.956 3.448M20.167 17.079l.454-.426s2.047 1.402 2.664 1.01s.589-.842.589-.842s1.01-.617.981-.925a1.7 1.7 0 0 1 0-.449h.841s-.532-1.598-.196-2.186l.336-.59l.401.365a2.6 2.6 0 0 0 1.03-2.58c-.393-1.57-2.776-4.037-3.87-4.205s-.953.196-.953.196s-1.99-1.177-3.224-.084s-2.692 2.356-2.663 4.599s.056 2.887.224 3.112a2.6 2.6 0 0 0 .766.481l-.494.964m17.924.738l3.028.2l-5.284 5.663l-2.511-.308z"/></svg>`;
+const SEARCH_BOOK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M11.724 7.447a2.276 2.276 0 1 0 0 4.553a2.276 2.276 0 0 0 0-4.553M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5zm10.819 7.295a3.724 3.724 0 1 0-1.024 1.024l2.476 2.475l.067.058l.008.006a.724.724 0 0 0 .942-1.093z"/></svg>`;
+const AMAZON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M15.93 17.09c-.18.16-.43.17-.63.06c-.89-.74-1.05-1.08-1.54-1.79c-1.47 1.5-2.51 1.95-4.42 1.95c-2.25 0-4.01-1.39-4.01-4.17c0-2.18 1.17-3.64 2.86-4.38c1.46-.64 3.49-.76 5.04-.93V7.5c0-.66.05-1.41-.33-1.96c-.32-.49-.95-.7-1.5-.7c-1.02 0-1.93.53-2.15 1.61c-.05.24-.25.48-.47.49l-2.6-.28c-.22-.05-.46-.22-.4-.56c.6-3.15 3.45-4.1 6-4.1c1.3 0 3 .35 4.03 1.33C17.11 4.55 17 6.18 17 7.95v4.17c0 1.25.5 1.81 1 2.48c.17.25.21.54 0 .71l-2.06 1.78h-.01m-2.7-6.53V10c-1.94 0-3.99.39-3.99 2.67c0 1.16.61 1.95 1.63 1.95c.76 0 1.43-.47 1.86-1.22c.52-.93.5-1.8.5-2.84m6.93 8.98C18 21.14 14.82 22 12.1 22c-3.81 0-7.25-1.41-9.85-3.76c-.2-.18-.02-.43.25-.29c2.78 1.63 6.25 2.61 9.83 2.61c2.41 0 5.07-.5 7.51-1.53c.37-.16.66.24.32.51m.91-1.04c-.28-.36-1.85-.17-2.57-.08c-.19.02-.22-.16-.03-.3c1.24-.88 3.29-.62 3.53-.33c.24.3-.07 2.35-1.24 3.32c-.18.16-.35.07-.26-.11c.26-.67.85-2.14.57-2.5z" fill="currentColor"/></svg>`;
+const BOOK_CATALOG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.3 42.5h34.1m-34-2l7-.2l-.5-34.7l-6.3-.1Zm8.6-27l-.3 26.3l6.5-.2l.8-25.9Zm9-5.6l-1.4 32.2l8.7-.1L33 8.4Zm10 6.3l-1.5 26.3l7.8.1l1.4-26.3Zm1 0a8.5 8.5 0 0 1 5.7-3.7M12.9 5.6L14.8 9l.1 4.6m-1.5 26.7l1.3-.5"/></svg>`;
 var __create = Object.create;
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14258,7 +14397,7 @@ var require_smartquotes = __commonJS({
       return str.substr(0, index) + ch + str.substr(index + 1);
     }
     function process_inlines(tokens2, state) {
-      var i, token, text2, t, pos, max2, thisLevel, item2, lastChar, nextChar, isLastPunctChar, isNextPunctChar, isLastWhiteSpace, isNextWhiteSpace, canOpen, canClose, j, isSingle, stack, openQuote, closeQuote;
+      var i, token, text2, t2, pos, max2, thisLevel, item2, lastChar, nextChar, isLastPunctChar, isNextPunctChar, isLastWhiteSpace, isNextWhiteSpace, canOpen, canClose, j, isSingle, stack, openQuote, closeQuote;
       stack = [];
       for (i = 0; i < tokens2.length; i++) {
         token = tokens2[i];
@@ -14278,16 +14417,16 @@ var require_smartquotes = __commonJS({
         OUTER:
           while (pos < max2) {
             QUOTE_RE.lastIndex = pos;
-            t = QUOTE_RE.exec(text2);
-            if (!t) {
+            t2 = QUOTE_RE.exec(text2);
+            if (!t2) {
               break;
             }
             canOpen = canClose = true;
-            pos = t.index + 1;
-            isSingle = t[0] === "'";
+            pos = t2.index + 1;
+            isSingle = t2[0] === "'";
             lastChar = 32;
-            if (t.index - 1 >= 0) {
-              lastChar = text2.charCodeAt(t.index - 1);
+            if (t2.index - 1 >= 0) {
+              lastChar = text2.charCodeAt(t2.index - 1);
             } else {
               for (j = i - 1; j >= 0; j--) {
                 if (tokens2[j].type === "softbreak" || tokens2[j].type === "hardbreak")
@@ -14329,7 +14468,7 @@ var require_smartquotes = __commonJS({
                 canClose = false;
               }
             }
-            if (nextChar === 34 && t[0] === '"') {
+            if (nextChar === 34 && t2[0] === '"') {
               if (lastChar >= 48 && lastChar <= 57) {
                 canClose = canOpen = false;
               }
@@ -14340,7 +14479,7 @@ var require_smartquotes = __commonJS({
             }
             if (!canOpen && !canClose) {
               if (isSingle) {
-                token.content = replaceAt(token.content, t.index, APOSTROPHE);
+                token.content = replaceAt(token.content, t2.index, APOSTROPHE);
               }
               continue;
             }
@@ -14359,7 +14498,7 @@ var require_smartquotes = __commonJS({
                     openQuote = state.md.options.quotes[0];
                     closeQuote = state.md.options.quotes[1];
                   }
-                  token.content = replaceAt(token.content, t.index, closeQuote);
+                  token.content = replaceAt(token.content, t2.index, closeQuote);
                   tokens2[item2.token].content = replaceAt(tokens2[item2.token].content, item2.pos, openQuote);
                   pos += closeQuote.length - 1;
                   if (item2.token === i) {
@@ -14375,12 +14514,12 @@ var require_smartquotes = __commonJS({
             if (canOpen) {
               stack.push({
                 token: i,
-                pos: t.index,
+                pos: t2.index,
                 single: isSingle,
                 level: thisLevel
               });
             } else if (canClose && isSingle) {
-              token.content = replaceAt(token.content, t.index, APOSTROPHE);
+              token.content = replaceAt(token.content, t2.index, APOSTROPHE);
             }
           }
       }
@@ -14533,7 +14672,7 @@ var require_table = __commonJS({
       return result;
     }
     module.exports = function table3(state, startLine, endLine, silent) {
-      var ch, lineText, pos, i, l2, nextLine, columns, columnCount, token, aligns, t, tableLines, tbodyLines, oldParentType, terminate, terminatorRules, firstCh, secondCh;
+      var ch, lineText, pos, i, l2, nextLine, columns, columnCount, token, aligns, t2, tableLines, tbodyLines, oldParentType, terminate, terminatorRules, firstCh, secondCh;
       if (startLine + 2 > endLine) {
         return false;
       }
@@ -14573,20 +14712,20 @@ var require_table = __commonJS({
       columns = lineText.split("|");
       aligns = [];
       for (i = 0; i < columns.length; i++) {
-        t = columns[i].trim();
-        if (!t) {
+        t2 = columns[i].trim();
+        if (!t2) {
           if (i === 0 || i === columns.length - 1) {
             continue;
           } else {
             return false;
           }
         }
-        if (!/^:?-+:?$/.test(t)) {
+        if (!/^:?-+:?$/.test(t2)) {
           return false;
         }
-        if (t.charCodeAt(t.length - 1) === 58) {
-          aligns.push(t.charCodeAt(0) === 58 ? "center" : "right");
-        } else if (t.charCodeAt(0) === 58) {
+        if (t2.charCodeAt(t2.length - 1) === 58) {
+          aligns.push(t2.charCodeAt(0) === 58 ? "center" : "right");
+        } else if (t2.charCodeAt(0) === 58) {
           aligns.push("left");
         } else {
           aligns.push("");
@@ -17325,11 +17464,11 @@ var require_punycode = __commonJS({
             error2("overflow");
           }
           i += digit * w;
-          const t = k <= bias ? tMin2 : k >= bias + tMax2 ? tMax2 : k - bias;
-          if (digit < t) {
+          const t2 = k <= bias ? tMin2 : k >= bias + tMax2 ? tMax2 : k - bias;
+          if (digit < t2) {
             break;
           }
-          const baseMinusT = base2 - t;
+          const baseMinusT = base2 - t2;
           if (w > floor2(maxInt2 / baseMinusT)) {
             error2("overflow");
           }
@@ -17383,13 +17522,13 @@ var require_punycode = __commonJS({
           if (currentValue == n2) {
             let q = delta;
             for (let k = base2; ; k += base2) {
-              const t = k <= bias ? tMin2 : k >= bias + tMax2 ? tMax2 : k - bias;
-              if (q < t) {
+              const t2 = k <= bias ? tMin2 : k >= bias + tMax2 ? tMax2 : k - bias;
+              if (q < t2) {
                 break;
               }
-              const qMinusT = q - t;
-              const baseMinusT = base2 - t;
-              output.push(stringFromCharCode2(digitToBasic2(t + qMinusT % baseMinusT, 0)));
+              const qMinusT = q - t2;
+              const baseMinusT = base2 - t2;
+              output.push(stringFromCharCode2(digitToBasic2(t2 + qMinusT % baseMinusT, 0)));
               q = floor2(qMinusT / baseMinusT);
             }
             output.push(stringFromCharCode2(digitToBasic2(q, 0)));
@@ -19362,12 +19501,12 @@ function validateType(type, value2, config, key) {
     return true;
   if (ast_default.isFunction(value2) && ((_a2 = config.validation) == null ? void 0 : _a2.validateFunctions)) {
     const schema = (_b2 = config.functions) == null ? void 0 : _b2[value2.name];
-    return !(schema == null ? void 0 : schema.returns) ? true : Array.isArray(schema.returns) ? schema.returns.find((t) => t === type) !== void 0 : schema.returns === type;
+    return !(schema == null ? void 0 : schema.returns) ? true : Array.isArray(schema.returns) ? schema.returns.find((t2) => t2 === type) !== void 0 : schema.returns === type;
   }
   if (ast_default.isAst(value2))
     return true;
   if (Array.isArray(type))
-    return type.some((t) => validateType(t, value2, config, key));
+    return type.some((t2) => validateType(t2, value2, config, key));
   if (typeof type === "string")
     type = TypeMappings[type];
   if (typeof type === "function") {
@@ -19573,7 +19712,7 @@ function validator(node2, config) {
   if (schema.validate) {
     const schemaErrors = schema.validate(node2, config);
     if (isPromise(schemaErrors)) {
-      return schemaErrors.then((e) => errors2.concat(e));
+      return schemaErrors.then((e2) => errors2.concat(e2));
     }
     errors2.push(...schemaErrors);
   }
@@ -19593,7 +19732,7 @@ function validateTree(content2, config) {
     };
     const errors2 = validator(node2, updatedConfig);
     if (isPromise(errors2)) {
-      return errors2.then((e) => e.map((error2) => ({ type, lines, location: location2, error: error2 })));
+      return errors2.then((e2) => e2.map((error2) => ({ type, lines, location: location2, error: error2 })));
     }
     return errors2.map((error2) => ({ type, lines, location: location2, error: error2 }));
   });
@@ -19793,7 +19932,7 @@ const getDomMeta = (view, info2) => ({
 const createPageView = (p2) => (view) => {
   var _a2;
   if ((_a2 = view == null ? void 0 : view.file) == null ? void 0 : _a2.path) {
-    const info2 = createPageInfo(p2)(view.file.path);
+    const info2 = getPageInfo(p2)(view.file.path);
     if (info2) {
       const viewMeta = {
         view: getViewMeta(p2)(view, info2),
@@ -20019,296 +20158,340 @@ const iconApi = (p2) => {
     }
   };
 };
-const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
-const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
-const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-quote"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>`;
-const INFO_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-info"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>`;
-const TIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
-const SUMMARY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="M200.12 55.87A102 102 0 1 0 55.88 200.12A102 102 0 1 0 200.12 55.87M94 211.37V152a2 2 0 0 1 2-2h64a2 2 0 0 1 2 2v59.37a90.49 90.49 0 0 1-68 0M146 138h-36V99.71l36-18Zm45.64 53.64A90.93 90.93 0 0 1 174 205.39V152a14 14 0 0 0-14-14h-2V72a6 6 0 0 0-8.68-5.37l-48 24A6 6 0 0 0 98 96v42h-2a14 14 0 0 0-14 14v53.39a90.93 90.93 0 0 1-17.64-13.75a90 90 0 1 1 127.28 0"/></svg>`;
-const BUG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-bug"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>`;
-const EXAMPLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
-const QUESTION_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>`;
-const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-check"><path d="M20 6 9 17l-5-5"></path></svg>`;
-const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
-const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>`;
-const BOOK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M14 9.9V8.2q.825-.35 1.688-.525T17.5 7.5q.65 0 1.275.1T20 7.85v1.6q-.6-.225-1.213-.337T17.5 9q-.95 0-1.825.238T14 9.9m0 5.5v-1.7q.825-.35 1.688-.525T17.5 13q.65 0 1.275.1t1.225.25v1.6q-.6-.225-1.213-.338T17.5 14.5q-.95 0-1.825.225T14 15.4m0-2.75v-1.7q.825-.35 1.688-.525t1.812-.175q.65 0 1.275.1T20 10.6v1.6q-.6-.225-1.213-.338T17.5 11.75q-.95 0-1.825.238T14 12.65M6.5 16q1.175 0 2.288.263T11 17.05V7.2q-1.025-.6-2.175-.9T6.5 6q-.9 0-1.788.175T3 6.7v9.9q.875-.3 1.738-.45T6.5 16m6.5 1.05q1.1-.525 2.213-.787T17.5 16q.9 0 1.763.15T21 16.6V6.7q-.825-.35-1.713-.525T17.5 6q-1.175 0-2.325.3T13 7.2zM12 20q-1.2-.95-2.6-1.475T6.5 18q-1.05 0-2.062.275T2.5 19.05q-.525.275-1.012-.025T1 18.15V6.1q0-.275.138-.525T1.55 5.2q1.15-.6 2.4-.9T6.5 4q1.45 0 2.838.375T12 5.5q1.275-.75 2.663-1.125T17.5 4q1.3 0 2.55.3t2.4.9q.275.125.413.375T23 6.1v12.05q0 .575-.487.875t-1.013.025q-.925-.5-1.937-.775T17.5 18q-1.5 0-2.9.525T12 20m-5-8.35"/></svg>`;
-const KINDLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.944 37.03a56.3 56.3 0 0 1 9.696-.751c4.318 0 11.836 1.626 20.316 4.879"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.167 36.547c1.52-.212 3.833-2.679 3.833-2.679a15 15 0 0 0 2.237-1.57l2.179 2.124v1.24l1.29.885l3.589-2.96s-.379-1.293-1.262-1.64c-.042-.62-2.748-5.06-3-5.425m-6.589.533a15 15 0 0 0 2.44 1.542c.392.028 6.532-4.093 6.532-4.093a4.73 4.73 0 0 0 2.13-1.122a2.7 2.7 0 0 0 .225-1.15s.365-.476.365-.645s.28-1.01.28-1.093"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24.855 24.504s.701.869.925.869s5.103-2.58 5.215-3.14m-10.828 6.532c.09-.084 2.644-1.444 2.644-1.444"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18.154 21.868c.477 1.907 3.673 5.453 3.673 5.453l3.365-3.294s-2.832-3.028-3.169-3.953s-.785-2.524-1.682-2.916s-4.458-2.243-4.458-2.243l-.673 1.233a11.73 11.73 0 0 0-5.13 9.673c0 6.561.756 8.804.756 8.804s4.85-1.037 6.589-2.888s2.742-2.972 2.742-2.972l.353-3.004"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11.597 34.44a3.44 3.44 0 0 0 1.423 1.93m19.701-2.31a15.5 15.5 0 0 0 3.391 4.532a17 17 0 0 0 2.25 1.304M30.03 36.28c.573.756 2.396 2.817 2.956 3.448M20.167 17.079l.454-.426s2.047 1.402 2.664 1.01s.589-.842.589-.842s1.01-.617.981-.925a1.7 1.7 0 0 1 0-.449h.841s-.532-1.598-.196-2.186l.336-.59l.401.365a2.6 2.6 0 0 0 1.03-2.58c-.393-1.57-2.776-4.037-3.87-4.205s-.953.196-.953.196s-1.99-1.177-3.224-.084s-2.692 2.356-2.663 4.599s.056 2.887.224 3.112a2.6 2.6 0 0 0 .766.481l-.494.964m17.924.738l3.028.2l-5.284 5.663l-2.511-.308z"/></svg>`;
-const SEARCH_BOOK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M11.724 7.447a2.276 2.276 0 1 0 0 4.553a2.276 2.276 0 0 0 0-4.553M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5zm10.819 7.295a3.724 3.724 0 1 0-1.024 1.024l2.476 2.475l.067.058l.008.006a.724.724 0 0 0 .942-1.093z"/></svg>`;
-const AMAZON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M15.93 17.09c-.18.16-.43.17-.63.06c-.89-.74-1.05-1.08-1.54-1.79c-1.47 1.5-2.51 1.95-4.42 1.95c-2.25 0-4.01-1.39-4.01-4.17c0-2.18 1.17-3.64 2.86-4.38c1.46-.64 3.49-.76 5.04-.93V7.5c0-.66.05-1.41-.33-1.96c-.32-.49-.95-.7-1.5-.7c-1.02 0-1.93.53-2.15 1.61c-.05.24-.25.48-.47.49l-2.6-.28c-.22-.05-.46-.22-.4-.56c.6-3.15 3.45-4.1 6-4.1c1.3 0 3 .35 4.03 1.33C17.11 4.55 17 6.18 17 7.95v4.17c0 1.25.5 1.81 1 2.48c.17.25.21.54 0 .71l-2.06 1.78h-.01m-2.7-6.53V10c-1.94 0-3.99.39-3.99 2.67c0 1.16.61 1.95 1.63 1.95c.76 0 1.43-.47 1.86-1.22c.52-.93.5-1.8.5-2.84m6.93 8.98C18 21.14 14.82 22 12.1 22c-3.81 0-7.25-1.41-9.85-3.76c-.2-.18-.02-.43.25-.29c2.78 1.63 6.25 2.61 9.83 2.61c2.41 0 5.07-.5 7.51-1.53c.37-.16.66.24.32.51m.91-1.04c-.28-.36-1.85-.17-2.57-.08c-.19.02-.22-.16-.03-.3c1.24-.88 3.29-.62 3.53-.33c.24.3-.07 2.35-1.24 3.32c-.18.16-.35.07-.26-.11c.26-.67.85-2.14.57-2.5z" fill="currentColor"/></svg>`;
-const BOOK_CATALOG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.3 42.5h34.1m-34-2l7-.2l-.5-34.7l-6.3-.1Zm8.6-27l-.3 26.3l6.5-.2l.8-25.9Zm9-5.6l-1.4 32.2l8.7-.1L33 8.4Zm10 6.3l-1.5 26.3l7.8.1l1.4-26.3Zm1 0a8.5 8.5 0 0 1 5.7-3.7M12.9 5.6L14.8 9l.1 4.6m-1.5 26.7l1.3-.5"/></svg>`;
-const obsidian_blockquote = (kind, title, opts) => [
-  `<div data-callout-metadata="" data-callout-fold="${(opts == null ? void 0 : opts.fold) || ""}" data-callout="${kind}" class="callout" ${style$1((opts == null ? void 0 : opts.style) || {})}>`,
-  `<div class="callout-title" style="gap:15px; align-items: center">`,
-  ...(opts == null ? void 0 : opts.icon) ? [`<div class="callout-icon">${opts == null ? void 0 : opts.icon}</div>`] : [],
-  `<div class="callout-title-inner" style="display: flex; flex-direction: row;">${title}</div>`,
-  ...(opts == null ? void 0 : opts.toRight) ? [
-    `<div class="callout-title-right" style="display: flex; flex-grow: 1; justify-content: right">${opts.toRight}</div>`
-  ] : [],
-  `</div>`,
-  ...(opts == null ? void 0 : opts.content) ? typeof opts.content === "string" ? [
-    `<div class="callout-content" ${style$1(opts.contentStyle || {})}>`,
-    `<p>${opts.content}</p>`,
-    `</div>`
-  ] : [
-    `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
-    ...opts.content.map((c) => `<div class="content-element" ${style$1({ flex: true, ...opts.contentStyle || {} })}>${c}</div>`),
-    `</div>`
-  ] : [],
-  ...(opts == null ? void 0 : opts.belowTheFold) ? [`<div class="below-the-fold" ${style$1((opts == null ? void 0 : opts.belowTheFoldStyle) || {})}>${opts == null ? void 0 : opts.belowTheFold}</div>`] : [""],
-  `</div>`
-].filter((i) => i).join("\n");
-const blockquote = (kind, title, opts) => {
-  const iconLookup = {
-    warning: WARN_ICON,
-    quote: QUOTE_ICON,
-    info: INFO_ICON,
-    tip: TIP_ICON,
-    summary: SUMMARY_ICON,
-    bug: BUG_ICON,
-    example: EXAMPLE_ICON,
-    question: QUESTION_ICON,
-    success: SUCCESS_ICON,
-    error: ERROR_ICON,
-    note: NOTE_ICON
-  };
-  return obsidian_blockquote(
-    kind,
-    title,
-    (opts == null ? void 0 : opts.icon) && opts.icon in iconLookup ? { ...opts, icon: iconLookup[opts.icon] } : opts
-  );
-};
-function removePound$1(tag) {
+const removePound$1 = (tag) => {
   return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
-}
-const get_internal_links = (p2) => (pg, ...props) => {
-  let links = [];
-  for (const prop of props) {
-    const pgProp = pg[prop];
-    if (!pgProp) {
-      break;
-    }
-    if (Array.isArray(pgProp)) {
-      links = [...links, ...pgProp.filter((i) => isLink(i))];
-    } else if (isLink(pgProp)) {
-      links.push(pgProp);
-    } else if (isDvPage(pgProp)) {
-      links.push(pgProp.file.link);
-    }
-  }
-  return links;
 };
-const renderApi = (p2) => (el, filePath) => {
-  const current = getPage(p2)(filePath);
-  if (!current) {
-    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
+const list_items_api = (wrapper) => ({
+  indent: (...items) => renderListItems(wrapper, items),
+  done: createFnWithProps(() => "", { escape: true })
+});
+const wrap_ul = (items, opts) => `<ul ${listStyle(opts)}>${items}</ul>`;
+const renderListItems = (wrapper, items, opts) => wrapper(
+  items.filter((i) => i !== void 0).map((i) => isFunction$2(i) ? isFunction$2(i(list_items_api)) ? "" : i(list_items_api) : `<li ${style$1((opts == null ? void 0 : opts.li) ? isFunction$2(opts == null ? void 0 : opts.li) ? opts.li(i ? i : "") : opts.li : {})}>${i}</li>`).filter((i) => i !== "").join("\n"),
+  opts
+);
+const span = (text2, fmt) => {
+  return `<span ${style$1(fmt || { fw: "400" })}>${text2}</span>`;
+};
+const italics = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || { fw: "400" }, fs: "italic" })}>${text2}</span>`;
+};
+const bold = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "700" })}>${text2}</span>`;
+};
+const light = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "300" })}>${text2}</span>`;
+};
+const thin = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "100" })}>${text2}</span>`;
+};
+const medium = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "500" })}>${text2}</span>`;
+};
+const normal = (text2, fmt) => {
+  return `<span ${style$1({ ...fmt || {}, fw: "400" })}>${text2}</span>`;
+};
+const emptyCallout = (fmt) => [
+  `<div class="callout" ${style$1(fmt)}>`,
+  `<div class="callout-title">&nbsp;</div>`,
+  `<div class="callout-content">&nbsp;</div>`,
+  `</div>`
+].join("\n");
+const internalLink = (p2) => (ref, opt2) => {
+  const link2 = (href, title) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`;
+  let page = getPage(p2)(ref);
+  if (page) {
+    link2(page.file.path, (opt2 == null ? void 0 : opt2.title) || page.file.name);
   }
+  return "";
+};
+const formattingApi = (p2) => {
   return {
-    /**
-     * Uses the underlying `renderValue()` functionality exposed by
-     * dataview to render data to the page.
-     */
-    async render(data2) {
-      await p2.dv.renderValue(data2, el, p2, filePath, false);
-    },
-    /** the current page represented as a `DvPage` */
-    current,
-    /**
-     * simply utility to ensure that a tag string has it's 
-     * leading pound symbol removed.
-     */
+    /** removes the pound symbol from a string */
     removePound: removePound$1,
     /**
-     * **get_classification**`(page)`
-     * 
-     * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
+     * returns the HTML for an unordered list
      */
-    getClassification: getClassification(p2),
-    /**
-     * **get_internal_links**
-     * 
-     * Gets any links to pages in the vault found across the various 
-     * properties passed in.
-     */
-    get_internal_links: get_internal_links(),
-    /**
-     * **callout**`(kind, title, opts)`
-     * 
-     * Renders a callout to the current block.
-     * 
-     * **Note:** use `blockquote` for same functionality but 
-     * with HTML returned rather than _rendered_.
-     */
-    callout: (kind, title, opts) => p2.dv.renderValue(
-      blockquote(kind, title, opts),
-      el,
-      p2,
-      filePath,
-      false
-    ),
-    /**
-     * **isKindedPage**(page,[category])
-     * 
-     * Tests whether a given page is a _kinded_ page and _optionally_ if
-     * the page is of a particular `category`.
-     */
-    isKindedPage: isKindedPage(p2),
-    /**
-     * **isKindDefnPage**(page)
-     * 
-     * Tests whether a given page is a _kind definition_ page.
-     */
-    isKindDefnPage,
-    /**
-     * **page**`(path, [originFile])`
-     * 
-     * Map a page path to the actual data contained within that page.
-     */
-    page(pg, originFile) {
-      return p2.dv.page(pg, originFile);
+    ul(items, opts) {
+      return renderListItems(wrap_ul, items.filter((i) => i !== void 0), opts);
     },
-    pages(query2, originFile) {
-      return p2.dv.pages(query2, originFile);
+    // /**
+    //  * **renderToRight**`(text)`
+    //  * 
+    //  * Takes text/html and renders it to the right.
+    //  * 
+    //  * Note: use `toRight` just to wrap this text in the appropriate HTML
+    //  * to move content to right.
+    //  */
+    // renderToRight: (text: string) => p.dv.renderValue(
+    // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
+    // 	container,p, filePath, true
+    // ),
+    toRight: (content2, fmt) => {
+      const html = [
+        `<div class="wrapper-to-right" style="display: relative">`,
+        `<span class="block-to-right" style="position: absolute; right: 0">`,
+        `<span ${style$1({ ...fmt, position: "relative" })}>`,
+        content2,
+        `</span>`,
+        `</div>`
+      ].join("\n");
+      return html;
     },
     /**
-     * **as_array**`(v)`
+     * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
      * 
-     * Utility function which ensures that the passed in value _is_ an array,
-     * and that any DvArray[] proxy is converted to a normal JS array
+     * Note: for external links use the `link` helper instead as the generated link
+     * here provides the reference as meta-data other then the traditional `href` 
+     * property.
      */
-    as_array: (v) => {
-      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
+    internalLink: internalLink(p2),
+    /**
+     * Add a span element with optional formatting
+     */
+    span,
+    italics,
+    bold,
+    light,
+    thin,
+    medium,
+    normal,
+    emptyCallout,
+    /**
+     * Wrap children items with DIV element; gain formatting control for block
+     */
+    wrap: (children2, fmt) => {
+      return [
+        `<div class="wrapped-content" ${style$1(fmt || {})}>`,
+        ...children2.filter((i) => i !== void 0),
+        `</div>`
+      ].join("\n");
+    },
+    link: (title, url, opts) => {
+      return [
+        `<a href="${url}" >`,
+        ...(opts == null ? void 0 : opts.iconUrl) || (opts == null ? void 0 : opts.svgInline) ? (opts == null ? void 0 : opts.titlePosition) === "top" ? [
+          normal(title)
+        ] : [
+          `<span class="grouping" ${style$1((opts == null ? void 0 : opts.style) || { alignItems: "center", flex: true })}>`,
+          (opts == null ? void 0 : opts.iconUrl) ? `<img src="${opts.iconUrl}" style="padding-right: 4px">` : opts == null ? void 0 : opts.svgInline,
+          normal(title),
+          `</span>`
+        ] : [
+          normal(title)
+        ],
+        `</a>`
+      ].join("\n");
     },
     /**
-     * Return an array of paths (as strings) corresponding to pages 
-     * which match the query.
+     * **as_tag**`(text)`
+     * 
+     * Puts the provided text into a _code block_ and ensures that the
+     * leading character is a `#` symbol.
      */
-    pagePaths(query2, originFile) {
-      return p2.dv.pagePaths(query2, originFile);
-    },
+    as_tag: (text2) => text2 ? `<code class="tag-reference" style="background-color: transparent">${ensureLeading(text2, "#")}</code>` : "",
+    inline_codeblock: (text2) => `<code class="inline-codeblock" style="display: flex; flex-direction: row;">${text2}</code>`,
     /**
-     * **date**`(pathLike)`
+     * **blockquote**`(kind, title, opts)`
      * 
-     * Attempt to extract a date from a string, link or date.
+     * Produces the HTML for a callout.
+     * 
+     * **Note:** use `callout` for same functionality but 
+     * with HTML _rendered_ rather than _returned_.
      */
-    date(pathLike) {
-      return p2.dv.date(pathLike);
+    blockquote: (kind, title, opts) => blockquote(kind, title, opts),
+    list: (format2, ...blocks) => {
+      const html = [
+        `<div class="list-block" style="${style$1(format2)}">`,
+        blocks.join("\n	"),
+        `</div>`
+      ].join("\n");
+      return html;
     },
-    /**
-     * **duration**`(pathLike)`
-     * 
-     * Attempt to extract a duration from a string or duration.
-     */
-    duration(str) {
-      return p2.dv.duration(str);
-    },
-    /**
-     * **fileLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview file link to the given path.
-     */
-    fileLink(path, embed, displayAs) {
-      return p2.dv.fileLink(path, embed, displayAs);
-    },
-    /**
-     * **sectionLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview section link to the given path.
-     */
-    sectionLink(path, embed, display) {
-      return p2.dv.sectionLink(path, embed, display);
-    },
-    /**
-     * **blockLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview block link to the given path.
-     */
-    blockLink(path, embed, display) {
-      return p2.dv.blockLink(path, embed, display);
-    },
-    /**
-     * **table**`(headers,values,container,component,filePath)`
-     * 
-     * Render a dataview table with the given headers, and the 
-     * 2D array of values.
-     */
-    async table(headers, values) {
-      return p2.dv.table(headers, values, el, p2, filePath);
-    },
-    /**
-     * **renderValue**`(value, [inline])`
-     * 
-     * Render an arbitrary value into a container.
-     */
-    async renderValue(value2, inline4 = false) {
-      return p2.dv.renderValue(value2, el, p2, filePath, inline4);
-    },
-    /** 
-     * **taskList**`(tasks,groupByFile)`
-     * 
-     * Render a dataview task view with the given tasks. 
-     */
-    async taskList(tasks, groupByFile) {
-      return p2.dv.taskList(tasks, groupByFile, el, p2, filePath);
-    },
-    /**
-     * **list**(values, container, component, filePath)
-     * 
-     * Render a dataview **list** of the given values by:
-     * 
-     * - adding a sub-container DIV to the passed in _container_
-     * - using the `component`'s `addChild()` method to 
-     * adding a child element which is given the sub-container
-     * for rendering purposes
-     */
-    async list(values) {
-      return p2.dv.list(values, el, p2, filePath);
-    },
-    async paragraph(text2) {
-      return p2.dv.renderValue(text2, el, p2, filePath, false);
-    },
-    async ul(...items) {
-      const wrap_ul2 = (items2) => `<ul>${items2}</ul>`;
-      const render_items = (items2) => items2.map((i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`).filter((i) => i !== "").join("\n");
-      const ul_api = {
-        indent: (...items2) => wrap_ul2(render_items(items2)),
-        done: createFnWithProps(() => "", { escape: true })
-      };
-      return p2.dv.renderValue(
-        wrap_ul2(render_items(items)),
-        el,
-        p2,
-        filePath,
-        false
-      );
-    },
-    async ol(...items) {
-      return p2.dv.renderValue(
-        renderListItems(wrap_ol, items),
-        el,
-        p2,
-        filePath,
-        false
-      );
-    },
-    code: (code2) => p2.dv.renderValue(
-      `<code>${code2}</code>`,
-      el,
-      p2,
-      filePath,
-      true
-    )
+    /** draws a two column table using markdown rather than HTML */
+    twoColumnTable: (leftHeading, rightHeading, ...data2) => {
+      let lines = [];
+      for (const datum of data2) {
+        const [left2, right2] = datum;
+        lines.push(`| ${left2} | ${right2}|`);
+      }
+      if (!leftHeading && !rightHeading) {
+        return lines.join("\n") + "\n";
+      } else {
+        const preamble = `| ${leftHeading} | ${rightHeading} |
+| --- | --- |
+`;
+        return preamble + lines.join("\n") + "\n";
+      }
+    }
   };
+};
+const createKindDefinition = (p2) => (ref) => {
+  const pg = getPage(p2)(ref);
+  if (pg) {
+    try {
+      const tags = getKindTagsOfPage(p2)(pg);
+      const defn = {
+        path: pg.file.path,
+        tag: tags ? tags[0] : void 0,
+        requiredProps: isArray(pg._requiredProps) ? pg._requiredProps : isArray(pg.__requiredProps) ? pg.__requiredProps : void 0,
+        metricProps: pg._metricProps || pg.__metricProps
+      };
+      const hash2 = p2.hasher(JSON.stringify(defn));
+      p2.debug(`kind defn hash: ${hash2}`, { ref });
+      return {
+        ...defn,
+        hash: hash2
+      };
+    } catch (e2) {
+      const msg2 = (e2 == null ? void 0 : e2.msg) || (e2 == null ? void 0 : e2.message) || String(e2);
+      p2.error(`Problem calling createKindDefinition(${String(ref)}): ${msg2}`);
+    }
+  } else {
+    if (!ref) {
+      p2.warn(`an empty reference was passed to createKindDefinition!`);
+    } else {
+      p2.warn("can not create KindDefinition", { ref, pg });
+    }
+  }
+};
+const updateKindDefinitionInCache = (p2) => async (payload) => {
+  if (isPageReference(payload)) {
+    const path = getPath(payload);
+    const page = getPage(p2)(path);
+    if (path && page) {
+      const defn = createKindDefinition(p2)(page);
+      if (isTagKindDefinition(defn)) {
+        p2.cache.kindDefinitionsByTag.set(defn.tag, defn);
+        p2.cache.kindDefinitionsByPath.set(path, defn);
+      } else {
+        p2.cache.kindDefinitionsByPath.set(path, defn);
+      }
+    }
+    p2.debug(`Unable to create page`, "while calling updateKindDefinitionInCache()", payload);
+  } else {
+    const page = getPage(p2)(payload.path);
+    if (page) {
+      const defn = createKindDefinition(p2)(payload.path);
+      if ((defn == null ? void 0 : defn.hash) !== (payload == null ? void 0 : payload.hash)) {
+        p2.cache.kindDefinitionsByPath.set(payload.path, defn);
+        if (defn.tag) {
+          p2.cache.kindDefinitionsByTag.set(defn.tag, defn);
+        }
+      } else {
+        p2.debug(`no change to kind defn`, `path: ${page.file.path}`, `hash: ${defn.hash}`);
+      }
+    } else {
+      p2.warn(`updateKindDefinitionInCache() got invalid payload`, "was not a page reference so kind have been a KindDefinition", { payload });
+    }
+  }
+};
+const findStaleByTag = async (p2) => {
+  const kinds = p2.dv.pages(`#kind`).where((k) => {
+    var _a2, _b2;
+    return (_b2 = (_a2 = k.file) == null ? void 0 : _a2.etags) == null ? void 0 : _b2.some((i) => i.startsWith(`#kind/`));
+  });
+  p2.dv.pages(`#type`).where((k) => {
+    var _a2, _b2;
+    return (_b2 = (_a2 = k.file) == null ? void 0 : _a2.etags) == null ? void 0 : _b2.some((i) => i.startsWith(`#type/`));
+  });
+  let problems = [];
+  for (const pg of kinds) {
+    const kp = p2.dv.page(pg.file.path);
+    if (kp) {
+      updateKindDefinitionInCache(p2)(pg.file.path);
+      p2.debug(`caching by file path ${kp.file.path}`);
+    } else {
+      p2.warn(`Page missing kind tag`, { pg });
+    }
+  }
+  if (problems.length > 0) {
+    p2.warn(`${problems.length} problems loading cache`, "failed to insert the following elements into cache", problems);
+  }
+};
+const initializeKindCaches = async (p2) => {
+  var _a2, _b2, _c2, _d2;
+  const kinds = Array.isArray((_a2 = p2.settings) == null ? void 0 : _a2.kinds) ? (_b2 = p2.settings) == null ? void 0 : _b2.kinds : [];
+  const types = Array.isArray((_c2 = p2.settings) == null ? void 0 : _c2.types) ? (_d2 = p2.settings) == null ? void 0 : _d2.types : [];
+  p2.info(
+    `cache updated with user settings`,
+    `${kinds.length} kinds defined in user settings`,
+    `${types.length} types defined in user settings`
+  );
+  for (const kind of kinds) {
+    if (isTagKindDefinition(kind)) {
+      if (p2.cache.kindDefinitionsByTag.has(kind.tag)) {
+        if (p2.cache.kindTagDuplicates.has(kind.tag)) {
+          const current = p2.cache.kindTagDuplicates.get(kind.tag);
+          current == null ? void 0 : current.add(kind);
+          p2.cache.kindTagDuplicates.set(kind.tag, current);
+        } else {
+          p2.cache.kindTagDuplicates.set(
+            kind.tag,
+            /* @__PURE__ */ new Set(
+              [
+                kind,
+                p2.cache.kindTagDuplicates.get(kind.tag)
+              ]
+            )
+          );
+        }
+      }
+      p2.cache.kindDefinitionsByTag.set(kind.tag, kind);
+    }
+    if (kind.path) {
+      p2.cache.kindDefinitionsByPath.set(kind.path, kind);
+    }
+  }
+  for (const t2 of types) {
+    if (isTagKindDefinition(t2)) {
+      if (p2.cache.kindDefinitionsByTag.has(t2.tag)) {
+        if (p2.cache.kindTagDuplicates.has(t2.tag)) {
+          const current = p2.cache.kindTagDuplicates.get(t2.tag);
+          current == null ? void 0 : current.add(t2);
+          p2.cache.kindTagDuplicates.set(t2.tag, current);
+        } else {
+          p2.cache.kindTagDuplicates.set(
+            t2.tag,
+            /* @__PURE__ */ new Set(
+              [
+                t2,
+                p2.cache.kindTagDuplicates.get(t2.tag)
+              ]
+            )
+          );
+        }
+      }
+      p2.cache.kindDefinitionsByTag.set(t2.tag, t2);
+    }
+    if (t2.path) {
+      p2.cache.kindDefinitionsByPath.set(t2.path, t2);
+    }
+  }
+  p2.info(`Kind (${kinds.length}) and Type (${types.length}) Lookups cached`);
+  return Promise.all([
+    // findStaleByPath(p),
+    findStaleByTag(p2).then(() => p2.info("Cache refreshed"))
+  ]);
+};
+const lookupKindByTag = (p2) => (tag) => {
+  const t2 = stripLeading(tag, "#");
+  return p2.cache.kindDefinitionsByTag.get(t2);
+};
+const lookupKnownKindTags = (p2) => {
+  const tags = Array.from(p2.cache.kindDefinitionsByTag.keys());
+  return tags;
 };
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 const showCreatedDate = (p2) => (pg, format2) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     return format2 ? page.file.cday.toFormat(format2) : page.file.cday;
   }
   return "";
 };
 const showModifiedDate = (p2) => (pg, format2) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     return format2 ? page.file.mday.toFormat(format2) : page.file.mday;
   }
@@ -20323,7 +20506,7 @@ const showDueDate = (p2) => (page, prop = "due", format2) => {
   }
 };
 const showDesc = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const desc = showProp(p2)(page, "about", "desc", "description");
     if (typeof desc == "string") {
@@ -20335,7 +20518,7 @@ const showDesc = (p2) => (pg) => {
   return "";
 };
 const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const created = page.file.cday;
     const modified = page.file.mday;
@@ -20355,10 +20538,10 @@ const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
   }
 };
 const showTags = (p2) => (pg, ...exclude) => {
-  return pg.file.etags.filter((t) => !exclude.some((i) => t.startsWith(i) ? true : false)).map((t) => `\`${t}\``).join(", ") || "";
+  return pg.file.etags.filter((t2) => !exclude.some((i) => t2.startsWith(i) ? true : false)).map((t2) => `\`${t2}\``).join(", ") || "";
 };
 const showLinks = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const [_, pageIcon] = getProp(p2)(pg, "icon", "svg_icon", "_icon", "_svg_icon");
     const link_props = {
@@ -20425,7 +20608,7 @@ const showLinks = (p2) => (pg) => {
 };
 const showProp = (p2) => (pg, ...props) => {
   var _a2;
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     if (!((_a2 = page == null ? void 0 : page.file) == null ? void 0 : _a2.name)) {
       throw new Error(`Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`);
@@ -20438,8 +20621,8 @@ const showProp = (p2) => (pg, ...props) => {
       const value2 = page[found];
       try {
         return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v) => isLink(v) ? v : isDvPage(v) ? v.file.link : "").filter((i) => i).join(", ") : "";
-      } catch (e) {
-        p2.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e);
+      } catch (e2) {
+        p2.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e2);
         return "";
       }
     }
@@ -20447,7 +20630,7 @@ const showProp = (p2) => (pg, ...props) => {
   return "";
 };
 const getProp = (p2) => (pg, ...props) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const found = props.find((prop) => isKeyOf(page, prop) && page[prop] !== void 0);
     if (!found) {
@@ -20618,212 +20801,258 @@ const showApi = (p2) => ({
   createFileLink: createFileLink(p2),
   createMarkdownLink: createMarkdownLink(p2)
 });
-const removePound = (tag) => {
-  return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
-};
-const list_items_api = (wrapper) => ({
-  indent: (...items) => renderListItems(wrapper, items),
-  done: createFnWithProps(() => "", { escape: true })
-});
-const wrap_ul = (items, opts) => `<ul ${listStyle(opts)}>${items}</ul>`;
-const renderListItems = (wrapper, items, opts) => wrapper(
-  items.filter((i) => i !== void 0).map((i) => isFunction$2(i) ? isFunction$2(i(list_items_api)) ? "" : i(list_items_api) : `<li ${style$1((opts == null ? void 0 : opts.li) ? isFunction$2(opts == null ? void 0 : opts.li) ? opts.li(i ? i : "") : opts.li : {})}>${i}</li>`).filter((i) => i !== "").join("\n"),
-  opts
-);
-const span = (text2, fmt) => {
-  return `<span ${style$1(fmt || { fw: "400" })}>${text2}</span>`;
-};
-const italics = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || { fw: "400" }, fs: "italic" })}>${text2}</span>`;
-};
-const bold = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || {}, fw: "700" })}>${text2}</span>`;
-};
-const light = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || {}, fw: "300" })}>${text2}</span>`;
-};
-const thin = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || {}, fw: "100" })}>${text2}</span>`;
-};
-const medium = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || {}, fw: "500" })}>${text2}</span>`;
-};
-const normal = (text2, fmt) => {
-  return `<span ${style$1({ ...fmt || {}, fw: "400" })}>${text2}</span>`;
-};
-const emptyCallout = (fmt) => [
-  `<div class="callout" ${style$1(fmt)}>`,
-  `<div class="callout-title">&nbsp;</div>`,
-  `<div class="callout-content">&nbsp;</div>`,
+const obsidian_blockquote = (kind, title, opts) => [
+  `<div data-callout-metadata="" data-callout-fold="${(opts == null ? void 0 : opts.fold) || ""}" data-callout="${kind}" class="callout" ${style$1((opts == null ? void 0 : opts.style) || {})}>`,
+  `<div class="callout-title" style="gap:15px; align-items: center">`,
+  ...(opts == null ? void 0 : opts.icon) ? [`<div class="callout-icon">${opts == null ? void 0 : opts.icon}</div>`] : [],
+  `<div class="callout-title-inner" style="display: flex; flex-direction: row;">${title}</div>`,
+  ...(opts == null ? void 0 : opts.toRight) ? [
+    `<div class="callout-title-right" style="display: flex; flex-grow: 1; justify-content: right">${opts.toRight}</div>`
+  ] : [],
+  `</div>`,
+  ...(opts == null ? void 0 : opts.content) ? typeof opts.content === "string" ? [
+    `<div class="callout-content" ${style$1(opts.contentStyle || {})}>`,
+    `<p>${opts.content}</p>`,
+    `</div>`
+  ] : [
+    `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
+    ...opts.content.map((c) => `<div class="content-element" ${style$1({ flex: true, ...opts.contentStyle || {} })}>${c}</div>`),
+    `</div>`
+  ] : [],
+  ...(opts == null ? void 0 : opts.belowTheFold) ? [`<div class="below-the-fold" ${style$1((opts == null ? void 0 : opts.belowTheFoldStyle) || {})}>${opts == null ? void 0 : opts.belowTheFold}</div>`] : [""],
   `</div>`
-].join("\n");
-const internalLink = (p2) => (ref, opt2) => {
-  const link2 = (href, title) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`;
-  let page = getPage(p2)(ref);
-  if (page) {
-    link2(page.file.path, (opt2 == null ? void 0 : opt2.title) || page.file.name);
-  }
-  return "";
+].filter((i) => i).join("\n");
+const blockquote = (kind, title, opts) => {
+  const iconLookup = {
+    warning: WARN_ICON,
+    quote: QUOTE_ICON,
+    info: INFO_ICON,
+    tip: TIP_ICON,
+    summary: SUMMARY_ICON,
+    bug: BUG_ICON,
+    example: EXAMPLE_ICON,
+    question: QUESTION_ICON,
+    success: SUCCESS_ICON,
+    error: ERROR_ICON,
+    note: NOTE_ICON
+  };
+  return obsidian_blockquote(
+    kind,
+    title,
+    (opts == null ? void 0 : opts.icon) && opts.icon in iconLookup ? { ...opts, icon: iconLookup[opts.icon] } : opts
+  );
 };
-const formattingApi = (p2) => {
+function removePound(tag) {
+  return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
+}
+const get_internal_links = (p2) => (pg, ...props) => {
+  let links = [];
+  for (const prop of props) {
+    const pgProp = pg[prop];
+    if (!pgProp) {
+      break;
+    }
+    if (Array.isArray(pgProp)) {
+      links = [...links, ...pgProp.filter((i) => isLink(i))];
+    } else if (isLink(pgProp)) {
+      links.push(pgProp);
+    } else if (isDvPage(pgProp)) {
+      links.push(pgProp.file.link);
+    }
+  }
+  return links;
+};
+const renderApi = (p2) => (el, filePath) => {
+  const current = getPage(p2)(filePath);
+  if (!current) {
+    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
+  }
   return {
-    /** removes the pound symbol from a string */
+    /**
+     * Uses the underlying `renderValue()` functionality exposed by
+     * dataview to render data to the page.
+     */
+    async render(data2) {
+      await p2.dv.renderValue(data2, el, p2, filePath, false);
+    },
+    /** the current page represented as a `DvPage` */
+    current,
+    /**
+     * simply utility to ensure that a tag string has it's 
+     * leading pound symbol removed.
+     */
     removePound,
     /**
-     * returns the HTML for an unordered list
-     */
-    ul(items, opts) {
-      return renderListItems(wrap_ul, items.filter((i) => i !== void 0), opts);
-    },
-    // /**
-    //  * **renderToRight**`(text)`
-    //  * 
-    //  * Takes text/html and renders it to the right.
-    //  * 
-    //  * Note: use `toRight` just to wrap this text in the appropriate HTML
-    //  * to move content to right.
-    //  */
-    // renderToRight: (text: string) => p.dv.renderValue(
-    // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
-    // 	container,p, filePath, true
-    // ),
-    toRight: (content2, fmt) => {
-      const html = [
-        `<div class="wrapper-to-right" style="display: relative">`,
-        `<span class="block-to-right" style="position: absolute; right: 0">`,
-        `<span ${style$1({ ...fmt, position: "relative" })}>`,
-        content2,
-        `</span>`,
-        `</div>`
-      ].join("\n");
-      return html;
-    },
-    /**
-     * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
+     * **get_classification**`(page)`
      * 
-     * Note: for external links use the `link` helper instead as the generated link
-     * here provides the reference as meta-data other then the traditional `href` 
-     * property.
+     * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
      */
-    internalLink: internalLink(p2),
+    getClassification: getClassification(p2),
     /**
-     * Add a span element with optional formatting
+     * **get_internal_links**
+     * 
+     * Gets any links to pages in the vault found across the various 
+     * properties passed in.
      */
-    span,
-    italics,
-    bold,
-    light,
-    thin,
-    medium,
-    normal,
-    emptyCallout,
+    get_internal_links: get_internal_links(),
     /**
-     * Wrap children items with DIV element; gain formatting control for block
+     * **callout**`(kind, title, opts)`
+     * 
+     * Renders a callout to the current block.
+     * 
+     * **Note:** use `blockquote` for same functionality but 
+     * with HTML returned rather than _rendered_.
      */
-    wrap: (children2, fmt) => {
-      return [
-        `<div class="wrapped-content" ${style$1(fmt || {})}>`,
-        ...children2.filter((i) => i !== void 0),
-        `</div>`
-      ].join("\n");
+    callout: (kind, title, opts) => p2.dv.renderValue(
+      blockquote(kind, title, opts),
+      el,
+      p2,
+      filePath,
+      false
+    ),
+    /**
+     * **page**`(path, [originFile])`
+     * 
+     * Map a page path to the actual data contained within that page.
+     */
+    page(pg, originFile) {
+      return p2.dv.page(pg, originFile);
     },
-    link: (title, url, opts) => {
-      return [
-        `<a href="${url}" >`,
-        ...(opts == null ? void 0 : opts.iconUrl) || (opts == null ? void 0 : opts.svgInline) ? (opts == null ? void 0 : opts.titlePosition) === "top" ? [
-          normal(title)
-        ] : [
-          `<span class="grouping" ${style$1((opts == null ? void 0 : opts.style) || { alignItems: "center", flex: true })}>`,
-          (opts == null ? void 0 : opts.iconUrl) ? `<img src="${opts.iconUrl}" style="padding-right: 4px">` : opts == null ? void 0 : opts.svgInline,
-          normal(title),
-          `</span>`
-        ] : [
-          normal(title)
-        ],
-        `</a>`
-      ].join("\n");
+    pages(query2, originFile) {
+      return p2.dv.pages(query2, originFile);
     },
     /**
-     * **as_tag**`(text)`
+     * **as_array**`(v)`
      * 
-     * Puts the provided text into a _code block_ and ensures that the
-     * leading character is a `#` symbol.
+     * Utility function which ensures that the passed in value _is_ an array,
+     * and that any DvArray[] proxy is converted to a normal JS array
      */
-    as_tag: (text2) => text2 ? `<code class="tag-reference" style="background-color: transparent">${ensureLeading(text2, "#")}</code>` : "",
-    inline_codeblock: (text2) => `<code class="inline-codeblock" style="display: flex; flex-direction: row;">${text2}</code>`,
-    /**
-     * **blockquote**`(kind, title, opts)`
-     * 
-     * Produces the HTML for a callout.
-     * 
-     * **Note:** use `callout` for same functionality but 
-     * with HTML _rendered_ rather than _returned_.
-     */
-    blockquote: (kind, title, opts) => blockquote(kind, title, opts),
-    list: (format2, ...blocks) => {
-      const html = [
-        `<div class="list-block" style="${style$1(format2)}">`,
-        blocks.join("\n	"),
-        `</div>`
-      ].join("\n");
-      return html;
+    as_array: (v) => {
+      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
     },
-    /** draws a two column table using markdown rather than HTML */
-    twoColumnTable: (leftHeading, rightHeading, ...data2) => {
-      let lines = [];
-      for (const datum of data2) {
-        const [left2, right2] = datum;
-        lines.push(`| ${left2} | ${right2}|`);
-      }
-      if (!leftHeading && !rightHeading) {
-        return lines.join("\n") + "\n";
-      } else {
-        const preamble = `| ${leftHeading} | ${rightHeading} |
-| --- | --- |
-`;
-        return preamble + lines.join("\n") + "\n";
-      }
-    }
+    /**
+     * Return an array of paths (as strings) corresponding to pages 
+     * which match the query.
+     */
+    pagePaths(query2, originFile) {
+      return p2.dv.pagePaths(query2, originFile);
+    },
+    /**
+     * **date**`(pathLike)`
+     * 
+     * Attempt to extract a date from a string, link or date.
+     */
+    date(pathLike) {
+      return p2.dv.date(pathLike);
+    },
+    /**
+     * **duration**`(pathLike)`
+     * 
+     * Attempt to extract a duration from a string or duration.
+     */
+    duration(str) {
+      return p2.dv.duration(str);
+    },
+    /**
+     * **fileLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview file link to the given path.
+     */
+    fileLink(path, embed, displayAs) {
+      return p2.dv.fileLink(path, embed, displayAs);
+    },
+    /**
+     * **sectionLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview section link to the given path.
+     */
+    sectionLink(path, embed, display) {
+      return p2.dv.sectionLink(path, embed, display);
+    },
+    /**
+     * **blockLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview block link to the given path.
+     */
+    blockLink(path, embed, display) {
+      return p2.dv.blockLink(path, embed, display);
+    },
+    /**
+     * **table**`(headers,values,container,component,filePath)`
+     * 
+     * Render a dataview table with the given headers, and the 
+     * 2D array of values.
+     */
+    async table(headers, values) {
+      return p2.dv.table(headers, values, el, p2, filePath);
+    },
+    /**
+     * **renderValue**`(value, [inline])`
+     * 
+     * Render an arbitrary value into a container.
+     */
+    async renderValue(value2, inline4 = false) {
+      return p2.dv.renderValue(value2, el, p2, filePath, inline4);
+    },
+    /** 
+     * **taskList**`(tasks,groupByFile)`
+     * 
+     * Render a dataview task view with the given tasks. 
+     */
+    async taskList(tasks, groupByFile) {
+      return p2.dv.taskList(tasks, groupByFile, el, p2, filePath);
+    },
+    /**
+     * **list**(values, container, component, filePath)
+     * 
+     * Render a dataview **list** of the given values by:
+     * 
+     * - adding a sub-container DIV to the passed in _container_
+     * - using the `component`'s `addChild()` method to 
+     * adding a child element which is given the sub-container
+     * for rendering purposes
+     */
+    async list(values) {
+      return p2.dv.list(values, el, p2, filePath);
+    },
+    async paragraph(text2) {
+      return p2.dv.renderValue(text2, el, p2, filePath, false);
+    },
+    async ul(...items) {
+      const wrap_ul2 = (items2) => `<ul>${items2}</ul>`;
+      const render_items = (items2) => items2.map((i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`).filter((i) => i !== "").join("\n");
+      const ul_api = {
+        indent: (...items2) => wrap_ul2(render_items(items2)),
+        done: createFnWithProps(() => "", { escape: true })
+      };
+      return p2.dv.renderValue(
+        wrap_ul2(render_items(items)),
+        el,
+        p2,
+        filePath,
+        false
+      );
+    },
+    async ol(...items) {
+      return p2.dv.renderValue(
+        renderListItems(wrap_ol, items),
+        el,
+        p2,
+        filePath,
+        false
+      );
+    },
+    code: (code2) => p2.dv.renderValue(
+      `<code>${code2}</code>`,
+      el,
+      p2,
+      filePath,
+      true
+    )
   };
 };
-const createPageInfo = (p2) => (pg) => {
-  const path = getPath(pg);
-  if (path && hasPageInfo()(path)) {
-    return lookupPageInfo(p2)(path);
-  }
-  const page = getPage(p2)(pg);
-  if (path && page) {
-    const info2 = {
-      page,
-      path,
-      type: isKindDefnPage(p2)(page) ? "kind-defn" : isTypeDefnPage(p2)(page) ? "type-defn" : isKindedPage(p2)(page) && isCategoryPage(p2)(page) ? "kinded > category" : isKindedPage(p2)(page) && isSubcategoryPage(p2)(page) ? "kinded > subcategory" : isKindedPage(p2)(page) ? "kinded" : "none",
-      fm: page.file.frontmatter,
-      categories: getCategories(p2)(page),
-      subcategories: getSubcategories(p2)(page),
-      classifications: getClassification(p2)(page),
-      hasCategoryProp: hasCategoryProp(p2)(page),
-      hasCategoryTag: hasCategoryTag(p2)(page),
-      hasKindProp: hasKindProp(p2)(page),
-      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
-      hasKindsProperty: hasKindsProp(p2)(page),
-      hasKindTag: hasKindTag(p2)(page),
-      hasMultipleKinds: hasMultipleKinds(p2)(page),
-      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
-      isCategoryPage: isCategoryPage(p2)(page),
-      isSubcategoryPage: isSubcategoryPage(p2)(page),
-      getBanners: () => getPageBanners()(page),
-      getIcons: () => getPageIcons()(page),
-      getSuggestedActions: () => getSuggestedActions()(page),
-      format: formattingApi(p2),
-      getPage: getPage(p2),
-      ...showApi(p2)
-    };
-    updatePageInfoCache()(path, info2);
-    removeFromPageCache()(path);
-  }
-};
-const createPageInfoBlock = (p2) => (source, container, component, filePath) => {
-  const page = createPageInfo(p2)(filePath);
+const getPageInfoBlock = (p2) => (source, container, component, filePath) => {
+  const page = getPageInfo(p2)(filePath);
   if (page) {
     return {
       ...page,
@@ -20834,327 +21063,24 @@ const createPageInfoBlock = (p2) => (source, container, component, filePath) => 
     };
   }
 };
-let PAGE_CACHE = {};
-let PAGE_INFO_CACHE = {};
-let TAG_CACHE = null;
-const initializeTagCache = (p2) => {
-  var _a2;
-  if (!TAG_CACHE) {
-    TAG_CACHE = {};
-    const kindDefn = p2.dv.pages(`#kind`);
-    const typeDefn = p2.dv.pages(`#type`);
-    for (const pg of kindDefn) {
-      const path = pg.file.path;
-      const tag = (_a2 = pg.file.etags.find(
-        (i) => i.startsWith(`#kind/`)
-      )) == null ? void 0 : _a2.split("/")[1];
-      if (tag) {
-        if (`kind/${tag}` in TAG_CACHE) {
-          TAG_CACHE[`kind/${tag}`].add(path);
-        } else {
-          TAG_CACHE[`kind/${tag}`] = new Set(path);
-        }
-      } else {
-        p2.info(`no kind: ${pg.file.name}`, toArray(pg.file.etags));
-      }
-    }
-    for (const pg of typeDefn) {
-      const path = pg.file.path;
-      const typeTag = pg.file.etags.find((i) => decomposeTag(p2)(i).type === "kind");
-      const tag = typeTag ? decomposeTag(p2)(typeTag) : void 0;
-      if (tag && tag.type === "type") {
-        if (tag.typeDefnTag in TAG_CACHE) {
-          TAG_CACHE[tag.typeDefnTag].add(path);
-        } else {
-          TAG_CACHE[tag.typeDefnTag] = new Set(path);
-        }
-      }
-    }
-    const sample = Object.keys(TAG_CACHE).slice(0, 8).join(", ") + ` ...`;
-    p2.info(`Initialized Tag cache [${Object.keys(TAG_CACHE).length}]`, sample);
-  } else {
-    p2.debug(`Kind Tag Cache already cached`);
-  }
-};
-const lookupKindTags = (p2) => {
-  initializeTagCache(p2);
-  return TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith(`kind/`)).map((i) => i.replace(`kind/`, "")) : [];
-};
-let classificationTags = false;
-const initializeClassificationTags = (p2) => {
-  initializeTagCache(p2);
-  const kinds = lookupKindTags(p2);
-  if (!classificationTags && TAG_CACHE) {
-    classificationTags = true;
-    let cats = 0;
-    let subs = 0;
-    for (const kind of kinds) {
-      const categoryPages = kind ? toArray(
-        p2.dv.pages(`#${kind}/category`)
-      ) : [];
-      const subcategoryPages = toArray(
-        p2.dv.pages(`#${kind}/subcategory`)
-      );
-      subs = subs + subcategoryPages.length;
-      for (const c of categoryPages) {
-        const tags = getCategoryTags(p2)(c);
-        for (const tag of tags) {
-          cats = cats + 1;
-          const cat = tag == null ? void 0 : tag.defnTag;
-          if (!cat) {
-            p2.warn(`Missing tag definition`, {
-              tag,
-              page: c.file.name
-            });
-          } else {
-            if (cat in TAG_CACHE) {
-              TAG_CACHE[cat].add(c.file.path);
-            } else if (TAG_CACHE) {
-              TAG_CACHE[cat] = new Set(c.file.path);
-            }
-          }
-        }
-      }
-      for (const c of subcategoryPages) {
-        const tags = getSubcategoryTags(p2)(c);
-        for (const tag of tags) {
-          const cat = tag.defnTag;
-          if (cat in TAG_CACHE) {
-            TAG_CACHE[cat].add(c.file.path);
-          } else if (TAG_CACHE) {
-            TAG_CACHE[cat] = new Set(c.file.path);
-          }
-        }
-      }
-    }
-    const catSample = Object.keys(TAG_CACHE).filter((i) => i.includes("category/")).slice(0, 8);
-    const subSample = Object.keys(TAG_CACHE).filter((i) => i.includes("subcategory/")).slice(0, 8);
-    p2.info(`Initialized Classification Tags`, {
-      categories: cats,
-      subcategories: subs,
-      catSample,
-      subSample,
-      all: Object.keys(TAG_CACHE)
-    });
-    classificationTags = true;
-  }
-};
-const getKindTagsFromPage = (p2) => (ref) => {
-  const page = p2.api.getPage(ref);
-  if (page) {
-    return Array.from(page.file.etags).filter((i) => isKindTag()(i)).map(
-      (i) => i.replace(`#kind/`, "")
-    );
-  }
-  return [];
-};
-const getKindTagsFromCache = (tag) => {
-  const tags = TAG_CACHE ? Object.keys(TAG_CACHE).filter((i) => i.startsWith("kind/")) : [];
-  if (tag) {
-    return tags.filter((i) => i.includes(tag)).map((i) => i.replace(`#kind/`, ""));
-  } else {
-    return tags.map((i) => i.replace(`#kind/`, ""));
-  }
-};
-const getTagPathFromCache = (p2) => (tag) => {
-  initializeTagCache(p2);
-  if (TAG_CACHE && tag in TAG_CACHE) {
-    return Array.from(TAG_CACHE[tag])[0];
-  }
-  return void 0;
-};
-const lookupTagSuggestions = (p2) => (tag) => {
-  initializeClassificationTags(p2);
-  if (TAG_CACHE) {
-    const safeTag = stripLeading(tag, "#");
-    const withTags = safeTag.split("/").filter(
-      (i) => !["category", "subcategory"].includes(i)
-    );
-    return Object.keys(TAG_CACHE).filter((i) => withTags.some((t) => i.includes(t)));
-  }
-  return [];
-};
-const lookupPageFromTag = (p2) => (tag) => {
-  initializeTagCache(p2);
-  let rebuiltTag = void 0;
-  if (TAG_CACHE) {
-    const safeTag = stripLeading(tag, "#");
-    const parts = decomposeTag(p2)(safeTag);
-    rebuiltTag = parts.type === "kind" ? parts.kindTag : parts.type === "category" ? parts.categoryDefnTag : parts.type === "subcategory" ? parts.subcategoryDefnTag : void 0;
-    if (!rebuiltTag) {
-      p2.info("invalid tag", `lookupPageFromTag(${tag}) called but this is an unknown tag (aka, not kind, category, or subcategory)`, parts);
-      return void 0;
-    }
-    if (rebuiltTag in TAG_CACHE) {
-      const pathOptions = TAG_CACHE[rebuiltTag];
-      if (!pathOptions) {
-        p2.warn(`Missing Tag`, { tag, rebuiltTag, keys: Object.keys(TAG_CACHE) });
-      }
-      const path = Array.from(pathOptions).pop();
-      if (pathOptions.size > 1) {
-        p2.debug(`call to lookupPageFromTag(${tag}) resolved to MORE than one [${pathOptions.size}] path but we returned the first one: "${path}"`);
-      }
-      const page = pathOptions.size > 0 ? getPage(p2)(path) : void 0;
-      if (pathOptions && !page) {
-        p2.warn(`call to lookupPageFromTag(${tag}) and the path was resolved as "${path}" but no page could be found at this location!`);
-      }
-      return page;
-    }
-    initializeClassificationTags(p2);
-    if (rebuiltTag in TAG_CACHE) {
-      const path = TAG_CACHE[stripLeading(tag, "#")];
-      return path.size > 0 ? getPage(p2)(Array.from(path.values())[0]) : void 0;
-    } else {
-      p2.warn(`Tag ${tag} not Found!`, {
-        rebuiltTag,
-        suggestions: lookupTagSuggestions(p2)(rebuiltTag)
-      });
-      return void 0;
-    }
-  }
-  p2.warn(`Call to lookupPageFromTag() found empty cache after initialization!`);
-  return void 0;
-};
-const addTagToCache = (p2) => (tag, path) => {
-  initializeTagCache(p2);
-  if (TAG_CACHE) {
-    p2.debug("adding tag to cache", { tag, path });
-    if (tag in TAG_CACHE) {
-      TAG_CACHE[tag].add(path);
-    } else {
-      TAG_CACHE[tag] = new Set(path);
-    }
-  }
-};
-const getKindDefnFromCache = (p2) => (tag, at) => {
-  if (!TAG_CACHE) {
-    initializeTagCache(p2);
-  }
-  if (TAG_CACHE && tag in TAG_CACHE && TAG_CACHE[tag].size > 0) {
-    return at ? Array.from(TAG_CACHE[tag]).find((p22) => p22 === at) : Array.from(TAG_CACHE[tag])[0];
-  }
-};
-const removeFromPageCache = (p2) => (pg) => {
-  const path = getPath(pg);
-  if (PAGE_CACHE && path && path in PAGE_CACHE) {
-    delete PAGE_CACHE[path];
-  }
-};
-const hasPageInfo = (p2) => (pg) => {
-  const path = getPath(pg);
-  return path && path in PAGE_INFO_CACHE ? true : false;
-};
-const updatePageInfoCache = (p2) => (path, info2) => {
-  if (!PAGE_INFO_CACHE) {
-    PAGE_INFO_CACHE = {};
-  }
-  PAGE_INFO_CACHE[path] = info2;
-};
-const lookupPageInfo = (p2) => (pg) => {
-  let path = getPath(pg);
-  if (!path) {
-    p2.warn(`failed to identify a valid file path from the page representation passed to lookupPageType()`, p2);
-    return void 0;
-  }
-  if (path in PAGE_INFO_CACHE) {
-    return PAGE_INFO_CACHE[path];
-  } else {
-    return void 0;
-  }
-};
-const getPropertyType = (value2) => {
-  if (isYouTubeUrl(value2)) {
-    getYouTubePageType(value2);
-    if (isYouTubeCreatorUrl(value2)) {
-      return `youtube::creator::featured`;
-    }
-    if (isYouTubeFeedUrl(value2, "history")) {
-      return `youtube::feed::history`;
-    }
-  }
-  if (isString$1(value2)) {
-    if (value2.startsWith("[[") && value2.endsWith("]]")) {
-      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
-      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
-        return "image::vault";
-      } else if (content2.endsWith(".excalidraw")) {
-        return "drawing::vault";
-      }
-    }
-    if (isPhoneNumber(value2)) {
-      return "phoneNumber";
-    }
-    if (isEmail(value2)) {
-      return "email";
-    }
-    if (isInlineSvg(value2)) {
-      return "svg::inline";
-    }
-    if (isMetric(value2)) {
-      return "metric";
-    }
-    if (isZipCode(value2)) {
-      return "geo::zip-code";
-    }
-    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
-      return "geo::country";
-    }
-    if (isUrl(value2)) {
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      if (isRepoUrl(value2)) {
-        return "url::repo";
-      }
-      if (isRetailUrl(value2)) {
-        return "url::retail";
-      }
-      if (isNewsUrl(value2)) {
-        return "url::news";
-      }
-      if (isYouTubeUrl(value2)) {
-        return "url::youtube";
-      }
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      return "url";
-    }
-    return "string";
-  }
-  if (isNumber$1(value2)) {
-    return "number";
-  }
-  if (isBoolean(value2)) {
-    return "boolean";
-  } else if (isArray(value2) && value2.length > 0) {
-    const variants = new Set(value2.map(getPropertyType));
-    if (variants.size === 1) {
-      return `list::${Array.from(variants)[0]}`;
-    } else {
-      return `list::mixed::${Array.from(variants).join(",")}`;
-    }
-  }
-  return `other::${toKebabCase(String(typeof value2))}`;
-};
 const getKnownKindTags = (p2) => (tag) => {
-  initializeTagCache(p2);
-  return getKindTagsFromCache(tag);
+  var _a2, _b2, _c2, _d2;
+  return tag ? Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).filter((i) => i.includes(tag)) : Array.from(((_d2 = (_c2 = p2.cache) == null ? void 0 : _c2.kindDefinitionsByTag) == null ? void 0 : _d2.keys()) || []);
 };
 const isKeyOf = (container, key) => {
   return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
 };
 const isKindTag = (p2) => (tag) => {
   const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
-  const parts = safeTag.split("/");
-  const valid = getKindTagsFromCache();
-  return valid.includes(`kind/${parts[0]}`);
+  safeTag.split("/");
+  const valid = getKnownKindTags(p2)();
+  return valid.includes(safeTag);
 };
 const hasCategoryTagDefn = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const hasBareCategory = page.file.etags.find((t) => t.startsWith(`#category/`)) ? true : false;
-    const hasKindCategory = page.file.etags.find((t) => t.split("/")[1] === "category" && t.split("/").length === 3);
+    const hasBareCategory = page.file.etags.find((t2) => t2.startsWith(`#category/`)) ? true : false;
+    const hasKindCategory = page.file.etags.find((t2) => t2.split("/")[1] === "category" && t2.split("/").length === 3);
     return hasBareCategory || hasKindCategory ? true : false;
   }
   return false;
@@ -21162,17 +21088,24 @@ const hasCategoryTagDefn = (p2) => (pg) => {
 const hasSubcategoryTagDefn = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const hasBareSubcategory = page.file.etags.find((t) => t.startsWith(`#subcategory/`)) ? true : false;
-    const hasKindSubcategory = page.file.etags.find((t) => t.split("/")[2] === "subcategory" && t.split("/").length === 4);
+    const hasBareSubcategory = page.file.etags.find((t2) => t2.startsWith(`#subcategory/`)) ? true : false;
+    const hasKindSubcategory = page.file.etags.find((t2) => t2.split("/")[1] === "subcategory" && t2.split("/").length === 4);
     return hasBareSubcategory || hasKindSubcategory ? true : false;
   }
   return false;
 };
+const hasSubcategoryTag = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  const kinds = lookupKnownKindTags(p2);
+  return page && page.file.etags.some(
+    (i) => i.split("/").length === 3 && kinds.includes(stripLeading(i.split("/")[0], "#"))
+  ) ? true : false;
+};
 const hasCategoryTag = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const kindTags = Array.from(page.file.tags).filter((t) => isKindTag(stripLeading(t.split("/")[0], "#")));
-    const withCategory = kindTags.filter((t) => t.split("/").length > 1).map((t) => t.split("/")[1]);
+    const kindTags = Array.from(page.file.tags).filter((t2) => isKindTag(stripLeading(t2.split("/")[0], "#")));
+    const withCategory = kindTags.filter((t2) => t2.split("/").length > 1).map((t2) => t2.split("/")[1]);
     return withCategory.length > 0;
   }
   return false;
@@ -21180,7 +21113,7 @@ const hasCategoryTag = (p2) => (pg) => {
 const hasCategoryProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    return page.category && isFileLink(page.category);
+    return page.category && isFileLink(page.category) ? true : false;
   }
   return false;
 };
@@ -21192,27 +21125,18 @@ const hasCategoriesProp = (p2) => (pg) => {
   return false;
 };
 const isCategoryPage = (p2) => (pg) => {
-  var _a2;
   const page = getPage(p2)(pg);
-  const cat = getPage(p2)(getKindDefnFromCache(p2)("category"));
-  if (page) {
-    return hasCategoryTagDefn(p2)(page) || page.role && isFileLink(page.role) && page.role.path === ((_a2 = cat == null ? void 0 : cat.file) == null ? void 0 : _a2.path) ? true : false;
-  }
-  return false;
+  return page && page.file.etags.some((i) => i.split("/").length === 3 && i.split("/")[1] === "category") ? true : false;
 };
 const isSubcategoryPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.etags.find((i) => isSubcategoryDefnTag()(i) || isSubcategoryPage(p2)(i));
-    return tags ? true : false;
-  }
-  return false;
+  return page && page.file.etags.some((i) => i.split("/").length === 4 && i.split("/")[1] === "subcategory") ? true : false;
 };
 const hasMultipleKinds = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
     const tags = page.file.tags;
-    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
+    const kindTags = tags.filter((t2) => isKindTag(p2)(stripLeading(t2.split("/")[0], "#")));
     return kindTags.length > 1 ? true : false;
   }
   return false;
@@ -21221,7 +21145,9 @@ const hasKindTag = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
     const tags = page.file.etags;
-    const kindTags = tags.filter((t) => isKindTag()(stripLeading(t.split("/")[0], "#")));
+    const kindTags = tags.filter(
+      (t2) => isKindTag(p2)(stripLeading(t2.split("/")[0], "#")) || t2.split("/").length === 3 && t2.split("/")[1] === "category" || t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
+    );
     return kindTags.length > 0 ? true : false;
   }
   return false;
@@ -21229,7 +21155,7 @@ const hasKindTag = (p2) => (pg) => {
 const hasKindDefinitionTag = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = page.file.tags.filter((t) => t.startsWith(`#kind/`));
+    const tags = page.file.tags.filter((t2) => t2.startsWith(`#kind/`));
     return tags.length > 0 ? true : false;
   }
   return false;
@@ -21237,17 +21163,14 @@ const hasKindDefinitionTag = (p2) => (pg) => {
 const hasTypeDefinitionTag = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = page.file.tags.filter((t) => t.startsWith(`#type/`));
+    const tags = page.file.tags.filter((t2) => t2.startsWith(`#type/`));
     return tags.length > 0 ? true : false;
   }
   return false;
 };
 const hasKindProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
-  if (page) {
-    return isDefined(page.kind) && isFileLink(page.kind);
-  }
-  return false;
+  return page && isDefined(page.kind) && isFileLink(page.kind) ? true : false;
 };
 const hasKindsProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
@@ -21276,22 +21199,21 @@ const isSubcategoryDefnTag = (p2) => (tag) => {
 const isKindedWithCategoryTag = (p2) => (tag) => {
   const safeTag = stripLeading(tag, "#");
   const parts = safeTag.split("/");
-  return parts.length === 2 && isKindTag()(parts[0]);
+  return parts.length === 2 && isKindTag(p2)(parts[0]);
 };
 const isKindedWithSubcategoryTag = (p2) => (tag) => {
   const safeTag = stripLeading(tag, "#");
   const parts = safeTag.split("/");
-  return parts.length === 3 && !["category", "subcategory"].includes(parts[1]) && isKindTag()(parts[0]) ? true : false;
+  return parts.length === 3 && !["category", "subcategory"].includes(parts[1]) && isKindTag(p2)(parts[0]) ? true : false;
 };
 const decomposeTag = (p2) => (tag) => {
   const safeTag = stripLeading(tag, "#");
   const parts = safeTag.split("/");
-  if (!isKindTag()(parts[0])) {
+  if (!isKindTag(p2)(parts[0])) {
     return {
       type: "unknown",
       tag,
-      safeTag,
-      suggestions: lookupTagSuggestions(p2)(safeTag)
+      safeTag
     };
   }
   const partial2 = {
@@ -21310,7 +21232,7 @@ const decomposeTag = (p2) => (tag) => {
       isSubcategoryDefn: false,
       isKindDefn: false
     };
-  } else if (isKindedWithCategoryTag()(safeTag)) {
+  } else if (isKindedWithCategoryTag(p2)(safeTag)) {
     return {
       type: "category",
       ...partial2,
@@ -21320,7 +21242,7 @@ const decomposeTag = (p2) => (tag) => {
       isSubcategoryDefn: false,
       isKindDefn: false
     };
-  } else if (isKindedWithSubcategoryTag()(safeTag)) {
+  } else if (isKindedWithSubcategoryTag(p2)(safeTag)) {
     return {
       type: "subcategory",
       ...partial2,
@@ -21374,7 +21296,7 @@ const getFrontmatter = (p2) => (from) => {
   if (isFrontmatter(from)) {
     return from;
   }
-  const page = p2.api.getPage(from);
+  const page = getPage(p2)(from);
   if (page) {
     return page.file.frontmatter;
   } else {
@@ -21383,30 +21305,28 @@ const getFrontmatter = (p2) => (from) => {
   }
 };
 const getCategories = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   const categories = [];
   if (page) {
-    if (hasPageInfo()(page)) {
-      return lookupPageInfo(p2)(page).categories;
-    }
     const tags = getCategoryTags(p2)(page);
-    return tags.map((t) => {
+    p2.info("cat tags", tags);
+    return tags.map((t2) => {
       return {
-        ...t,
-        category: lookupPageFromTag(p2)(t.defnTag)
+        ...t2,
+        category: getPage(p2)(t2.defnTag)
       };
     });
   }
   return categories;
 };
 const getSubcategories = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
-    const tags = getSubcategoryTags(p2)(page).map((t) => {
-      const subcategory = lookupPageFromTag(p2)(t.defnTag);
+    const tags = getSubcategoryTags(p2)(page).map((t2) => {
+      const subcategory = getPage(p2)(t2.defnTag);
       if (subcategory) {
         return {
-          ...t,
+          ...t2,
           subcategory
         };
       }
@@ -21416,24 +21336,7 @@ const getSubcategories = (p2) => (pg) => {
   }
   return [];
 };
-const getPageIcons = (p2) => (pg) => {
-  return {
-    hasIcon: false
-  };
-};
-const getPageBanners = (p2) => (pg) => {
-  return {
-    hasBanner: false
-  };
-};
-const getSuggestedActions = (p2) => (pg) => {
-  return [];
-};
 const isKindedPage = (p2) => (pg) => {
-  let info2 = lookupPageInfo(p2)(pg);
-  if (info2) {
-    return info2.type === "kinded";
-  }
   const page = getPage(p2)(pg);
   if (page) {
     return hasKindProp(p2)(page) && !hasKindDefinitionTag(p2)(page) ? true : hasKindTag(p2)(page) ? true : false;
@@ -21442,55 +21345,27 @@ const isKindedPage = (p2) => (pg) => {
   p2.error(err);
   return false;
 };
-const isKindDefnPage = (p2) => (pg) => {
-  let info2 = lookupPageInfo(p2)(pg);
-  if (info2) {
-    return info2.type === "kind-defn" ? true : false;
-  }
-  const page = getPage(p2)(pg);
-  const kindMaster = getPage(p2)(getKindDefnFromCache(p2)("kind"));
-  if (page) {
-    const kindProp = isFileLink(page == null ? void 0 : page.kind) ? getPage(p2)(page.kind.path) : void 0;
-    return hasKindDefinitionTag(p2)(page) ? true : kindProp && kindProp.file.path === (kindMaster == null ? void 0 : kindMaster.file.path) ? true : false;
-  }
-  return false;
+const isKindDefnPage = (p2) => (ref) => {
+  const page = getPage(p2)(ref);
+  return page && page.file.etags.some((i) => i.startsWith("#kind/")) ? true : false;
 };
-const isTypeDefnPage = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    if (hasTypeDefinitionTag(p2)(page)) {
-      return true;
-    }
-  }
-  return false;
+const isTypeDefnPage = (p2) => (ref) => {
+  const page = getPage(p2)(ref);
+  return page && page.file.etags.some((i) => i.startsWith("#type/")) ? true : false;
 };
 const getKindTagsOfPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = page.file.etags.filter((t) => isKindTag()(t));
-    return Array.from(tags).map((t) => t.replace("#kind/", ""));
+    const tags = page.file.etags.filter((t2) => isKindTag(p2)(t2));
+    return Array.from(tags).map((t2) => t2.replace("#kind/", ""));
   }
   return [];
 };
 const getKindPages = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = getKindTagsOfPage(p2)(page);
-    const paths = new Set(...tags.map(
-      (t) => getTagPathFromCache(p2)(t)
-    ).filter((i) => i));
-    if (page.kind && isFileLink(page.kind) && !paths.has(page.kind.path)) {
-      paths.add(page.kind.path);
-    }
-    if (page.kinds && Array.isArray(page.kinds) && page.kinds.some((i) => isFileLink(i))) {
-      const links = page.kinds.filter((i) => isFileLink(i));
-      for (const link2 of links) {
-        if (!paths.has(link2.path)) {
-          paths.add(link2.path);
-        }
-      }
-    }
-    return Array.from(paths).map((path) => getPage(p2)(path)).filter((i) => i);
+    const pages = getKindTagsOfPage(p2)(page).map((i) => lookupKindByTag(p2)(i)).map((i) => i ? getPage(p2)(i.path) : void 0).map((i) => i);
+    return pages;
   }
   return [];
 };
@@ -21517,13 +21392,13 @@ const getMetadata = (p2) => (pg) => {
   return {};
 };
 const getSubcategoryTags = (p2) => (pg) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const tags = page.file.etags.filter(
-      (t) => isKindedWithSubcategoryTag()(t) || isSubcategoryDefnTag()(t)
+      (t2) => isKindedWithSubcategoryTag(p2)(t2) || isSubcategoryDefnTag()(t2)
     );
-    return toArray(tags).map((t) => {
-      const tag = decomposeTag(p2)(t);
+    return toArray(tags).map((t2) => {
+      const tag = decomposeTag(p2)(t2);
       if (tag.type === "subcategory") {
         return {
           rawTag: tag.tag,
@@ -21541,17 +21416,14 @@ const getSubcategoryTags = (p2) => (pg) => {
   return [];
 };
 const getCategoryTags = (p2) => (pg, filterByKindTag) => {
-  const page = p2.api.getPage(pg);
+  const page = getPage(p2)(pg);
   if (page) {
     const tags = toArray(page.file.etags).map(
-      (t) => decomposeTag(p2)(t)
-    ).filter((t) => t.type === "category" || t.type === "subcategory");
+      (t2) => decomposeTag(p2)(t2)
+    ).filter((t2) => t2.type === "category" || t2.type === "subcategory");
     const cats = [];
     for (const tag of tags) {
       if (tag.type === "category" || tag.type === "subcategory") {
-        if (page.file.etags.find((t) => t === `#${tag.categoryDefnTag}`)) {
-          addTagToCache(p2)(tag.categoryDefnTag, page.file.path);
-        }
         if (filterByKindTag === void 0 || tag.kindTag === filterByKindTag) {
           cats.push({
             rawTag: tag.tag,
@@ -21564,52 +21436,50 @@ const getCategoryTags = (p2) => (pg, filterByKindTag) => {
       }
     }
     return cats;
+  } else {
+    p2.debug(`failed to get page`, `when calling getCategoryTags()`);
   }
   return [];
 };
 const getClassification = (p2) => (pg) => {
   const page = pg ? getPage(p2)(pg) : void 0;
   if (page) {
-    if (hasPageInfo()(page)) {
-      return lookupPageInfo(p2)(page).classifications;
-    } else {
-      const kinds = getKindPages(p2)(page);
-      const classification2 = [];
-      for (const kind of kinds) {
-        const kindTag = getKindTagsFromPage(p2)(kind)[0];
-        const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
-        const partial2 = getSubcategoryTags(p2)(page.subcategory)[0];
-        const subcategory = partial2 ? {
-          ...partial2,
-          subcategory: lookupPageFromTag(p2)(partial2.defnTag)
-        } : void 0;
-        const categories = getCategoryTags(p2)(page, kindTag).map(
-          (c) => {
-            if (page.file.etags.includes(`#${c.defnTag}`)) {
-              addTagToCache(p2)(c.defnTag, page.file.path);
-              return {
-                ...c,
-                category: page
-              };
-            } else {
-              return {
-                ...c,
-                category: lookupPageFromTag(p2)(c.defnTag)
-              };
-            }
+    const kinds = getKindPages(p2)(page);
+    const classification2 = [];
+    for (const kind of kinds) {
+      const kindTag = getKindTagsOfPage(p2)(kind)[0];
+      const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
+      const partial2 = getSubcategoryTags(p2)(page.subcategory)[0];
+      const subcategory = partial2 ? {
+        ...partial2,
+        subcategory: getPage(p2)(partial2.defnTag)
+      } : void 0;
+      const categories = getCategoryTags(p2)(page, kindTag).map(
+        (c) => {
+          if (page.file.etags.includes(`#${c.defnTag}`)) {
+            addTagToCache(p2)(c.defnTag, page.file.path);
+            return {
+              ...c,
+              category: page
+            };
+          } else {
+            return {
+              ...c,
+              category: lookupPageFromTag(p2)(c.defnTag)
+            };
           }
-        );
-        classification2.push({
-          type,
-          kind,
-          kindTag,
-          categories,
-          subcategory
-        });
-      }
-      p2.info("classification", classification2);
-      return classification2;
+        }
+      );
+      classification2.push({
+        type,
+        kind,
+        kindTag,
+        categories,
+        subcategory
+      });
     }
+    p2.info("classification", classification2);
+    return classification2;
   }
   return [];
 };
@@ -21636,10 +21506,10 @@ const buildingBlocks = (plugin4) => ({
   getKindPages: getKindPages(plugin4),
   getMetadata: getMetadata(plugin4),
   getKindTagsOfPage: getKindTagsOfPage(plugin4),
-  isKindTag: isKindTag()
+  isKindTag: isKindTag(plugin4)
 });
 const BackLinks = (p2) => (source, container, component, filePath) => async (params_str = "") => {
-  const page = p2.api.createPageInfoBlock(
+  const page = p2.api.getPageInfoBlock(
     source,
     container,
     component,
@@ -21649,19 +21519,15 @@ const BackLinks = (p2) => (source, container, component, filePath) => async (par
     const current = page.current;
     const {
       table: table3,
-      renderValue,
+      renderValue
+    } = page;
+    const {
       createFileLink: createFileLink2,
       showDesc: showDesc2,
       showLinks: showLinks2,
       showClassifications: showClassifications2
-    } = page;
-    const links = current.file.inlinks.sort((p22) => {
-      var _a2;
-      return (_a2 = page.getPage(p22)) == null ? void 0 : _a2.file.name;
-    }).where((p22) => {
-      var _a2;
-      return ((_a2 = page.getPage(p22)) == null ? void 0 : _a2.file.path) !== current.file.path;
-    });
+    } = p2.api;
+    const links = current.file.inlinks.sort((p22) => p22 == null ? void 0 : p22.path).where((p22) => p22.path !== current.file.path);
     p2.info("backlinks", links.map((i) => [
       createFileLink2(i),
       showClassifications2(i),
@@ -21876,11 +21742,11 @@ var _function = {};
     return;
   }
   function tuple() {
-    var t = [];
+    var t2 = [];
     for (var _i = 0; _i < arguments.length; _i++) {
-      t[_i] = arguments[_i];
+      t2[_i] = arguments[_i];
     }
-    return t;
+    return t2;
   }
   function increment2(n2) {
     return n2 + 1;
@@ -22237,7 +22103,7 @@ var lib = {};
   exports.DataView = (value2, options2 = {}) => {
     try {
       dvByteLengthGetter.call(value2);
-    } catch (e) {
+    } catch (e2) {
       throw makeException(TypeError, "is not a DataView", options2);
     }
     if (!options2.allowShared && isSharedArrayBuffer(value2.buffer)) {
@@ -22405,7 +22271,7 @@ var utils$2 = { exports: {} };
     try {
       byteLengthGetter.call(value2);
       return true;
-    } catch (e) {
+    } catch (e2) {
       return false;
     }
   }
@@ -22595,11 +22461,11 @@ const decode = function(input) {
         error$1("overflow");
       }
       i += digit * w;
-      const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
-      if (digit < t) {
+      const t2 = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
+      if (digit < t2) {
         break;
       }
-      const baseMinusT = base - t;
+      const baseMinusT = base - t2;
       if (w > floor(maxInt / baseMinusT)) {
         error$1("overflow");
       }
@@ -22653,14 +22519,14 @@ const encode = function(input) {
       if (currentValue === n2) {
         let q = delta;
         for (let k = base; ; k += base) {
-          const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
-          if (q < t) {
+          const t2 = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
+          if (q < t2) {
             break;
           }
-          const qMinusT = q - t;
-          const baseMinusT = base - t;
+          const qMinusT = q - t2;
+          const baseMinusT = base - t2;
           output.push(
-            stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+            stringFromCharCode(digitToBasic(t2 + qMinusT % baseMinusT, 0))
           );
           q = floor(qMinusT / baseMinusT);
         }
@@ -70623,7 +70489,7 @@ function toASCII(domainName, {
     if (containsNonASCII(l2)) {
       try {
         return `xn--${punycode.encode(l2)}`;
-      } catch (e) {
+      } catch (e2) {
         result.error = true;
       }
     }
@@ -91341,7 +91207,7 @@ class BrowserFrameURL {
     }
     try {
       return new URL_1(url, frame.window.location.href);
-    } catch (e) {
+    } catch (e2) {
       return new URL_1("about:blank");
     }
   }
@@ -92224,7 +92090,7 @@ let HTMLFormElement$1 = class HTMLFormElement extends HTMLElement$1 {
     }
     try {
       return new URL(this.getAttribute("action"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -93582,7 +93448,7 @@ class HTMLInputElement extends HTMLElement$1 {
     }
     try {
       return new URL_1(this.getAttribute("formaction"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -95618,7 +95484,7 @@ class CSSParser {
   static validateSelectorText(selectorText) {
     try {
       SelectorParser.getSelectorGroups(selectorText);
-    } catch (e) {
+    } catch (e2) {
       return false;
     }
     return true;
@@ -95785,8 +95651,8 @@ class HTMLLinkElementStyleSheetLoader {
     let error2 = null;
     try {
       code2 = await resourceFetch.fetch(absoluteURL);
-    } catch (e) {
-      error2 = e;
+    } catch (e2) {
+      error2 = e2;
     }
     readyStateManager$1.endTask();
     if (error2) {
@@ -95892,7 +95758,7 @@ let HTMLLinkElement$1 = class HTMLLinkElement extends HTMLElement$1 {
     }
     try {
       return new URL(this.getAttribute("href"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return this.getAttribute("href");
     }
   }
@@ -98053,15 +97919,15 @@ class HTMLScriptElementScriptLoader {
       readyStateManager$1.startTask();
       try {
         code2 = await resourceFetch.fetch(absoluteURL);
-      } catch (e) {
-        error2 = e;
+      } catch (e2) {
+        error2 = e2;
       }
       readyStateManager$1.endTask();
     } else {
       try {
         code2 = resourceFetch.fetchSync(absoluteURL);
-      } catch (e) {
-        error2 = e;
+      } catch (e2) {
+        error2 = e2;
       }
     }
     if (error2) {
@@ -98137,7 +98003,7 @@ let HTMLScriptElement$1 = class HTMLScriptElement extends HTMLElement$1 {
     }
     try {
       return new URL(this.getAttribute("src"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return this.getAttribute("src");
     }
   }
@@ -98493,7 +98359,7 @@ class HTMLImageElement extends HTMLElement$1 {
     }
     try {
       return new URL(this.getAttribute("src"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return this.getAttribute("src");
     }
   }
@@ -100678,7 +100544,7 @@ class Base64 {
     if (/[^\u0000-\u00ff]/.test(str)) {
       throw new DOMException("Failed to execute 'btoa' on 'Window': The string to be encoded contains characters outside of the Latin1 range.", DOMExceptionNameEnum$1.invalidCharacterError);
     }
-    let t = "";
+    let t2 = "";
     let p2 = -6;
     let a = 0;
     let i = 0;
@@ -100695,11 +100561,11 @@ class Base64 {
         a = (a & 255) << 8 | c & 255;
         p2 += 8;
       }
-      t += BASE64_CHARS.charAt(v > 0 ? a >> p2 & 63 : 64);
+      t2 += BASE64_CHARS.charAt(v > 0 ? a >> p2 & 63 : 64);
       p2 -= 6;
       v -= 6;
     }
-    return t;
+    return t2;
   }
   /**
    * Decodes a string of data which has been encoded using Base64 encoding.
@@ -100718,7 +100584,7 @@ class Base64 {
     if (/[^A-Za-z\d+/=]/.test(str) || str.length % 4 == 1) {
       throw new DOMException("Failed to execute 'atob' on 'Window': The string to be decoded is not correctly encoded.", DOMExceptionNameEnum$1.invalidCharacterError);
     }
-    let t = "";
+    let t2 = "";
     let p2 = -8;
     let a = 0;
     let c;
@@ -100731,13 +100597,13 @@ class Base64 {
       if ((p2 += 6) >= 0) {
         d = a >> p2 & 255;
         if (c !== 64) {
-          t += String.fromCharCode(d);
+          t2 += String.fromCharCode(d);
         }
         a &= 63;
         p2 -= 8;
       }
     }
-    return t;
+    return t2;
   }
 }
 var _a$8, _b$5, _c$3, _d$1, _e$1, _f;
@@ -100990,7 +100856,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
     return url.hash;
@@ -101004,7 +100870,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.hash = hash2;
@@ -101021,7 +100887,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     }
     try {
       return new URL$1(this.getAttribute("href"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return this.getAttribute("href");
     }
   }
@@ -101057,7 +100923,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get origin() {
     try {
       return new URL$1(this.href).origin;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101085,7 +100951,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get protocol() {
     try {
       return new URL$1(this.href).protocol;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101098,7 +100964,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.protocol = protocol;
@@ -101112,7 +100978,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get username() {
     try {
       return new URL$1(this.href).username;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101125,7 +100991,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.username = username;
@@ -101139,7 +101005,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get password() {
     try {
       return new URL$1(this.href).password;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101152,7 +101018,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.password = password;
@@ -101166,7 +101032,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get pathname() {
     try {
       return new URL$1(this.href).pathname;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101179,7 +101045,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.pathname = pathname;
@@ -101193,7 +101059,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get port() {
     try {
       return new URL$1(this.href).port;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101206,7 +101072,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.port = port;
@@ -101220,7 +101086,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get host() {
     try {
       return new URL$1(this.href).host;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101233,7 +101099,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.host = host2;
@@ -101247,7 +101113,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get hostname() {
     try {
       return new URL$1(this.href).hostname;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101260,7 +101126,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.hostname = hostname;
@@ -101317,7 +101183,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
   get search() {
     try {
       return new URL$1(this.href).search;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -101330,7 +101196,7 @@ class HTMLAnchorElement extends HTMLElement$1 {
     let url;
     try {
       url = new URL$1(this.href);
-    } catch (e) {
+    } catch (e2) {
       return;
     }
     url.search = search;
@@ -101545,7 +101411,7 @@ class HTMLButtonElement extends HTMLElement$1 {
     }
     try {
       return new URL_1(this.getAttribute("formaction"), this[ownerDocument].location.href).href;
-    } catch (e) {
+    } catch (e2) {
       return "";
     }
   }
@@ -102517,7 +102383,7 @@ var mimeType = class MIMEType {
   static parse(string) {
     try {
       return new this(string);
-    } catch (e) {
+    } catch (e2) {
       return null;
     }
   }
@@ -105532,9 +105398,9 @@ function toHtml(node2) {
     const results = n2.map((i) => {
       const convert = solveForNodeType().outputType().solver({
         html: (h) => h,
-        text: (t) => t.textContent,
+        text: (t2) => t2.textContent,
         comment: (h) => `<!-- ${h.textContent} -->`,
-        element: (e) => e.outerHTML,
+        element: (e2) => e2.outerHTML,
         node: (ne) => {
           if (isElement(ne)) {
             convert(ne);
@@ -105577,7 +105443,7 @@ function clone(container) {
     document: (d) => {
       return createDocument(d.body.innerHTML, d.head.innerHTML);
     },
-    element: (e) => _function.pipe(e, toHtml, createElement),
+    element: (e2) => _function.pipe(e2, toHtml, createElement),
     node: (n2) => {
       throw new HappyMishap("Can't clone an unknown node!", { inspect: n2 });
     },
@@ -105630,9 +105496,9 @@ var describeNode = (node2) => {
   return solveForNodeType().outputType().solver({
     html: (h) => _function.pipe(h, createFragment, describeNode),
     node: (n2) => `node${descClass(n2)}`,
-    text: (t) => `text[${t.textContent.slice(0, 5).replace("\n", "")}...]`,
-    comment: (t) => `comment[${t.textContent.slice(0, 5).replace("\n", "")}...]`,
-    element: (e) => `element[${e.tagName.toLowerCase()}]${descClass(e)}`,
+    text: (t2) => `text[${t2.textContent.slice(0, 5).replace("\n", "")}...]`,
+    comment: (t2) => `comment[${t2.textContent.slice(0, 5).replace("\n", "")}...]`,
+    element: (e2) => `element[${e2.tagName.toLowerCase()}]${descClass(e2)}`,
     fragment: (f) => `fragment${descFrag(f)}`,
     document: (d) => `doc[head: ${!!d.head}, body: ${!!d.body}]: ${describeNode(
       createFragment(d.body)
@@ -105911,16 +105777,16 @@ var createElement = (el, parent) => solveForNodeType().outputType().solver({
     }
   },
   element: _function.identity,
-  text: (t) => {
+  text: (t2) => {
     throw new HappyMishap(
       "An IElement can not be created from a IText node because element's require a wrapping tag name!",
-      { name: "createElement(text)", inspect: t }
+      { name: "createElement(text)", inspect: t2 }
     );
   },
-  comment: (t) => {
+  comment: (t2) => {
     throw new HappyMishap(
       "An IElement can not be created from a IComment node because element's require a wrapping tag name!",
-      { name: "createElement(comment)", inspect: t }
+      { name: "createElement(comment)", inspect: t2 }
     );
   },
   fragment: (f) => {
@@ -105974,9 +105840,9 @@ var getClassList = (container) => {
       var _a2;
       return ((_a2 = getClass(f.firstElementChild)) == null ? void 0 : _a2.split(/\s+/)) || [];
     },
-    element: (e) => {
+    element: (e2) => {
       var _a2;
-      return ((_a2 = getClass(e)) == null ? void 0 : _a2.split(/\s+/)) || [];
+      return ((_a2 = getClass(e2)) == null ? void 0 : _a2.split(/\s+/)) || [];
     },
     text: (n2) => {
       throw new HappyMishap("Passed in a text node to getClassList!", {
@@ -106165,8 +106031,8 @@ const AmazonBook = async (p2, book) => {
     });
     html = req.text;
     p2.debug("Returned from Amazon API call", html);
-  } catch (e) {
-    p2.error(`Problems loading book information from Amazon (${url})`, e == null ? void 0 : e.msg);
+  } catch (e2) {
+    p2.error(`Problems loading book information from Amazon (${url})`, e2 == null ? void 0 : e2.msg);
     return book;
   }
   let page = createDocument(html);
@@ -106237,7 +106103,7 @@ const AmazonBook = async (p2, book) => {
 };
 const Book = (p2) => async (source, container, component, filePath) => {
   var _a2, _b2, _c2, _d2, _e2, _f2;
-  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
+  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   if (page) {
     const fmt = page.format;
     const current = page.current;
@@ -106422,7 +106288,7 @@ const iconPageDefn = {
 const IconPage = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
   var _a2;
   p2.debug("entering Icons handler");
-  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
+  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   if (page) {
     const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.page[i]}</span>`;
     const meta = getMetadata(p2)(page);
@@ -106450,7 +106316,7 @@ const kind_defn = {
   }
 };
 const kind_table = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
-  const dv = createPageInfoBlock(p2)(source, container, component, filePath);
+  const dv = getPageInfoBlock(p2)(source, container, component, filePath);
   if (dv) {
     const {
       table: table3,
@@ -106492,7 +106358,7 @@ const page_entry_defn = {
   }
 };
 const PageEntry = (p2) => (source, container, component, filePath) => async (_scalar, _opt) => {
-  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
+  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   if (page) {
     const fmt = page == null ? void 0 : page.format;
     const current = page.current;
@@ -106551,16 +106417,16 @@ function traverse(tree, cb) {
   }
   cb(tree);
 }
-const find_links = (links, fm_links, page) => (t) => {
+const find_links = (links, fm_links, page) => (t2) => {
   var _a2, _b2;
-  if (isObject(t) && isUrl((_a2 = t == null ? void 0 : t.attributes) == null ? void 0 : _a2.src)) [
+  if (isObject(t2) && isUrl((_a2 = t2 == null ? void 0 : t2.attributes) == null ? void 0 : _a2.src)) [
     links.push({
-      url: t.attributes.src,
-      title: ((_b2 = t.attributes) == null ? void 0 : _b2.alt) || page.file.name,
+      url: t2.attributes.src,
+      title: ((_b2 = t2.attributes) == null ? void 0 : _b2.alt) || page.file.name,
       in_content: true,
-      in_frontmatter: fm_links.map((i) => i.url).includes(t.attributes.src),
-      tagName: t.name,
-      domain: isYouTubeCreatorUrl(t.attributes.src) ? "youtube-creator" : isYouTubeVideoUrl(t.attributes.src) ? "youtube-video" : isGithubRepoUrl(t.attributes.src) ? "github-repo" : void 0
+      in_frontmatter: fm_links.map((i) => i.url).includes(t2.attributes.src),
+      tagName: t2.name,
+      domain: isYouTubeCreatorUrl(t2.attributes.src) ? "youtube-creator" : isYouTubeVideoUrl(t2.attributes.src) ? "youtube-video" : isGithubRepoUrl(t2.attributes.src) ? "github-repo" : void 0
     })
   ];
   return links;
@@ -106635,11 +106501,12 @@ const video_defn = {
   }
 };
 const video_gallery = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
-  const page = createPageInfoBlock(p2)(source, container, component, filePath);
+  var _a2;
+  const page = getPageInfoBlock(p2)(source, container, component, filePath);
   if (page) {
     const { page: current, format: fmt } = page;
     let videos = [];
-    let backLinks = page.as_array(current.file.inlinks);
+    let backLinks = page.as_array(((_a2 = current == null ? void 0 : current.file) == null ? void 0 : _a2.inlinks) || []);
     let backPages = await Promise.all(
       backLinks.map((i) => pageContent(p2)(i))
     ).then((pgs) => pgs.filter((i) => i));
@@ -106675,16 +106542,19 @@ const video_gallery = (p2) => (source, container, component, filePath) => async 
 };
 const Page = (p2) => (source, container, component, filePath) => (scalar, obj) => {
   var _a2, _b2, _c2, _d2;
-  const page = p2.api.createPageInfoBlock(
+  const page = p2.api.getPageInfoBlock(
     source,
     container,
     component,
     filePath
   );
   if (page) {
-    const fmt = page.format;
-    page.paragraph(fmt.bold("Page Information<br/>"));
-    p2.info("Page()", page);
+    const fmt = p2.api.format;
+    p2.api;
+    p2.info(`Page`, { page });
+    console.log(page);
+    console.log(lookupKnownKindTags(p2));
+    fmt.bold("Page Information<br/>");
     page.render(fmt.twoColumnTable(
       "",
       "Value",
@@ -106694,11 +106564,11 @@ const Page = (p2) => (source, container, component, filePath) => (scalar, obj) =
       ],
       [
         fmt.bold("Type"),
-        ((_b2 = (_a2 = page.classifications[0].type) == null ? void 0 : _a2.file) == null ? void 0 : _b2.name) || ""
+        page.classifications.length > 0 ? ((_b2 = (_a2 = page.classifications[0].type) == null ? void 0 : _a2.file) == null ? void 0 : _b2.name) || "" : "<i>undefined</i>"
       ],
       [
         fmt.bold("Kind"),
-        (_d2 = (_c2 = page.classifications[0].kind) == null ? void 0 : _c2.file) == null ? void 0 : _d2.name
+        page.classifications.length > 0 ? (_d2 = (_c2 = page.classifications[0].kind) == null ? void 0 : _c2.file) == null ? void 0 : _d2.name : "<i>undefined</i>"
       ],
       [
         fmt.bold("Category(s)"),
@@ -106799,14 +106669,14 @@ const api = (plugin4) => ({
    * - the code block's HTML container element
    * - Obsidian's `Component` (which we're probably not taking full advantage of yet)
    */
-  createPageInfoBlock: createPageInfoBlock(plugin4),
+  getPageInfoBlock: getPageInfoBlock(plugin4),
   /**
    * Converts a `PageReference` into a `PageInfo` which has
    * tons of extra meta properties and functions along with 
    * a `page` property which represents the `DvPage` API surface
    * for this page.
    */
-  createPageInfo: createPageInfo(plugin4)
+  getPageInfo: getPageInfo(plugin4)
 });
 const csv = (plugin4) => {
   plugin4.registerMarkdownCodeBlockProcessor("csv", (source, el, ctx) => {
@@ -106959,6 +106829,56 @@ const add_commands = (plugin4) => {
     editorCallback: update_kinded_page(plugin4)
   });
 };
+const t = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 48, 8, 96, 3, 127, 127, 127, 0, 96, 3, 127, 127, 127, 1, 127, 96, 2, 127, 127, 0, 96, 2, 127, 126, 0, 96, 1, 127, 1, 127, 96, 1, 127, 1, 126, 96, 3, 127, 127, 126, 1, 126, 96, 3, 126, 127, 127, 1, 126, 3, 11, 10, 1, 1, 2, 0, 4, 6, 7, 3, 0, 5, 5, 3, 1, 0, 1, 7, 85, 9, 3, 109, 101, 109, 2, 0, 5, 120, 120, 104, 51, 50, 0, 0, 6, 105, 110, 105, 116, 51, 50, 0, 2, 8, 117, 112, 100, 97, 116, 101, 51, 50, 0, 3, 8, 100, 105, 103, 101, 115, 116, 51, 50, 0, 4, 5, 120, 120, 104, 54, 52, 0, 5, 6, 105, 110, 105, 116, 54, 52, 0, 7, 8, 117, 112, 100, 97, 116, 101, 54, 52, 0, 8, 8, 100, 105, 103, 101, 115, 116, 54, 52, 0, 9, 10, 211, 23, 10, 242, 1, 1, 4, 127, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 16, 79, 4, 127, 32, 3, 65, 16, 107, 33, 6, 32, 2, 65, 168, 136, 141, 161, 2, 106, 33, 3, 32, 2, 65, 247, 148, 175, 175, 120, 106, 33, 4, 32, 2, 65, 177, 243, 221, 241, 121, 107, 33, 5, 3, 64, 32, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 5, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 0, 65, 4, 106, 34, 0, 32, 6, 77, 13, 0, 11, 32, 2, 65, 12, 119, 32, 5, 65, 18, 119, 106, 32, 4, 65, 7, 119, 106, 32, 3, 65, 1, 119, 106, 5, 32, 2, 65, 177, 207, 217, 178, 1, 106, 11, 32, 1, 106, 32, 0, 32, 1, 65, 15, 113, 16, 1, 11, 146, 1, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 4, 106, 32, 2, 75, 69, 4, 64, 32, 1, 40, 2, 0, 65, 189, 220, 202, 149, 124, 108, 32, 0, 106, 65, 17, 119, 65, 175, 214, 211, 190, 2, 108, 33, 0, 32, 1, 65, 4, 106, 33, 1, 12, 1, 11, 11, 3, 64, 32, 1, 32, 2, 79, 69, 4, 64, 32, 1, 45, 0, 0, 65, 177, 207, 217, 178, 1, 108, 32, 0, 106, 65, 11, 119, 65, 177, 243, 221, 241, 121, 108, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 65, 15, 118, 32, 0, 115, 65, 247, 148, 175, 175, 120, 108, 34, 0, 32, 0, 65, 13, 118, 115, 65, 189, 220, 202, 149, 124, 108, 34, 0, 32, 0, 65, 16, 118, 115, 11, 63, 0, 32, 0, 65, 8, 106, 32, 1, 65, 168, 136, 141, 161, 2, 106, 54, 2, 0, 32, 0, 65, 12, 106, 32, 1, 65, 247, 148, 175, 175, 120, 106, 54, 2, 0, 32, 0, 65, 16, 106, 32, 1, 54, 2, 0, 32, 0, 65, 20, 106, 32, 1, 65, 177, 243, 221, 241, 121, 107, 54, 2, 0, 11, 211, 4, 1, 6, 127, 32, 1, 32, 2, 106, 33, 6, 32, 0, 65, 24, 106, 33, 5, 32, 0, 65, 40, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 40, 2, 0, 32, 2, 106, 54, 2, 0, 32, 0, 65, 4, 106, 34, 4, 32, 4, 40, 2, 0, 32, 2, 65, 16, 79, 32, 0, 40, 2, 0, 65, 16, 79, 114, 114, 54, 2, 0, 32, 2, 32, 3, 106, 65, 16, 73, 4, 64, 32, 3, 32, 5, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 5, 106, 32, 1, 65, 16, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 40, 2, 0, 32, 5, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 12, 106, 34, 3, 40, 2, 0, 32, 5, 65, 4, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 16, 106, 34, 3, 40, 2, 0, 32, 5, 65, 8, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 34, 3, 40, 2, 0, 32, 5, 65, 12, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 40, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 32, 6, 65, 16, 107, 77, 4, 64, 32, 6, 65, 16, 107, 33, 8, 32, 0, 65, 8, 106, 40, 2, 0, 33, 2, 32, 0, 65, 12, 106, 40, 2, 0, 33, 3, 32, 0, 65, 16, 106, 40, 2, 0, 33, 4, 32, 0, 65, 20, 106, 40, 2, 0, 33, 7, 3, 64, 32, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 7, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 7, 32, 1, 65, 4, 106, 34, 1, 32, 8, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 2, 54, 2, 0, 32, 0, 65, 12, 106, 32, 3, 54, 2, 0, 32, 0, 65, 16, 106, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 32, 7, 54, 2, 0, 11, 32, 1, 32, 6, 73, 4, 64, 32, 5, 32, 1, 32, 6, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 1, 54, 2, 0, 11, 11, 97, 1, 1, 127, 32, 0, 65, 16, 106, 40, 2, 0, 33, 1, 32, 0, 65, 4, 106, 40, 2, 0, 4, 127, 32, 1, 65, 12, 119, 32, 0, 65, 20, 106, 40, 2, 0, 65, 18, 119, 106, 32, 0, 65, 12, 106, 40, 2, 0, 65, 7, 119, 106, 32, 0, 65, 8, 106, 40, 2, 0, 65, 1, 119, 106, 5, 32, 1, 65, 177, 207, 217, 178, 1, 106, 11, 32, 0, 40, 2, 0, 106, 32, 0, 65, 24, 106, 32, 0, 65, 40, 106, 40, 2, 0, 16, 1, 11, 157, 4, 2, 1, 127, 3, 126, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 32, 79, 4, 126, 32, 3, 65, 32, 107, 33, 3, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 4, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 5, 32, 2, 66, 0, 124, 33, 6, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 33, 2, 3, 64, 32, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 4, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 4, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 5, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 5, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 2, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 2, 32, 0, 65, 8, 106, 34, 0, 32, 3, 77, 13, 0, 11, 32, 6, 66, 12, 137, 32, 2, 66, 18, 137, 124, 32, 5, 66, 7, 137, 124, 32, 4, 66, 1, 137, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 6, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 2, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 1, 173, 124, 32, 0, 32, 1, 65, 31, 113, 16, 6, 11, 137, 2, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 8, 106, 32, 2, 77, 4, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 27, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 33, 0, 32, 1, 65, 8, 106, 33, 1, 12, 1, 11, 11, 32, 1, 65, 4, 106, 32, 2, 77, 4, 64, 32, 1, 53, 2, 0, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 23, 137, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 124, 33, 0, 32, 1, 65, 4, 106, 33, 1, 11, 3, 64, 32, 1, 32, 2, 73, 4, 64, 32, 1, 49, 0, 0, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 126, 32, 0, 133, 66, 11, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 66, 33, 136, 32, 0, 133, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 34, 0, 32, 0, 66, 29, 136, 133, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 126, 34, 0, 32, 0, 66, 32, 136, 133, 11, 88, 0, 32, 0, 65, 8, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 16, 106, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 24, 106, 32, 1, 55, 3, 0, 32, 0, 65, 32, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 55, 3, 0, 11, 132, 5, 2, 3, 127, 4, 126, 32, 1, 32, 2, 106, 33, 5, 32, 0, 65, 40, 106, 33, 4, 32, 0, 65, 200, 0, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 41, 3, 0, 32, 2, 173, 124, 55, 3, 0, 32, 2, 32, 3, 106, 65, 32, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 32, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 41, 3, 0, 32, 4, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 34, 3, 41, 3, 0, 32, 4, 65, 8, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 24, 106, 34, 3, 41, 3, 0, 32, 4, 65, 16, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 32, 106, 34, 3, 41, 3, 0, 32, 4, 65, 24, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 200, 0, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 65, 32, 106, 32, 5, 77, 4, 64, 32, 5, 65, 32, 107, 33, 2, 32, 0, 65, 8, 106, 41, 3, 0, 33, 6, 32, 0, 65, 16, 106, 41, 3, 0, 33, 7, 32, 0, 65, 24, 106, 41, 3, 0, 33, 8, 32, 0, 65, 32, 106, 41, 3, 0, 33, 9, 3, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 7, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 7, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 8, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 8, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 9, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 9, 32, 1, 65, 8, 106, 34, 1, 32, 2, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 32, 7, 55, 3, 0, 32, 0, 65, 24, 106, 32, 8, 55, 3, 0, 32, 0, 65, 32, 106, 32, 9, 55, 3, 0, 11, 32, 1, 32, 5, 73, 4, 64, 32, 4, 32, 1, 32, 5, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 1, 54, 2, 0, 11, 11, 200, 2, 1, 5, 126, 32, 0, 65, 24, 106, 41, 3, 0, 33, 1, 32, 0, 41, 3, 0, 34, 2, 66, 32, 90, 4, 126, 32, 0, 65, 8, 106, 41, 3, 0, 34, 3, 66, 1, 137, 32, 0, 65, 16, 106, 41, 3, 0, 34, 4, 66, 7, 137, 124, 32, 1, 66, 12, 137, 32, 0, 65, 32, 106, 41, 3, 0, 34, 5, 66, 18, 137, 124, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 1, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 2, 124, 32, 0, 65, 40, 106, 32, 2, 66, 31, 131, 167, 16, 6, 11]);
+async function e() {
+  const { instance: { exports: { mem: e2, xxh32: n2, xxh64: r, init32: i, update32: o, digest32: h, init64: s2, update64: u, digest64: g } } } = await WebAssembly.instantiate(t);
+  let a = new Uint8Array(e2.buffer);
+  function c(t2, n3) {
+    if (e2.buffer.byteLength < t2 + n3) {
+      const r2 = Math.ceil((t2 + n3 - e2.buffer.byteLength) / 65536);
+      e2.grow(r2), a = new Uint8Array(e2.buffer);
+    }
+  }
+  function l2(t2, e3, n3, r2, i2, o2) {
+    c(t2);
+    const h2 = new Uint8Array(t2);
+    return a.set(h2), n3(0, e3), h2.set(a.slice(0, t2)), { update(e4) {
+      let n4;
+      return a.set(h2), "string" == typeof e4 ? (c(3 * e4.length, t2), n4 = b.encodeInto(e4, a.subarray(t2)).written) : (c(e4.byteLength, t2), a.set(e4, t2), n4 = e4.byteLength), r2(0, t2, n4), h2.set(a.slice(0, t2)), this;
+    }, digest: () => (a.set(h2), o2(i2(0))) };
+  }
+  function d(t2) {
+    return t2 >>> 0;
+  }
+  const f = 2n ** 64n - 1n;
+  function y2(t2) {
+    return t2 & f;
+  }
+  const b = new TextEncoder(), w = 0n;
+  function p2(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
+    return c(3 * t2.length, 0), d(n2(0, b.encodeInto(t2, a).written, e3));
+  }
+  function v(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
+    return c(3 * t2.length, 0), y2(r(0, b.encodeInto(t2, a).written, e3));
+  }
+  return { h32: p2, h32ToString(t2) {
+    return p2(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0).toString(16).padStart(8, "0");
+  }, h32Raw(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
+    return c(t2.byteLength, 0), a.set(t2), d(n2(0, t2.byteLength, e3));
+  }, create32() {
+    return l2(48, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, i, o, h, d);
+  }, h64: v, h64ToString(t2) {
+    return v(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w).toString(16).padStart(16, "0");
+  }, h64Raw(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
+    return c(t2.byteLength, 0), a.set(t2), y2(r(0, t2.byteLength, e3));
+  }, create64() {
+    return l2(88, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : w, s2, u, g, y2);
+  } };
+}
 const opt = (value2) => {
   let opt_type = stripBefore(value2, "opt(").slice(0, -1);
   return `${opt_type} | undefined`;
@@ -107053,16 +106973,16 @@ const evaluate_query_params = (p2) => (re, source, defn) => {
       };
     }
     return response;
-  } catch (e) {
+  } catch (e2) {
     return {
       isOk: false,
-      error: e,
+      error: e2,
       param_str
     };
   }
 };
 const query_error = (p2) => (source, container, component, filePath) => async (query2, err, params_str) => {
-  const page = p2.api.createPageInfoBlock(source, container, component, filePath);
+  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   p2.warn(err);
   if (page) {
     const desc = query2 in QUERY_DEFN_LOOKUP ? `<span style="margin-top: 0.75rem">This query command is defined as:</span>` + describe_query(QUERY_DEFN_LOOKUP[query2]) : `<br>${query2} is not a recognized command!`;
@@ -107317,20 +107237,21 @@ const on_file_deleted = (plugin4) => {
   EventHandler(plugin4).onFileDeleted((evt) => {
     const kind_folder = plugin4.settings.kind_folder;
     const find = new RegExp(`^${kind_folder}$`);
-    if (find.test(evt.path)) {
+    if (find.test(evt == null ? void 0 : evt.path)) {
       new Notice("Kind file deleted");
     } else {
-      plugin4.info(`file ${evt.path} was deleted but has no effect on Kind Model (and it's caching)`);
+      plugin4.info(`file ${evt == null ? void 0 : evt.path} was deleted but has no effect on Kind Model (and it's caching)`);
     }
   });
 };
 const on_file_modified = (plugin4) => {
   EventHandler(plugin4).onFileModified((evt) => {
-    plugin4.api.isKindedPage(evt.path);
-    const kind_folder = plugin4.settings.kind_folder;
-    const find = new RegExp(`^${kind_folder}`);
-    if (find.test(evt.path)) {
-      new Notice("Kind file modified");
+    if (isString$1(evt == null ? void 0 : evt.path) && isKindedPage(plugin4)(evt == null ? void 0 : evt.path)) {
+      const kind_folder = plugin4.settings.kind_folder;
+      const find = new RegExp(`^${kind_folder}`);
+      if (find.test(evt.path)) {
+        new Notice("Kind file modified");
+      }
     }
   });
 };
@@ -107351,13 +107272,20 @@ const on_tab_change = (plugin4) => {
     );
   });
 };
+let hasher = null;
 class KindModelPlugin extends Plugin$1 {
   constructor() {
     super(...arguments);
     this.dv = globalThis["DataviewAPI"];
-  }
-  get_cache() {
-    return null;
+    this.cache = {
+      kindDefinitionsByPath: /* @__PURE__ */ new Map(),
+      kindDefinitionsByTag: /* @__PURE__ */ new Map(),
+      typeDefinitionsByPath: /* @__PURE__ */ new Map(),
+      typeDefinitionsByTag: /* @__PURE__ */ new Map(),
+      kindTagDuplicates: /* @__PURE__ */ new Map(),
+      typeTagDuplicates: /* @__PURE__ */ new Map()
+    };
+    this.cache_ready = false;
   }
   /**
    * provides a boolean flag which indicates whether this plugin's 
@@ -107365,7 +107293,10 @@ class KindModelPlugin extends Plugin$1 {
    * on this can proceed.
    */
   get ready() {
-    return false;
+    return this.cache_ready;
+  }
+  set ready(state) {
+    this.cache_ready = state;
   }
   /**
    * Setup this plugin on the "onload" event from Obsidian
@@ -107380,6 +107311,15 @@ class KindModelPlugin extends Plugin$1 {
     this.info = info2;
     this.warn = warn2;
     this.error = error2;
+    this.hasher = hasher ? hasher : (await e()).h32;
+    hasher = this.hasher;
+    this.ready = false;
+    const caching = initializeKindCaches(this);
+    caching.then(() => {
+      this.ready = true;
+      this.info("Caching lookups complete");
+      this.saveSettings();
+    });
     this.dv = getAPI_1(this.app);
     this.api = api(this);
     csv(this);
@@ -107406,14 +107346,13 @@ class KindModelPlugin extends Plugin$1 {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
   async saveSettings() {
-    const { debug: debug2, error: error2 } = logger(this.settings.log_level);
+    const { info: info2, error: error2 } = logger(this.settings.log_level);
     if (typeof this.saveData !== "function") {
       error2("the 'this' context appear to have been lost when trying to call saveSettings()", this);
       return;
-    } else {
-      debug2("saving settings", this.settings);
     }
     await this.saveData(this.settings);
+    info2("user settings saved", this.settings);
   }
 }
 export {

@@ -12,8 +12,8 @@ import {
 } from "inferred-types";
 import KindModelPlugin from "~/main";
 import { isDvPage, isLink } from "~/type-guards";
-import { BlockQuoteOptions, DataArray, DvPage, Grouping, Link, ListItemsCallback, ObsidianCalloutColors, PageReference, PropertyType, SListItem } from "~/types";
-import { getClassification, isKindDefnPage, isKindedPage } from "./buildingBlocks";
+import { BlockQuoteOptions, DataArray, DvPage, Grouping, Link, ListItemsCallback, ObsidianCalloutColors,  SListItem } from "~/types";
+import { getClassification } from "./buildingBlocks";
 import { DateTime, Duration } from "luxon";
 import { blockquote } from "./formatting/blockquote";
 import { renderListItems } from "./formattingApi";
@@ -77,9 +77,10 @@ const get_internal_links = (p: KindModelPlugin) => (
 /**
  * **renderApi**`(p) => (el, filePath) => API`
  * 
- * The render API provides a means to directly render to the DOM. It expects a DOM node and file path along with the
- * plugin to instantiate and will probably be most useful in scenarios where you're rendering a codeblock as these
- * interrupts conveniently provide both the parent element as well the file path.
+ * The render API provides a means to directly render to the DOM. It expects a DOM node and 
+ * file path along with the plugin to instantiate and will probably be most useful in 
+ * scenarios where you're rendering a codeblock as these interrupts conveniently provide 
+ * both the parent element as well the file path.
  */
 export const renderApi =  (p: KindModelPlugin) => (
 	el: HTMLElement, 
@@ -140,21 +141,6 @@ export const renderApi =  (p: KindModelPlugin) => (
 			el,p, filePath, false
 		),
 
-
-		/**
-		 * **isKindedPage**(page,[category])
-		 * 
-		 * Tests whether a given page is a _kinded_ page and _optionally_ if
-		 * the page is of a particular `category`.
-		 */
-		isKindedPage: isKindedPage(p),
-
-		/**
-		 * **isKindDefnPage**(page)
-		 * 
-		 * Tests whether a given page is a _kind definition_ page.
-		 */
-		isKindDefnPage,
 		
 		/**
 		 * **page**`(path, [originFile])`

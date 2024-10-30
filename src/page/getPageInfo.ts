@@ -1,19 +1,10 @@
 import KindModelPlugin from "~/main";
 import { getPath } from "../api/getPath";
-import {  
-	hasPageInfo, 
-	lookupPageInfo, 
-	removeFromPageCache, 
-	updatePageInfoCache 
-} from "../api/cache";
 import { PageInfo, PageReference } from "~/types";
 import { 
 	getCategories,
 	getClassification, 
-	getPageBanners, 
-	getPageIcons, 
 	getSubcategories, 
-	getSuggestedActions, 
 	hasCategoryProp, 
 	hasCategoryTag, 
 	hasKindDefinitionTag, 
@@ -21,6 +12,8 @@ import {
 	hasKindsProp, 
 	hasKindTag, 
 	hasMultipleKinds, 
+	hasSubcategoryTag, 
+	hasSubcategoryTagDefn, 
 	hasTypeDefinitionTag, 
 	isCategoryPage, 
 	isKindDefnPage, 
@@ -28,9 +21,8 @@ import {
 	isSubcategoryPage, 
 	isTypeDefnPage 
 } from "../api/buildingBlocks";
-import { formattingApi } from "../api/formattingApi";
-import { showApi } from "../api/showApi";
 import { getPage } from "./getPage";
+
 
 /**
  * Creates an entry in PAGE_INFO_CACHE for a page in the vault.
@@ -39,58 +31,57 @@ import { getPage } from "./getPage";
  * - the `page` property on `PageInfo` is now the reference to the `DvPage`
  * API surface
  */
-export const createPageInfo = (p: KindModelPlugin) => (
+export const getPageInfo = (p: KindModelPlugin) => (
 	pg: PageReference
 ): PageInfo | undefined => {
 	const path = getPath(pg);
-
-	if(path && hasPageInfo(p)(path)) {
-		// already in cache
-		return lookupPageInfo(p)(path);
-	}
-
 	const page = getPage(p)(pg);
 
 	if (path && page) {
-		const info: PageInfo  = {
-			page,
-			path,
-			type: isKindDefnPage(p)(page)
-				? "kind-defn"
-				: isTypeDefnPage(p)(page)
-				? "type-defn"
-				: isKindedPage(p)(page) && isCategoryPage(p)(page)
-					? "kinded > category"
-					: isKindedPage(p)(page) && isSubcategoryPage(p)(page)
-					? "kinded > subcategory"
-					: isKindedPage(p)(page)
-					? "kinded"
-					: "none",	
-			fm: page.file.frontmatter,
+		const meta = {
 			categories: getCategories(p)(page),
 			subcategories: getSubcategories(p)(page),
 			classifications: getClassification(p)(page),
 
 			hasCategoryProp: hasCategoryProp(p)(page),
 			hasCategoryTag: hasCategoryTag(p)(page),
+			hasSubcategoryTag: hasSubcategoryTag(p)(page),
+			hasSubcategoryDefnTag: hasSubcategoryTagDefn(p)(page),
+
 			hasKindProp: hasKindProp(p)(page),
-			hasKindDefinitionTag: hasKindDefinitionTag(p)(page),
 			hasKindsProperty: hasKindsProp(p)(page),
 			hasKindTag: hasKindTag(p)(page),
+			hasKindDefinitionTag: hasKindDefinitionTag(p)(page),
 			hasMultipleKinds: hasMultipleKinds(p)(page),
 			hasTypeDefinitionTag: hasTypeDefinitionTag(p)(page),
+			
 			isCategoryPage: isCategoryPage(p)(page),
 			isSubcategoryPage: isSubcategoryPage(p)(page),
-			getBanners: () => getPageBanners(p)(page),
-			getIcons: () => getPageIcons(p)(page),
-			getSuggestedActions: () => getSuggestedActions(p)(page),
-			format: formattingApi(p),
-			getPage: getPage(p),
-			...showApi(p)
+			isKindDefnPage: isKindDefnPage(p)(page),
+			isTypeDefnPage: isTypeDefnPage(p)(page),
+			isKindedPage: isKindedPage(p)(page)
 		}
 
-		updatePageInfoCache(p)(path, info);
-		removeFromPageCache(p)(path);
+		const info: PageInfo  = {
+			current: page,
+			path,
+			name: page.file.name,
+			ext: page.file.ext,
+			type: meta.isKindDefnPage
+				? "kind-defn"
+				: meta.isTypeDefnPage
+				? "type-defn"
+				: meta.isKindedPage && meta.isCategoryPage
+					? "kinded > category"
+					: meta.isKindedPage && meta.isSubcategoryPage
+					? "kinded > subcategory"
+					: meta.isKindedPage
+					? "kinded"
+					: "none",	
+			fm: page.file.frontmatter,
+			...meta
+		}
 
+		return info;
 	}
 }

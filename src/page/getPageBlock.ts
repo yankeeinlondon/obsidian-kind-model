@@ -1,7 +1,7 @@
 import { Component, MarkdownPostProcessorContext } from "obsidian";
 
 import KindModelPlugin from "~/main";
-import { createPageInfo } from "./getPageInfo";
+import { getPageInfo } from "./getPageInfo";
 import { PageInfoBlock } from "~/types";
 import { renderApi } from "../api/renderApi";
 
@@ -13,20 +13,20 @@ import { renderApi } from "../api/renderApi";
  * 2. the code block's HTML container element
  * 3. Obsidian's `Component` (which we're probably not taking full advantage of yet)
  */
-export const createPageInfoBlock = (p: KindModelPlugin) => (
+export const getPageInfoBlock = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
 	component: Component | MarkdownPostProcessorContext,
 	filePath: string,
 ): PageInfoBlock | undefined => {
-	const page = createPageInfo(p)(filePath);
+	const page = getPageInfo(p)(filePath);
 	if (page) {
 		return {
 			...page,
 			content: source,
 			container,
 			component,
-			...renderApi(p)(container,filePath)
+			...renderApi(p)(container,filePath),
 		} as PageInfoBlock
 	}
 }

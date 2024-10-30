@@ -11,6 +11,7 @@ import { api } from './api/api';
 import { csv } from './utils/on_load/csv';
 import { on_editor_change } from './events/on_editor_change';
 import { add_commands } from './utils/on_load/add_commands';
+import xx from "xxhash-wasm";
 
 import { 
 	codeblockParser,
@@ -20,7 +21,10 @@ import {
 	on_file_created,
 	on_file_deleted,
 } from './events';
-import { KindCache } from './types';
+import { KindCache, KindDefinition } from './types';
+import { initializeKindCaches } from './cache';
+
+let hasher: null | ((input: string, seed?: number) => number) = null;
 
 
 export default class KindModelPlugin extends Plugin {
@@ -29,7 +33,6 @@ export default class KindModelPlugin extends Plugin {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public dv: DataViewApi = (globalThis as any)["DataviewAPI"] as DataViewApi;
 	public api: ReturnType<typeof api>;
-	public config: KindModelSettings;
 
 	public log: Logger;
 	public debug: Logger["debug"];
@@ -37,9 +40,17 @@ export default class KindModelPlugin extends Plugin {
 	public warn: Logger["warn"];
 	public error: Logger["error"];
 
-	public get_cache(): KindCache | null {
-		return null;
-	}
+	public cache: KindCache = {
+		kindDefinitionsByPath:  new Map<string, KindDefinition<[ "path"]>>(),
+		kindDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
+		typeDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),
+		typeDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
+		kindTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
+		typeTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
+	};
+	public hasher: (input: string, seed?: number) => number
+
+	private cache_ready: boolean = false;
 
 	/**
 	 * provides a boolean flag which indicates whether this plugin's 
@@ -47,7 +58,10 @@ export default class KindModelPlugin extends Plugin {
 	 * on this can proceed.
 	 */
 	public get ready() {
-		return false
+		return this.cache_ready;
+	}
+	public set ready(state: boolean) {
+		this.cache_ready = state;
 	}
 
 	/**
@@ -64,6 +78,25 @@ export default class KindModelPlugin extends Plugin {
 		this.info = info;
 		this.warn = warn;
 		this.error = error;
+
+		this.hasher = hasher
+			? hasher
+			: (await xx()).h32;
+		hasher = this.hasher;
+
+		// start the cache refresh process
+		// -------------------------------
+		// synchronous return happens at point that what was
+		// already in configuration JSON is loaded into memory
+		// async component runs queries to refresh any aspects
+		// which might be stale.
+		this.ready = false;
+		const caching = initializeKindCaches(this);
+		caching.then(() => {
+			this.ready = true;
+			this.info("Caching lookups complete");
+			this.saveSettings();
+		});
 
 		// expose the Dataview API
 		this.dv = getAPI(this.app);
@@ -112,14 +145,14 @@ export default class KindModelPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		const { debug,  error } = logger(this.settings.log_level);
+		const { info,  error } = logger(this.settings.log_level);
 		if(typeof this.saveData !== "function") {
 			error("the 'this' context appear to have been lost when trying to call saveSettings()", this)
 			return
-		} else {
-			debug("saving settings", this.settings);
 		}
+		
 		await this.saveData(this.settings);
+		info("user settings saved", this.settings);
 	}
 }
 

@@ -28,6 +28,11 @@ export type PageInfo = {
 	/** the full path to the page */
 	path: string;
 
+	/** the file's name */
+	name: string;
+	/** the file extension */
+	ext: string;
+
 	/**
 	 * the frontmatter dictionary on the current page
 	 * 
@@ -53,8 +58,15 @@ export type PageInfo = {
 	/** boolean flag indicating whether page is a **category** page for a `kind` */
 	isCategoryPage: boolean;
 
+	isKindDefnPage: boolean;
+	isTypeDefnPage: boolean;
+	isKindedPage: boolean;
+
 	hasCategoryTag: boolean;
 	hasCategoryProp: boolean;
+
+	hasSubcategoryTag: boolean;
+
 
 	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
 	isSubcategoryPage: boolean;
@@ -83,7 +95,6 @@ export type PageInfo = {
 	 */
 	hasKindProp: boolean;
 
-
 	/**
 	 * the Classifications of the page
 	 */
@@ -96,30 +107,12 @@ export type PageInfo = {
 	 */
 	hasKindsProperty: boolean;
 
-	/** get the icons associated with this page */
-	getIcons(): PageIcons;
-	/** get the banners associated with this page */
-	getBanners(): PageBanners;
-	
-
-	getSuggestedActions(): PageSuggestion[];
-
-	/**
-	 * The **Formatting API** surface.
-	 */
-	format: FormattingApi;
-
 	/** 
 	 * The `DvPage` API surface for the given page
 	 */
-	page: DvPage;
+	current: DvPage;
 
-
-	/**
-	 * Get a `DvPage` from any `PageReference`
-	 */
-	getPage: ReturnType<typeof getPage>
-} & ShowApi;
+} ;
 
 export type PageInfoBlock = PageInfo & RenderApi & {
 	/** the content of the code block */

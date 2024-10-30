@@ -2,12 +2,12 @@ import KindModelPlugin from "~/main";
 import { buildingBlocks } from "./buildingBlocks";
 import { getPath } from "./getPath";
 import { createPageView } from "./createPageView";
-import { createPageInfo } from "../page/getPageInfo";
+import { getPageInfo } from "../page/getPageInfo";
 import { formattingApi } from "./formattingApi";
 import { renderApi } from "./renderApi";
 import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
-import { createPageInfoBlock } from "../page/getPageBlock";
+import { getPageInfoBlock } from "../page/getPageBlock";
 import { queryHandlers } from "~/handlers";
 import { obsidianApi } from "./obsidian";
 import { getPage } from "~/page";
@@ -75,7 +75,7 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * - the code block's HTML container element
 	 * - Obsidian's `Component` (which we're probably not taking full advantage of yet)
 	 */
-	createPageInfoBlock: createPageInfoBlock(plugin),
+	getPageInfoBlock: getPageInfoBlock(plugin),
 
 	/**
 	 * Converts a `PageReference` into a `PageInfo` which has
@@ -83,7 +83,7 @@ export const api = (plugin: KindModelPlugin) => ({
 	 * a `page` property which represents the `DvPage` API surface
 	 * for this page.
 	 */
-	createPageInfo: createPageInfo(plugin),
+	getPageInfo: getPageInfo(plugin),
 
 
 

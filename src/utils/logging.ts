@@ -1,4 +1,4 @@
-import { LogLevel } from "types/settings_types";
+import { LogLevel } from "~/types/settings_types";
 
 
 const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") || "" as string | "";
@@ -14,10 +14,10 @@ const debug = <TLevel extends LogLevel>(level: TLevel) =>(...args: unknown[]) =>
     return;
   }
 
-  console.groupCollapsed(`Kind Model(d) (${trunc(msg(args))})`);
+  console.groupCollapsed(`KM(dbg): ${trunc(msg(args))}`);
   args.forEach(a => {
     if (typeof a === "function") {
-      console.log(a());
+      console.log(`fn → `,a());
     }  else if (typeof a === "object" && a !== null) {
 		Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
 	} else {
@@ -32,10 +32,10 @@ const info = <TLevel extends LogLevel>(level: TLevel) =>
   if (["debug"].includes(level)) {
     return;
   }
-  console.groupCollapsed(`Kind Model(i): ${trunc(msg(args))}`);
+  console.groupCollapsed(`KM(i): ${trunc(msg(args))}`);
   args.forEach(a => {
 		if (typeof a === "function") {
-			console.info(a);
+			console.log(`fn → `,a());
 		} else if (typeof a === "object" && a !== null) {
 			Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
 		} else {
@@ -54,20 +54,16 @@ const warn = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) =>
   if (["error"].includes(level)) {
     return;
   }
-  console.group("Kind Model(warn)");
+  console.group("KM(warn)");
   args.forEach(a => {
     console.warn(a);
   })
   console.groupEnd();
 }
 const error = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) => {
-//   const trunc = (s: string | undefined) => typeof s === "string"
-//   ? console.group("obsidian-kind-model (error)")
-//   : args.forEach(a => {
-//     console.error(a);
-//   })
+
   console.groupEnd();
-  new Notification(`Kind Model(err): ${msg(args) || ""}`, {body: "see developer console for more details"});
+  new Notification(`KM(err): ${msg(args) || ""}`, {body: "see developer console for more details"});
 
 
   class KindModelError extends Error {

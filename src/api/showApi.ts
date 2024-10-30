@@ -1,11 +1,16 @@
 import KindModelPlugin from "~/main";
 import { isArray, isString, isUndefined, keysOf, OptionalSpace, StripLeading } from "inferred-types";
 import { DvPage, PageReference, FileLink, ShowApi } from "~/types";
-import { lookupTag } from "./cache";
+import { lookupKindByTag } from "~/cache";
 import { hasFileLink, isDvPage, isFileLink, isLink } from "~/type-guards";
 import { DateTime } from "luxon";
-import { getCategories, getCategoryTags, getClassification, getSubcategories, isCategoryPage, isKeyOf, isKindTag } from "./buildingBlocks";
-import { internalLink } from "./formattingApi";
+import { 
+	getCategories,  
+	getClassification, 
+	getSubcategories, 
+	isKeyOf, 
+	isKindTag 
+} from "./buildingBlocks";
 import { getPage } from "~/page";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
@@ -15,7 +20,7 @@ export const showCreatedDate = (p: KindModelPlugin) => (
 	pg: PageReference | undefined, 
 	format?: string
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 	if (page) {
 		return format 
 			? page.file.cday.toFormat(format)
@@ -28,7 +33,7 @@ export const showModifiedDate = (p: KindModelPlugin) => (
 	pg: PageReference, 
 	format?: string
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 	if (page) {
 		return format 
 			? page.file.mday.toFormat(format)
@@ -72,7 +77,7 @@ export const showDueDate = (p: KindModelPlugin) => (
  * properties
  */
 export const showDesc = (p: KindModelPlugin) => (pg: PageReference) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 	if (page) {
 		const desc = showProp(p)(page, "about", "desc", "description")
 		if (typeof desc == "string") {
@@ -95,7 +100,7 @@ export const showWhen = (p: KindModelPlugin) => (
 	pg: PageReference | undefined,
 	format: string = "LLL yyyy"
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 
 	if (page) {
 		const created = page.file.cday;
@@ -141,7 +146,7 @@ export const getInternalLinks = (p: KindModelPlugin) => (
 	...props: string[]
 ) => {
 	let links: FileLink[] = [];
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 
 	if(page) {
 		for (const prop of props) {
@@ -163,7 +168,7 @@ export const getInternalLinks = (p: KindModelPlugin) => (
 export const showLinks = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 	if (page) {
 		const [_,pageIcon] = getProp(p)(pg, "icon", "svg_icon","_icon","_svg_icon");
 		const link_props = {
@@ -258,7 +263,7 @@ export const showProp = (p: KindModelPlugin) => (
 	pg: PageReference | undefined, 
 	...props: [string, ...string[]]
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 
 	if (page) {
 		if(!page?.file?.name) {
@@ -312,7 +317,7 @@ export const getProp = (p: KindModelPlugin) => <
 	pg: PageReference | undefined,
 	...props: TProps
 ) => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 
 	if(page) {
 		const found = props.find(prop => isKeyOf(page, prop) && page[prop] !== undefined) as (string) | undefined;
@@ -352,13 +357,13 @@ export const showPeers = (p: KindModelPlugin) => (pg: PageReference): string => 
 export const getKind = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
 ): undefined | { kind: DvPage; kindTag: string } => {
-	const page = p.api.getPage(pg);
+	const page = getPage(p)(pg);
 	if(page) {
 		const [_, kind] = getProp(p)(page, "kind");
 		if (isDvPage(kind)) {
 			const kindTag = page.file.etags.find(
 				i => isKindTag(p)(i.split("/")[0]) && 
-				lookupTag(p)(i.split("/")[0]) === page.file.path
+				lookupKindByTag(p)(i.split("/")[0])?.path ===  page.file.path
 			);
 
 			p.info("getKind", { kind, kindTag: kindTag || "unknown" });
@@ -369,8 +374,8 @@ export const getKind = (p: KindModelPlugin) => (
 				i => isKindTag(p)(i.split("/")[0])
 			);
 			if(kindTag) {
-				const kindPath = lookupTag(p)(kindTag);
-				const kind = p.api.getPage(kindPath) as DvPage;
+				const kindPath = lookupKindByTag(p)(kindTag)?.path as unknown as string;
+				const kind = getPage(p)(kindPath) as DvPage;
 
 				p.info("getKind", { kind, kindTag: kindTag || "unknown" });
 				return { kind, kindTag }

@@ -28,7 +28,7 @@ export const IconPage = (p: KindModelPlugin) => (
 	opt: TOption
 ) => {
 	p.debug("entering Icons handler")
-	const page = p.api.createPageInfoBlock(source, container, component, filePath);
+	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 
 	if (page) {
 		const icon = (i: string & keyof typeof page.page) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.page[i]}</span>`;

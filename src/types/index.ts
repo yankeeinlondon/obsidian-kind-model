@@ -22,4 +22,5 @@ export * from "./ui-builder_types";
 export * from "./video-types";
 export * from "./style";
 export * from "./tags";
+export * from "./KindDefinition";
 

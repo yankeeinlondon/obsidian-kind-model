@@ -1,4 +1,13 @@
-import { App, ButtonComponent, ColorComponent, SearchComponent, Setting, SliderComponent, TextComponent, ToggleComponent } from "obsidian";
+import { 
+	App,
+	ButtonComponent, 
+	ColorComponent, 
+	SearchComponent, 
+	Setting, 
+	SliderComponent, 
+	TextComponent, 
+	ToggleComponent 
+} from "obsidian";
 
 export type Callback<
   T extends unknown[] = [], 

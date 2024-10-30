@@ -8,6 +8,7 @@ import { Date,  Iso8601 } from "inferred-types";
 
 export type FmPropSuggestions = {
 	kind?: Link  | string | null;
+	kinds?: (Link | string)[];
 	type?: Link | string | null;
 	category?: Link | string | null;
 	categories?: DataArray<Link | string> | null;

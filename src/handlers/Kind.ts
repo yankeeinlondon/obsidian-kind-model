@@ -4,7 +4,7 @@ import {  OptionParam, QueryDefinition, ScalarParams } from "~/helpers/QueryDefi
 import { DvPage } from "~/types";
 import KindModelPlugin from "~/main";
 import { isDvPage } from "~/type-guards";
-import { createPageInfoBlock, showKind } from "~/api";
+import { getPageInfoBlock, showKind } from "~/api";
 
 export type KindQueryOptions = {
 	category?: string;
@@ -46,7 +46,7 @@ export const kind_table = (p: KindModelPlugin) => (
 	scalar: TScalar,
 	opt: TOption
 ) => {
-	const dv = createPageInfoBlock(p)(source, container, component, filePath);
+	const dv = getPageInfoBlock(p)(source, container, component, filePath);
 	if (dv) {
 		const {
 			table, 

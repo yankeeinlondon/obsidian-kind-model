@@ -54,7 +54,6 @@ export type DecomposedUnknownTag = {
 	type: "unknown";
 	tag: string;
 	safeTag: string;
-	suggestions: string[];
 }
 
 

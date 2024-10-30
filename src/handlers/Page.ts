@@ -1,4 +1,5 @@
 import {  MarkdownPostProcessorContext } from "obsidian";
+import { lookupKnownKindTags } from "~/cache";
 import KindModelPlugin from "~/main";
 import { ObsidianComponent } from "~/types";
 
@@ -12,7 +13,7 @@ export const Page = (p: KindModelPlugin) => (
 	scalar: any[],
 	obj: any
 ) => {
-	const page = p.api.createPageInfoBlock(
+	const page = p.api.getPageInfoBlock(
 		source,
 		container,
 		component,
@@ -20,10 +21,14 @@ export const Page = (p: KindModelPlugin) => (
 	);
 	
 	if(page) {
-		const fmt = page.format;
-		page.paragraph(fmt.bold("Page Information<br/>"));
+		const fmt = p.api.format;
+		const api = p.api;
 
-		p.info("Page()",page);
+		p.info(`Page`, { page });
+		console.log(page)
+		console.log(lookupKnownKindTags(p));
+		fmt.bold("Page Information<br/>");
+
 		page.render(fmt.twoColumnTable(
 			"",
 			"Value",
@@ -31,10 +36,16 @@ export const Page = (p: KindModelPlugin) => (
 				fmt.bold("Kind of Page"), page.type
 			],
 			[
-				fmt.bold("Type"), page.classifications[0].type?.file?.name || ""
+				fmt.bold("Type"), 
+				page.classifications.length > 0 
+				? page.classifications[0].type?.file?.name || ""
+				: "<i>undefined</i>"
 			],
 			[
-				fmt.bold("Kind"), page.classifications[0].kind?.file?.name
+				fmt.bold("Kind"), 
+				page.classifications.length > 0
+				? page.classifications[0].kind?.file?.name
+				: "<i>undefined</i>"
 			],
 			[
 				fmt.bold("Category(s)"), page.categories.map(i => i.categoryTag).join(", ")
