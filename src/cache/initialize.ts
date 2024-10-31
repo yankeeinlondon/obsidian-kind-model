@@ -1,8 +1,8 @@
-import { ensureLeading, stripLeading } from "inferred-types";
 import KindModelPlugin from "~/main";
 import { KindDefinition } from "~/types";
-import { updateKindDefinitionInCache } from "./update";
+import { updateKindDefinitionInCache, updateTypeDefinitionInCache } from "./update";
 import { isTagKindDefinition } from "~/type-guards";
+import { wait } from "~/utils";
 
 
 const findStaleByTag = async(p: KindModelPlugin) => {
@@ -14,16 +14,35 @@ const findStaleByTag = async(p: KindModelPlugin) => {
 	let problems: string[] = [];
 
 	for (const pg of kinds) {
-
 			const kp = p.dv.page(pg.file.path);
 			if(kp) {
-				updateKindDefinitionInCache(p)(pg.file.path);
+				updateKindDefinitionInCache(p)(kp);
 				p.debug(`caching by file path ${kp.file.path}`);
 			} else {
 				p.warn(`Page missing kind tag`, {pg});
 			}
-			
 	}
+
+	for (const pg of types) {
+		const kp = p.dv.page(pg.file.path);
+		if(kp) {
+			updateTypeDefinitionInCache(p)(kp);
+			p.debug(`caching by file path ${kp.file.path}`);
+		} else {
+			p.warn(`Page missing kind tag`, {pg});
+		}
+	}
+
+	p.settings.kinds = Array.from(
+		p.cache.kindDefinitionsByTag.values()
+	)
+	p.settings.types = Array.from(
+		p.cache.typeDefinitionsByTag.values()
+	)
+
+	p.saveSettings();
+
+
 
 	if (problems.length > 0) {
 		p.warn(`${problems.length} problems loading cache`, "failed to insert the following elements into cache", problems)
@@ -101,6 +120,8 @@ export const initializeKindCaches = async (p: KindModelPlugin) => {
 	}
 
 	p.info(`Kind (${kinds.length}) and Type (${types.length}) Lookups cached`)
+
+	await wait(100);
 
 	// remainder can be done async
 	return Promise.all([

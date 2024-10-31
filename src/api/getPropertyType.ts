@@ -21,20 +21,24 @@ import {
 	isNewsUrl,
 	isPhoneNumber,
 	isEmail,
-	isSocialMediaUrl
+	isSocialMediaUrl,
+	isUndefined,
+	toPascalCase
 } from "inferred-types";
+import KindModelPlugin from "~/main";
+import { getPage } from "~/page";
 import { PropertyType } from "~/types";
 
-export const getPropertyType = (value: unknown): PropertyType => {
+export const getPropertyType = (p: KindModelPlugin) => (value: unknown): PropertyType => {
 
 	if(isYouTubeUrl(value)) {
 		const yt = getYouTubePageType(value);
 
 		if(isYouTubeCreatorUrl(value)) {
-			return `youtube::creator::featured`
+			return `youtube_creator_featured`
 		}
 		if(isYouTubeFeedUrl(value, "history")) {
-			return `youtube::feed::history`
+			return `youtube_feed_history`
 		}
 	} 
 
@@ -43,19 +47,28 @@ export const getPropertyType = (value: unknown): PropertyType => {
 		if(value.startsWith("[[") && value.endsWith("]]")) {
 			// internal vault link
 			const content = stripTrailing(stripLeading(value, "[["), "]]");
-			
-			if(
-				content.endsWith(".png") ||
-				content.endsWith(".jpg") ||
-				content.endsWith(".jpeg") ||
-				content.endsWith(".gif") ||
-				content.endsWith(".avif") ||
-				content.endsWith(".webp")
-			) {
-				return "image::vault";
-			} else if (content.endsWith(".excalidraw")) {
-				return "drawing::vault";
+			const page = getPage(p)(content);
+
+			if (page) {
+
+				if(
+					page.file.ext === "png" ||
+					page.file.ext === "jpg" ||
+					page.file.ext === "jpeg" ||
+					page.file.ext === "gif" ||
+					page.file.ext === "avif" ||
+					page.file.ext === "wep"
+				) {
+					return "image_vault";
+				} else if (page.file.ext === "excalidraw") {
+					return "link_drawing";
+				} else if (page.file.ext = "md") {
+					return "link_md"
+				}
 			}
+			
+
+			return "link_undefined"
 		}
 
 		if (isPhoneNumber(value)) {
@@ -67,7 +80,7 @@ export const getPropertyType = (value: unknown): PropertyType => {
 		}
 
 		if (isInlineSvg(value)) {
-			return "svg::inline"
+			return "svg_inline"
 		}
 
 		if (isMetric(value)) {
@@ -77,34 +90,34 @@ export const getPropertyType = (value: unknown): PropertyType => {
 
 
 		if (isZipCode(value)) {
-			return "geo::zip-code"
+			return "geo_zip-code"
 		}
 
 		if (isIso3166CountryCode(value) || isIso3166CountryName(value)) {
-			return "geo::country"
+			return "geo_country"
 		}
 
 		if (isUrl(value)) {
 			if (isSocialMediaUrl(value)) {
-				return "url::social"
+				return "url_social"
 			}
 
 			if (isRepoUrl(value)) {
-				return "url::repo"
+				return "url_repo"
 			}
 			if (isRetailUrl(value)) {
-				return "url::retail"
+				return "url_retail"
 			}
 			if (isNewsUrl(value)) {
-				return "url::news"
+				return "url_news"
 			}
 
 			if (isYouTubeUrl(value)) {
-				return "url::youtube"
+				return "url_youtube"
 			}
 
 			if (isSocialMediaUrl(value)) {
-				return "url::social"
+				return "url_social"
 			}
 
 			return "url"
@@ -119,16 +132,20 @@ export const getPropertyType = (value: unknown): PropertyType => {
 		return "boolean"
 	}
 
+	if(isUndefined(value)) {
+		return "empty"
+	}
+
 	// ARRAYS
 	else if (isArray(value) && value.length > 0) {
-		const variants = new Set<PropertyType>(value.map(getPropertyType));
+		const variants = new Set<PropertyType>(value.map(getPropertyType(p)));
 		if(variants.size === 1) {
-			return `list::${Array.from(variants)[0]}` as PropertyType
+			return `list_${Array.from(variants)[0]}` as PropertyType
 		} else {
-			return `list::mixed::${Array.from(variants).join(",")}`
+			return `list_mixed_${Array.from(variants).join(",")}`
 		}
 		
 	}
 
-	return `other::${toKebabCase(String(typeof value))}`
+	return `other_${toPascalCase(String(typeof value))}`
 }

@@ -1,7 +1,7 @@
 import KindModelPlugin from "~/main";
 import {  KindDefinition, PageReference } from "~/types";
 import { createKindDefinition } from "./createKindDefinition";
-import { isPageReference, isTagKindDefinition } from "~/type-guards";
+import { isKindDefinition, isPageReference, isTagKindDefinition } from "~/type-guards";
 import { getPath } from "~/api";
 import { getPage } from "~/page";
 
@@ -30,11 +30,14 @@ export const updateKindDefinitionInCache = (p: KindModelPlugin) => async (
 			} else {
 				p.cache.kindDefinitionsByPath.set(path, defn as KindDefinition<["path"]>)
 			}
-		} 
-		
-		p.debug(`Unable to create page`, "while calling updateKindDefinitionInCache()", payload);
-		
-	} else {
+		} else {
+			p.warn(
+				`when calling updateKindDefinitionInCache() the payload appeared to be a page reference but for some reason we couldn't bring up the page! ${JSON.stringify(payload)}`, { path, page }
+			)
+		}
+	} 
+	
+	if (isKindDefinition(payload)) {
 		const page = getPage(p)(payload.path);
 		if (page) {
 			const defn = createKindDefinition(p)(payload.path) as KindDefinition<["path"]>;
@@ -64,7 +67,7 @@ export const updateKindDefinitionInCache = (p: KindModelPlugin) => async (
  * `KindDefinition` and set it in cache regardless (ensuring fresh cache value)
  */
 export const updateTypeDefinitionInCache = (p: KindModelPlugin) => async (
-	payload: KindDefinition<["path"]>
+	payload: KindDefinition<["path"]> | PageReference
 ) => {
 	if (isPageReference(payload)) {
 		const path = getPath(payload);
@@ -77,7 +80,9 @@ export const updateTypeDefinitionInCache = (p: KindModelPlugin) => async (
 			} else {
 				p.cache.typeDefinitionsByPath.set(path, defn as KindDefinition<["path"]>)
 			}
-		} else {
+		} 
+		
+		if (isKindDefinition(payload)) {
 				const page = getPage(p)(payload.path);
 				if (page) {
 					const defn = createKindDefinition(p)(payload.path) as KindDefinition<["path"]>;
@@ -88,7 +93,6 @@ export const updateTypeDefinitionInCache = (p: KindModelPlugin) => async (
 					if (defn.tag) {
 						p.cache.typeDefinitionsByTag.set(defn.tag, defn as KindDefinition<["path","tag"]>)
 					}
-					return saveConfiguration(p);
 				} else {
 					p.warn(`updateTypeDefinitionInCache() got invalid payload`, "was not a page reference so kind should have been a KindDefinition", {payload})
 				}
@@ -104,7 +108,6 @@ export const updateTypeDefinitionInCache = (p: KindModelPlugin) => async (
 			if (defn.tag) {
 				p.cache.typeDefinitionsByTag.set(defn.tag, defn as KindDefinition<["path","tag"]>)
 			}
-			return saveConfiguration(p);
 		}
 	}
 }

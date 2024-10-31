@@ -4,6 +4,8 @@ import { PageInfo, PageReference } from "~/types";
 import { 
 	getCategories,
 	getClassification, 
+	getKindTagsOfPage, 
+	getMetadata, 
 	getSubcategories, 
 	hasCategoryProp, 
 	hasCategoryTag, 
@@ -41,7 +43,6 @@ export const getPageInfo = (p: KindModelPlugin) => (
 		const meta = {
 			categories: getCategories(p)(page),
 			subcategories: getSubcategories(p)(page),
-			classifications: getClassification(p)(page),
 
 			hasCategoryProp: hasCategoryProp(p)(page),
 			hasCategoryTag: hasCategoryTag(p)(page),
@@ -59,7 +60,10 @@ export const getPageInfo = (p: KindModelPlugin) => (
 			isSubcategoryPage: isSubcategoryPage(p)(page),
 			isKindDefnPage: isKindDefnPage(p)(page),
 			isTypeDefnPage: isTypeDefnPage(p)(page),
-			isKindedPage: isKindedPage(p)(page)
+			isKindedPage: isKindedPage(p)(page),
+
+			kindTags: getKindTagsOfPage(p)(page),
+			typeTags: [],
 		}
 
 		const info: PageInfo  = {
@@ -67,6 +71,11 @@ export const getPageInfo = (p: KindModelPlugin) => (
 			path,
 			name: page.file.name,
 			ext: page.file.ext,
+			classifications: getClassification(p)(
+				page, 
+				meta.categories, 
+				meta.subcategories
+			),
 			type: meta.isKindDefnPage
 				? "kind-defn"
 				: meta.isTypeDefnPage
@@ -79,6 +88,7 @@ export const getPageInfo = (p: KindModelPlugin) => (
 					? "kinded"
 					: "none",	
 			fm: page.file.frontmatter,
+			metadata: getMetadata(p)(page),
 			...meta
 		}
 

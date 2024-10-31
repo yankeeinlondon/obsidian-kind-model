@@ -1,36 +1,61 @@
-import { YouTubePageType} from "inferred-types";
+import { Replace, YouTubePageType} from "inferred-types";
 
 
 export type PageTypeUnits = 
 | "string"
 | "geo"
-| "geo::country"
-| "geo::zip-code"
-| "geo::state"
+| "geo_country"
+| "geo_zip"
+| "geo_state"
+| "geo_city"
 | "number"
 | "metric"
+| "marker"
 | "boolean"
 | "svg"
-| "svg::inline" 
-| "svg::url" 
+| "svg_inline" 
+| "svg_url" 
+| "link"
+| "link_image"
+| "link_md"
+| "link_drawing"
+| "link_vector"
+| "link_undefined"
 | "image"
-| "image::vault"
-| "image::href"
+| "image_vault"
+| "image_href"
 | "drawing"
-| "drawing::vault"
+| "drawing_vault"
 | "youtube"
-| `youtube::${YouTubePageType}`
+| `youtube_${Replace<YouTubePageType, "::", "_">}`
 | "phoneNumber"
 | "email"
-| "url::social"
-| "url::book" 
-| "url::retail" 
-| "url::profile" 
-| `url::repo`
-| "url::news" 
-| "url::youtube"
+| "url_social"
+| "url_book" 
+| "url_retail" 
+| "url_profile" 
+| `url_repo`
+| "url_news" 
+| "url_youtube"
 | "url" 
+| "empty"
 | `other::${string}`;
+
+
+/**
+ * API surface to simplify access to metadata object.
+ */
+export type PageMetadata = {
+	hasLinks(): boolean;
+	hasUrls(): boolean;
+	hasGeoInfo(): boolean;
+	getYouTubeVideoLinks(): string[];
+	/** 
+	 * boolean flag indicating whether any of the frontmatter properties 
+	 * either _link to_ or contain _inline_ SVG content.
+	 */
+	hasSvg(): boolean;
+}
 
 /**
  * **PropertyType**

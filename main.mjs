@@ -11199,19 +11199,8 @@ function ensureLeading(content2, ensure) {
   let output = String(content2);
   return output.startsWith(String(ensure)) ? content2 : isString$1(content2) ? `${ensure}${content2}` : Number(`${ensure}${content2}`);
 }
-function toKebabCase(input, _preserveWhitespace) {
-  const [_, preWhite, focus, postWhite] = /^(\s*)(.*?)(\s*)$/.exec(input);
-  const replaceWhitespace = (i) => i.replace(/\s/gs, "-");
-  const replaceUppercase = (i) => i.replace(/[A-Z]/g, (c) => `-${c[0].toLowerCase()}`);
-  const replaceLeadingDash = (i) => i.replace(/^-/s, "");
-  const replaceTrailingDash = (i) => i.replace(/-$/s, "");
-  const replaceUnderscore = (i) => i.replace(/_/g, "-");
-  const removeDupDashes = (i) => i.replace(/-+/g, "-");
-  return removeDupDashes(`${preWhite}${replaceUnderscore(
-    replaceTrailingDash(
-      replaceLeadingDash(removeDupDashes(replaceWhitespace(replaceUppercase(focus))))
-    )
-  )}${postWhite}`);
+function capitalize(str) {
+  return `${str == null ? void 0 : str.slice(0, 1).toUpperCase()}${str == null ? void 0 : str.slice(1)}`;
 }
 function stripAfter(content2, find2) {
   return content2.split(find2).shift();
@@ -11223,6 +11212,19 @@ var stripUntil = (content2, ...until) => {
   const stopIdx = asChars(content2).findIndex((c) => until.includes(c));
   return content2.slice(stopIdx);
 };
+function toPascalCase(input, preserveWhitespace = void 0) {
+  const [_, preWhite, focus, postWhite] = /^(\s*)(.*?)(\s*)$/.exec(
+    input
+  );
+  const convertInteriorToCap = (i) => i.replace(/[ |_|-]+([0-9]*?[a-z|A-Z]{1})/gs, (_2, p1) => p1.toUpperCase());
+  const startingToCap = (i) => i.replace(/^[_|-]*?([0-9]*?[a-z]{1})/gs, (_2, p1) => p1.toUpperCase());
+  const replaceLeadingTrash = (i) => i.replace(/^[-_]/s, "");
+  const replaceTrailingTrash = (i) => i.replace(/[-_]$/s, "");
+  const pascal = `${preserveWhitespace ? preWhite : ""}${capitalize(
+    replaceTrailingTrash(replaceLeadingTrash(convertInteriorToCap(startingToCap(focus))))
+  )}${preserveWhitespace ? postWhite : ""}`;
+  return pascal;
+}
 var retainChars = (content2, ...retain2) => {
   let chars = asChars(content2);
   return chars.filter((c) => retain2.includes(c)).join("");
@@ -11349,97 +11351,17 @@ const isFrontmatter = (v) => {
 const isTagKindDefinition = (val) => {
   return isObject(val) && "tag" in val && typeof val.tag === "string";
 };
-const getPropertyType = (value2) => {
-  if (isYouTubeUrl(value2)) {
-    getYouTubePageType(value2);
-    if (isYouTubeCreatorUrl(value2)) {
-      return `youtube::creator::featured`;
-    }
-    if (isYouTubeFeedUrl(value2, "history")) {
-      return `youtube::feed::history`;
-    }
-  }
-  if (isString$1(value2)) {
-    if (value2.startsWith("[[") && value2.endsWith("]]")) {
-      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
-      if (content2.endsWith(".png") || content2.endsWith(".jpg") || content2.endsWith(".jpeg") || content2.endsWith(".gif") || content2.endsWith(".avif") || content2.endsWith(".webp")) {
-        return "image::vault";
-      } else if (content2.endsWith(".excalidraw")) {
-        return "drawing::vault";
-      }
-    }
-    if (isPhoneNumber(value2)) {
-      return "phoneNumber";
-    }
-    if (isEmail(value2)) {
-      return "email";
-    }
-    if (isInlineSvg(value2)) {
-      return "svg::inline";
-    }
-    if (isMetric(value2)) {
-      return "metric";
-    }
-    if (isZipCode(value2)) {
-      return "geo::zip-code";
-    }
-    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
-      return "geo::country";
-    }
-    if (isUrl(value2)) {
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      if (isRepoUrl(value2)) {
-        return "url::repo";
-      }
-      if (isRetailUrl(value2)) {
-        return "url::retail";
-      }
-      if (isNewsUrl(value2)) {
-        return "url::news";
-      }
-      if (isYouTubeUrl(value2)) {
-        return "url::youtube";
-      }
-      if (isSocialMediaUrl(value2)) {
-        return "url::social";
-      }
-      return "url";
-    }
-    return "string";
-  }
-  if (isNumber$1(value2)) {
-    return "number";
-  }
-  if (isBoolean(value2)) {
-    return "boolean";
-  } else if (isArray(value2) && value2.length > 0) {
-    const variants = new Set(value2.map(getPropertyType));
-    if (variants.size === 1) {
-      return `list::${Array.from(variants)[0]}`;
-    } else {
-      return `list::mixed::${Array.from(variants).join(",")}`;
-    }
-  }
-  return `other::${toKebabCase(String(typeof value2))}`;
-};
-const toArray = (arrayLike) => {
-  return Array.from(arrayLike);
+const isKindDefinition = (val) => {
+  return isObject(val) && "path" in val && typeof val.tag === "string" && "hash" in val && typeof val.hash === "number";
 };
 const getPath = (pg) => {
   var _a2, _b2, _c2;
   return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? (_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.path : isString$1(pg) ? pg : isPageInfo(pg) ? (_c2 = (_b2 = pg.current) == null ? void 0 : _b2.file) == null ? void 0 : _c2.path : void 0;
 };
 const getPage = (p2) => (pg) => {
-  var _a2, _b2, _c2;
-  if (isString$1(pg) && (pg.includes("/category/") || pg.includes("/subcategory/") || pg.includes("kind/") || pg.includes("type/") || Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).some(
-    (i) => i.startsWith(stripLeading(pg, "#"))
-  ))) {
-    return p2.dv.page(ensureLeading(pg, "#"));
-  }
+  var _a2;
   const path = getPath(pg);
-  const fc = (_c2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _c2.fileCache;
+  const fc = (_a2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _a2.fileCache;
   isObject(fc) && path && path in fc ? fc[path] : void 0;
   const page = path ? p2.dv.page(path) : void 0;
   return page;
@@ -11451,7 +11373,6 @@ const getPageInfo = (p2) => (pg) => {
     const meta = {
       categories: getCategories(p2)(page),
       subcategories: getSubcategories(p2)(page),
-      classifications: getClassification(p2)(page),
       hasCategoryProp: hasCategoryProp(p2)(page),
       hasCategoryTag: hasCategoryTag(p2)(page),
       hasSubcategoryTag: hasSubcategoryTag(p2)(page),
@@ -11466,15 +11387,23 @@ const getPageInfo = (p2) => (pg) => {
       isSubcategoryPage: isSubcategoryPage(p2)(page),
       isKindDefnPage: isKindDefnPage(p2)(page),
       isTypeDefnPage: isTypeDefnPage(p2)(page),
-      isKindedPage: isKindedPage(p2)(page)
+      isKindedPage: isKindedPage(p2)(page),
+      kindTags: getKindTagsOfPage(p2)(page),
+      typeTags: []
     };
     const info2 = {
       current: page,
       path,
       name: page.file.name,
       ext: page.file.ext,
+      classifications: getClassification(p2)(
+        page,
+        meta.categories,
+        meta.subcategories
+      ),
       type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
       fm: page.file.frontmatter,
+      metadata: getMetadata(p2)(page),
       ...meta
     };
     return info2;
@@ -20367,9 +20296,14 @@ const updateKindDefinitionInCache = (p2) => async (payload) => {
       } else {
         p2.cache.kindDefinitionsByPath.set(path, defn);
       }
+    } else {
+      p2.warn(
+        `when calling updateKindDefinitionInCache() the payload appeared to be a page reference but for some reason we couldn't bring up the page! ${JSON.stringify(payload)}`,
+        { path, page }
+      );
     }
-    p2.debug(`Unable to create page`, "while calling updateKindDefinitionInCache()", payload);
-  } else {
+  }
+  if (isKindDefinition(payload)) {
     const page = getPage(p2)(payload.path);
     if (page) {
       const defn = createKindDefinition(p2)(payload.path);
@@ -20386,12 +20320,56 @@ const updateKindDefinitionInCache = (p2) => async (payload) => {
     }
   }
 };
+const updateTypeDefinitionInCache = (p2) => async (payload) => {
+  if (isPageReference(payload)) {
+    const path = getPath(payload);
+    const page = getPage(p2)(path);
+    if (path && page) {
+      const defn = createKindDefinition(p2)(page);
+      if (isTagKindDefinition(defn)) {
+        p2.cache.typeDefinitionsByTag.set(defn.tag, defn);
+        p2.cache.typeDefinitionsByPath.set(path, defn);
+      } else {
+        p2.cache.typeDefinitionsByPath.set(path, defn);
+      }
+    }
+    if (isKindDefinition(payload)) {
+      const page2 = getPage(p2)(payload.path);
+      if (page2) {
+        const defn = createKindDefinition(p2)(payload.path);
+        if ((defn == null ? void 0 : defn.hash) !== (payload == null ? void 0 : payload.hash)) {
+          p2.cache.typeDefinitionsByPath.set(payload.path, defn);
+          if (defn.tag) {
+            p2.cache.typeDefinitionsByTag.set(defn.tag, defn);
+          }
+        } else {
+          p2.warn(`updateTypeDefinitionInCache() got invalid payload`, "was not a page reference so kind should have been a KindDefinition", { payload });
+        }
+      }
+    }
+  } else {
+    const defn = createKindDefinition(p2)(payload.path);
+    if (defn.hash !== payload.hash) {
+      p2.cache.typeDefinitionsByPath.set(payload.path, defn);
+      if (defn.tag) {
+        p2.cache.typeDefinitionsByTag.set(defn.tag, defn);
+      }
+    }
+  }
+};
+const wait = (delay) => {
+  return new Promise((resolve3) => {
+    setTimeout(() => {
+      resolve3("wait delay expired");
+    }, delay);
+  });
+};
 const findStaleByTag = async (p2) => {
   const kinds = p2.dv.pages(`#kind`).where((k) => {
     var _a2, _b2;
     return (_b2 = (_a2 = k.file) == null ? void 0 : _a2.etags) == null ? void 0 : _b2.some((i) => i.startsWith(`#kind/`));
   });
-  p2.dv.pages(`#type`).where((k) => {
+  const types = p2.dv.pages(`#type`).where((k) => {
     var _a2, _b2;
     return (_b2 = (_a2 = k.file) == null ? void 0 : _a2.etags) == null ? void 0 : _b2.some((i) => i.startsWith(`#type/`));
   });
@@ -20399,12 +20377,28 @@ const findStaleByTag = async (p2) => {
   for (const pg of kinds) {
     const kp = p2.dv.page(pg.file.path);
     if (kp) {
-      updateKindDefinitionInCache(p2)(pg.file.path);
+      updateKindDefinitionInCache(p2)(kp);
       p2.debug(`caching by file path ${kp.file.path}`);
     } else {
       p2.warn(`Page missing kind tag`, { pg });
     }
   }
+  for (const pg of types) {
+    const kp = p2.dv.page(pg.file.path);
+    if (kp) {
+      updateTypeDefinitionInCache(p2)(kp);
+      p2.debug(`caching by file path ${kp.file.path}`);
+    } else {
+      p2.warn(`Page missing kind tag`, { pg });
+    }
+  }
+  p2.settings.kinds = Array.from(
+    p2.cache.kindDefinitionsByTag.values()
+  );
+  p2.settings.types = Array.from(
+    p2.cache.typeDefinitionsByTag.values()
+  );
+  p2.saveSettings();
   if (problems.length > 0) {
     p2.warn(`${problems.length} problems loading cache`, "failed to insert the following elements into cache", problems);
   }
@@ -20469,6 +20463,7 @@ const initializeKindCaches = async (p2) => {
     }
   }
   p2.info(`Kind (${kinds.length}) and Type (${types.length}) Lookups cached`);
+  await wait(100);
   return Promise.all([
     // findStaleByPath(p),
     findStaleByTag(p2).then(() => p2.info("Cache refreshed"))
@@ -20681,14 +20676,14 @@ const showCategories = (p2) => (pg, opt2) => {
   isUndefined(opt2 == null ? void 0 : opt2.withTag) ? true : opt2.withTag;
   if (page) {
     const cats = getCategories(p2)(page);
-    const isMultiKind = new Set(cats.map((i) => i.kindTag)).size > 1;
+    const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
     for (const cat of cats) {
       p2.api.format;
       ({
-        pre: isMultiKind ? p2.api.format.light(cat.kindTag + "/") : ""
+        pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
       });
       links.push(
-        htmlLink(p2)(page, { display: cat.categoryTag })
+        htmlLink(p2)(page, { display: cat.category })
       );
     }
   }
@@ -20700,14 +20695,14 @@ const showSubcategories = (p2) => (pg, opt2) => {
   isUndefined(opt2 == null ? void 0 : opt2.withTag) ? true : opt2.withTag;
   if (page) {
     const cats = getSubcategories(p2)(page);
-    const isMultiKind = new Set(cats.map((i) => i.kindTag)).size > 1;
+    const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
     for (const cat of cats) {
       p2.api.format;
       ({
-        pre: isMultiKind ? p2.api.format.light(cat.kindTag + "/") : ""
+        pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
       });
       links.push(
-        htmlLink(p2)(page, { display: cat.subcategoryTag })
+        htmlLink(p2)(page, { display: cat.subcategory })
       );
     }
     p2.info("sub", { links, cats, page: page.file.name });
@@ -20740,11 +20735,11 @@ const showClassifications = (p2) => (pg) => {
         // CATEGORY
         i.categories.length === 0 ? "" : i.categories && i.categories.length === 1 ? htmlLink(p2)(
           i.categories[0].category,
-          opt2(p2.api.format.as_tag(i.categories[0].categoryTag))
+          opt2(p2.api.format.as_tag(i.categories[0].category))
         ) : `<span style="opacity: 0.8">[ </span>` + i.categories.map(
           (ii) => htmlLink(p2)(
             ii.category,
-            opt2(p2.api.format.as_tag(ii.categoryTag))
+            opt2(p2.api.format.as_tag(ii.category))
           )
         ).join(",&nbsp;") + `<span style="opacity: 0.8"> ]</span>`,
         // SUBCATEGORY
@@ -20752,7 +20747,6 @@ const showClassifications = (p2) => (pg) => {
       ].filter((i2) => i2 && i2 !== "").join(`<span style="opacity: 0.8"> &gt; </span>`);
     }
   );
-  p2.info("show", { classy, output: classification2 });
   return classification2.join("<br>");
 };
 function extractTitle(s2) {
@@ -21063,6 +21057,90 @@ const getPageInfoBlock = (p2) => (source, container, component, filePath) => {
     };
   }
 };
+const getPropertyType = (p2) => (value2) => {
+  if (isYouTubeUrl(value2)) {
+    getYouTubePageType(value2);
+    if (isYouTubeCreatorUrl(value2)) {
+      return `youtube_creator_featured`;
+    }
+    if (isYouTubeFeedUrl(value2, "history")) {
+      return `youtube_feed_history`;
+    }
+  }
+  if (isString$1(value2)) {
+    if (value2.startsWith("[[") && value2.endsWith("]]")) {
+      const content2 = stripTrailing(stripLeading(value2, "[["), "]]");
+      const page = getPage(p2)(content2);
+      if (page) {
+        if (page.file.ext === "png" || page.file.ext === "jpg" || page.file.ext === "jpeg" || page.file.ext === "gif" || page.file.ext === "avif" || page.file.ext === "wep") {
+          return "image_vault";
+        } else if (page.file.ext === "excalidraw") {
+          return "link_drawing";
+        } else if (page.file.ext = "md") {
+          return "link_md";
+        }
+      }
+      return "link_undefined";
+    }
+    if (isPhoneNumber(value2)) {
+      return "phoneNumber";
+    }
+    if (isEmail(value2)) {
+      return "email";
+    }
+    if (isInlineSvg(value2)) {
+      return "svg_inline";
+    }
+    if (isMetric(value2)) {
+      return "metric";
+    }
+    if (isZipCode(value2)) {
+      return "geo_zip-code";
+    }
+    if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
+      return "geo_country";
+    }
+    if (isUrl(value2)) {
+      if (isSocialMediaUrl(value2)) {
+        return "url_social";
+      }
+      if (isRepoUrl(value2)) {
+        return "url_repo";
+      }
+      if (isRetailUrl(value2)) {
+        return "url_retail";
+      }
+      if (isNewsUrl(value2)) {
+        return "url_news";
+      }
+      if (isYouTubeUrl(value2)) {
+        return "url_youtube";
+      }
+      if (isSocialMediaUrl(value2)) {
+        return "url_social";
+      }
+      return "url";
+    }
+    return "string";
+  }
+  if (isNumber$1(value2)) {
+    return "number";
+  }
+  if (isBoolean(value2)) {
+    return "boolean";
+  }
+  if (isUndefined(value2)) {
+    return "empty";
+  } else if (isArray(value2) && value2.length > 0) {
+    const variants = new Set(value2.map(getPropertyType(p2)));
+    if (variants.size === 1) {
+      return `list_${Array.from(variants)[0]}`;
+    } else {
+      return `list_mixed_${Array.from(variants).join(",")}`;
+    }
+  }
+  return `other_${toPascalCase(String(typeof value2))}`;
+};
 const getKnownKindTags = (p2) => (tag) => {
   var _a2, _b2, _c2, _d2;
   return tag ? Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).filter((i) => i.includes(tag)) : Array.from(((_d2 = (_c2 = p2.cache) == null ? void 0 : _c2.kindDefinitionsByTag) == null ? void 0 : _d2.keys()) || []);
@@ -21186,106 +21264,6 @@ const hasTypeProp = (p2) => (pg) => {
   }
   return false;
 };
-const isCategoryDefnTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 3 && parts[1] === "category" ? true : false;
-};
-const isSubcategoryDefnTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 4 && parts[1] === "subcategory" ? true : false;
-};
-const isKindedWithCategoryTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 2 && isKindTag(p2)(parts[0]);
-};
-const isKindedWithSubcategoryTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  return parts.length === 3 && !["category", "subcategory"].includes(parts[1]) && isKindTag(p2)(parts[0]) ? true : false;
-};
-const decomposeTag = (p2) => (tag) => {
-  const safeTag = stripLeading(tag, "#");
-  const parts = safeTag.split("/");
-  if (!isKindTag(p2)(parts[0])) {
-    return {
-      type: "unknown",
-      tag,
-      safeTag
-    };
-  }
-  const partial2 = {
-    tag,
-    safeTag,
-    kindTag: parts[0],
-    kindDefnTag: `kind/${parts[0]}`
-  };
-  if (isCategoryDefnTag()(safeTag)) {
-    return {
-      type: "category",
-      ...partial2,
-      categoryTag: parts[2],
-      categoryDefnTag: safeTag,
-      isCategoryDefn: true,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isKindedWithCategoryTag(p2)(safeTag)) {
-    return {
-      type: "category",
-      ...partial2,
-      categoryTag: parts[1],
-      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isKindedWithSubcategoryTag(p2)(safeTag)) {
-    return {
-      type: "subcategory",
-      ...partial2,
-      categoryTag: parts[1],
-      categoryDefnTag: `${parts[0]}/category/${parts[1]}`,
-      subcategoryTag: parts[2],
-      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  } else if (isSubcategoryDefnTag()(safeTag)) {
-    return {
-      type: "subcategory",
-      ...partial2,
-      categoryTag: parts[2],
-      categoryDefnTag: `${parts[0]}/category/${parts[2]}`,
-      subcategoryTag: parts[3],
-      subcategoryDefnTag: `${parts[0]}/subcategory/${parts[2]}/${parts[3]}`,
-      isCategoryDefn: false,
-      isSubcategoryDefn: true,
-      isKindDefn: false
-    };
-  } else if (isTypeDefnPage(p2)(safeTag)) {
-    return {
-      type: "type",
-      typeDefnTag: `type/${parts[1]}`,
-      typeTag: parts[1],
-      tag,
-      safeTag,
-      isCategoryDefn: false,
-      isSubcategoryDefn: false,
-      isKindDefn: false
-    };
-  }
-  return {
-    type: "kind",
-    ...partial2,
-    isCategoryDefn: false,
-    isSubcategoryDefn: false,
-    isKindDefn: safeTag.includes("kind/")
-  };
-};
 const getFrontmatter = (p2) => (from) => {
   if (isDvPage(from)) {
     return from.file.frontmatter;
@@ -21304,35 +21282,104 @@ const getFrontmatter = (p2) => (from) => {
     return {};
   }
 };
+const catTag = (kind, cat) => {
+  return `${ensureLeading(kind, "#")}/${cat}`;
+};
 const getCategories = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   const categories = [];
   if (page) {
-    const tags = getCategoryTags(p2)(page);
-    p2.info("cat tags", tags);
-    return tags.map((t2) => {
-      return {
-        ...t2,
-        category: getPage(p2)(t2.defnTag)
-      };
-    });
+    const kindedCat = page.file.etags.filter(
+      (t2) => t2.split("/").length === 3 && t2.split("/")[1] === "category"
+    ).map((i) => catTag(i.split("/")[0], i.split("/")[2]));
+    const kindedSubcat = page.file.etags.filter(
+      (t2) => t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
+    ).map((i) => catTag(i.split("/")[0], i.split("/")[2]));
+    const kinded = page.file.etags.filter(
+      (t2) => t2.split("/").length > 1 && !["category", "subcategory"].includes(t2.split("/")[1]) && isKindTag(p2)(t2.split("/")[0])
+    ).map((i) => catTag(i.split("/")[0], i.split("/")[1]));
+    const tags = /* @__PURE__ */ new Set(
+      [
+        ...kinded,
+        ...kindedCat,
+        ...kindedSubcat
+      ]
+    );
+    const missing = [];
+    const pages = Array.from(tags).map(
+      (t2) => {
+        const pgs = p2.dv.pages(`${t2}`);
+        if (pgs.length > 0) {
+          return [t2, getPage(p2)(pgs[0])];
+        } else {
+          missing.push(`${t2} on page "${page.file.path}"`);
+          return void 0;
+        }
+      }
+    ).filter((i) => i);
+    if (missing.length > 0) {
+      p2.warn("Some category tags didn't not map to a page", missing);
+    }
+    return pages.map(
+      ([t2, pg2]) => {
+        return {
+          kind: stripLeading(t2.split("/")[0], "#"),
+          page: pg2,
+          category: t2.split("/")[1],
+          kindedTag: ensureLeading(t2, "#"),
+          defnTag: `${ensureLeading(t2.split("/")[0], "#")}/category/${t2.split("/")[1]}`
+        };
+      }
+    );
   }
   return categories;
+};
+const subCatTag = (kind, cat, sub) => {
+  return `${ensureLeading(kind, "#")}/${cat}/${sub}`;
 };
 const getSubcategories = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = getSubcategoryTags(p2)(page).map((t2) => {
-      const subcategory = getPage(p2)(t2.defnTag);
-      if (subcategory) {
+    const kindedSubcat = page.file.etags.filter(
+      (t2) => t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
+    ).map((i) => subCatTag(i.split("/")[0], i.split("/")[2], i.split("/")[3]));
+    const kinded = page.file.etags.filter(
+      (t2) => t2.split("/").length === 3 && !["category", "subcategory"].includes(t2.split("/")[1]) && isKindTag(p2)(t2.split("/")[0])
+    ).map((i) => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2]));
+    const tags = /* @__PURE__ */ new Set(
+      [
+        ...kinded,
+        ...kindedSubcat
+      ]
+    );
+    const missing = [];
+    const pages = Array.from(tags).map(
+      (t2) => {
+        const pgs = p2.dv.pages(`${t2}`);
+        if (pgs.length > 0) {
+          return [t2, getPage(p2)(pgs[0])];
+        } else {
+          missing.push(`${t2} on page "${page.file.path}"`);
+          return void 0;
+        }
+      }
+    ).filter((i) => i);
+    if (missing.length > 0) {
+      p2.warn("Some subcategory tags didn't not map to a page", missing);
+    }
+    return pages.map(
+      ([t2, pg2]) => {
+        const parts = t2.split("/");
         return {
-          ...t2,
-          subcategory
+          kind: stripLeading(parts[0], "#"),
+          page: pg2,
+          category: parts[1],
+          subcategory: parts[2],
+          kindedTag: ensureLeading(t2, "#"),
+          defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${t2.split("/)")}`
         };
       }
-      return void 0;
-    }).filter((i) => i);
-    return tags;
+    );
   }
   return [];
 };
@@ -21356,8 +21403,27 @@ const isTypeDefnPage = (p2) => (ref) => {
 const getKindTagsOfPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const tags = page.file.etags.filter((t2) => isKindTag(p2)(t2));
-    return Array.from(tags).map((t2) => t2.replace("#kind/", ""));
+    const kindedCat = page.file.etags.filter(
+      (t2) => t2.split("/").length === 3 && t2.split("/")[1] === "category"
+    ).map((i) => i.split("/")[0]);
+    const kindedSubcat = page.file.etags.filter(
+      (t2) => t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
+    ).map((i) => i.split("/")[0]);
+    const kinded = page.file.etags.filter(
+      (t2) => isKindTag(p2)(t2.split("/")[0]) && !["category", "subcategory"].includes(t2.split("/")[1])
+    ).map((i) => i.split("/")[0]);
+    const kindDefn = page.file.etags.filter(
+      (t2) => t2.startsWith("#kind/")
+    ).map((i) => i.split("/")[1]);
+    const tags = /* @__PURE__ */ new Set(
+      [
+        ...kinded,
+        ...kindedCat,
+        ...kindedSubcat,
+        ...kindDefn
+      ]
+    );
+    return Array.from(tags).map((i) => stripLeading(i, "#"));
   }
   return [];
 };
@@ -21371,117 +21437,84 @@ const getKindPages = (p2) => (pg) => {
 };
 const getMetadata = (p2) => (pg) => {
   const fm = pg ? getFrontmatter(p2)(pg) : void 0;
-  const kv = {};
   if (fm) {
     let meta = {};
     for (const key of Object.keys(fm)) {
-      const type = getPropertyType(fm[key]);
+      const type = getPropertyType(p2)(fm[key]);
       if (type && !type.startsWith("other")) {
         meta[type] = meta[type] ? [...meta[type], key] : [key];
-        kv[key] = [fm[key], type];
+        [fm[key], type];
       } else {
         meta["other"] = meta.other ? [...meta.other, key] : [key];
-        kv[key] = [fm[key], type];
+        [fm[key], type];
       }
     }
-    p2.warn("getMetadata() passed FM", { fm, meta, kv });
+    meta.hasLinks = () => {
+      return Object.keys(meta).includes("link") || Object.keys(meta).includes("link_image") || Object.keys(meta).includes("link_md") || Object.keys(meta).includes("link_drawing") || Object.keys(meta).includes("link_vector") || Object.keys(meta).includes("link_unknown");
+    };
+    meta.hasUrls = () => {
+      return Object.keys(meta).includes("url") || Object.keys(meta).includes("url_social") || Object.keys(meta).includes("url_book") || Object.keys(meta).includes("url_retail") || Object.keys(meta).includes("url_profile") || Object.keys(meta).includes("url_repo") || Object.keys(meta).includes("url_news") || Object.keys(meta).includes("url_youtube");
+    };
+    meta.hasGeoInfo = () => {
+      return Object.keys(meta).includes("geo") || Object.keys(meta).includes("geo_country") || Object.keys(meta).includes("geo_zip") || Object.keys(meta).includes("geo_state") || Object.keys(meta).includes("geo_city");
+    };
+    meta.getYouTubeVideoLinks = () => {
+      if (!(Object.keys(meta).includes("url_youtube") || Object.keys(meta).includes("list_url_youtube"))) {
+        return [];
+      }
+      const unitLinks = (meta["url_youtube"] || []).map(
+        (i) => meta[i]
+      );
+      const listLinks = (meta["list_url_youtube"] || []).flatMap(
+        (i) => meta[i]
+      );
+      const links = [
+        ...unitLinks,
+        ...listLinks
+      ].filter((i) => isYouTubeVideoUrl(i));
+      return links;
+    };
     return meta;
   } else {
     p2.debug(`no metadata found on page ${pg ? pg : "unknown"}`);
   }
   return {};
 };
-const getSubcategoryTags = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = page.file.etags.filter(
-      (t2) => isKindedWithSubcategoryTag(p2)(t2) || isSubcategoryDefnTag()(t2)
-    );
-    return toArray(tags).map((t2) => {
-      const tag = decomposeTag(p2)(t2);
-      if (tag.type === "subcategory") {
-        return {
-          rawTag: tag.tag,
-          kindTag: tag.kindTag,
-          categoryTag: tag.categoryTag,
-          subcategoryTag: tag.subcategoryTag,
-          defnTag: tag.subcategoryDefnTag,
-          kindedTag: `${tag.kindTag}/${tag.categoryTag}/${tag.subcategoryTag}`
-        };
-      } else {
-        return void 0;
-      }
-    }).filter((i) => i);
-  }
-  return [];
-};
-const getCategoryTags = (p2) => (pg, filterByKindTag) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const tags = toArray(page.file.etags).map(
-      (t2) => decomposeTag(p2)(t2)
-    ).filter((t2) => t2.type === "category" || t2.type === "subcategory");
-    const cats = [];
-    for (const tag of tags) {
-      if (tag.type === "category" || tag.type === "subcategory") {
-        if (filterByKindTag === void 0 || tag.kindTag === filterByKindTag) {
-          cats.push({
-            rawTag: tag.tag,
-            kindTag: tag.kindTag,
-            categoryTag: tag.categoryTag,
-            defnTag: tag.categoryDefnTag,
-            kindedTag: `${tag.kindTag}/${tag.categoryTag}`
-          });
-        }
-      }
-    }
-    return cats;
-  } else {
-    p2.debug(`failed to get page`, `when calling getCategoryTags()`);
-  }
-  return [];
-};
-const getClassification = (p2) => (pg) => {
+const getClassification = (p2) => (pg, cats, subCats) => {
+  var _a2, _b2, _c2, _d2, _e2, _f2;
   const page = pg ? getPage(p2)(pg) : void 0;
+  const classification2 = [];
   if (page) {
+    const pgCats = cats ? cats : getCategories(p2)(page);
+    const pgSubCats = subCats ? subCats : getSubcategories(p2)(page);
     const kinds = getKindPages(p2)(page);
-    const classification2 = [];
-    for (const kind of kinds) {
-      const kindTag = getKindTagsOfPage(p2)(kind)[0];
-      const type = kind.type && isFileLink(kind.type) ? p2.api.getPage(kind.type) : page.type && isFileLink(page.type) ? p2.api.getPage(page.type) : void 0;
-      const partial2 = getSubcategoryTags(p2)(page.subcategory)[0];
-      const subcategory = partial2 ? {
-        ...partial2,
-        subcategory: getPage(p2)(partial2.defnTag)
-      } : void 0;
-      const categories = getCategoryTags(p2)(page, kindTag).map(
-        (c) => {
-          if (page.file.etags.includes(`#${c.defnTag}`)) {
-            addTagToCache(p2)(c.defnTag, page.file.path);
-            return {
-              ...c,
-              category: page
-            };
-          } else {
-            return {
-              ...c,
-              category: lookupPageFromTag(p2)(c.defnTag)
-            };
-          }
-        }
-      );
-      classification2.push({
-        type,
-        kind,
-        kindTag,
-        categories,
-        subcategory
-      });
+    for (const k of kinds) {
+      let kindTag = (_b2 = (_a2 = k == null ? void 0 : k.file) == null ? void 0 : _a2.etags.find((i) => i.startsWith(`#kind/`))) == null ? void 0 : _b2.split("/")[1];
+      if (!kindTag) {
+        kindTag = (_d2 = (_c2 = k == null ? void 0 : k.file) == null ? void 0 : _c2.etags.find(
+          (i) => ["category", "subcategory"].includes(i.split("/")[1])
+        )) == null ? void 0 : _d2.split("/")[0];
+      }
+      if (!kindTag) {
+        kindTag = (_f2 = (_e2 = k == null ? void 0 : k.file) == null ? void 0 : _e2.etags.find(
+          (i) => i.split("/").length > 0 && !["category", "subcategory"].includes(i.split("/")[1]) && i.split("/").length < 4
+        )) == null ? void 0 : _f2.split("/")[0];
+      }
+      if (kindTag) {
+        classification2.push({
+          kind: k,
+          kindTag,
+          categories: pgCats.filter((c) => c.kind === stripLeading(kindTag, "#")),
+          subcategory: pgSubCats.find((c) => c.kind === stripLeading(kindTag, "#"))
+        });
+      } else {
+        getMetadata(p2)(page);
+        p2.warn(`no 'kind' could be identified for the page ${page.file.path}`);
+      }
     }
-    p2.info("classification", classification2);
-    return classification2;
   }
-  return [];
+  p2.info("classification", classification2);
+  return classification2;
 };
 const buildingBlocks = (plugin4) => ({
   isKeyOf,
@@ -106290,12 +106323,14 @@ const IconPage = (p2) => (source, container, component, filePath) => async (scal
   p2.debug("entering Icons handler");
   const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   if (page) {
-    const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.page[i]}</span>`;
+    const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.current[i]}</span>`;
     const meta = getMetadata(p2)(page);
     p2.info("Icon Props", { meta });
+    page.render(`## **${page.current.file.name}** is an Icon Page`);
+    page.render(`> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`);
     page.table(
       ["name", "icon"],
-      (_a2 = meta["svg::inline"]) == null ? void 0 : _a2.map((i) => [
+      (_a2 = meta["svg_inline"]) == null ? void 0 : _a2.map((i) => [
         i,
         icon(i)
       ])
@@ -106360,14 +106395,15 @@ const page_entry_defn = {
 const PageEntry = (p2) => (source, container, component, filePath) => async (_scalar, _opt) => {
   const page = p2.api.getPageInfoBlock(source, container, component, filePath);
   if (page) {
-    const fmt = page == null ? void 0 : page.format;
+    const fmt = p2.api.format;
+    const api2 = p2.api;
     const current = page.current;
     const banner_img = isUrl(page.current["_banner"]) ? page.current["_banner"] : void 0;
     const banner_aspect = isCssAspectRatio(page.current["_banner_aspect"]) ? page.current["_banner_aspect"] : "32/12";
     const hasBanner = isUrl(banner_img);
-    let [_p1, icon] = page.getProp(page.current, "icon", "_icon", "svgIcon", "_svgIcon");
+    let [_p1, icon] = api2.getProp(page.current, "icon", "_icon", "svgIcon", "_svgIcon");
     const hasIcon = isInlineSvg(icon);
-    let [_p2, desc] = page.getProp(page.current, "desc", "description", "about", "tagline", "summary");
+    let [_p2, desc] = api2.getProp(page.current, "desc", "description", "about", "tagline", "summary");
     const hasDesc = isString$1(desc);
     const type = current.type ? fmt.internalLink(page.page(current.type)) : void 0;
     const kind = current.kind ? fmt.internalLink(page.page(current.kind)) : void 0;
@@ -106550,34 +106586,38 @@ const Page = (p2) => (source, container, component, filePath) => (scalar, obj) =
   );
   if (page) {
     const fmt = p2.api.format;
-    p2.api;
-    p2.info(`Page`, { page });
+    p2.info(`Page Details`, { page });
     console.log(page);
-    console.log(lookupKnownKindTags(p2));
     fmt.bold("Page Information<br/>");
+    const kindOfPage = [fmt.bold("Kind of Page"), page.type];
+    const types = ((_a2 = page.typeTags) == null ? void 0 : _a2.length) > 0 ? [fmt.bold("Types(s)"), page.kindTags.join(", ")] : void 0;
+    const kinds = ((_b2 = page.kindTags) == null ? void 0 : _b2.length) > 0 ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")] : void 0;
+    const cats = ((_c2 = page.categories) == null ? void 0 : _c2.length) > 0 ? [
+      fmt.bold("Category(s)"),
+      page.categories.map((i) => i.category).join(", ")
+    ] : void 0;
+    const subCats = ((_d2 = page.subcategories) == null ? void 0 : _d2.length) > 0 ? [
+      fmt.bold("Subcategories(s)"),
+      page.subcategories.map((i) => i.subcategory).join(", ")
+    ] : void 0;
+    const metadata = Object.keys(page.metadata).length > 0 ? [
+      fmt.bold("Frontmatter"),
+      Object.keys(page.metadata).filter((k) => !isFunction$2(page.metadata[k])).map(
+        (k) => `${k}(${page.metadata[k].join(", ")})`
+      ).join("<br/>")
+    ] : void 0;
+    const report = [
+      kindOfPage,
+      types,
+      kinds,
+      cats,
+      subCats,
+      metadata
+    ].filter((i) => i);
     page.render(fmt.twoColumnTable(
       "",
       "Value",
-      [
-        fmt.bold("Kind of Page"),
-        page.type
-      ],
-      [
-        fmt.bold("Type"),
-        page.classifications.length > 0 ? ((_b2 = (_a2 = page.classifications[0].type) == null ? void 0 : _a2.file) == null ? void 0 : _b2.name) || "" : "<i>undefined</i>"
-      ],
-      [
-        fmt.bold("Kind"),
-        page.classifications.length > 0 ? (_d2 = (_c2 = page.classifications[0].kind) == null ? void 0 : _c2.file) == null ? void 0 : _d2.name : "<i>undefined</i>"
-      ],
-      [
-        fmt.bold("Category(s)"),
-        page.categories.map((i) => i.categoryTag).join(", ")
-      ],
-      [
-        fmt.bold("Subcategories(s)"),
-        page.subcategories.map((i) => i.subcategoryTag).join(", ")
-      ]
+      ...report
     ));
   }
 };

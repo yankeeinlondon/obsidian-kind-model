@@ -30,7 +30,7 @@ export const showCreatedDate = (p: KindModelPlugin) => (
 }
 
 export const showModifiedDate = (p: KindModelPlugin) => (
-	pg: PageReference, 
+	pg: PageReference,
 	format?: string
 ) => {
 	const page = getPage(p)(pg);
@@ -436,18 +436,18 @@ export const showCategories = (p: KindModelPlugin) => (
 
 	if(page) {
 		const cats = getCategories(p)(page);
-		const isMultiKind = new Set<string>(cats.map(i => i.kindTag)).size > 1;
+		const isMultiKind = new Set<string>(cats.map(i => i.kind)).size > 1;
 		
 		for (const cat of cats) {
 			const fmt = p.api.format;
 			let opt: MarkdownLinkOpt = {
 				pre: isMultiKind
-					? p.api.format.light(cat.kindTag + "/")
+					? p.api.format.light(cat.kind + "/")
 					: "",
 			}
 
 			links.push(
-				htmlLink(p)(page, { display: cat.categoryTag })
+				htmlLink(p)(page, { display: cat.category })
 			);
 		}
 	}
@@ -472,18 +472,18 @@ export const showSubcategories = (p: KindModelPlugin) => (
 
 	if(page) {
 		const cats = getSubcategories(p)(page);
-		const isMultiKind = new Set<string>(cats.map(i => i.kindTag)).size > 1;
+		const isMultiKind = new Set<string>(cats.map(i => i.kind)).size > 1;
 		
 		for (const cat of cats) {
 			const fmt = p.api.format;
 			let opt: MarkdownLinkOpt = {
 				pre: isMultiKind
-					? p.api.format.light(cat.kindTag + "/")
+					? p.api.format.light(cat.kind + "/")
 					: "",
 			}
 
 			links.push(
-				htmlLink(p)(page, { display: cat.subcategoryTag })
+				htmlLink(p)(page, { display: cat.subcategory })
 			);
 		}
 		p.info("sub",{links, cats, page: page.file.name})
@@ -526,12 +526,12 @@ export const showClassifications = (p: KindModelPlugin) => (
 				: i.categories && i.categories.length === 1
 				? htmlLink(p)(
 					i.categories[0].category, 
-					opt(p.api.format.as_tag(i.categories[0].categoryTag))
+					opt(p.api.format.as_tag(i.categories[0].category))
 				  )
 				: `<span style="opacity: 0.8">[ </span>` + i.categories.map(
 					ii => htmlLink(p)(
 						ii.category, 
-						opt(p.api.format.as_tag(ii.categoryTag))
+						opt(p.api.format.as_tag(ii.category))
 					)
 				).join(",&nbsp;") + `<span style="opacity: 0.8"> ]</span>` ,
 			// SUBCATEGORY
@@ -540,7 +540,6 @@ export const showClassifications = (p: KindModelPlugin) => (
 		.join(`<span style="opacity: 0.8"> &gt; </span>`)
 	);
 
-	p.info("show", {classy, output: classification});
 	return classification.join("<br>");
 } 
 

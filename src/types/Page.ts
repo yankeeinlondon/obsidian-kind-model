@@ -6,7 +6,7 @@ import { RenderableTreeNode, Node } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
 
-import { ShowApi } from "~/types";
+import { PropertyType, ShowApi, Tag } from "~/types";
 import { RenderApi, FormattingApi } from "~/api";
 import { getPage } from "~/page";
 
@@ -112,6 +112,26 @@ export type PageInfo = {
 	 */
 	current: DvPage;
 
+	/**
+	 * The _kind_ tag or tags associated with the current page:
+	 * 
+	 * - `#kind/foobar` resolves to `[ "foobar" ]`
+	 * - `#foobar/foo/bar` resolves to `[ "foobar" ]`
+	 * - `#foobar/foo #product` resolves to `[ "foobar", "product" ]`
+	 */
+	kindTags: string[];
+
+	/**
+	 * The _type_ tag or tags associated with the current page. A _type_ 
+	 * is inherited by the _kind(s)_ which the page associated with.
+	 */
+	typeTags: string[];
+
+	/**
+	 * Reports on the current page's frontmatter property organized by
+	 * `PropertyType` (aka, "link", "list::link", "inline-svg")
+	 */
+	metadata: Record<Partial<PropertyType>,string[]>
 } ;
 
 export type PageInfoBlock = PageInfo & RenderApi & {
@@ -336,18 +356,19 @@ export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | st
  * particular kind.
  */
 export type PageCategory = {
-	/** the tag as it was found on the page */
-	rawTag: string;
-
-	kindTag: string;
+	/** the kind name of the category */
+	kind: string;
 	/** the `DvPage` for the category page */	
-	category: DvPage;
+	page: DvPage;
 	/** the **tag** to identify the category */
-	categoryTag: string;
-	/** the **tag**: `[kind]/[cat]` */
-	kindedTag: `${string}/${string}`;
-	/** a _full qualified_ tag path to the category definition: `kind/category/[cat]` */
-	defnTag: `${string}/category/${string}`;
+	category: string;
+	/** the **tag**: `#[kind]/[cat]` */
+	kindedTag: `${Tag}/${string}`;
+	/** 
+	 * a _full qualified_ tag path to the category definition: 
+	 * `#[kind]/category/[cat]` 
+	 */
+	defnTag: `${Tag}/category/${string}`;
 }
 
 /**
@@ -355,17 +376,19 @@ export type PageCategory = {
  * a given page has.
  */
 export type PageSubcategory = {
-	/** the tag as it was found on the page */
-	rawTag: string;
-
-	kindTag: string;
-	categoryTag: string;
-	subcategoryTag: string;
-	subcategory: DvPage;
-	/** a**tag** of: `[kind]/[cat]/[sub]` */
-	kindedTag: `${string}/${string}/${string}`;
+	/** the kind name of the subcategory */
+	kind: string;
+	/** the `DvPage` for the category page */	
+	page: DvPage;
+	/** the category name */
+	category: string;
+	/** the subcategory name */
+	subcategory: string;
+	/** the **tag**: `#[kind]/[cat]` */
+	kindedTag: `${Tag}/${string}/${string}`;
 	/** 
-	 * a tag of: `[kind]/subcategory/[cat]/[sub]` 
+	 * a _full qualified_ tag path to the subcategory definition: 
+	 * `#[kind]/category/[cat]/[subcat]` 
 	 */
-	defnTag: `${string}/subcategory/${string}/${string}`;
+	defnTag: `${Tag}/subcategory/${string}/${string}`;
 }

@@ -10,19 +10,19 @@ import { DvPage, PageReference } from "~/types";
 export const getPage = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
 ): DvPage | undefined => {
-	if (
-		isString(pg) && (
-			pg.includes("/category/") || 
-			pg.includes("/subcategory/") ||
-			pg.includes("kind/") ||
-			pg.includes("type/") ||
-			Array.from(p.cache?.kindDefinitionsByTag?.keys() || []).some(
-				i => i.startsWith(stripLeading(pg, "#"))
-			)
-		)
-	) {
-		return p.dv.page(ensureLeading(pg, "#"));
-	}
+	// if (
+	// 	isString(pg) && (
+	// 		pg.includes("/category/") || 
+	// 		pg.includes("/subcategory/") ||
+	// 		pg.includes("kind/") ||
+	// 		pg.includes("type/") ||
+	// 		Array.from(p.cache?.kindDefinitionsByTag?.keys() || []).some(
+	// 			i => i.startsWith(stripLeading(pg, "#"))
+	// 		)
+	// 	)
+	// ) {
+	// 	return p.dv.page(ensureLeading(pg, "#"));
+	// }
 
 	const path = getPath(pg);
 	const fc = p?.api?.fileCache;

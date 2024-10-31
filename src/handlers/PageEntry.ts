@@ -43,7 +43,8 @@ _opt: TOption
 ) => {
 	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 	if(page) {
-		const fmt = page?.format;
+		const fmt = p.api.format;
+		const api = p.api;
 		const current = page.current;
 		// const {fmt, current} = dv;
 	
@@ -56,10 +57,10 @@ _opt: TOption
 	
 		const hasBanner = isUrl(banner_img);
 	
-		let [_p1, icon] = page.getProp(page.current, "icon","_icon","svgIcon", "_svgIcon");
+		let [_p1, icon] = api.getProp(page.current, "icon","_icon","svgIcon", "_svgIcon");
 		const hasIcon = isInlineSvg(icon);
 	
-		let [_p2, desc] = page.getProp(page.current, "desc","description","about","tagline", "summary");
+		let [_p2, desc] = api.getProp(page.current, "desc","description","about","tagline", "summary");
 		const hasDesc = isString(desc);
 	
 		const type = current.type
@@ -149,6 +150,5 @@ _opt: TOption
 		}
 
 	}
-
 }
 

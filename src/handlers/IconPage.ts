@@ -31,15 +31,18 @@ export const IconPage = (p: KindModelPlugin) => (
 	const page = p.api.getPageInfoBlock(source, container, component, filePath);
 
 	if (page) {
-		const icon = (i: string & keyof typeof page.page) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.page[i]}</span>`;
+		const icon = (i: string & keyof typeof page.current) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.current[i]}</span>`;
 
 		const meta = getMetadata(p)(page);
 
 		p.info("Icon Props", {meta})
 
+		page.render(`## **${page.current.file.name}** is an Icon Page`);
+		page.render(`> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`)
+
 		page.table(
 			["name", "icon"],
-			meta["svg::inline"]?.map(i => [
+			meta["svg_inline"]?.map(i => [
 				i,
 				icon(i)
 			])

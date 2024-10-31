@@ -13,6 +13,7 @@ export type ClassificationTuple = [tag: string, page: DvPage];
 export type Classification = {
 	/** the "type" which this page is */
 	type?: DvPage;
+	/** the `DvPage` for the **kind** of the given page */
 	kind: DvPage;
 	kindTag: string;
 	/**
