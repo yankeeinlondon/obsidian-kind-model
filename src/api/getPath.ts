@@ -1,4 +1,4 @@
-import { isString } from "inferred-types";
+import { isString, stripAfter } from "inferred-types";
 import { PageReference } from "../types";
 import { isDvPage, isLink, isPageInfo, isTAbstractFile, isTFile } from "../type-guards";
 
@@ -12,9 +12,9 @@ export const getPath = <T extends PageReference  | undefined>(
 	return isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
 	? pg.path
 	: isDvPage(pg)
-	? pg?.file?.path
+	? pg.file.path
 	: isString(pg)
-	? pg
+	? stripAfter(pg, "|")
 	: isPageInfo(pg)
 	? pg.current?.file?.path
 	: undefined;

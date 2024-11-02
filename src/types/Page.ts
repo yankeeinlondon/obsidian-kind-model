@@ -1,14 +1,14 @@
 import { DvPage, Link } from "./dataview_types";
 import { Classification } from "./Classification";
 import { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
-import { MarkdownView } from "obsidian";
+import { Component, MarkdownView } from "obsidian";
 import { RenderableTreeNode, Node } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
 
-import { PropertyType, ShowApi, Tag } from "~/types";
-import { RenderApi, FormattingApi } from "~/api";
-import { getPage } from "~/page";
+import { PageBlock, PropertyType, ShowApi, Tag } from "~/types";
+import { removeFmKey, RenderApi, setFmKey } from "~/api";
+import { TypedFunction } from "inferred-types";
 
 
 export type PageType = "kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn" | "none";
@@ -40,6 +40,15 @@ export type PageInfo = {
 	 */
 	fm: Frontmatter;
 
+	/**
+	 * _set_ a key/value pair in the frontmatter of the current page
+	 */
+	setFmKey: ReturnType<ReturnType<typeof setFmKey>>,
+	/**
+	 * _remove_ a key/value pair in the frontmatter of the current page
+	 */
+	removeFmKey: ReturnType<ReturnType<typeof removeFmKey>>,
+
 	/** 
 	 * All of the categories which the current page belongs to.
 	 * 
@@ -64,8 +73,25 @@ export type PageInfo = {
 
 	hasCategoryTag: boolean;
 	hasCategoryProp: boolean;
+	hasCategoriesProp: boolean;
 
+	/**
+	 * **hasAnyCategoryProp** 
+	 * 
+	 * Boolean flag which indicates if _either_ the `category` or `categories` 
+	 * property is set. 
+	 * 
+	 * **Notes:**
+	 * - a `categories` property which is empty or missing any vault links is not
+	 * considered valid and ignored in check
+	 * - a `category` which is not a vault link is also ignored
+	 */
+	hasAnyCategoryProp: boolean;
+
+	/** Checks whether a _kinded page_ has a **subcategory** tag defined. */
 	hasSubcategoryTag: boolean;
+
+	hasSubcategoryProp: boolean;
 
 
 	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
@@ -105,7 +131,13 @@ export type PageInfo = {
 	 * (or multiple kinds); this looks for a list where at least one item in the 
 	 * list is a link to another page in the vault.
 	 */
-	hasKindsProperty: boolean;
+	hasKindsProp: boolean;
+
+	/**
+	 * whether the page has either a `kind` _or_ `kinds` property of the appropriate
+	 * type
+	 */
+	hasAnyKindProp: boolean;
 
 	/** 
 	 * The `DvPage` API surface for the given page
@@ -314,6 +346,7 @@ export type MarkdownViewMeta = {
  */
 export type PageView = PageInfo & {
 	dom: PageDomElements;
+	component: Component & { getSectionInfo: TypedFunction; sourcePath: string };
 	/**
 	 * Metadata derived from the `MarkdownView` provided to create the `PageView`
 	 */
@@ -349,7 +382,7 @@ export type PageSuggestion =
 | "add-subcategory-prop";
 
 
-export type PageReference = PageInfo | DvPage | TFile |TAbstractFile | Link | string;
+export type PageReference = PageInfo | PageBlock |  DvPage | TFile |TAbstractFile | Link | string;
 
 /**
  * represents a static "kind" and the categories that a given page has of this

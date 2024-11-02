@@ -1,10 +1,26 @@
 import { MarkdownView } from "obsidian";
 import Markdoc, { Node } from "@markdoc/markdoc";
-import { getPageInfo } from "../page/getPageInfo";
+import { getPageInfo } from "./getPageInfo";
 import { MarkdownViewMeta, PageInfo, PageView } from "../types";
 import KindModelPlugin from "../main";
 import { getHeadingLevel } from "../utils/getHeadingLevel";
 import { splitContent } from "../utils/splitContent";
+
+/**
+ * provides several properties which allow for exploring the 
+ * _structure_ of a Markdown page.
+ */
+export const getContentStructure = (p: KindModelPlugin) => (content: string, path: string) => {
+	const ast = Markdoc.parse(content) as Node;
+	const renderableTree = Markdoc.transform(ast);
+
+	return {
+		ast,
+		renderableTree,
+		h2_tags: getHeadingLevel(path, content, 2, p),
+		...(splitContent(content))
+	}
+}
 
 
 export const getViewMeta = (p: KindModelPlugin) => (
@@ -50,12 +66,7 @@ export const getViewMeta = (p: KindModelPlugin) => (
 
 		content,
 		showBackLinks: (view as any)?.showBackLinks,
-		contentStructure: {
-			ast,
-			renderableTree,
-			h2_tags: getHeadingLevel(info.path, content, 2, p),
-			...(splitContent(content)),
-		}
+		contentStructure: getContentStructure(p)(content, info.path)
 	}
 }
 
@@ -77,7 +88,9 @@ const getDomMeta = (view: MarkdownView, info: PageInfo) => ({
 /**
  * Converts a `MarkdownView` to a `PageView`
  */
-export const createPageView = (p: KindModelPlugin) => (view: MarkdownView) => {
+export const createPageView = (p: KindModelPlugin) => (
+	view: MarkdownView
+) => {
 	if (view?.file?.path) {
 		const info = getPageInfo(p)(view.file.path);
 		if (info) {

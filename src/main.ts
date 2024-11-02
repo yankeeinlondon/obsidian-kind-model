@@ -8,9 +8,9 @@ import { DEFAULT_SETTINGS } from './utils/Constants'
 import { Logger, logger } from './utils/logging';
 // import App from "./App.vue";
 import { api } from './api/api';
-import { csv } from './utils/on_load/csv';
+import { csv } from './events/on_load/csv';
 import { on_editor_change } from './events/on_editor_change';
-import { add_commands } from './utils/on_load/add_commands';
+import { add_commands } from './events/on_load/add_commands';
 import xx from "xxhash-wasm";
 
 import { 
@@ -30,7 +30,6 @@ let hasher: null | ((input: string, seed?: number) => number) = null;
 export default class KindModelPlugin extends Plugin {
 	public settings: KindModelSettings;
 	/** the Dataview API surface */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public dv: DataViewApi = (globalThis as any)["DataviewAPI"] as DataViewApi;
 	public api: ReturnType<typeof api>;
 
@@ -152,7 +151,7 @@ export default class KindModelPlugin extends Plugin {
 		}
 		
 		await this.saveData(this.settings);
-		info("user settings saved", this.settings);
+		info("saved user settings", this.settings);
 	}
 }
 

@@ -20,3 +20,5 @@ export * from "./isWikipediaUrl";
 export * from "./isPageReference";
 export * from "./isFrontmatter";
 export * from "./isTagKindDefinition";
+export * from "./isObsidianComponent";
+export * from "./isMarkdownPostProcessorContext";

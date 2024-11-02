@@ -35,11 +35,11 @@ const info = <TLevel extends LogLevel>(level: TLevel) =>
   console.groupCollapsed(`KM(i): ${trunc(msg(args))}`);
   args.forEach(a => {
 		if (typeof a === "function") {
-			console.log(`fn → `,a());
+			console.log(`fn → `, String(a));
 		} else if (typeof a === "object" && a !== null) {
-			Object.keys(a).map((k) => console.info({[k]: a[k as keyof typeof a] }));
+			Object.keys(a).map((k) => console.log({[k]: a[k as keyof typeof a]}));
 		} else {
-			console.info(a);
+			console.log(a);
 		}
 	});
   console.groupEnd();

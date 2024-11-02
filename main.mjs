@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
-import { Scope, TFolder, Setting, Modal, PluginSettingTab, getIcon, Notice, Plugin as Plugin$1 } from "obsidian";
+import { Scope, TFolder, Setting, Modal, PluginSettingTab, getIcon, TFile, Notice, Plugin as Plugin$1 } from "obsidian";
 import { DateTime as DateTime$1 } from "luxon";
 var commonjsGlobal$1 = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x2) {
@@ -9092,11 +9092,11 @@ const info = (level) => (...args) => {
   console.groupCollapsed(`KM(i): ${trunc(msg(args))}`);
   args.forEach((a) => {
     if (typeof a === "function") {
-      console.log(`fn → `, a());
+      console.log(`fn → `, String(a));
     } else if (typeof a === "object" && a !== null) {
-      Object.keys(a).map((k) => console.info({ [k]: a[k] }));
+      Object.keys(a).map((k) => console.log({ [k]: a[k] }));
     } else {
-      console.info(a);
+      console.log(a);
     }
   });
   console.groupEnd();
@@ -11331,7 +11331,7 @@ const isLink = (val) => {
   return isObject(val) && "path" in val && isString$1(val.path) && "embed" in val && typeof val.embed === "boolean";
 };
 const isPageInfo = (val) => {
-  return isObject(val) && "page" in val && "categories" in val && "type" in val;
+  return isObject(val) && "current" in val && "categories" in val && "type" in val;
 };
 const isTAbstractFile = (v) => {
   return isObject(v) && "basename" in v && "path" in v;
@@ -11355,77 +11355,20 @@ const isKindDefinition = (val) => {
   return isObject(val) && "path" in val && typeof val.tag === "string" && "hash" in val && typeof val.hash === "number";
 };
 const getPath = (pg) => {
-  var _a2, _b2, _c2;
-  return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? (_a2 = pg == null ? void 0 : pg.file) == null ? void 0 : _a2.path : isString$1(pg) ? pg : isPageInfo(pg) ? (_c2 = (_b2 = pg.current) == null ? void 0 : _b2.file) == null ? void 0 : _c2.path : void 0;
+  var _a2, _b2;
+  return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? pg.file.path : isString$1(pg) ? stripAfter(pg, "|") : isPageInfo(pg) ? (_b2 = (_a2 = pg.current) == null ? void 0 : _a2.file) == null ? void 0 : _b2.path : void 0;
 };
 const getPage = (p2) => (pg) => {
-  var _a2;
+  if (isDvPage(pg)) {
+    return pg;
+  }
+  if (isPageInfo(pg)) {
+    return pg.current;
+  }
   const path = getPath(pg);
-  const fc = (_a2 = p2 == null ? void 0 : p2.api) == null ? void 0 : _a2.fileCache;
-  isObject(fc) && path && path in fc ? fc[path] : void 0;
   const page = path ? p2.dv.page(path) : void 0;
   return page;
 };
-const getPageInfo = (p2) => (pg) => {
-  const path = getPath(pg);
-  const page = getPage(p2)(pg);
-  if (path && page) {
-    const meta = {
-      categories: getCategories(p2)(page),
-      subcategories: getSubcategories(p2)(page),
-      hasCategoryProp: hasCategoryProp(p2)(page),
-      hasCategoryTag: hasCategoryTag(p2)(page),
-      hasSubcategoryTag: hasSubcategoryTag(p2)(page),
-      hasSubcategoryDefnTag: hasSubcategoryTagDefn(p2)(page),
-      hasKindProp: hasKindProp(p2)(page),
-      hasKindsProperty: hasKindsProp(p2)(page),
-      hasKindTag: hasKindTag(p2)(page),
-      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
-      hasMultipleKinds: hasMultipleKinds(p2)(page),
-      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
-      isCategoryPage: isCategoryPage(p2)(page),
-      isSubcategoryPage: isSubcategoryPage(p2)(page),
-      isKindDefnPage: isKindDefnPage(p2)(page),
-      isTypeDefnPage: isTypeDefnPage(p2)(page),
-      isKindedPage: isKindedPage(p2)(page),
-      kindTags: getKindTagsOfPage(p2)(page),
-      typeTags: []
-    };
-    const info2 = {
-      current: page,
-      path,
-      name: page.file.name,
-      ext: page.file.ext,
-      classifications: getClassification(p2)(
-        page,
-        meta.categories,
-        meta.subcategories
-      ),
-      type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
-      fm: page.file.frontmatter,
-      metadata: getMetadata(p2)(page),
-      ...meta
-    };
-    return info2;
-  }
-};
-const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
-const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
-const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-quote"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>`;
-const INFO_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-info"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>`;
-const TIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
-const SUMMARY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="M200.12 55.87A102 102 0 1 0 55.88 200.12A102 102 0 1 0 200.12 55.87M94 211.37V152a2 2 0 0 1 2-2h64a2 2 0 0 1 2 2v59.37a90.49 90.49 0 0 1-68 0M146 138h-36V99.71l36-18Zm45.64 53.64A90.93 90.93 0 0 1 174 205.39V152a14 14 0 0 0-14-14h-2V72a6 6 0 0 0-8.68-5.37l-48 24A6 6 0 0 0 98 96v42h-2a14 14 0 0 0-14 14v53.39a90.93 90.93 0 0 1-17.64-13.75a90 90 0 1 1 127.28 0"/></svg>`;
-const BUG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-bug"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>`;
-const EXAMPLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
-const QUESTION_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>`;
-const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-check"><path d="M20 6 9 17l-5-5"></path></svg>`;
-const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
-const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>`;
-const BOOK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M14 9.9V8.2q.825-.35 1.688-.525T17.5 7.5q.65 0 1.275.1T20 7.85v1.6q-.6-.225-1.213-.337T17.5 9q-.95 0-1.825.238T14 9.9m0 5.5v-1.7q.825-.35 1.688-.525T17.5 13q.65 0 1.275.1t1.225.25v1.6q-.6-.225-1.213-.338T17.5 14.5q-.95 0-1.825.225T14 15.4m0-2.75v-1.7q.825-.35 1.688-.525t1.812-.175q.65 0 1.275.1T20 10.6v1.6q-.6-.225-1.213-.338T17.5 11.75q-.95 0-1.825.238T14 12.65M6.5 16q1.175 0 2.288.263T11 17.05V7.2q-1.025-.6-2.175-.9T6.5 6q-.9 0-1.788.175T3 6.7v9.9q.875-.3 1.738-.45T6.5 16m6.5 1.05q1.1-.525 2.213-.787T17.5 16q.9 0 1.763.15T21 16.6V6.7q-.825-.35-1.713-.525T17.5 6q-1.175 0-2.325.3T13 7.2zM12 20q-1.2-.95-2.6-1.475T6.5 18q-1.05 0-2.062.275T2.5 19.05q-.525.275-1.012-.025T1 18.15V6.1q0-.275.138-.525T1.55 5.2q1.15-.6 2.4-.9T6.5 4q1.45 0 2.838.375T12 5.5q1.275-.75 2.663-1.125T17.5 4q1.3 0 2.55.3t2.4.9q.275.125.413.375T23 6.1v12.05q0 .575-.487.875t-1.013.025q-.925-.5-1.937-.775T17.5 18q-1.5 0-2.9.525T12 20m-5-8.35"/></svg>`;
-const KINDLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.944 37.03a56.3 56.3 0 0 1 9.696-.751c4.318 0 11.836 1.626 20.316 4.879"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.167 36.547c1.52-.212 3.833-2.679 3.833-2.679a15 15 0 0 0 2.237-1.57l2.179 2.124v1.24l1.29.885l3.589-2.96s-.379-1.293-1.262-1.64c-.042-.62-2.748-5.06-3-5.425m-6.589.533a15 15 0 0 0 2.44 1.542c.392.028 6.532-4.093 6.532-4.093a4.73 4.73 0 0 0 2.13-1.122a2.7 2.7 0 0 0 .225-1.15s.365-.476.365-.645s.28-1.01.28-1.093"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24.855 24.504s.701.869.925.869s5.103-2.58 5.215-3.14m-10.828 6.532c.09-.084 2.644-1.444 2.644-1.444"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18.154 21.868c.477 1.907 3.673 5.453 3.673 5.453l3.365-3.294s-2.832-3.028-3.169-3.953s-.785-2.524-1.682-2.916s-4.458-2.243-4.458-2.243l-.673 1.233a11.73 11.73 0 0 0-5.13 9.673c0 6.561.756 8.804.756 8.804s4.85-1.037 6.589-2.888s2.742-2.972 2.742-2.972l.353-3.004"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11.597 34.44a3.44 3.44 0 0 0 1.423 1.93m19.701-2.31a15.5 15.5 0 0 0 3.391 4.532a17 17 0 0 0 2.25 1.304M30.03 36.28c.573.756 2.396 2.817 2.956 3.448M20.167 17.079l.454-.426s2.047 1.402 2.664 1.01s.589-.842.589-.842s1.01-.617.981-.925a1.7 1.7 0 0 1 0-.449h.841s-.532-1.598-.196-2.186l.336-.59l.401.365a2.6 2.6 0 0 0 1.03-2.58c-.393-1.57-2.776-4.037-3.87-4.205s-.953.196-.953.196s-1.99-1.177-3.224-.084s-2.692 2.356-2.663 4.599s.056 2.887.224 3.112a2.6 2.6 0 0 0 .766.481l-.494.964m17.924.738l3.028.2l-5.284 5.663l-2.511-.308z"/></svg>`;
-const SEARCH_BOOK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M11.724 7.447a2.276 2.276 0 1 0 0 4.553a2.276 2.276 0 0 0 0-4.553M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5zm10.819 7.295a3.724 3.724 0 1 0-1.024 1.024l2.476 2.475l.067.058l.008.006a.724.724 0 0 0 .942-1.093z"/></svg>`;
-const AMAZON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M15.93 17.09c-.18.16-.43.17-.63.06c-.89-.74-1.05-1.08-1.54-1.79c-1.47 1.5-2.51 1.95-4.42 1.95c-2.25 0-4.01-1.39-4.01-4.17c0-2.18 1.17-3.64 2.86-4.38c1.46-.64 3.49-.76 5.04-.93V7.5c0-.66.05-1.41-.33-1.96c-.32-.49-.95-.7-1.5-.7c-1.02 0-1.93.53-2.15 1.61c-.05.24-.25.48-.47.49l-2.6-.28c-.22-.05-.46-.22-.4-.56c.6-3.15 3.45-4.1 6-4.1c1.3 0 3 .35 4.03 1.33C17.11 4.55 17 6.18 17 7.95v4.17c0 1.25.5 1.81 1 2.48c.17.25.21.54 0 .71l-2.06 1.78h-.01m-2.7-6.53V10c-1.94 0-3.99.39-3.99 2.67c0 1.16.61 1.95 1.63 1.95c.76 0 1.43-.47 1.86-1.22c.52-.93.5-1.8.5-2.84m6.93 8.98C18 21.14 14.82 22 12.1 22c-3.81 0-7.25-1.41-9.85-3.76c-.2-.18-.02-.43.25-.29c2.78 1.63 6.25 2.61 9.83 2.61c2.41 0 5.07-.5 7.51-1.53c.37-.16.66.24.32.51m.91-1.04c-.28-.36-1.85-.17-2.57-.08c-.19.02-.22-.16-.03-.3c1.24-.88 3.29-.62 3.53-.33c.24.3-.07 2.35-1.24 3.32c-.18.16-.35.07-.26-.11c.26-.67.85-2.14.57-2.5z" fill="currentColor"/></svg>`;
-const BOOK_CATALOG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.3 42.5h34.1m-34-2l7-.2l-.5-34.7l-6.3-.1Zm8.6-27l-.3 26.3l6.5-.2l.8-25.9Zm9-5.6l-1.4 32.2l8.7-.1L33 8.4Zm10 6.3l-1.5 26.3l7.8.1l1.4-26.3Zm1 0a8.5 8.5 0 0 1 5.7-3.7M12.9 5.6L14.8 9l.1 4.6m-1.5 26.7l1.3-.5"/></svg>`;
 var __create = Object.create;
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -19801,11 +19744,21 @@ ${body}`, "\n#"), "\n")
   });
   return { yaml, body, blocks, preH1, postH1, h1 };
 };
+const getContentStructure = (p2) => (content2, path) => {
+  const ast = Markdoc.parse(content2);
+  const renderableTree = Markdoc.transform(ast);
+  return {
+    ast,
+    renderableTree,
+    h2_tags: getHeadingLevel(path, content2, 2, p2),
+    ...splitContent(content2)
+  };
+};
 const getViewMeta = (p2) => (view, info2) => {
   var _a2, _b2, _c2;
   const content2 = view.getViewData();
   const ast = Markdoc.parse(content2);
-  const renderableTree = Markdoc.transform(ast);
+  Markdoc.transform(ast);
   return {
     iconAssigned: view.icon,
     mode: view.currentMode,
@@ -19836,12 +19789,7 @@ const getViewMeta = (p2) => (view, info2) => {
     getViewType: view.getViewType,
     content: content2,
     showBackLinks: view == null ? void 0 : view.showBackLinks,
-    contentStructure: {
-      ast,
-      renderableTree,
-      h2_tags: getHeadingLevel(info2.path, content2, 2, p2),
-      ...splitContent(content2)
-    }
+    contentStructure: getContentStructure(p2)(content2, info2.path)
   };
 };
 const getDomMeta = (view, info2) => ({
@@ -20087,6 +20035,64 @@ const iconApi = (p2) => {
     }
   };
 };
+const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
+const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
+const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-quote"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>`;
+const INFO_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-info"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>`;
+const TIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
+const SUMMARY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="M200.12 55.87A102 102 0 1 0 55.88 200.12A102 102 0 1 0 200.12 55.87M94 211.37V152a2 2 0 0 1 2-2h64a2 2 0 0 1 2 2v59.37a90.49 90.49 0 0 1-68 0M146 138h-36V99.71l36-18Zm45.64 53.64A90.93 90.93 0 0 1 174 205.39V152a14 14 0 0 0-14-14h-2V72a6 6 0 0 0-8.68-5.37l-48 24A6 6 0 0 0 98 96v42h-2a14 14 0 0 0-14 14v53.39a90.93 90.93 0 0 1-17.64-13.75a90 90 0 1 1 127.28 0"/></svg>`;
+const BUG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-bug"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>`;
+const EXAMPLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+const QUESTION_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>`;
+const SUCCESS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-check"><path d="M20 6 9 17l-5-5"></path></svg>`;
+const ERROR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+const NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>`;
+const BOOK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M14 9.9V8.2q.825-.35 1.688-.525T17.5 7.5q.65 0 1.275.1T20 7.85v1.6q-.6-.225-1.213-.337T17.5 9q-.95 0-1.825.238T14 9.9m0 5.5v-1.7q.825-.35 1.688-.525T17.5 13q.65 0 1.275.1t1.225.25v1.6q-.6-.225-1.213-.338T17.5 14.5q-.95 0-1.825.225T14 15.4m0-2.75v-1.7q.825-.35 1.688-.525t1.812-.175q.65 0 1.275.1T20 10.6v1.6q-.6-.225-1.213-.338T17.5 11.75q-.95 0-1.825.238T14 12.65M6.5 16q1.175 0 2.288.263T11 17.05V7.2q-1.025-.6-2.175-.9T6.5 6q-.9 0-1.788.175T3 6.7v9.9q.875-.3 1.738-.45T6.5 16m6.5 1.05q1.1-.525 2.213-.787T17.5 16q.9 0 1.763.15T21 16.6V6.7q-.825-.35-1.713-.525T17.5 6q-1.175 0-2.325.3T13 7.2zM12 20q-1.2-.95-2.6-1.475T6.5 18q-1.05 0-2.062.275T2.5 19.05q-.525.275-1.012-.025T1 18.15V6.1q0-.275.138-.525T1.55 5.2q1.15-.6 2.4-.9T6.5 4q1.45 0 2.838.375T12 5.5q1.275-.75 2.663-1.125T17.5 4q1.3 0 2.55.3t2.4.9q.275.125.413.375T23 6.1v12.05q0 .575-.487.875t-1.013.025q-.925-.5-1.937-.775T17.5 18q-1.5 0-2.9.525T12 20m-5-8.35"/></svg>`;
+const KINDLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.944 37.03a56.3 56.3 0 0 1 9.696-.751c4.318 0 11.836 1.626 20.316 4.879"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.167 36.547c1.52-.212 3.833-2.679 3.833-2.679a15 15 0 0 0 2.237-1.57l2.179 2.124v1.24l1.29.885l3.589-2.96s-.379-1.293-1.262-1.64c-.042-.62-2.748-5.06-3-5.425m-6.589.533a15 15 0 0 0 2.44 1.542c.392.028 6.532-4.093 6.532-4.093a4.73 4.73 0 0 0 2.13-1.122a2.7 2.7 0 0 0 .225-1.15s.365-.476.365-.645s.28-1.01.28-1.093"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M24.855 24.504s.701.869.925.869s5.103-2.58 5.215-3.14m-10.828 6.532c.09-.084 2.644-1.444 2.644-1.444"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18.154 21.868c.477 1.907 3.673 5.453 3.673 5.453l3.365-3.294s-2.832-3.028-3.169-3.953s-.785-2.524-1.682-2.916s-4.458-2.243-4.458-2.243l-.673 1.233a11.73 11.73 0 0 0-5.13 9.673c0 6.561.756 8.804.756 8.804s4.85-1.037 6.589-2.888s2.742-2.972 2.742-2.972l.353-3.004"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11.597 34.44a3.44 3.44 0 0 0 1.423 1.93m19.701-2.31a15.5 15.5 0 0 0 3.391 4.532a17 17 0 0 0 2.25 1.304M30.03 36.28c.573.756 2.396 2.817 2.956 3.448M20.167 17.079l.454-.426s2.047 1.402 2.664 1.01s.589-.842.589-.842s1.01-.617.981-.925a1.7 1.7 0 0 1 0-.449h.841s-.532-1.598-.196-2.186l.336-.59l.401.365a2.6 2.6 0 0 0 1.03-2.58c-.393-1.57-2.776-4.037-3.87-4.205s-.953.196-.953.196s-1.99-1.177-3.224-.084s-2.692 2.356-2.663 4.599s.056 2.887.224 3.112a2.6 2.6 0 0 0 .766.481l-.494.964m17.924.738l3.028.2l-5.284 5.663l-2.511-.308z"/></svg>`;
+const SEARCH_BOOK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M11.724 7.447a2.276 2.276 0 1 0 0 4.553a2.276 2.276 0 0 0 0-4.553M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5zm10.819 7.295a3.724 3.724 0 1 0-1.024 1.024l2.476 2.475l.067.058l.008.006a.724.724 0 0 0 .942-1.093z"/></svg>`;
+const AMAZON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M15.93 17.09c-.18.16-.43.17-.63.06c-.89-.74-1.05-1.08-1.54-1.79c-1.47 1.5-2.51 1.95-4.42 1.95c-2.25 0-4.01-1.39-4.01-4.17c0-2.18 1.17-3.64 2.86-4.38c1.46-.64 3.49-.76 5.04-.93V7.5c0-.66.05-1.41-.33-1.96c-.32-.49-.95-.7-1.5-.7c-1.02 0-1.93.53-2.15 1.61c-.05.24-.25.48-.47.49l-2.6-.28c-.22-.05-.46-.22-.4-.56c.6-3.15 3.45-4.1 6-4.1c1.3 0 3 .35 4.03 1.33C17.11 4.55 17 6.18 17 7.95v4.17c0 1.25.5 1.81 1 2.48c.17.25.21.54 0 .71l-2.06 1.78h-.01m-2.7-6.53V10c-1.94 0-3.99.39-3.99 2.67c0 1.16.61 1.95 1.63 1.95c.76 0 1.43-.47 1.86-1.22c.52-.93.5-1.8.5-2.84m6.93 8.98C18 21.14 14.82 22 12.1 22c-3.81 0-7.25-1.41-9.85-3.76c-.2-.18-.02-.43.25-.29c2.78 1.63 6.25 2.61 9.83 2.61c2.41 0 5.07-.5 7.51-1.53c.37-.16.66.24.32.51m.91-1.04c-.28-.36-1.85-.17-2.57-.08c-.19.02-.22-.16-.03-.3c1.24-.88 3.29-.62 3.53-.33c.24.3-.07 2.35-1.24 3.32c-.18.16-.35.07-.26-.11c.26-.67.85-2.14.57-2.5z" fill="currentColor"/></svg>`;
+const BOOK_CATALOG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.3 42.5h34.1m-34-2l7-.2l-.5-34.7l-6.3-.1Zm8.6-27l-.3 26.3l6.5-.2l.8-25.9Zm9-5.6l-1.4 32.2l8.7-.1L33 8.4Zm10 6.3l-1.5 26.3l7.8.1l1.4-26.3Zm1 0a8.5 8.5 0 0 1 5.7-3.7M12.9 5.6L14.8 9l.1 4.6m-1.5 26.7l1.3-.5"/></svg>`;
+const obsidian_blockquote = (kind, title, opts) => [
+  `<div data-callout-metadata="" data-callout-fold="${(opts == null ? void 0 : opts.fold) || ""}" data-callout="${kind}" class="callout" ${style$1((opts == null ? void 0 : opts.style) || {})}>`,
+  `<div class="callout-title" style="gap:15px; align-items: center">`,
+  ...(opts == null ? void 0 : opts.icon) ? [`<div class="callout-icon">${opts == null ? void 0 : opts.icon}</div>`] : [],
+  `<div class="callout-title-inner" style="display: flex; flex-direction: row;">${title}</div>`,
+  ...(opts == null ? void 0 : opts.toRight) ? [
+    `<div class="callout-title-right" style="display: flex; flex-grow: 1; justify-content: right">${opts.toRight}</div>`
+  ] : [],
+  `</div>`,
+  ...(opts == null ? void 0 : opts.content) ? typeof opts.content === "string" ? [
+    `<div class="callout-content" ${style$1(opts.contentStyle || {})}>`,
+    `<p>${opts.content}</p>`,
+    `</div>`
+  ] : [
+    `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
+    ...opts.content.map((c) => `<div class="content-element" ${style$1({ flex: true, ...opts.contentStyle || {} })}>${c}</div>`),
+    `</div>`
+  ] : [],
+  ...(opts == null ? void 0 : opts.belowTheFold) ? [`<div class="below-the-fold" ${style$1((opts == null ? void 0 : opts.belowTheFoldStyle) || {})}>${opts == null ? void 0 : opts.belowTheFold}</div>`] : [""],
+  `</div>`
+].filter((i) => i).join("\n");
+const blockquote = (kind, title, opts) => {
+  const iconLookup = {
+    warning: WARN_ICON,
+    quote: QUOTE_ICON,
+    info: INFO_ICON,
+    tip: TIP_ICON,
+    summary: SUMMARY_ICON,
+    bug: BUG_ICON,
+    example: EXAMPLE_ICON,
+    question: QUESTION_ICON,
+    success: SUCCESS_ICON,
+    error: ERROR_ICON,
+    note: NOTE_ICON
+  };
+  return obsidian_blockquote(
+    kind,
+    title,
+    (opts == null ? void 0 : opts.icon) && opts.icon in iconLookup ? { ...opts, icon: iconLookup[opts.icon] } : opts
+  );
+};
 const removePound$1 = (tag) => {
   return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
 };
@@ -20254,6 +20260,272 @@ const formattingApi = (p2) => {
       }
     }
   };
+};
+function removePound(tag) {
+  return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
+}
+const get_internal_links = (p2) => (pg, ...props) => {
+  let links = [];
+  for (const prop of props) {
+    const pgProp = pg[prop];
+    if (!pgProp) {
+      break;
+    }
+    if (Array.isArray(pgProp)) {
+      links = [...links, ...pgProp.filter((i) => isLink(i))];
+    } else if (isLink(pgProp)) {
+      links.push(pgProp);
+    } else if (isDvPage(pgProp)) {
+      links.push(pgProp.file.link);
+    }
+  }
+  return links;
+};
+const renderApi = (p2) => (el, filePath) => {
+  const current = getPage(p2)(filePath);
+  if (!current) {
+    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
+  }
+  return {
+    /**
+     * Uses the underlying `renderValue()` functionality exposed by
+     * dataview to render data to the page.
+     */
+    async render(data2) {
+      await p2.dv.renderValue(data2, el, p2, filePath, false);
+    },
+    /** the current page represented as a `DvPage` */
+    current,
+    /**
+     * simply utility to ensure that a tag string has it's 
+     * leading pound symbol removed.
+     */
+    removePound,
+    /**
+     * **get_classification**`(page)`
+     * 
+     * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
+     */
+    getClassification: getClassification(p2),
+    /**
+     * **get_internal_links**
+     * 
+     * Gets any links to pages in the vault found across the various 
+     * properties passed in.
+     */
+    get_internal_links: get_internal_links(),
+    /**
+     * **callout**`(kind, title, opts)`
+     * 
+     * Renders a callout to the current block.
+     * 
+     * **Note:** use `blockquote` for same functionality but 
+     * with HTML returned rather than _rendered_.
+     */
+    callout: (kind, title, opts) => p2.dv.renderValue(
+      blockquote(kind, title, opts),
+      el,
+      p2,
+      filePath,
+      false
+    ),
+    /**
+     * **page**`(path, [originFile])`
+     * 
+     * Map a page path to the actual data contained within that page.
+     */
+    page(pg, originFile) {
+      return p2.dv.page(pg, originFile);
+    },
+    pages(query2, originFile) {
+      return p2.dv.pages(query2, originFile);
+    },
+    /**
+     * **as_array**`(v)`
+     * 
+     * Utility function which ensures that the passed in value _is_ an array,
+     * and that any DvArray[] proxy is converted to a normal JS array
+     */
+    as_array: (v) => {
+      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
+    },
+    /**
+     * Return an array of paths (as strings) corresponding to pages 
+     * which match the query.
+     */
+    pagePaths(query2, originFile) {
+      return p2.dv.pagePaths(query2, originFile);
+    },
+    /**
+     * **date**`(pathLike)`
+     * 
+     * Attempt to extract a date from a string, link or date.
+     */
+    date(pathLike) {
+      return p2.dv.date(pathLike);
+    },
+    /**
+     * **duration**`(pathLike)`
+     * 
+     * Attempt to extract a duration from a string or duration.
+     */
+    duration(str) {
+      return p2.dv.duration(str);
+    },
+    /**
+     * **fileLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview file link to the given path.
+     */
+    fileLink(path, embed, displayAs) {
+      return p2.dv.fileLink(path, embed, displayAs);
+    },
+    /**
+     * **sectionLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview section link to the given path.
+     */
+    sectionLink(path, embed, display) {
+      return p2.dv.sectionLink(path, embed, display);
+    },
+    /**
+     * **blockLink**`(path, [embed],[display])`
+     * 
+     * Create a dataview block link to the given path.
+     */
+    blockLink(path, embed, display) {
+      return p2.dv.blockLink(path, embed, display);
+    },
+    /**
+     * **table**`(headers,values,container,component,filePath)`
+     * 
+     * Render a dataview table with the given headers, and the 
+     * 2D array of values.
+     */
+    async table(headers, values) {
+      return p2.dv.table(headers, values, el, p2, filePath);
+    },
+    /**
+     * **renderValue**`(value, [inline])`
+     * 
+     * Render an arbitrary value into a container.
+     */
+    async renderValue(value2, inline4 = false) {
+      return p2.dv.renderValue(value2, el, p2, filePath, inline4);
+    },
+    /** 
+     * **taskList**`(tasks,groupByFile)`
+     * 
+     * Render a dataview task view with the given tasks. 
+     */
+    async taskList(tasks, groupByFile) {
+      return p2.dv.taskList(tasks, groupByFile, el, p2, filePath);
+    },
+    /**
+     * **list**(values, container, component, filePath)
+     * 
+     * Render a dataview **list** of the given values by:
+     * 
+     * - adding a sub-container DIV to the passed in _container_
+     * - using the `component`'s `addChild()` method to 
+     * adding a child element which is given the sub-container
+     * for rendering purposes
+     */
+    async list(values) {
+      return p2.dv.list(values, el, p2, filePath);
+    },
+    async paragraph(text2) {
+      return p2.dv.renderValue(text2, el, p2, filePath, false);
+    },
+    async ul(...items) {
+      const wrap_ul2 = (items2) => `<ul>${items2}</ul>`;
+      const render_items = (items2) => items2.map((i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`).filter((i) => i !== "").join("\n");
+      const ul_api = {
+        indent: (...items2) => wrap_ul2(render_items(items2)),
+        done: createFnWithProps(() => "", { escape: true })
+      };
+      return p2.dv.renderValue(
+        wrap_ul2(render_items(items)),
+        el,
+        p2,
+        filePath,
+        false
+      );
+    },
+    async ol(...items) {
+      return p2.dv.renderValue(
+        renderListItems(wrap_ol, items),
+        el,
+        p2,
+        filePath,
+        false
+      );
+    },
+    code: (code2) => p2.dv.renderValue(
+      `<code>${code2}</code>`,
+      el,
+      p2,
+      filePath,
+      true
+    )
+  };
+};
+const removeFmKey = (p2) => (
+  /**
+   * A higher order function which interacts with **Obsidian** to remove
+   * a property from a page's frontmatter.
+   */
+  (path) => (
+    /**
+     *  Removes the specified `key` from the current page.
+     */
+    async (key) => {
+      const abstractFile = p2.app.vault.getAbstractFileByPath(path);
+      if (abstractFile instanceof TFile) {
+        const file = abstractFile;
+        try {
+          await p2.app.fileManager.processFrontMatter(file, (frontmatter) => {
+            delete frontmatter[key];
+          });
+          p2.debug(`Frontmatter key '${key}' removed successfully from file: ${path}`);
+        } catch (error2) {
+          p2.error("Error removing frontmatter key:", error2);
+        }
+      } else {
+        p2.error(`File "${path}" not found or is a folder.`);
+      }
+    }
+  )
+);
+const setFmKey = (p2) => (path) => (
+  /**
+   * Sets the value of the specified **key** in the _frontmatter_ properties.
+   */
+  async (key, value2) => {
+    const abstractFile = p2.app.vault.getAbstractFileByPath(path);
+    if (abstractFile instanceof TFile) {
+      const file = abstractFile;
+      try {
+        await p2.app.fileManager.processFrontMatter(file, (frontmatter) => {
+          frontmatter[key] = value2;
+        });
+        p2.debug(`Frontmatter updated successfully for file: ${path}`);
+      } catch (error2) {
+        p2.error(`Error updating frontmatter [${key}] for file "${path}":`, error2);
+      }
+    } else {
+      console.error(`File "${path}" not found or is a folder.`);
+    }
+  }
+);
+const fmApi = (p2, path) => path ? {
+  /** set **key** on current page's _frontmatter_. */
+  setFmKey: setFmKey(p2)(path),
+  /** remove **key** from current page's _frontmatter_. */
+  removeFmKey: removeFmKey(p2)(path)
+} : {
+  setFmKey: setFmKey(p2),
+  removeFmKey: removeFmKey(p2)
 };
 const createKindDefinition = (p2) => (ref) => {
   const pg = getPage(p2)(ref);
@@ -20795,264 +21067,79 @@ const showApi = (p2) => ({
   createFileLink: createFileLink(p2),
   createMarkdownLink: createMarkdownLink(p2)
 });
-const obsidian_blockquote = (kind, title, opts) => [
-  `<div data-callout-metadata="" data-callout-fold="${(opts == null ? void 0 : opts.fold) || ""}" data-callout="${kind}" class="callout" ${style$1((opts == null ? void 0 : opts.style) || {})}>`,
-  `<div class="callout-title" style="gap:15px; align-items: center">`,
-  ...(opts == null ? void 0 : opts.icon) ? [`<div class="callout-icon">${opts == null ? void 0 : opts.icon}</div>`] : [],
-  `<div class="callout-title-inner" style="display: flex; flex-direction: row;">${title}</div>`,
-  ...(opts == null ? void 0 : opts.toRight) ? [
-    `<div class="callout-title-right" style="display: flex; flex-grow: 1; justify-content: right">${opts.toRight}</div>`
-  ] : [],
-  `</div>`,
-  ...(opts == null ? void 0 : opts.content) ? typeof opts.content === "string" ? [
-    `<div class="callout-content" ${style$1(opts.contentStyle || {})}>`,
-    `<p>${opts.content}</p>`,
-    `</div>`
-  ] : [
-    `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
-    ...opts.content.map((c) => `<div class="content-element" ${style$1({ flex: true, ...opts.contentStyle || {} })}>${c}</div>`),
-    `</div>`
-  ] : [],
-  ...(opts == null ? void 0 : opts.belowTheFold) ? [`<div class="below-the-fold" ${style$1((opts == null ? void 0 : opts.belowTheFoldStyle) || {})}>${opts == null ? void 0 : opts.belowTheFold}</div>`] : [""],
-  `</div>`
-].filter((i) => i).join("\n");
-const blockquote = (kind, title, opts) => {
-  const iconLookup = {
-    warning: WARN_ICON,
-    quote: QUOTE_ICON,
-    info: INFO_ICON,
-    tip: TIP_ICON,
-    summary: SUMMARY_ICON,
-    bug: BUG_ICON,
-    example: EXAMPLE_ICON,
-    question: QUESTION_ICON,
-    success: SUCCESS_ICON,
-    error: ERROR_ICON,
-    note: NOTE_ICON
-  };
-  return obsidian_blockquote(
-    kind,
-    title,
-    (opts == null ? void 0 : opts.icon) && opts.icon in iconLookup ? { ...opts, icon: iconLookup[opts.icon] } : opts
-  );
-};
-function removePound(tag) {
-  return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
-}
-const get_internal_links = (p2) => (pg, ...props) => {
-  let links = [];
-  for (const prop of props) {
-    const pgProp = pg[prop];
-    if (!pgProp) {
-      break;
-    }
-    if (Array.isArray(pgProp)) {
-      links = [...links, ...pgProp.filter((i) => isLink(i))];
-    } else if (isLink(pgProp)) {
-      links.push(pgProp);
-    } else if (isDvPage(pgProp)) {
-      links.push(pgProp.file.link);
-    }
+const createVaultLink = (p2) => (ref) => {
+  const page = getPage(p2)(ref);
+  if (page) {
+    const alias = page.file.name;
+    const path = page.file.path;
+    const link2 = `[[${path}|${alias}]]`;
+    return link2;
   }
-  return links;
+  return void 0;
 };
-const renderApi = (p2) => (el, filePath) => {
-  const current = getPage(p2)(filePath);
-  if (!current) {
-    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
+const getPageInfo = (p2) => (pg) => {
+  if (isPageInfo(pg)) {
+    return pg;
   }
-  return {
-    /**
-     * Uses the underlying `renderValue()` functionality exposed by
-     * dataview to render data to the page.
-     */
-    async render(data2) {
-      await p2.dv.renderValue(data2, el, p2, filePath, false);
-    },
-    /** the current page represented as a `DvPage` */
-    current,
-    /**
-     * simply utility to ensure that a tag string has it's 
-     * leading pound symbol removed.
-     */
-    removePound,
-    /**
-     * **get_classification**`(page)`
-     * 
-     * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
-     */
-    getClassification: getClassification(p2),
-    /**
-     * **get_internal_links**
-     * 
-     * Gets any links to pages in the vault found across the various 
-     * properties passed in.
-     */
-    get_internal_links: get_internal_links(),
-    /**
-     * **callout**`(kind, title, opts)`
-     * 
-     * Renders a callout to the current block.
-     * 
-     * **Note:** use `blockquote` for same functionality but 
-     * with HTML returned rather than _rendered_.
-     */
-    callout: (kind, title, opts) => p2.dv.renderValue(
-      blockquote(kind, title, opts),
-      el,
-      p2,
-      filePath,
-      false
-    ),
-    /**
-     * **page**`(path, [originFile])`
-     * 
-     * Map a page path to the actual data contained within that page.
-     */
-    page(pg, originFile) {
-      return p2.dv.page(pg, originFile);
-    },
-    pages(query2, originFile) {
-      return p2.dv.pages(query2, originFile);
-    },
-    /**
-     * **as_array**`(v)`
-     * 
-     * Utility function which ensures that the passed in value _is_ an array,
-     * and that any DvArray[] proxy is converted to a normal JS array
-     */
-    as_array: (v) => {
-      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
-    },
-    /**
-     * Return an array of paths (as strings) corresponding to pages 
-     * which match the query.
-     */
-    pagePaths(query2, originFile) {
-      return p2.dv.pagePaths(query2, originFile);
-    },
-    /**
-     * **date**`(pathLike)`
-     * 
-     * Attempt to extract a date from a string, link or date.
-     */
-    date(pathLike) {
-      return p2.dv.date(pathLike);
-    },
-    /**
-     * **duration**`(pathLike)`
-     * 
-     * Attempt to extract a duration from a string or duration.
-     */
-    duration(str) {
-      return p2.dv.duration(str);
-    },
-    /**
-     * **fileLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview file link to the given path.
-     */
-    fileLink(path, embed, displayAs) {
-      return p2.dv.fileLink(path, embed, displayAs);
-    },
-    /**
-     * **sectionLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview section link to the given path.
-     */
-    sectionLink(path, embed, display) {
-      return p2.dv.sectionLink(path, embed, display);
-    },
-    /**
-     * **blockLink**`(path, [embed],[display])`
-     * 
-     * Create a dataview block link to the given path.
-     */
-    blockLink(path, embed, display) {
-      return p2.dv.blockLink(path, embed, display);
-    },
-    /**
-     * **table**`(headers,values,container,component,filePath)`
-     * 
-     * Render a dataview table with the given headers, and the 
-     * 2D array of values.
-     */
-    async table(headers, values) {
-      return p2.dv.table(headers, values, el, p2, filePath);
-    },
-    /**
-     * **renderValue**`(value, [inline])`
-     * 
-     * Render an arbitrary value into a container.
-     */
-    async renderValue(value2, inline4 = false) {
-      return p2.dv.renderValue(value2, el, p2, filePath, inline4);
-    },
-    /** 
-     * **taskList**`(tasks,groupByFile)`
-     * 
-     * Render a dataview task view with the given tasks. 
-     */
-    async taskList(tasks, groupByFile) {
-      return p2.dv.taskList(tasks, groupByFile, el, p2, filePath);
-    },
-    /**
-     * **list**(values, container, component, filePath)
-     * 
-     * Render a dataview **list** of the given values by:
-     * 
-     * - adding a sub-container DIV to the passed in _container_
-     * - using the `component`'s `addChild()` method to 
-     * adding a child element which is given the sub-container
-     * for rendering purposes
-     */
-    async list(values) {
-      return p2.dv.list(values, el, p2, filePath);
-    },
-    async paragraph(text2) {
-      return p2.dv.renderValue(text2, el, p2, filePath, false);
-    },
-    async ul(...items) {
-      const wrap_ul2 = (items2) => `<ul>${items2}</ul>`;
-      const render_items = (items2) => items2.map((i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`).filter((i) => i !== "").join("\n");
-      const ul_api = {
-        indent: (...items2) => wrap_ul2(render_items(items2)),
-        done: createFnWithProps(() => "", { escape: true })
-      };
-      return p2.dv.renderValue(
-        wrap_ul2(render_items(items)),
-        el,
-        p2,
-        filePath,
-        false
-      );
-    },
-    async ol(...items) {
-      return p2.dv.renderValue(
-        renderListItems(wrap_ol, items),
-        el,
-        p2,
-        filePath,
-        false
-      );
-    },
-    code: (code2) => p2.dv.renderValue(
-      `<code>${code2}</code>`,
-      el,
-      p2,
-      filePath,
-      true
-    )
-  };
+  const path = getPath(pg);
+  const page = getPage(p2)(pg);
+  if (path && page) {
+    const meta = {
+      categories: getCategories(p2)(page),
+      subcategories: getSubcategories(p2)(page),
+      hasCategoryProp: hasCategoryProp(p2)(page),
+      hasCategoriesProp: hasCategoriesProp(p2)(page),
+      hasAnyCategoryProp: hasAnyCategoryProp(p2)(page),
+      hasSubcategoryProp: hasSubcategoryProp(p2)(page),
+      hasSubcategoriesProp: hasSubcategoriesProp(p2)(page),
+      hasAnySubcategoryProp: hasAnySubcategoryProp(p2)(page),
+      hasCategoryTag: hasCategoryTag(p2)(page),
+      hasSubcategoryTag: hasSubcategoryTag(p2)(page),
+      hasSubcategoryDefnTag: hasSubcategoryTagDefn(p2)(page),
+      hasKindProp: hasKindProp(p2)(page),
+      hasKindsProp: hasKindsProp(p2)(page),
+      hasAnyKindProp: hasAnyKindProp(p2)(page),
+      hasKindTag: hasKindTag(p2)(page),
+      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
+      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
+      isCategoryPage: isCategoryPage(p2)(page),
+      isSubcategoryPage: isSubcategoryPage(p2)(page),
+      isKindDefnPage: isKindDefnPage(p2)(page),
+      isTypeDefnPage: isTypeDefnPage(p2)(page),
+      isKindedPage: isKindedPage(p2)(page),
+      kindTags: getKindTagsOfPage(p2)(page),
+      typeTags: []
+    };
+    const info2 = {
+      current: page,
+      path,
+      name: page.file.name,
+      ext: page.file.ext,
+      classifications: getClassification(p2)(
+        page,
+        meta.categories,
+        meta.subcategories
+      ),
+      hasMultipleKinds: meta.kindTags.length > 1,
+      type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
+      fm: page.file.frontmatter,
+      ...fmApi(p2, path),
+      metadata: getMetadata(p2)(page),
+      ...meta
+    };
+    return info2;
+  }
 };
 const getPageInfoBlock = (p2) => (source, container, component, filePath) => {
   const page = getPageInfo(p2)(filePath);
   if (page) {
+    const sectionInfo = component.getSectionInfo(container);
     return {
       ...page,
       content: source,
       container,
       component,
+      sectionInfo,
       ...renderApi(p2)(container, filePath)
     };
   }
@@ -21076,10 +21163,11 @@ const getPropertyType = (p2) => (value2) => {
           return "image_vault";
         } else if (page.file.ext === "excalidraw") {
           return "link_drawing";
-        } else if (page.file.ext = "md") {
+        } else if (page.file.ext === "md" || content2.includes(".md|")) {
           return "link_md";
         }
       }
+      p2.info("undefined link", content2, value2);
       return "link_undefined";
     }
     if (isPhoneNumber(value2)) {
@@ -21191,10 +21279,28 @@ const hasCategoryTag = (p2) => (pg) => {
 const hasCategoryProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    return page.category && isFileLink(page.category) ? true : false;
+    const catType = getPropertyType(p2)(page.file.frontmatter["category"]);
+    return page.category && catType.startsWith("link") ? true : false;
   }
   return false;
 };
+const hasSubcategoryProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const catType = getPropertyType(p2)(page.file.frontmatter["subcategory"]);
+    return page.category && catType.startsWith("link") ? true : false;
+  }
+  return false;
+};
+const hasSubcategoriesProp = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const catType = getPropertyType(p2)(page.file.frontmatter["subcategory"]);
+    return page.category && catType.startsWith("link") ? true : false;
+  }
+  return false;
+};
+const hasAnySubcategoryProp = (p2) => (pg) => hasSubcategoriesProp(p2)(pg) || hasSubcategoryProp(p2)(pg);
 const hasCategoriesProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
@@ -21202,13 +21308,19 @@ const hasCategoriesProp = (p2) => (pg) => {
   }
   return false;
 };
+const hasAnyCategoryProp = (p2) => (pg) => hasCategoriesProp(p2)(pg) || hasCategoryProp(p2)(pg);
 const isCategoryPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   return page && page.file.etags.some((i) => i.split("/").length === 3 && i.split("/")[1] === "category") ? true : false;
 };
 const isSubcategoryPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
-  return page && page.file.etags.some((i) => i.split("/").length === 4 && i.split("/")[1] === "subcategory") ? true : false;
+  if (page) {
+    return page.file.etags.some(
+      (i) => i.split("/").length === 4 && i.split("/")[1] === "subcategory"
+    ) ? true : false;
+  }
+  return false;
 };
 const hasMultipleKinds = (p2) => (pg) => {
   const page = getPage(p2)(pg);
@@ -21257,6 +21369,7 @@ const hasKindsProp = (p2) => (pg) => {
   }
   return false;
 };
+const hasAnyKindProp = (p2) => (pg) => hasKindProp(p2)(pg) || hasKindsProp(p2)(pg);
 const hasTypeProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
@@ -21308,9 +21421,10 @@ const getCategories = (p2) => (pg) => {
     const missing = [];
     const pages = Array.from(tags).map(
       (t2) => {
-        const pgs = p2.dv.pages(`${t2}`);
+        const [kind, cat] = t2.split("/");
+        const pgs = p2.dv.pages(`${kind}/category/${cat}`);
         if (pgs.length > 0) {
-          return [t2, getPage(p2)(pgs[0])];
+          return [t2, pgs[0]];
         } else {
           missing.push(`${t2} on page "${page.file.path}"`);
           return void 0;
@@ -21345,7 +21459,9 @@ const getSubcategories = (p2) => (pg) => {
     ).map((i) => subCatTag(i.split("/")[0], i.split("/")[2], i.split("/")[3]));
     const kinded = page.file.etags.filter(
       (t2) => t2.split("/").length === 3 && !["category", "subcategory"].includes(t2.split("/")[1]) && isKindTag(p2)(t2.split("/")[0])
-    ).map((i) => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2]));
+    ).map(
+      (i) => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2])
+    );
     const tags = /* @__PURE__ */ new Set(
       [
         ...kinded,
@@ -21355,9 +21471,10 @@ const getSubcategories = (p2) => (pg) => {
     const missing = [];
     const pages = Array.from(tags).map(
       (t2) => {
-        const pgs = p2.dv.pages(`${t2}`);
+        const [kind, cat, subcat] = t2.split("/");
+        const pgs = p2.dv.pages(`${kind}/subcategory/${cat}/${subcat}`);
         if (pgs.length > 0) {
-          return [t2, getPage(p2)(pgs[0])];
+          return [t2, pgs[0]];
         } else {
           missing.push(`${t2} on page "${page.file.path}"`);
           return void 0;
@@ -21376,7 +21493,7 @@ const getSubcategories = (p2) => (pg) => {
           category: parts[1],
           subcategory: parts[2],
           kindedTag: ensureLeading(t2, "#"),
-          defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${t2.split("/)")}`
+          defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${parts[2]}`
         };
       }
     );
@@ -21430,7 +21547,7 @@ const getKindTagsOfPage = (p2) => (pg) => {
 const getKindPages = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const pages = getKindTagsOfPage(p2)(page).map((i) => lookupKindByTag(p2)(i)).map((i) => i ? getPage(p2)(i.path) : void 0).map((i) => i);
+    const pages = getKindTagsOfPage(p2)(page).map((i) => lookupKindByTag(p2)(i)).map((i) => i ? getPage(p2)(i.path) : void 0).filter((i) => i);
     return pages;
   }
   return [];
@@ -21481,39 +21598,52 @@ const getMetadata = (p2) => (pg) => {
   return {};
 };
 const getClassification = (p2) => (pg, cats, subCats) => {
-  var _a2, _b2, _c2, _d2, _e2, _f2;
   const page = pg ? getPage(p2)(pg) : void 0;
   const classification2 = [];
   if (page) {
     const pgCats = cats ? cats : getCategories(p2)(page);
     const pgSubCats = subCats ? subCats : getSubcategories(p2)(page);
-    const kinds = getKindPages(p2)(page);
-    for (const k of kinds) {
-      let kindTag = (_b2 = (_a2 = k == null ? void 0 : k.file) == null ? void 0 : _a2.etags.find((i) => i.startsWith(`#kind/`))) == null ? void 0 : _b2.split("/")[1];
-      if (!kindTag) {
-        kindTag = (_d2 = (_c2 = k == null ? void 0 : k.file) == null ? void 0 : _c2.etags.find(
-          (i) => ["category", "subcategory"].includes(i.split("/")[1])
-        )) == null ? void 0 : _d2.split("/")[0];
-      }
-      if (!kindTag) {
-        kindTag = (_f2 = (_e2 = k == null ? void 0 : k.file) == null ? void 0 : _e2.etags.find(
-          (i) => i.split("/").length > 0 && !["category", "subcategory"].includes(i.split("/")[1]) && i.split("/").length < 4
-        )) == null ? void 0 : _f2.split("/")[0];
-      }
-      if (kindTag) {
+    const kindTags = getKindTagsOfPage(p2)(page);
+    for (let tag of kindTags) {
+      tag = stripLeading(tag, "#");
+      p2.info(`tag ${tag}`);
+      const kd = lookupKindByTag(p2)(tag);
+      const kp = kd ? getPage(p2)(kd.path) : void 0;
+      if (kd && kp) {
         classification2.push({
-          kind: k,
-          kindTag,
-          categories: pgCats.filter((c) => c.kind === stripLeading(kindTag, "#")),
-          subcategory: pgSubCats.find((c) => c.kind === stripLeading(kindTag, "#"))
+          kind: kp,
+          kindTag: tag,
+          categories: pgCats.filter((c) => c.kind === stripLeading(tag, "#")),
+          subcategory: pgSubCats.find((c) => c.kind === stripLeading(tag, "#"))
         });
       } else {
-        getMetadata(p2)(page);
-        p2.warn(`no 'kind' could be identified for the page ${page.file.path}`);
+        const defn = p2.dv.pages(`#kind/${tag}`);
+        if (defn.length > 0) {
+          p2.debug(`tag lookup of ${tag} failed but found kind definition with dataview query`);
+          const kindPage = Array.from(defn)[0];
+          if (kindPage && kindPage.file.etags.some((i) => i.startsWith("#kind/"))) {
+            classification2.push({
+              kind: kindPage,
+              kindTag: tag,
+              categories: pgCats.filter((c) => c.kind === stripLeading(tag, "#")),
+              subcategory: pgSubCats.find((c) => c.kind === stripLeading(tag, "#"))
+            });
+            return classification2;
+          }
+        }
+        p2.warn(`no 'kind' could be identified for the page ${page.file.path}`, {
+          categories: pgCats,
+          subcategories: pgSubCats,
+          etags: Array.from(page.file.etags),
+          kindTags,
+          tag,
+          kd,
+          kp
+        });
       }
     }
   }
-  p2.info("classification", classification2);
+  p2.debug("classification", classification2);
   return classification2;
 };
 const buildingBlocks = (plugin4) => ({
@@ -21528,6 +21658,8 @@ const buildingBlocks = (plugin4) => ({
   hasMultipleKinds: hasMultipleKinds(plugin4),
   hasCategoryTagDefn: hasCategoryTagDefn(plugin4),
   hasCategoryTag: hasCategoryTag(plugin4),
+  hasAnyCategoryProp: hasAnyCategoryProp(plugin4),
+  hasAnySubcategoryProp: hasAnySubcategoryProp(plugin4),
   getCategories: getCategories(plugin4),
   hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
   isCategoryPage: isCategoryPage(plugin4),
@@ -106586,9 +106718,8 @@ const Page = (p2) => (source, container, component, filePath) => (scalar, obj) =
   );
   if (page) {
     const fmt = p2.api.format;
-    p2.info(`Page Details`, { page });
-    console.log(page);
-    fmt.bold("Page Information<br/>");
+    p2.info(`Page Details`, page);
+    page.render(fmt.bold("Page Information<br/>"));
     const kindOfPage = [fmt.bold("Kind of Page"), page.type];
     const types = ((_a2 = page.typeTags) == null ? void 0 : _a2.length) > 0 ? [fmt.bold("Types(s)"), page.kindTags.join(", ")] : void 0;
     const kinds = ((_b2 = page.kindTags) == null ? void 0 : _b2.length) > 0 ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")] : void 0;
@@ -106635,11 +106766,38 @@ const obsidianApi = (p2) => {
     /**
      * the full Obsidian API surface exposed on global
      */
-    obsidianApp: globalThis.app,
+    app: p2.app,
     /**
      * A dictionary of commands configured for the active vault
      */
     commands: globalThis.app.commands.commands,
+    /**
+     * Atomically read, modify, and save the frontmatter of a note. The frontmatter is passed in as a JS object, and should be mutated directly to achieve the desired result.
+     Remember to handle errors thrown by this method.
+     * @param file — the file to be modified. Must be a Markdown file.
+     * @param fn — a callback function which mutates the frontmatter object synchronously.
+     * @param options — write options.
+     * @throws — YAMLParseError if the YAML parsing fails
+     * @throws — any errors that your callback function throws
+     * 
+     * ```ts
+     * app.fileManager.processFrontMatter(file, (frontmatter) => {
+     *     frontmatter['key1'] = value;
+     *     delete frontmatter['key2'];
+     * });
+     * ```
+     */
+    processFrontmatter: p2.app.fileManager.processFrontMatter,
+    /**
+     * Resolves a unique path for the attachment file being saved.
+     * Ensures that the parent directory exists and dedupes the
+     * filename if the destination filename already exists.
+     *
+     * @param filename Name of the attachment being saved
+     * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
+     * @returns Full path for where the attachment should be saved, according to the user's settings
+     */
+    getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
     /**
      * A dictionary of files:
      * 
@@ -106666,7 +106824,8 @@ const api = (plugin4) => ({
   ...buildingBlocks(plugin4),
   ...showApi(plugin4),
   ...iconApi(plugin4),
-  ...obsidianApi(),
+  fm: fmApi(plugin4),
+  obsidian: obsidianApi(plugin4),
   /**
    * **render**`(el, filePath) -> API`
    * 
@@ -106827,15 +106986,68 @@ const on_editor_change = (plugin4) => {
     )
   );
 };
-const update_kinded_page = (plugin4) => async (editor, view) => {
-  var _a2, _b2;
-  const page = plugin4.api.createPageView(view);
-  plugin4.info("update-kinded-page", page);
-  if (view.getViewType() !== "markdown") {
-    plugin4.warn(
-      "non-markdown file",
-      `update-kinded-page[${((_a2 = view.file) == null ? void 0 : _a2.name) || ((_b2 = view.file) == null ? void 0 : _b2.basename)}] was run on a non-markdown page so nothing to do`
-    );
+const update_kinded_page = (p2) => async (editor, view) => {
+  var _a2;
+  const page = p2.api.createPageView(view);
+  if (page.type !== "none") {
+    p2.info("update-kinded-page", page);
+    let changes = false;
+    if (page.hasKindTag && page.kindTags.length === 1 && !page.hasKindProp) {
+      changes = true;
+      await page.setFmKey(
+        "kind",
+        createVaultLink(p2)((_a2 = page.classifications[0]) == null ? void 0 : _a2.kind)
+      );
+      new Notice("Set 'kind' property", 5e3);
+      if (page.hasKindsProp) {
+        page.removeFmKey("kinds");
+        new Notice("Removed 'kinds' property'", 5e3);
+      }
+    }
+    if (page.hasKindTag && page.kindTags.length > 1 && !page.hasKindsProp) {
+      changes = true;
+      await page.setFmKey(
+        "kinds",
+        page.classifications.map(
+          (c) => createVaultLink(p2)(c.kind)
+        )
+      );
+      new Notice("Set 'kinds' property", 5e3);
+      if (page.hasKindProp) {
+        page.removeFmKey("kind");
+        new Notice("Removed 'kind' property'", 5e3);
+      }
+    }
+    if (page.hasCategoryTag && !page.isCategoryPage && page.categories.length === 1 && !page.hasCategoryProp) {
+      new Notice("'category' property added", 5e3);
+      await page.setFmKey(
+        "category",
+        createVaultLink(p2)(page.categories[0].page)
+      );
+      if (page.hasCategoriesProp) {
+        new Notice("'categories' property removed", 5e3);
+        page.removeFmKey("categories");
+      }
+      changes = true;
+    }
+    if (page.hasCategoryProp && page.categories.length > 1 && !page.hasCategoriesProp) {
+      await page.setFmKey(
+        "categories",
+        page.categories.map((i) => createVaultLink(p2)(i.page)).filter((i) => i)
+      );
+      if (page.hasCategoryProp) {
+        new Notice("'category' property removed");
+        page.removeFmKey("category");
+      }
+    }
+    if (page.hasSubcategoryTag && !page.hasSubcategoryProp) {
+      changes = true;
+    }
+    if (!changes) {
+      new Notice("No changes necessary for Update command", 4e3);
+    } else {
+      new Notice("Updates completed");
+    }
   }
 };
 const add_commands = (plugin4) => {
@@ -106865,7 +107077,7 @@ const add_commands = (plugin4) => {
   });
   plugin4.addCommand({
     id: "update-kinded-page",
-    name: "update this (kinded) page",
+    name: "update this page",
     editorCallback: update_kinded_page(plugin4)
   });
 };
@@ -107300,10 +107512,11 @@ const on_layout_change = (plugin4) => {
     plugin4.info("layout change detected");
   });
 };
-const on_tab_change = (plugin4) => {
-  EventHandler(plugin4).onTabChange((evt) => {
-    plugin4.info(
+const on_tab_change = (p2) => {
+  EventHandler(p2).onTabChange((evt) => {
+    p2.info(
       evt.pageName,
+      "navigation event",
       {
         file: evt.filePath,
         icon: evt.icon,
@@ -107392,7 +107605,7 @@ class KindModelPlugin extends Plugin$1 {
       return;
     }
     await this.saveData(this.settings);
-    info2("user settings saved", this.settings);
+    info2("saved user settings", this.settings);
   }
 }
 export {

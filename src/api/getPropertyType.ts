@@ -62,11 +62,12 @@ export const getPropertyType = (p: KindModelPlugin) => (value: unknown): Propert
 					return "image_vault";
 				} else if (page.file.ext === "excalidraw") {
 					return "link_drawing";
-				} else if (page.file.ext = "md") {
+				} else if (page.file.ext === "md" || content.includes(".md|")) {
 					return "link_md"
 				}
-			}
-			
+			}	
+
+			p.info("undefined link", content, value)
 
 			return "link_undefined"
 		}

@@ -7,13 +7,18 @@ import {
 	getKindTagsOfPage, 
 	getMetadata, 
 	getSubcategories, 
+	hasAnyCategoryProp, 
+	hasAnyKindProp, 
+	hasAnySubcategoryProp, 
+	hasCategoriesProp, 
 	hasCategoryProp, 
 	hasCategoryTag, 
 	hasKindDefinitionTag, 
 	hasKindProp, 
 	hasKindsProp, 
 	hasKindTag, 
-	hasMultipleKinds, 
+	hasSubcategoriesProp, 
+	hasSubcategoryProp, 
 	hasSubcategoryTag, 
 	hasSubcategoryTagDefn, 
 	hasTypeDefinitionTag, 
@@ -24,6 +29,8 @@ import {
 	isTypeDefnPage 
 } from "../api/buildingBlocks";
 import { getPage } from "./getPage";
+import { isPageInfo } from "~/type-guards";
+import { fmApi } from "~/api";
 
 
 /**
@@ -36,6 +43,11 @@ import { getPage } from "./getPage";
 export const getPageInfo = (p: KindModelPlugin) => (
 	pg: PageReference
 ): PageInfo | undefined => {
+
+	if(isPageInfo(pg)) {
+		return pg;
+	}
+
 	const path = getPath(pg);
 	const page = getPage(p)(pg);
 
@@ -45,15 +57,22 @@ export const getPageInfo = (p: KindModelPlugin) => (
 			subcategories: getSubcategories(p)(page),
 
 			hasCategoryProp: hasCategoryProp(p)(page),
+			hasCategoriesProp: hasCategoriesProp(p)(page),
+			hasAnyCategoryProp: hasAnyCategoryProp(p)(page),
+			hasSubcategoryProp: hasSubcategoryProp(p)(page),
+			hasSubcategoriesProp: hasSubcategoriesProp(p)(page),
+			hasAnySubcategoryProp: hasAnySubcategoryProp(p)(page),
+
 			hasCategoryTag: hasCategoryTag(p)(page),
 			hasSubcategoryTag: hasSubcategoryTag(p)(page),
 			hasSubcategoryDefnTag: hasSubcategoryTagDefn(p)(page),
 
 			hasKindProp: hasKindProp(p)(page),
-			hasKindsProperty: hasKindsProp(p)(page),
+			hasKindsProp: hasKindsProp(p)(page),
+			hasAnyKindProp: hasAnyKindProp(p)(page),
+
 			hasKindTag: hasKindTag(p)(page),
 			hasKindDefinitionTag: hasKindDefinitionTag(p)(page),
-			hasMultipleKinds: hasMultipleKinds(p)(page),
 			hasTypeDefinitionTag: hasTypeDefinitionTag(p)(page),
 			
 			isCategoryPage: isCategoryPage(p)(page),
@@ -76,6 +95,7 @@ export const getPageInfo = (p: KindModelPlugin) => (
 				meta.categories, 
 				meta.subcategories
 			),
+			hasMultipleKinds: meta.kindTags.length > 1,
 			type: meta.isKindDefnPage
 				? "kind-defn"
 				: meta.isTypeDefnPage
@@ -88,6 +108,7 @@ export const getPageInfo = (p: KindModelPlugin) => (
 					? "kinded"
 					: "none",	
 			fm: page.file.frontmatter,
+			...fmApi(p, path),
 			metadata: getMetadata(p)(page),
 			...meta
 		}

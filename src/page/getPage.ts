@@ -1,6 +1,7 @@
 import { ensureLeading, ensureTrailing, isObject, isString, stripLeading } from "inferred-types";
 import { getPath } from "~/api/getPath";
 import KindModelPlugin from "~/main";
+import { isDvPage, isPageInfo } from "~/type-guards";
 import { DvPage, PageReference } from "~/types";
 
 /**
@@ -10,25 +11,17 @@ import { DvPage, PageReference } from "~/types";
 export const getPage = (p: KindModelPlugin) => (
 	pg: PageReference | undefined
 ): DvPage | undefined => {
-	// if (
-	// 	isString(pg) && (
-	// 		pg.includes("/category/") || 
-	// 		pg.includes("/subcategory/") ||
-	// 		pg.includes("kind/") ||
-	// 		pg.includes("type/") ||
-	// 		Array.from(p.cache?.kindDefinitionsByTag?.keys() || []).some(
-	// 			i => i.startsWith(stripLeading(pg, "#"))
-	// 		)
-	// 	)
-	// ) {
-	// 	return p.dv.page(ensureLeading(pg, "#"));
-	// }
+
+	if (isDvPage(pg)) {
+		return pg;
+	}
+
+	if (isPageInfo(pg)) {
+		return pg.current;
+	}
+
 
 	const path = getPath(pg);
-	const fc = p?.api?.fileCache;
-	const file = isObject(fc) && path && path in fc
-		? fc[path]
-		: undefined;
 	const page = path 
 		? p.dv.page(path)
 		: undefined;

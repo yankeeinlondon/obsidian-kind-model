@@ -22,7 +22,8 @@ import {
 	isKindDefnPage, 
 	isKindedPage, 
 	isKindTag, 
-	isSubcategoryPage 
+	isSubcategoryPage, 
+	hasAnyCategoryProp
 } from "~/api/buildingBlocks";
 
 
@@ -47,6 +48,31 @@ export type BuildingBlocksApi = {
 	 */
 	hasCategoriesProp: ReturnType<typeof hasCategoriesProp>,
 
+	/**
+	 * **hasAnyCategoryProp** 
+	 * 
+	 * Boolean flag which indicates if _either_ the `category` or `categories` 
+	 * property is set. 
+	 * 
+	 * **Notes:**
+	 * - a `categories` property which is empty or missing any vault links is not
+	 * considered valid and ignored in check
+	 * - a `category` which is not a vault link is also ignored
+	 */
+	hasAnyCategoryProp: ReturnType<typeof hasAnyCategoryProp>,
+
+	/**
+	 * **hasAnySubcategoryProp** 
+	 * 
+	 * Boolean flag which indicates if _either_ the `subcategory` or `subcategories` 
+	 * property is set. 
+	 * 
+	 * **Notes:**
+	 * - a `subcategories` property which is empty or missing any vault links is not
+	 * considered valid and ignored in check
+	 * - a `subcategory` which is not a vault link is also ignored
+	 */
+	hasAnySubcategoryProp: ReturnType<typeof hasAnyCategoryProp>,
 
 	/**
 	 * boolean operator which indicates whether the page has a tag starting with `#type/`.

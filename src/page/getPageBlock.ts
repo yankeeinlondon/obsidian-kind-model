@@ -3,7 +3,7 @@ import { Component, MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
 import { getPageInfo } from "./getPageInfo";
 import { PageInfoBlock } from "~/types";
-import { renderApi } from "../api/renderApi";
+import { renderApi } from "~/api/renderApi";
 
 /**
  * Creates a `PageInfoBlock` type which builds on the `PageInfo` type
@@ -16,16 +16,20 @@ import { renderApi } from "../api/renderApi";
 export const getPageInfoBlock = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
+	component: Component & MarkdownPostProcessorContext,
 	filePath: string,
 ): PageInfoBlock | undefined => {
+
 	const page = getPageInfo(p)(filePath);
 	if (page) {
+		const sectionInfo = component.getSectionInfo(container);
+
 		return {
 			...page,
 			content: source,
 			container,
 			component,
+			sectionInfo,
 			...renderApi(p)(container,filePath),
 		} as PageInfoBlock
 	}

@@ -1,5 +1,5 @@
-import { update_kinded_page } from "../../commands/update_kinded_page";
-import KindModelPlugin from "~main";
+import KindModelPlugin from "~/main";
+import { update_kinded_page } from "~/commands/update_kinded_page";
 import { Editor, MarkdownView } from "obsidian";
 
 /**
@@ -39,7 +39,7 @@ export const add_commands = (plugin: KindModelPlugin) => {
 
 	plugin.addCommand({
 		id: "update-kinded-page",
-		name: "update this (kinded) page",
+		name: "update this page",
 		editorCallback: update_kinded_page(plugin)
 	});
 

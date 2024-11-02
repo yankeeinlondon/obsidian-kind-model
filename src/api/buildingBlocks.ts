@@ -2,13 +2,11 @@ import {
 	Container,
 	Dictionary,
 	ensureLeading,
-	ExpandDictionary,
 	isArray, 
 	isContainer, 
 	isDefined, 
 	isNumber, 
 	isString, 
-	isYouTubeVideosInPlaylist, 
 	isYouTubeVideoUrl, 
 	stripLeading 
 } from "inferred-types";
@@ -43,7 +41,6 @@ import {
 } from "../types";
 import { BuildingBlocksApi } from "../types";
 import { getPropertyType } from "./getPropertyType";
-import { toArray } from "~/helpers/toArray";
 import { getPage } from "~/page";
 import { lookupKindByTag, lookupKnownKindTags } from "~/cache";
 
@@ -112,7 +109,7 @@ export const hasSubcategoryTagDefn = (p: KindModelPlugin) => (pg: PageReference)
 }
 
 /**
- * checks whether a kinded page 
+ * Checks whether a _kinded page_ has a **subcategory** tag defined.
  */
 export const hasSubcategoryTag = (p: KindModelPlugin) => (
 	pg: PageReference
@@ -128,6 +125,8 @@ export const hasSubcategoryTag = (p: KindModelPlugin) => (
 		? true
 		: false
 }
+
+
 
 /**
  * Indicates whether the _specified page_ has expressed it's category in the tag where it defined it's "kind".
@@ -157,13 +156,60 @@ export const hasCategoryTag = (p: KindModelPlugin) => (pg: PageReference): boole
  */
 export const hasCategoryProp = (p: KindModelPlugin) => (pg: PageReference): boolean => {
 	const page = getPage(p)(pg); 
-
+	
 	if (page) {
-		return page.category && isFileLink(page.category) ? true : false;
+		const catType = getPropertyType(p)(page.file.frontmatter["category"]);
+
+		return page.category && catType.startsWith("link") ? true : false;
 	}
 
 	return false;
 }
+
+/**
+ * Boolean flag indicating whether the page has `subcategory` property which
+ * is a `FileLink`.
+ */
+export const hasSubcategoryProp = (p: KindModelPlugin) => (pg: PageReference): boolean => {
+	const page = getPage(p)(pg); 
+	
+	if (page) {
+		const catType = getPropertyType(p)(page.file.frontmatter["subcategory"]);
+
+		return page.category && catType.startsWith("link") ? true : false;
+	}
+
+	return false;
+}
+
+/**
+ * Boolean flag indicating whether the page has `subcategories` property which
+ * is an array of `FileLink` references.
+ */
+export const hasSubcategoriesProp = (p: KindModelPlugin) => (pg: PageReference): boolean => {
+	const page = getPage(p)(pg); 
+	
+	if (page) {
+		const catType = getPropertyType(p)(page.file.frontmatter["subcategory"]);
+
+		return page.category && catType.startsWith("link") ? true : false;
+	}
+
+	return false;
+}
+
+/**
+ * **hasAnySubcategoryProp** 
+ * 
+ * Boolean flag which indicates if _either_ the `subcategory` or `subcategories` 
+ * property is set. 
+ * 
+ * **Notes:**
+ * - a `subcategories` property which is empty or missing any vault links is not
+ * considered valid and ignored in check
+ * - a `subcategory` which is not a vault link is also ignored
+ */
+export const hasAnySubcategoryProp = (p: KindModelPlugin) => (pg: PageReference): boolean => hasSubcategoriesProp(p)(pg) || hasSubcategoryProp(p)(pg);
 
 /**
  * boolean operation which checks that page has a `categories` property, it is an array, and at least
@@ -182,6 +228,19 @@ export const hasCategoriesProp = (p: KindModelPlugin) => (pg: PageReference): bo
 
 	return false;
 }
+
+/**
+ * **hasAnyCategoryProp** 
+ * 
+ * Boolean flag which indicates if _either_ the `category` or `categories` 
+ * property is set. 
+ * 
+ * **Notes:**
+ * - a `categories` property which is empty or missing any vault links is not
+ * considered valid and ignored in check
+ * - a `category` which is not a vault link is also ignored
+ */
+export const hasAnyCategoryProp = (p: KindModelPlugin) => (pg: PageReference): boolean => hasCategoriesProp(p)(pg) || hasCategoryProp(p)(pg);
 
 /**
  * tests whether a page is a "category page" which is ascertained by:
@@ -209,10 +268,17 @@ export const isSubcategoryPage = (p: KindModelPlugin) => (
 	pg: PageReference
 ): boolean => {
 	const page = getPage(p)(pg);
+
+	if (page) {
+		return page.file.etags.some(i => 
+			i.split("/").length === 4 && i.split("/")[1] === "subcategory"
+		)
+			? true 
+			: false
+
+	}
 	
-	return page && page.file.etags.some(i => i.split("/").length === 4 && i.split("/")[1] === "subcategory")
-		? true 
-		: false;
+	return false;
 }
 
 /**
@@ -315,6 +381,9 @@ export const hasKindsProp = (p: KindModelPlugin) => (pg: PageReference): boolean
 	}
 	return false;
 }
+
+
+export const hasAnyKindProp = (p: KindModelPlugin) => (pg: PageReference): boolean => hasKindProp(p)(pg) || hasKindsProp(p)(pg);
 
 /**
  * a boolean operator which reports on whether the page has a `type` property which is a `FileLink` to 
@@ -543,9 +612,10 @@ export const getCategories = (p: KindModelPlugin) => (
 		const missing: string[] = [];
 		const pages = Array.from<string>(tags).map(
 			t => {
-				const pgs = p.dv.pages(`${t}`);
+				const [kind, cat] = t.split("/")
+				const pgs = p.dv.pages(`${kind}/category/${cat}`);
 				if (pgs.length > 0) {
-					return [t, getPage(p)(pgs[0] as Link)] as [string, DvPage]
+					return [t, pgs[0] as DvPage] as [string, DvPage]
 				} else {
 					missing.push(`${t} on page "${page.file.path}"`);
 					return undefined;
@@ -600,9 +670,12 @@ export const getSubcategories = (p: KindModelPlugin) => (
 		const kindedSubcat = page.file.etags.filter(
 			t => t.split("/").length === 4 && t.split("/")[1] === "subcategory"
 		).map(i => subCatTag(i.split("/")[0], i.split("/")[2], i.split("/")[3]));
-		const kinded = page.file.etags.filter(
-			t => t.split("/").length === 3 && !["category", "subcategory"].includes(t.split("/")[1]) && isKindTag(p)(t.split("/")[0])
-		).map(i => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2]));
+		const kinded = page.file.etags
+			.filter(
+					t => t.split("/").length === 3 && !["category", "subcategory"].includes(t.split("/")[1]) && isKindTag(p)(t.split("/")[0])
+			).map(
+				i => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2])
+			);
 
 
 		/** unique set of tags in format of `#kind/cat` */
@@ -615,9 +688,10 @@ export const getSubcategories = (p: KindModelPlugin) => (
 		const missing: string[] = [];
 		const pages = Array.from<string>(tags).map(
 			t => {
-				const pgs = p.dv.pages(`${t}`);
+				const [ kind, cat, subcat ] = t.split("/");
+				const pgs = p.dv.pages(`${kind}/subcategory/${cat}/${subcat}`);
 				if (pgs.length > 0) {
-					return [t, getPage(p)(pgs[0] as Link)] as [string, DvPage]
+					return [t, pgs[0]] as [string, DvPage | undefined]
 				} else {
 					missing.push(`${t} on page "${page.file.path}"`);
 					return undefined;
@@ -639,7 +713,7 @@ export const getSubcategories = (p: KindModelPlugin) => (
 					category: parts[1],
 					subcategory: parts[2],
 					kindedTag: ensureLeading(t, "#"),
-					defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${t.split("/)")}`
+					defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${parts[2]}`
 				} as PageSubcategory
 			}
 		);
@@ -785,7 +859,7 @@ export const getKindPages = (p: KindModelPlugin) => (
 		const pages = getKindTagsOfPage(p)(page)
 			.map(i => lookupKindByTag(p)(i))
 			.map(i => i ? getPage(p)(i.path) : undefined)
-			.map(i => i) as DvPage[];
+			.filter(i => i) as DvPage[];
 
 		return pages;
 	}
@@ -883,50 +957,60 @@ export const getClassification = (p: KindModelPlugin) => (
 ): Classification[] => {
 	const page = pg ? getPage(p)(pg) : undefined; 
 	const classification: Classification[] = [];
-
 	
 	if(page) {
 		const pgCats = cats ? cats : getCategories(p)(page);
 		const pgSubCats = subCats? subCats : getSubcategories(p)(page);
 
-		const kinds: DvPage[] = getKindPages(p)(page);
+		const kindTags: string[] = getKindTagsOfPage(p)(page)
 
-		for (const k of kinds) {
-			let kindTag = k?.file?.etags.find(i => i.startsWith(`#kind/`))?.split("/")[1] as string | undefined;
+		for (let tag of kindTags) {
+			tag = stripLeading(tag, "#");
+			p.info(`tag ${tag}`);
 
-			if(!kindTag) {
-				// solve for when kinded page acting as category or subcat
-				kindTag = k?.file?.etags.find(
-					i => ["category", "subcategory"].includes(i.split("/")[1])
-				)?.split("/")[0]
-			}
-
-			if (!kindTag) {
-				// solve for a subtyped tag where the leading tag is a
-				// known "kind"
-				kindTag = k?.file?.etags.find(
-					i => i.split("/").length > 0 && 
-					!["category", "subcategory"].includes(i.split("/")[1]) &&
-					i.split("/").length < 4
-				)?.split("/")[0]
-			}
+			const kd = lookupKindByTag(p)(tag);
+			const kp = kd ? getPage(p)(kd.path) : undefined;
 			
-			if(kindTag) {
+			if (kd && kp) {
 				classification.push({
-					kind: k,
-					kindTag,
-					categories: pgCats.filter(c => c.kind === stripLeading(kindTag, "#")),
-					subcategory: pgSubCats.find(c => c.kind === stripLeading(kindTag, "#"))
-				})
+					kind: kp,
+					kindTag: tag,
+					categories: pgCats.filter(c => c.kind === stripLeading(tag, "#")),
+					subcategory: pgSubCats.find(c => c.kind === stripLeading(tag, "#"))
+				});
 			} else {
-				const meta = getMetadata(p)(page);
+				const defn = p.dv.pages(`#kind/${tag}`);
+				if(defn.length > 0) {
+					p.debug(`tag lookup of ${tag} failed but found kind definition with dataview query`);
+					const kindPage = Array.from(defn)[0] as DvPage;
+					if(kindPage && kindPage.file.etags.some(i => i.startsWith("#kind/"))) {
+						classification.push({
+							kind: kindPage,
+							kindTag: tag,
+							categories: pgCats.filter(c => c.kind === stripLeading(tag, "#")),
+							subcategory: pgSubCats.find(c => c.kind === stripLeading(tag, "#"))
+						});
+
+						return classification
+					}
+				}
+
+				p.warn(`no 'kind' could be identified for the page ${page.file.path}`, {
+					categories: pgCats, 
+					subcategories: pgSubCats, 
+					etags: Array.from(page.file.etags),
+					kindTags,
+					tag,
+					kd,
+					kp
+				})
 				
-				p.warn(`no 'kind' could be identified for the page ${page.file.path}`)
 			}
+
 		}
 	}
 
-	p.info("classification", classification);
+	p.debug("classification", classification);
 	
 	return classification
 };
@@ -948,6 +1032,8 @@ export const buildingBlocks = (plugin: KindModelPlugin): BuildingBlocksApi => ({
 	hasMultipleKinds: hasMultipleKinds(plugin),
 	hasCategoryTagDefn: hasCategoryTagDefn(plugin),
 	hasCategoryTag: hasCategoryTag(plugin),
+	hasAnyCategoryProp: hasAnyCategoryProp(plugin),
+	hasAnySubcategoryProp: hasAnySubcategoryProp(plugin),
 	getCategories: getCategories(plugin),
 	hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin),
 	isCategoryPage: isCategoryPage(plugin),

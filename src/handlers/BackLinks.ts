@@ -49,7 +49,7 @@ export type BackLinkOptions = {
 export const BackLinks = (p: KindModelPlugin) => (
 	source: string,
 	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
+	component: Component & MarkdownPostProcessorContext,
 	filePath: string
 ) => async(
 	params_str: string = ""

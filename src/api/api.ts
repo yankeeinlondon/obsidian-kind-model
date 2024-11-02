@@ -1,7 +1,7 @@
 import KindModelPlugin from "~/main";
 import { buildingBlocks } from "./buildingBlocks";
 import { getPath } from "./getPath";
-import { createPageView } from "./createPageView";
+import { createPageView } from "../page/createPageView";
 import { getPageInfo } from "../page/getPageInfo";
 import { formattingApi } from "./formattingApi";
 import { renderApi } from "./renderApi";
@@ -11,6 +11,7 @@ import { getPageInfoBlock } from "../page/getPageBlock";
 import { queryHandlers } from "~/handlers";
 import { obsidianApi } from "./obsidian";
 import { getPage } from "~/page";
+import { fmApi } from "./fm";
 
 export const api = (plugin: KindModelPlugin) => ({
 	/**
@@ -25,7 +26,9 @@ export const api = (plugin: KindModelPlugin) => ({
 	...buildingBlocks(plugin),
 	...showApi(plugin),
 	...iconApi(plugin),
-	...obsidianApi(plugin),
+	fm: fmApi(plugin),
+	obsidian: obsidianApi(plugin),
+
 
 	/**
 	 * **render**`(el, filePath) -> API`

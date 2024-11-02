@@ -555,6 +555,12 @@ export type ObsidianApp = {
 	vault: {
 		adaptor: ObsidianAdaptor;
 		fileMap: Record<string, ObsidianMappedFile>;
+		/**
+		 * Retrieves a file or folder in the vault by its path.
+		 * @param path - The path to the file or folder, relative to the vault root.
+		 * @returns A TAbstractFile if found, or null if not found.
+		 */
+		getAbstractFileByPath(path: string): TAbstractFile | null;
 	};
 	viewRegistry: any;
 	workspace: {

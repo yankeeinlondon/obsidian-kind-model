@@ -1,7 +1,5 @@
 import { isFunction } from "inferred-types";
 import {  MarkdownPostProcessorContext } from "obsidian";
-import { isKindTag } from "~/api/buildingBlocks";
-import { lookupKnownKindTags } from "~/cache";
 import KindModelPlugin from "~/main";
 import { ObsidianComponent } from "~/types";
 
@@ -25,9 +23,9 @@ export const Page = (p: KindModelPlugin) => (
 	if(page) {
 		const fmt = p.api.format;
 
-		p.info(`Page Details`, { page });
-		console.log(page)
-		fmt.bold("Page Information<br/>");
+		p.info(`Page Details`, page);
+		
+		page.render(fmt.bold("Page Information<br/>"));
 
 		const kindOfPage = [ fmt.bold("Kind of Page"), page.type ];
 		const types = page.typeTags?.length > 0 

@@ -22,6 +22,7 @@
 		"@codemirror/autocomplete",
 		"vue"
 	],
+	"typeRoots": ["node_modules/@types", "node_modules/obsidian"],
 	"paths": {
 		"~/*": ["src/*"]
 	},
