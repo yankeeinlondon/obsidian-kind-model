@@ -2,25 +2,16 @@ import { isFunction } from "inferred-types";
 import {  MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
 import { ObsidianComponent } from "~/types";
+import { createHandler } from "./createHandler";
 
 
-export const Page = (p: KindModelPlugin) => (
-	source: string,
-	container: HTMLElement,
-	component: ObsidianComponent | MarkdownPostProcessorContext,
-	filePath: string
-) => (
-	scalar: any[],
-	obj: any
-) => {
-	const page = p.api.getPageInfoBlock(
-		source,
-		container,
-		component,
-		filePath
-	);
-	
-	if(page) {
+export const Page = createHandler("Page")
+	.scalar()
+	.options()
+	.handler(async(evt) => {
+		const p = evt.plugin;
+		const page = evt.page;
+
 		const fmt = p.api.format;
 
 		p.info(`Page Details`, page);
@@ -75,7 +66,7 @@ export const Page = (p: KindModelPlugin) => (
 			"Value",
 			...report
 		));
+	});
 
-	}
 
-}
+

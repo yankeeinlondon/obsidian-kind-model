@@ -1,8 +1,6 @@
 import { isObject, isString } from "inferred-types"
 
 
-export const isError = <T>(val: T): val is T & { msg: string } => {
-	return (
-		isObject(val) && "msg" in val && isString(val.msg)
-	) || val instanceof Error
+export const isError = (val: unknown): val is Error => {
+	return isObject(val) && val instanceof Error;
 }

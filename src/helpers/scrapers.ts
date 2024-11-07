@@ -10,7 +10,6 @@ import {
 import { 
 	NUMERIC_CHAR, 
 	stripAfter, 
-	stripBefore,
 	retainWhile,
 	stripUntil,
 	stripTrailing
@@ -18,7 +17,6 @@ import {
 import KindModelPlugin from "../main";
 import { BookMeta } from "../handlers/Book";
 import { DateTime } from "luxon";
-// import { loadRemoteDom } from "./network.ts.ignore";
 import { requestUrl } from "./obsidian";
 
 /**
@@ -177,8 +175,12 @@ export const AmazonBook = async (p: KindModelPlugin, book: BookMeta): Promise<Bo
 	p.debug("page created")
 
 
-	let amazonRating = Number(stripAfter(query(page, "span .a-icon-alt").textContent ||"", " "));
-	let goodReadsRating = Number(query(page, ""))
+	let amazonRating = page && query(page, "span .a-icon-alt")?.textContent
+		? Number(stripAfter(query(page, "span .a-icon-alt")?.textContent ||"", " "))
+		: undefined;
+	// let goodReadsRating = page 
+	// 	? Number(query(page, ""))
+	// 	: undefined;
 
 
 	/** number of reviewers */

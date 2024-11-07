@@ -486,7 +486,6 @@ export const showSubcategories = (p: KindModelPlugin) => (
 				htmlLink(p)(page, { display: cat.subcategory })
 			);
 		}
-		p.info("sub",{links, cats, page: page.file.name})
 	}
 
 	return links.join(", ");

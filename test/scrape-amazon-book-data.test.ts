@@ -51,7 +51,7 @@ describe("Name", () => {
 	it("first test", () => {
 
 		/** DOM area where review histogram is presented [ 5-star, 4-star, 3-star, 2-star, 1-star ] */
-		let histogram = queryAll(page, "#histogramTable tr").map((el: IElement) => el.lastChild.textContent);
+		let histogram = queryAll(page, "#histogramTable tr").map((el: IElement) => el.lastChild?.textContent);
 
 		let pages: number | undefined = undefined;
 		let xrayEnabled: boolean | undefined  = undefined;
@@ -64,7 +64,7 @@ describe("Name", () => {
 		if (detailListing) {
 			let printLength = findWhere(detailListing, "span.a-text-bold", "empty", "contains", "Print length");
 			if (isElement(printLength)) {
-				pages = Number(stripAfter(printLength.nextElementSibling.textContent || "", " pages"))
+				pages = Number(stripAfter(printLength.nextElementSibling?.textContent || "", " pages"))
 			}
 
 			let xray = findWhere(detailListing, "span.a-text-bold", "empty", "contains", "X-Ray");
@@ -146,10 +146,12 @@ describe("Name", () => {
 	
 		let numOfRatings = query(page, "#acrCustomerReviewText")
 			? Number(
-				stripAfter(query(page, "#acrCustomerReviewText").textContent || "", " ratings")
+				stripAfter(query(page, "#acrCustomerReviewText")?.textContent || "", " ratings")
 			)
 			: undefined;
-		let amazonRating = Number(stripAfter(query(page, "span .a-icon-alt").textContent ||"", " "));
+		let amazonRating = page && query(page, "span .a-icon-alt")?.textContent
+		? Number(stripAfter(query(page, "span .a-icon-alt")?.textContent || "", " "))
+		: undefined;
 		let goodReadsRating = Number((query(page, ".gr-review-rating-text span")?.textContent || "").trim());
 
 		let reviews = queryAll(page, "#cm-cr-dp-review-list [data-hook]=review").map((el: Element) => 
@@ -158,14 +160,14 @@ describe("Name", () => {
 
 		/** Kindle, Hardcover, etc. */
 		let format = queryAll(page, ".a-color-secondary")
-			.find((i: IElement)=> i.textContent?.includes("Format"))
+			.find((i: IElement)=> i?.textContent?.includes("Format"))
 				?.nextElementSibling?.textContent;
 
 		/**
 		 * gives us a list of books by the author but to get to other interesting content
 		 * we'll need to move around some
 		 */
-		const books = queryAll(page, "span[aria-labelledby^='author']")?.filter(i => i.querySelector("span>a")?.textContent.toLowerCase() === book.authors[0].toLowerCase());				
+		const books = queryAll(page, "span[aria-labelledby^='author']")?.filter(i => i.querySelector("span>a")?.textContent?.toLowerCase() === book.authors[0].toLowerCase());				
 	
 		if (!pages) {
 			// second attempt at finding pages

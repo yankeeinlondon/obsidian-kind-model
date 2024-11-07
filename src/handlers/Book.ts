@@ -1,9 +1,5 @@
-
-
-import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { Date } from "inferred-types";
 import { DateTime } from "luxon";
-import KindModelPlugin from "~/main";
 import { DvPage } from "~/types";
 import { 
 	AMAZON, 
@@ -15,6 +11,7 @@ import {
 } from "~/constants";
 import {  AmazonBook, worldCatBookPage } from "~/helpers/scrapers";
 import { isDateTime } from "~/type-guards";
+import { createHandler } from "./createHandler";
 
 type BookSearchMeta = {
 	title?: string;
@@ -144,242 +141,237 @@ export type BookMeta = {
  * 
  * Based on metadata that is provided by [kindle-sync]() and [book-search]().
  */
-export const Book =  (p: KindModelPlugin) => async(
-	source: string,
-	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
-	filePath: string
-) =>  {
-	// const dv = p.dv;
-	const page = p.api.getPageInfoBlock(source, container, component, filePath);
-	if (page) {
+export const Book = createHandler("Book")
+	.scalar()
+	.options()
+	.handler(async(evt)=> {
+		const { plugin:p, page} = evt;
 
-	const fmt = page.format;
-	const current = page.current as DvPage & PageMeta;
-	
-	let book: BookMeta = {
-		title: current.title || current["kindle-sync"]?.title || "unknown",
-		subtitle: current.subtitle,
-		authors: (
-			current.authors
-			? current.authors.split(",").map(i => i.trim())
-			: current.author
-			? current.author.split(",").map(i => i.trim())
-			: current["kindle-sync"].author
-			? current["kindle-sync"].author.split(",").map(i => i.trim())
-			: []
-		),
-		bookCategory: current.category,
-		publisher: current.publisher,
-		publishDate: current.publishDate,
-		totalPages: current.totalPage,
-		description: current.description,
-		isbn13: current.isbn13,
-		isbn10: current.isbn10,
-		asin: current["kindle-sync"]?.asin
-			? current["kindle-sync"].asin 
-			: typeof current?.asin === "string" ? String(current?.asin) : undefined,
-		coverImages: [
-			...(current.coverUrl ? [current.coverUrl] : []),
-			...(current["kindle-sync"]?.bookImageUrl ? [current["kindle-sync"]?.bookImageUrl
-			] : [])
-		],
-
-		worldCatSubjects: [],
-
-		googleBookLink: current.link,
-		/**
-		 * provides a link to the WorldCat service with the featured
-		 * book highlighted.
-		 */
-		worldCatBookLink: undefined,
-		/**
-		 * provides a list of books by the same author
-		 */
-		otherBooks: current.otherBooks as OtherBook[] | undefined,
-
-		/**
-		 * the _number_ of highlights found from a kindle device
-		 */
-		kindleHighlightCount: current['kindle-sync']?.highlightsCount
-	};
-
-	if(!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
-		p.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
+		const fmt = p.api.format;
+		const current = page.current as DvPage & PageMeta;
 		
-		page.callout("warning","No Book metadata found!", {content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`});
-	} else {
-		book.worldCatBookLink = await worldCatBookPage(p, book);
-		// get Amazon info
-		book = await AmazonBook(p,book);
-		p.debug("Book after Amazon Scrape", {book})
-
-		const cover = [
-			`<div class="book-cover" style="padding-bottom: 8px;">`,
-			book.coverImages.length > 0 
-				? `<img src="${book.coverImages[0]}" style="">`
-				: ``,
-			`</div>`
-		];
-
-		const publisher = book.publisher
-			? [
-				fmt.medium("Publisher:"),
-				fmt.ul([book.publisher], {  indentation: "default", my: "tight" })
-			]
-			: [];
-
-		const publicationDate = book.publishDate
-			? [
-				fmt.medium("Publication Date:"),
-				isDateTime(book.publishDate)
-				? fmt.ul([book?.publishDate?.toFormat("LLL yyyy")], {indentation: "default", my: "tight"})
-				: "unknown format"
-			]
-			: [];
-
-		const pages = book.totalPages
-			? [
-				fmt.medium("Length:&nbsp;"),
-				fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", {ts:"sm"})}`], {indentation: "default", my: "tight"}),
-			]
-			: [];
-
-		const author = book.authors.length > 0
-			? [
-				fmt.medium("Written By:"),
-				fmt.ul(book.authors, {indentation: "default", my: "tight"})
-			]
-			: [];
-		
-		const book_ids = [
-			`<div class="book-ids">`,
-			fmt.medium("Book Identifiers:"),
-			fmt.ul([
-				book.isbn10 ? `${fmt.light(book.isbn10, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn10", {ts: "xs"})}` : undefined,
-				book.isbn13 ? `${fmt.light(book.isbn13, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn13", {ts: "xs"})}` : undefined,
-				book.asin ? `${fmt.light(book.asin, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;asin", {ts: "xs"})}` : undefined
-			
-			], {indentation: "default", my: "tight"}),
-			`</div>`
-		]
-
-		const summary = fmt.blockquote("example", "Summary", {
-			content: fmt.wrap([
-				...cover,
-				...author,
-				...publisher,
-				...publicationDate,
-				...pages,
-				...book_ids,
-			],{ my: "4px", px: "8px"}),
-			style: {
-				mr: "8px",
-				ml: "8px",
-			}
-		});
-		
-		const description = fmt.blockquote("info", "Book Description", {
-			fold: "+",
-			content: book.description || "no description found"
-		});
-
-
-
-		const otherBooks = book.otherBooks
-			? [
-				fmt.blockquote("info", `Books by ${book.authors[0]}`, {
-					content: book.otherBooks.map(b => {
-						return fmt.link(
-							b.title,
-							b.titleLink,
-							{ iconUrl: b.imageLink }
-						);
-					}).join("\n") || "&nbsp;",
-					icon: BOOK_ICON,
-					fold: "-"
-				})
-			]
-			: []
-
-		const actions = fmt.blockquote("info", "Actions / Links", {
-			content: fmt.wrap([
-				book.asin ? fmt.link(
-					"Open in Kindle", 
-					`kindle://book?action=open&asin=${book.asin}`, 
-					{svgInline: KINDLE_ICON}
-				): undefined,
-				book.asin ? fmt.link(
-					"Amazon",
-					`https://www.amazon.com/dp/${book.asin}`,
-					{ svgInline: AMAZON}
-				) : undefined,
-				book.googleBookLink
-					? fmt.link(
-						"Google",
-						book.googleBookLink,
-						{ svgInline: BOOK_ICON}
-					)
-					: undefined,
-				book.worldCatBookLink 
-				? fmt.link(
-					"WorldCat",
-					book.worldCatBookLink,
-					{ svgInline: BOOK_CATALOG }
-				)
-				: undefined,					
-				fmt.link(
-					"Search", 
-					`https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
-					{ svgInline: SEARCH_BOOK}
-				),
-				// fmt.link(
-				// 	"Update Metadata", 
-				// 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
-				// 	{ svgInline: META_DATA}
-				// ),
-			], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
-			fold: "+"
-		});
-
-		const reviews = fmt.blockquote("info", "Reviews", {
-			content: "not available currently",
-			fold: "-",
-			icon: TIP_ICON
-		});
-
-
-		const details = fmt.wrap([
-			description,
-			reviews,
-			...otherBooks,
-			actions,
-			fmt.empty_callout({ flex: true, grow: 1})
-		], { flex: true, direction: "column" });
-
-		const html: string[] = [
-			`<div class="book-summary">`,
-			...(
-				book.subtitle
-					? [
-						`<div class="book-subtitle" style="display:block; width: 100%">`,
-							fmt.blockquote("quote", book.subtitle, {style: {mb: "8px"}}),
-						`</div>`
-					]
-					: []
+		let book: BookMeta = {
+			title: current.title || current["kindle-sync"]?.title || "unknown",
+			subtitle: current.subtitle,
+			authors: (
+				current.authors
+				? current.authors.split(",").map(i => i.trim())
+				: current.author
+				? current.author.split(",").map(i => i.trim())
+				: current["kindle-sync"]?.author
+				? current["kindle-sync"]?.author.split(",").map(i => i.trim())
+				: []
 			),
-			// column container
-			`<div class="book-cols" style="display:flex; flex-direction: cols; width: 100%;">`,
-			// LEFT / SUMMARY
-			`<div class="summary-col" style="display:flex; flex-grow:0; max-width: 30%;">${summary}</div>`,
-			// RIGHT / DETAILS
-			details,
-			`</div`
-		];
+			bookCategory: current.category,
+			publisher: current.publisher,
+			publishDate: current.publishDate,
+			totalPages: current.totalPage,
+			description: current.description,
+			isbn13: current.isbn13,
+			isbn10: current.isbn10,
+			asin: current["kindle-sync"]?.asin
+				? current["kindle-sync"].asin 
+				: typeof current?.asin === "string" ? String(current?.asin) : undefined,
+			coverImages: [
+				...(current.coverUrl ? [current.coverUrl] : []),
+				...(current["kindle-sync"]?.bookImageUrl ? [current["kindle-sync"]?.bookImageUrl
+				] : [])
+			],
 
-		await page.render(html.join("\n"));
-	}
-		
-	}
-	
-}
+			worldCatSubjects: [],
+
+			googleBookLink: current.link,
+			/**
+			 * provides a link to the WorldCat service with the featured
+			 * book highlighted.
+			 */
+			worldCatBookLink: undefined,
+			/**
+			 * provides a list of books by the same author
+			 */
+			otherBooks: current.otherBooks as OtherBook[] | undefined,
+
+			/**
+			 * the _number_ of highlights found from a kindle device
+			 */
+			kindleHighlightCount: current['kindle-sync']?.highlightsCount
+		};
+
+		if(!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
+			p.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
+			
+			page.callout("warning","No Book metadata found!", {content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`});
+		} else {
+			book.worldCatBookLink = await worldCatBookPage(p, book);
+			// get Amazon info
+			book = await AmazonBook(p,book);
+			p.debug("Book after Amazon Scrape", {book})
+
+			const cover = [
+				`<div class="book-cover" style="padding-bottom: 8px;">`,
+				book.coverImages.length > 0 
+					? `<img src="${book.coverImages[0]}" style="">`
+					: ``,
+				`</div>`
+			];
+
+			const publisher = book.publisher
+				? [
+					fmt.medium("Publisher:"),
+					fmt.ul([book.publisher], {  indentation: "default", my: "tight" })
+				]
+				: [];
+
+			const publicationDate = book.publishDate
+				? [
+					fmt.medium("Publication Date:"),
+					isDateTime(book.publishDate)
+					? fmt.ul([book?.publishDate?.toFormat("LLL yyyy")], {indentation: "default", my: "tight"})
+					: "unknown format"
+				]
+				: [];
+
+			const pages = book.totalPages
+				? [
+					fmt.medium("Length:&nbsp;"),
+					fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", {ts:"sm"})}`], {indentation: "default", my: "tight"}),
+				]
+				: [];
+
+			const author = book.authors.length > 0
+				? [
+					fmt.medium("Written By:"),
+					fmt.ul(book.authors, {indentation: "default", my: "tight"})
+				]
+				: [];
+			
+			const book_ids = [
+				`<div class="book-ids">`,
+				fmt.medium("Book Identifiers:"),
+				fmt.ul([
+					book.isbn10 ? `${fmt.light(book.isbn10, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn10", {ts: "xs"})}` : undefined,
+					book.isbn13 ? `${fmt.light(book.isbn13, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;isbn13", {ts: "xs"})}` : undefined,
+					book.asin ? `${fmt.light(book.asin, {ts: "sm"})}&nbsp;${fmt.medium("&nbsp;asin", {ts: "xs"})}` : undefined
+				
+				], {indentation: "default", my: "tight"}),
+				`</div>`
+			]
+
+			const summary = fmt.blockquote("example", "Summary", {
+				content: fmt.wrap([
+					...cover,
+					...author,
+					...publisher,
+					...publicationDate,
+					...pages,
+					...book_ids,
+				],{ my: "4px", px: "8px"}),
+				style: {
+					mr: "8px",
+					ml: "8px",
+				}
+			});
+			
+			const description = fmt.blockquote("info", "Book Description", {
+				fold: "+",
+				content: book.description || "no description found"
+			});
+
+
+
+			const otherBooks = book.otherBooks
+				? [
+					fmt.blockquote("info", `Books by ${book.authors[0]}`, {
+						content: book.otherBooks.map(b => {
+							return fmt.link(
+								b.title,
+								b.titleLink,
+								{ iconUrl: b.imageLink }
+							);
+						}).join("\n") || "&nbsp;",
+						icon: BOOK_ICON,
+						fold: "-"
+					})
+				]
+				: []
+
+			const actions = fmt.blockquote("info", "Actions / Links", {
+				content: fmt.wrap([
+					book.asin ? fmt.link(
+						"Open in Kindle", 
+						`kindle://book?action=open&asin=${book.asin}`, 
+						{svgInline: KINDLE_ICON}
+					): undefined,
+					book.asin ? fmt.link(
+						"Amazon",
+						`https://www.amazon.com/dp/${book.asin}`,
+						{ svgInline: AMAZON}
+					) : undefined,
+					book.googleBookLink
+						? fmt.link(
+							"Google",
+							book.googleBookLink,
+							{ svgInline: BOOK_ICON}
+						)
+						: undefined,
+					book.worldCatBookLink 
+					? fmt.link(
+						"WorldCat",
+						book.worldCatBookLink,
+						{ svgInline: BOOK_CATALOG }
+					)
+					: undefined,					
+					fmt.link(
+						"Search", 
+						`https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
+						{ svgInline: SEARCH_BOOK}
+					),
+					// fmt.link(
+					// 	"Update Metadata", 
+					// 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
+					// 	{ svgInline: META_DATA}
+					// ),
+				], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
+				fold: "+"
+			});
+
+			const reviews = fmt.blockquote("info", "Reviews", {
+				content: "not available currently",
+				fold: "-",
+				icon: TIP_ICON
+			});
+
+
+			const details = fmt.wrap([
+				description,
+				reviews,
+				...otherBooks,
+				actions,
+				fmt.empty_callout({ flex: true, grow: 1})
+			], { flex: true, direction: "column" });
+
+			const html: string[] = [
+				`<div class="book-summary">`,
+				...(
+					book.subtitle
+						? [
+							`<div class="book-subtitle" style="display:block; width: 100%">`,
+								fmt.blockquote("quote", book.subtitle, {style: {mb: "8px"}}),
+							`</div>`
+						]
+						: []
+				),
+				// column container
+				`<div class="book-cols" style="display:flex; flex-direction: cols; width: 100%;">`,
+				// LEFT / SUMMARY
+				`<div class="summary-col" style="display:flex; flex-grow:0; max-width: 30%;">${summary}</div>`,
+				// RIGHT / DETAILS
+				details,
+				`</div`
+			];
+
+			await page.render(html.join("\n"));
+		}
+	})
+
+

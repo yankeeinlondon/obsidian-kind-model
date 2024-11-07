@@ -1720,7 +1720,7 @@ function combineExtractors(...extractors) {
     [{}, null, 1]
   ).slice(0, 2);
 }
-function parse$1(s2, ...patterns) {
+function parse$2(s2, ...patterns) {
   if (s2 == null) {
     return [null, null];
   }
@@ -1897,7 +1897,7 @@ const extractISOTimeAndOffset = combineExtractors(
   extractIANAZone
 );
 function parseISODate(s2) {
-  return parse$1(
+  return parse$2(
     s2,
     [isoYmdWithTimeExtensionRegex, extractISOYmdTimeAndOffset],
     [isoWeekWithTimeExtensionRegex, extractISOWeekTimeAndOffset],
@@ -1906,10 +1906,10 @@ function parseISODate(s2) {
   );
 }
 function parseRFC2822Date(s2) {
-  return parse$1(preprocessRFC2822(s2), [rfc2822, extractRFC2822]);
+  return parse$2(preprocessRFC2822(s2), [rfc2822, extractRFC2822]);
 }
 function parseHTTPDate(s2) {
-  return parse$1(
+  return parse$2(
     s2,
     [rfc1123, extractRFC1123Or850],
     [rfc850, extractRFC1123Or850],
@@ -1917,11 +1917,11 @@ function parseHTTPDate(s2) {
   );
 }
 function parseISODuration(s2) {
-  return parse$1(s2, [isoDuration, extractISODuration]);
+  return parse$2(s2, [isoDuration, extractISODuration]);
 }
 const extractISOTimeOnly = combineExtractors(extractISOTime);
 function parseISOTimeOnly(s2) {
-  return parse$1(s2, [isoTimeOnly, extractISOTimeOnly]);
+  return parse$2(s2, [isoTimeOnly, extractISOTimeOnly]);
 }
 const sqlYmdWithTimeExtensionRegex = combineRegexes(sqlYmdRegex, sqlTimeExtensionRegex);
 const sqlTimeCombinedRegex = combineRegexes(sqlTimeRegex);
@@ -1931,7 +1931,7 @@ const extractISOTimeOffsetAndIANAZone = combineExtractors(
   extractIANAZone
 );
 function parseSQL(s2) {
-  return parse$1(
+  return parse$2(
     s2,
     [sqlYmdWithTimeExtensionRegex, extractISOYmdTimeAndOffset],
     [sqlTimeCombinedRegex, extractISOTimeOffsetAndIANAZone]
@@ -6574,7 +6574,7 @@ var Values;
   }
   Values2.toString = toString;
   function wrapValue(val) {
-    if (isNull2(val))
+    if (isNull(val))
       return { type: "null", value: val };
     else if (isNumber2(val))
       return { type: "number", value: val };
@@ -6776,10 +6776,10 @@ var Values;
     return val instanceof Duration;
   }
   Values2.isDuration = isDuration;
-  function isNull2(val) {
+  function isNull(val) {
     return val === null || val === void 0;
   }
-  Values2.isNull = isNull2;
+  Values2.isNull = isNull;
   function isArray2(val) {
     return Array.isArray(val);
   }
@@ -6805,7 +6805,7 @@ var Values;
   }
   Values2.isHtml = isHtml;
   function isObject2(val) {
-    return typeof val == "object" && !isHtml(val) && !isWidget(val) && !isArray2(val) && !isDuration(val) && !isDate2(val) && !isLink2(val) && val !== void 0 && !isNull2(val);
+    return typeof val == "object" && !isHtml(val) && !isWidget(val) && !isArray2(val) && !isDuration(val) && !isDate2(val) && !isLink2(val) && val !== void 0 && !isNull(val);
   }
   Values2.isObject = isObject2;
   function isFunction2(val) {
@@ -9134,7 +9134,7 @@ const logger = (level, context) => {
 const isNotNull = (prop, base2) => {
   return prop === null ? false : prop in base2 ? true : false;
 };
-const resolve$1 = (val) => typeof val === "function" ? val() : val;
+const resolve$2 = (val) => typeof val === "function" ? val() : val;
 const contextApi = (el, base2, global_opt, log_level) => ({
   sectionHeading: (heading2, sub_text) => {
     const color = "rgba(15, 117, 224, .75) ";
@@ -9183,9 +9183,9 @@ const componentApi = (el, base2, global_opt, log_level) => (name2, desc, prop) =
     addDropdown(choices) {
       s2.addDropdown((dd) => {
         const isKeyValueDict = !Array.isArray(choices);
-        for (const opt2 of isKeyValueDict ? Object.keys(choices) : choices) {
-          const value2 = isKeyValueDict ? String(choices[opt2]) : opt2;
-          dd.addOption(value2, opt2);
+        for (const opt of isKeyValueDict ? Object.keys(choices) : choices) {
+          const value2 = isKeyValueDict ? String(choices[opt]) : opt;
+          dd.addOption(value2, opt);
           if (isNotNull(prop, base2) && value2 === base2[prop]) {
             dd.setValue(value2);
           }
@@ -9208,8 +9208,8 @@ ${JSON.stringify(base2, null, 2)}`);
             } else {
               debug2(`no auto save: state changed on "${name2}" property but state is not automatically save after state changes`);
             }
-            s2.setName(resolve$1(name2));
-            s2.setDesc(resolve$1(desc));
+            s2.setName(resolve$2(name2));
+            s2.setDesc(resolve$2(desc));
           } else {
             debug2(`the dropdown "${name2}" changed state but no property was set to record this.`, "this may be ok but is typically an error", `the new state is now: ${v}`);
           }
@@ -9217,15 +9217,15 @@ ${JSON.stringify(base2, null, 2)}`);
       });
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
-    addToggleSwitch(opt2 = {}) {
+    addToggleSwitch(opt = {}) {
       s2.addToggle((t2) => {
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
         t2.onChange((v) => {
           if (isNotNull(prop, base2)) {
-            s2.setName(resolve$1(name2));
-            s2.setDesc(resolve$1(desc));
+            s2.setName(resolve$2(name2));
+            s2.setDesc(resolve$2(desc));
             base2[prop] = v;
             if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
@@ -9237,14 +9237,14 @@ ${JSON.stringify(base2, null, 2)}`);
               debug2(`no auto save: state changed on "${name2}" on property`);
             }
           }
-          if (opt2.refreshDomOnChange) {
+          if (opt.refreshDomOnChange) {
             warn2("do not know how to refresh DOM yet");
           }
         });
       });
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
-    addTextInput(opt2 = {}) {
+    addTextInput(opt = {}) {
       s2.addText((t2) => {
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
@@ -9255,9 +9255,9 @@ ${JSON.stringify(base2, null, 2)}`);
           } else {
             debug2(`state changed on the property "${name2}" but because "prop" was null it will not be recorded.`);
           }
-          s2.setName(resolve$1(name2));
-          s2.setDesc(resolve$1(desc));
-          if (opt2.refreshDomOnChange) {
+          s2.setName(resolve$2(name2));
+          s2.setDesc(resolve$2(desc));
+          if (opt.refreshDomOnChange) {
             warn2("do not know how to refresh DOM yet");
           }
           if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
@@ -9273,16 +9273,16 @@ ${JSON.stringify(base2, null, 2)}`);
       });
       return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
     },
-    addFolderSearch(opt2 = {}) {
+    addFolderSearch(opt = {}) {
       s2.addSearch((t2) => {
         new FolderSuggest(t2.inputEl);
-        t2.setPlaceholder(opt2.placeholder || "Example: folder1/folder2");
+        t2.setPlaceholder(opt.placeholder || "Example: folder1/folder2");
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
         t2.onChange((v) => {
-          s2.setName(resolve$1(name2));
-          s2.setDesc(resolve$1(desc));
+          s2.setName(resolve$2(name2));
+          s2.setDesc(resolve$2(desc));
           if (isNotNull(prop, base2)) {
             base2[prop] = v;
             if (global_opt == null ? void 0 : global_opt.saveState) {
@@ -9296,7 +9296,7 @@ ${JSON.stringify(base2, null, 2)}`);
               debug2(`no auto save: state changed on "${name2}" on property`);
             }
           }
-          if (opt2.refreshDomOnChange) {
+          if (opt.refreshDomOnChange) {
             warn2("do not know how to refresh DOM yet");
           }
         });
@@ -9305,7 +9305,7 @@ ${JSON.stringify(base2, null, 2)}`);
     },
     addButton: (o) => {
       s2.addButton((b) => {
-        b.setTooltip((o == null ? void 0 : o.tooltip) || resolve$1(desc)).setButtonText((o == null ? void 0 : o.buttonText) || "+").setCta().onClick((o == null ? void 0 : o.onClick) ? o.onClick : () => warn2(`${name2} button for "${String(o == null ? void 0 : o.buttonText)}" does not have a click handler`));
+        b.setTooltip((o == null ? void 0 : o.tooltip) || resolve$2(desc)).setButtonText((o == null ? void 0 : o.buttonText) || "+").setCta().onClick((o == null ? void 0 : o.onClick) ? o.onClick : () => warn2(`${name2} button for "${String(o == null ? void 0 : o.buttonText)}" does not have a click handler`));
         if (o == null ? void 0 : o.backgroundColor) {
           b.setClass(`bg-${o.backgroundColor}`);
         }
@@ -9319,7 +9319,7 @@ ${JSON.stringify(base2, null, 2)}`);
   };
 };
 const inputRow = (el, base2, global_opt, log_level) => (name2, desc, prop) => {
-  const s2 = new Setting(el).setName(resolve$1(name2)).setDesc(resolve$1(desc));
+  const s2 = new Setting(el).setName(resolve$2(name2)).setDesc(resolve$2(desc));
   return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
 };
 const UiBuilder = (el, base2, log_level, global_opt = {}) => {
@@ -9597,6 +9597,266 @@ class SettingsTab extends PluginSettingTab {
     ).addDropdown(LOG_LEVELS);
   }
 }
+const FIREFOX_SAFARI_STACK_REGEXP = /(^|@)\S+:\d+/;
+const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
+const SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code\])?$/;
+function parse$1(error2, options2) {
+  if (typeof error2.stacktrace !== "undefined" || typeof error2["opera#sourceloc"] !== "undefined")
+    return parseOpera(error2);
+  else if (error2.stack && error2.stack.match(CHROME_IE_STACK_REGEXP))
+    return parseV8OrIE(error2);
+  else if (error2.stack)
+    return parseFFOrSafari(error2);
+  else throw new Error("Cannot parse given Error object");
+}
+function extractLocation(urlLike) {
+  if (!urlLike.includes(":"))
+    return [urlLike, void 0, void 0];
+  const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/;
+  const parts = regExp.exec(urlLike.replace(/[()]/g, ""));
+  return [parts[1], parts[2] || void 0, parts[3] || void 0];
+}
+function applySlice(lines, options2) {
+  return lines;
+}
+function parseV8OrIE(error2, options2) {
+  return parseV8OrIeString(error2.stack);
+}
+function parseV8OrIeString(stack, options2) {
+  const filtered = applySlice(
+    stack.split("\n").filter((line) => {
+      return !!line.match(CHROME_IE_STACK_REGEXP);
+    })
+  );
+  return filtered.map((line) => {
+    if (line.includes("(eval ")) {
+      line = line.replace(/eval code/g, "eval").replace(/(\(eval at [^()]*)|(,.*$)/g, "");
+    }
+    let sanitizedLine = line.replace(/^\s+/, "").replace(/\(eval code/g, "(").replace(/^.*?\s+/, "");
+    const location2 = sanitizedLine.match(/ (\(.+\)$)/);
+    sanitizedLine = location2 ? sanitizedLine.replace(location2[0], "") : sanitizedLine;
+    const locationParts = extractLocation(location2 ? location2[1] : sanitizedLine);
+    const functionName = location2 && sanitizedLine || void 0;
+    const fileName = ["eval", "<anonymous>"].includes(locationParts[0]) ? void 0 : locationParts[0];
+    return {
+      function: functionName,
+      file: fileName,
+      line: locationParts[1] ? +locationParts[1] : void 0,
+      col: locationParts[2] ? +locationParts[2] : void 0,
+      raw: line
+    };
+  });
+}
+function parseFFOrSafari(error2, options2) {
+  return parseFFOrSafariString(error2.stack);
+}
+function parseFFOrSafariString(stack, options2) {
+  const filtered = applySlice(
+    stack.split("\n").filter((line) => {
+      return !line.match(SAFARI_NATIVE_CODE_REGEXP);
+    })
+  );
+  return filtered.map((line) => {
+    if (line.includes(" > eval"))
+      line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g, ":$1");
+    if (!line.includes("@") && !line.includes(":")) {
+      return {
+        function: line
+      };
+    } else {
+      const functionNameRegex = /(([^\n\r"\u2028\u2029]*".[^\n\r"\u2028\u2029]*"[^\n\r@\u2028\u2029]*(?:@[^\n\r"\u2028\u2029]*"[^\n\r@\u2028\u2029]*)*(?:[\n\r\u2028\u2029][^@]*)?)?[^@]*)@/;
+      const matches = line.match(functionNameRegex);
+      const functionName = matches && matches[1] ? matches[1] : void 0;
+      const locationParts = extractLocation(line.replace(functionNameRegex, ""));
+      return {
+        function: functionName,
+        file: locationParts[0],
+        line: locationParts[1] ? +locationParts[1] : void 0,
+        col: locationParts[2] ? +locationParts[2] : void 0,
+        raw: line
+      };
+    }
+  });
+}
+function parseOpera(e2, options2) {
+  if (!e2.stacktrace || e2.message.includes("\n") && e2.message.split("\n").length > e2.stacktrace.split("\n").length)
+    return parseOpera9(e2);
+  else if (!e2.stack)
+    return parseOpera10(e2);
+  else
+    return parseOpera11(e2);
+}
+function parseOpera9(e2, options2) {
+  const lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
+  const lines = e2.message.split("\n");
+  const result = [];
+  for (let i = 2, len = lines.length; i < len; i += 2) {
+    const match2 = lineRE.exec(lines[i]);
+    if (match2) {
+      result.push({
+        file: match2[2],
+        line: +match2[1],
+        raw: lines[i]
+      });
+    }
+  }
+  return applySlice(result);
+}
+function parseOpera10(e2, options2) {
+  const lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
+  const lines = e2.stacktrace.split("\n");
+  const result = [];
+  for (let i = 0, len = lines.length; i < len; i += 2) {
+    const match2 = lineRE.exec(lines[i]);
+    if (match2) {
+      result.push({
+        function: match2[3] || void 0,
+        file: match2[2],
+        line: match2[1] ? +match2[1] : void 0,
+        raw: lines[i]
+      });
+    }
+  }
+  return applySlice(result);
+}
+function parseOpera11(error2, options2) {
+  const filtered = applySlice(
+    // @ts-expect-error missing stack property
+    error2.stack.split("\n").filter((line) => {
+      return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) && !line.match(/^Error created at/);
+    })
+  );
+  return filtered.map((line) => {
+    const tokens2 = line.split("@");
+    const locationParts = extractLocation(tokens2.pop());
+    const functionCall = tokens2.shift() || "";
+    const functionName = functionCall.replace(/<anonymous function(: (\w+))?>/, "$2").replace(/\([^)]*\)/g, "") || void 0;
+    let argsRaw;
+    if (functionCall.match(/\(([^)]*)\)/))
+      argsRaw = functionCall.replace(/^[^(]+\(([^)]*)\)$/, "$1");
+    const args = argsRaw === void 0 || argsRaw === "[arguments not available]" ? void 0 : argsRaw.split(",");
+    return {
+      function: functionName,
+      args,
+      file: locationParts[0],
+      line: locationParts[1] ? +locationParts[1] : void 0,
+      col: locationParts[2] ? +locationParts[2] : void 0,
+      raw: line
+    };
+  });
+}
+const _DRIVE_LETTER_START_RE = /^[A-Za-z]:\//;
+function normalizeWindowsPath(input = "") {
+  if (!input) {
+    return input;
+  }
+  return input.replace(/\\/g, "/").replace(_DRIVE_LETTER_START_RE, (r) => r.toUpperCase());
+}
+const _IS_ABSOLUTE_RE = /^[/\\](?![/\\])|^[/\\]{2}(?!\.)|^[A-Za-z]:[/\\]/;
+const _ROOT_FOLDER_RE = /^\/([A-Za-z]:)?$/;
+function cwd() {
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
+    return process.cwd().replace(/\\/g, "/");
+  }
+  return "/";
+}
+const resolve$1 = function(...arguments_) {
+  arguments_ = arguments_.map((argument) => normalizeWindowsPath(argument));
+  let resolvedPath = "";
+  let resolvedAbsolute = false;
+  for (let index = arguments_.length - 1; index >= -1 && !resolvedAbsolute; index--) {
+    const path = index >= 0 ? arguments_[index] : cwd();
+    if (!path || path.length === 0) {
+      continue;
+    }
+    resolvedPath = `${path}/${resolvedPath}`;
+    resolvedAbsolute = isAbsolute(path);
+  }
+  resolvedPath = normalizeString(resolvedPath, !resolvedAbsolute);
+  if (resolvedAbsolute && !isAbsolute(resolvedPath)) {
+    return `/${resolvedPath}`;
+  }
+  return resolvedPath.length > 0 ? resolvedPath : ".";
+};
+function normalizeString(path, allowAboveRoot) {
+  let res = "";
+  let lastSegmentLength = 0;
+  let lastSlash = -1;
+  let dots = 0;
+  let char = null;
+  for (let index = 0; index <= path.length; ++index) {
+    if (index < path.length) {
+      char = path[index];
+    } else if (char === "/") {
+      break;
+    } else {
+      char = "/";
+    }
+    if (char === "/") {
+      if (lastSlash === index - 1 || dots === 1) ;
+      else if (dots === 2) {
+        if (res.length < 2 || lastSegmentLength !== 2 || res[res.length - 1] !== "." || res[res.length - 2] !== ".") {
+          if (res.length > 2) {
+            const lastSlashIndex = res.lastIndexOf("/");
+            if (lastSlashIndex === -1) {
+              res = "";
+              lastSegmentLength = 0;
+            } else {
+              res = res.slice(0, lastSlashIndex);
+              lastSegmentLength = res.length - 1 - res.lastIndexOf("/");
+            }
+            lastSlash = index;
+            dots = 0;
+            continue;
+          } else if (res.length > 0) {
+            res = "";
+            lastSegmentLength = 0;
+            lastSlash = index;
+            dots = 0;
+            continue;
+          }
+        }
+        if (allowAboveRoot) {
+          res += res.length > 0 ? "/.." : "..";
+          lastSegmentLength = 2;
+        }
+      } else {
+        if (res.length > 0) {
+          res += `/${path.slice(lastSlash + 1, index)}`;
+        } else {
+          res = path.slice(lastSlash + 1, index);
+        }
+        lastSegmentLength = index - lastSlash - 1;
+      }
+      lastSlash = index;
+      dots = 0;
+    } else if (char === "." && dots !== -1) {
+      ++dots;
+    } else {
+      dots = -1;
+    }
+  }
+  return res;
+}
+const isAbsolute = function(p2) {
+  return _IS_ABSOLUTE_RE.test(p2);
+};
+const relative = function(from, to) {
+  const _from = resolve$1(from).replace(_ROOT_FOLDER_RE, "$1").split("/");
+  const _to = resolve$1(to).replace(_ROOT_FOLDER_RE, "$1").split("/");
+  if (_to[0][1] === ":" && _from[0][1] === ":" && _from[0] !== _to[0]) {
+    return _to.join("/");
+  }
+  const _fromCopy = [..._from];
+  for (const segment of _fromCopy) {
+    if (_to[0] !== segment) {
+      break;
+    }
+    _from.shift();
+    _to.shift();
+  }
+  return [..._from.map(() => ".."), ..._to].join("/");
+};
 function createConstant$1(kind) {
   return {
     _type: "Constant",
@@ -10793,15 +11053,6 @@ function isString$1(value2) {
 function isNumber$1(value2) {
   return typeof value2 === "number";
 }
-function isSymbol(value2) {
-  return typeof value2 === "symbol";
-}
-function isNull(value2) {
-  return value2 === null ? true : false;
-}
-function isScalar(value2) {
-  return isString$1(value2) || isNumber$1(value2) || isSymbol(value2) || isNull(value2);
-}
 function keysOf(container) {
   const keys = Array.isArray(container) ? Object.keys(container).map((i) => Number(i)) : isObject(container) ? isRef(container) ? ["value"] : Object.keys(container) : [];
   return keys;
@@ -10866,6 +11117,9 @@ var hasUrlQueryParameter = (val, prop) => {
 };
 var asChars = (str) => {
   return str.split("");
+};
+var stripParenthesis = (val) => {
+  return stripTrailing(stripLeading(val.trim(), "("), ")").trim();
 };
 var isEmail = (val) => {
   var _a2;
@@ -11202,6 +11456,33 @@ function ensureLeading(content2, ensure) {
 function capitalize(str) {
   return `${str == null ? void 0 : str.slice(0, 1).toUpperCase()}${str == null ? void 0 : str.slice(1)}`;
 }
+function toKebabCase(input, _preserveWhitespace = false) {
+  const [_, preWhite, focus, postWhite] = /^(\s*)(.*?)(\s*)$/.exec(input);
+  const replaceWhitespace = (i) => i.replace(/\s/gs, "-");
+  const replaceUppercase = (i) => i.replace(/[A-Z]/g, (c) => `-${c[0].toLowerCase()}`);
+  const replaceLeadingDash = (i) => i.replace(/^-/s, "");
+  const replaceTrailingDash = (i) => i.replace(/-$/s, "");
+  const replaceUnderscore = (i) => i.replace(/_/g, "-");
+  const removeDupDashes = (i) => i.replace(/-+/g, "-");
+  return removeDupDashes(`${preWhite}${replaceUnderscore(
+    replaceTrailingDash(
+      replaceLeadingDash(removeDupDashes(replaceWhitespace(replaceUppercase(focus))))
+    )
+  )}${postWhite}`);
+}
+function retainAfter(content2, ...find2) {
+  const idx = Math.min(
+    ...find2.map((i) => content2.indexOf(i)).filter((i) => i > -1)
+  );
+  const min2 = Math.min(...find2.map((i) => i.length));
+  let len = Math.max(...find2.map((i) => i.length));
+  if (min2 !== len) {
+    if (!find2.includes(content2.slice(idx, len))) {
+      len = min2;
+    }
+  }
+  return idx && idx > 0 ? content2.slice(idx + len) : "";
+}
 function stripAfter(content2, find2) {
   return content2.split(find2).shift();
 }
@@ -11249,6 +11530,31 @@ var stripWhile = (content2, ...match2) => {
   const stopIdx = asChars(content2).findIndex((c) => !match2.includes(c));
   return content2.slice(stopIdx);
 };
+var IGNORABLES = [
+  "@vitest/runner",
+  "node:"
+];
+function kindError(kind, baseContext = {}) {
+  return (msg2, context = {}) => {
+    const err = new Error(msg2);
+    const stackTrace = parse$1(err).filter((i) => !IGNORABLES.some((has) => i.file && i.file.includes(has))).map((i) => ({
+      ...i,
+      file: i.file ? relative(process.cwd(), i.file) : void 0
+    }));
+    err.name = toPascalCase(kind);
+    err.kind = toKebabCase(stripChars(kind, "<", ">", "[", "]", "(", ")"));
+    err.file = stackTrace[0].file;
+    err.line = stackTrace[0].line;
+    err.col = stackTrace[0].col;
+    err.stackTrace = stackTrace;
+    err.__kind = "KindError";
+    err.context = {
+      ...baseContext,
+      ...context
+    };
+    return err;
+  };
+}
 var createFnWithProps = (fn2, props, narrowing = false) => {
   let fnWithProps = fn2;
   for (let prop of Object.keys(props)) {
@@ -11323,6 +11629,9 @@ const isDateTime = (val) => {
 };
 const isDvPage = (val) => {
   return isObject(val) && "file" in val && isObject(val.file) && "link" in val.file && "name" in val.file && "path" in val.file;
+};
+const isError = (val) => {
+  return isObject(val) && val instanceof Error;
 };
 const isFileLink = (val) => {
   return isLink(val) && "type" in val && val.type === "file";
@@ -13952,17 +14261,17 @@ var require_ruler = __commonJS({
     };
     Ruler.prototype.at = function(name2, fn2, options2) {
       var index = this.__find__(name2);
-      var opt2 = options2 || {};
+      var opt = options2 || {};
       if (index === -1) {
         throw new Error("Parser rule not found: " + name2);
       }
       this.__rules__[index].fn = fn2;
-      this.__rules__[index].alt = opt2.alt || [];
+      this.__rules__[index].alt = opt.alt || [];
       this.__cache__ = null;
     };
     Ruler.prototype.before = function(beforeName, ruleName, fn2, options2) {
       var index = this.__find__(beforeName);
-      var opt2 = options2 || {};
+      var opt = options2 || {};
       if (index === -1) {
         throw new Error("Parser rule not found: " + beforeName);
       }
@@ -13970,13 +14279,13 @@ var require_ruler = __commonJS({
         name: ruleName,
         enabled: true,
         fn: fn2,
-        alt: opt2.alt || []
+        alt: opt.alt || []
       });
       this.__cache__ = null;
     };
     Ruler.prototype.after = function(afterName, ruleName, fn2, options2) {
       var index = this.__find__(afterName);
-      var opt2 = options2 || {};
+      var opt = options2 || {};
       if (index === -1) {
         throw new Error("Parser rule not found: " + afterName);
       }
@@ -13984,17 +14293,17 @@ var require_ruler = __commonJS({
         name: ruleName,
         enabled: true,
         fn: fn2,
-        alt: opt2.alt || []
+        alt: opt.alt || []
       });
       this.__cache__ = null;
     };
     Ruler.prototype.push = function(ruleName, fn2, options2) {
-      var opt2 = options2 || {};
+      var opt = options2 || {};
       this.__rules__.push({
         name: ruleName,
         enabled: true,
         fn: fn2,
-        alt: opt2.alt || []
+        alt: opt.alt || []
       });
       this.__cache__ = null;
     };
@@ -20132,11 +20441,11 @@ const emptyCallout = (fmt) => [
   `<div class="callout-content">&nbsp;</div>`,
   `</div>`
 ].join("\n");
-const internalLink = (p2) => (ref, opt2) => {
+const internalLink = (p2) => (ref, opt) => {
   const link2 = (href, title) => `<a data-tooltip-position="top" aria-label="${href}" data-href="${href}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${href}" style="">${title}</a>`;
   let page = getPage(p2)(ref);
   if (page) {
-    link2(page.file.path, (opt2 == null ? void 0 : opt2.title) || page.file.name);
+    link2(page.file.path, (opt == null ? void 0 : opt.title) || page.file.name);
   }
   return "";
 };
@@ -20934,18 +21243,18 @@ const showKind = (p2) => (pg, withTag) => {
   }
   return links.join(", ");
 };
-const htmlLink = (p2) => (pageLike, opt2) => {
+const htmlLink = (p2) => (pageLike, opt) => {
   const page = p2.api.getPage(pageLike);
   if (page) {
-    const text2 = (opt2 == null ? void 0 : opt2.display) || page.file.name || page.file.path;
+    const text2 = (opt == null ? void 0 : opt.display) || page.file.name || page.file.path;
     return `<a data-href="${page.file.name}" href="${page.file.path}" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener">${text2}</a>`;
   }
   return "<!-- no link -->";
 };
-const showCategories = (p2) => (pg, opt2) => {
+const showCategories = (p2) => (pg, opt) => {
   const page = p2.api.getPage(pg);
   let links = [];
-  isUndefined(opt2 == null ? void 0 : opt2.withTag) ? true : opt2.withTag;
+  isUndefined(opt == null ? void 0 : opt.withTag) ? true : opt.withTag;
   if (page) {
     const cats = getCategories(p2)(page);
     const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
@@ -20961,10 +21270,10 @@ const showCategories = (p2) => (pg, opt2) => {
   }
   return links.join(", ");
 };
-const showSubcategories = (p2) => (pg, opt2) => {
+const showSubcategories = (p2) => (pg, opt) => {
   const page = p2.api.getPage(pg);
   let links = [];
-  isUndefined(opt2 == null ? void 0 : opt2.withTag) ? true : opt2.withTag;
+  isUndefined(opt == null ? void 0 : opt.withTag) ? true : opt.withTag;
   if (page) {
     const cats = getSubcategories(p2)(page);
     const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
@@ -20977,7 +21286,6 @@ const showSubcategories = (p2) => (pg, opt2) => {
         htmlLink(p2)(page, { display: cat.subcategory })
       );
     }
-    p2.info("sub", { links, cats, page: page.file.name });
   }
   return links.join(", ");
 };
@@ -20989,7 +21297,7 @@ const showSlider = (p2) => (pg) => {
 };
 const showClassifications = (p2) => (pg) => {
   const classy = getClassification(p2)(pg);
-  const opt2 = (pg2) => {
+  const opt = (pg2) => {
     const page = p2.api.getPage(pg2);
     if (page) {
       return {
@@ -21007,11 +21315,11 @@ const showClassifications = (p2) => (pg) => {
         // CATEGORY
         i.categories.length === 0 ? "" : i.categories && i.categories.length === 1 ? htmlLink(p2)(
           i.categories[0].category,
-          opt2(p2.api.format.as_tag(i.categories[0].category))
+          opt(p2.api.format.as_tag(i.categories[0].category))
         ) : `<span style="opacity: 0.8">[ </span>` + i.categories.map(
           (ii) => htmlLink(p2)(
             ii.category,
-            opt2(p2.api.format.as_tag(ii.category))
+            opt(p2.api.format.as_tag(ii.category))
           )
         ).join(",&nbsp;") + `<span style="opacity: 0.8"> ]</span>`,
         // SUBCATEGORY
@@ -21035,10 +21343,10 @@ const createFileLink = (p2) => (pathLike, embed, display) => {
   }
   return "";
 };
-const createMarkdownLink = (p2) => (pathLike, opt2) => {
+const createMarkdownLink = (p2) => (pathLike, opt) => {
   const page = p2.api.getPage(pathLike);
   if (page) {
-    return (opt2 == null ? void 0 : opt2.display) ? `${(opt2 == null ? void 0 : opt2.pre) || ""}[[${page.file.path}|${opt2.display}]]${(opt2 == null ? void 0 : opt2.post) || ""}` : `${(opt2 == null ? void 0 : opt2.pre) || ""}[[${page.file.path}|${page.file.name}]]${(opt2 == null ? void 0 : opt2.post) || ""}`;
+    return (opt == null ? void 0 : opt.display) ? `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${opt.display}]]${(opt == null ? void 0 : opt.post) || ""}` : `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${page.file.name}]]${(opt == null ? void 0 : opt.post) || ""}`;
   }
   return "";
 };
@@ -21130,17 +21438,23 @@ const getPageInfo = (p2) => (pg) => {
     return info2;
   }
 };
-const getPageInfoBlock = (p2) => (source, container, component, filePath) => {
+const getPageInfoBlock = (p2) => (evt) => {
+  const {
+    source,
+    el,
+    ctx
+  } = evt;
+  const filePath = ctx.sourcePath;
   const page = getPageInfo(p2)(filePath);
   if (page) {
-    const sectionInfo = component.getSectionInfo(container);
+    const sectionInfo = ctx.getSectionInfo(el);
     return {
       ...page,
       content: source,
-      container,
-      component,
+      container: el,
+      component: ctx,
       sectionInfo,
-      ...renderApi(p2)(container, filePath)
+      ...renderApi(p2)(el, filePath)
     };
   }
 };
@@ -21238,7 +21552,6 @@ const isKeyOf = (container, key) => {
 };
 const isKindTag = (p2) => (tag) => {
   const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
-  safeTag.split("/");
   const valid = getKnownKindTags(p2)();
   return valid.includes(safeTag);
 };
@@ -21606,7 +21919,7 @@ const getClassification = (p2) => (pg, cats, subCats) => {
     const kindTags = getKindTagsOfPage(p2)(page);
     for (let tag of kindTags) {
       tag = stripLeading(tag, "#");
-      p2.info(`tag ${tag}`);
+      p2.debug(`tag ${tag}`);
       const kd = lookupKindByTag(p2)(tag);
       const kp = kd ? getPage(p2)(kd.path) : void 0;
       if (kd && kp) {
@@ -21673,48 +21986,238 @@ const buildingBlocks = (plugin4) => ({
   getKindTagsOfPage: getKindTagsOfPage(plugin4),
   isKindTag: isKindTag(plugin4)
 });
-const BackLinks = (p2) => (source, container, component, filePath) => async (params_str = "") => {
-  const page = p2.api.getPageInfoBlock(
-    source,
-    container,
-    component,
-    filePath
-  );
-  if (page) {
-    const current = page.current;
-    const {
-      table: table3,
-      renderValue
-    } = page;
-    const {
-      createFileLink: createFileLink2,
-      showDesc: showDesc2,
-      showLinks: showLinks2,
-      showClassifications: showClassifications2
-    } = p2.api;
-    const links = current.file.inlinks.sort((p22) => p22 == null ? void 0 : p22.path).where((p22) => p22.path !== current.file.path);
-    p2.info("backlinks", links.map((i) => [
-      createFileLink2(i),
-      showClassifications2(i),
-      showDesc2(i),
-      showLinks2(i)
-    ]));
-    if (links.length > 0) {
-      table3(
-        ["Page", "Classification(s)", "Desc", "Links"],
-        links.map((i) => [
-          createFileLink2(i),
-          showClassifications2(i),
-          showDesc2(i),
-          showLinks2(i)
-        ])
-      );
+const obsidianApi = (p2) => {
+  return {
+    /**
+     * the full Obsidian API surface exposed on global
+     */
+    app: p2.app,
+    /**
+     * A dictionary of commands configured for the active vault
+     */
+    commands: globalThis.app.commands.commands,
+    /**
+     * Atomically read, modify, and save the frontmatter of a note. The frontmatter is passed in as a JS object, and should be mutated directly to achieve the desired result.
+     Remember to handle errors thrown by this method.
+     * @param file — the file to be modified. Must be a Markdown file.
+     * @param fn — a callback function which mutates the frontmatter object synchronously.
+     * @param options — write options.
+     * @throws — YAMLParseError if the YAML parsing fails
+     * @throws — any errors that your callback function throws
+     * 
+     * ```ts
+     * app.fileManager.processFrontMatter(file, (frontmatter) => {
+     *     frontmatter['key1'] = value;
+     *     delete frontmatter['key2'];
+     * });
+     * ```
+     */
+    processFrontmatter: p2.app.fileManager.processFrontMatter,
+    /**
+     * Resolves a unique path for the attachment file being saved.
+     * Ensures that the parent directory exists and dedupes the
+     * filename if the destination filename already exists.
+     *
+     * @param filename Name of the attachment being saved
+     * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
+     * @returns Full path for where the attachment should be saved, according to the user's settings
+     */
+    getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
+    /**
+     * A dictionary of files:
+     * 
+     * - _keys_ are the full file path
+     * - _values_ are 
+     */
+    fileCache: globalThis.app.metadataCache.fileCache,
+    /**
+     * A dictionary which can be used to lookup metadata using
+     * the `fileCache`'s hash value.
+     */
+    metaData: globalThis.app.metadataCache.metadataCache
+  };
+};
+const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
+  const invalid = kindError(`InvalidQuery<${name2}>`, { raw, scalar, options: options2 });
+  const parsingErr = kindError(`ParsingError<${name2}>`, { raw, scalar, options: options2 });
+  const requiredScalar = scalar.findIndex((i) => !i.contains("opt(")) + 1;
+  const scalarOrder = scalar.map((s2) => {
+    return [retainUntil(s2, " "), retainAfter(s2, "AS ")];
+  });
+  if (!raw || raw.trim() === "") {
+    if (requiredScalar > 0) {
+      return invalid(`The $${name2} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler!`);
     }
-    if (links.length === 0) {
-      renderValue(`- no back links found to this page`);
+    return [
+      {},
+      {}
+    ];
+  }
+  try {
+    const parsed = JSON.parse(`[ ${raw} ]`);
+    const optionsPosition = parsed.findIndex((i) => isObject(i));
+    const hasOptionsHash = optionsPosition !== -1;
+    const optionsHash = hasOptionsHash ? parsed[optionsPosition] : {};
+    const optionsInTerminalPosition = optionsPosition === -1 ? true : optionsPosition === length - 1;
+    const scalarParams = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
+    const hasEnoughScalarParams = requiredScalar > 0 && scalarParams.length >= requiredScalar ? true : false;
+    if (!optionsInTerminalPosition) {
+      return invalid(`Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`);
     }
+    if (!hasEnoughScalarParams) {
+      return invalid(`the ${name2} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`);
+    }
+    if (optionsPosition !== -1) {
+      const requiredOpts = Object.keys(options2).filter((i) => !i.includes("opt("));
+      const opts = parsed[optionsPosition];
+      for (const key of requiredOpts) {
+        if (!(key in opts)) {
+          return invalid(`The "${name2}" query parser received an options hash but did not provide all of the required properties!`);
+        }
+      }
+    }
+    const scalar2 = {};
+    let idx = 0;
+    for (const [key, typeOf] of scalarOrder) {
+      if (typeOf.startsWith("string") && !isString$1(scalarParams[idx])) {
+        return invalid(`the scalar property "${key}" is required and expected to be a string; type was ${typeof scalarParams[idx]}`);
+      }
+      scalar2[key] = scalarParams[idx];
+      idx++;
+    }
+    return [
+      scalar2,
+      optionsHash
+    ];
+  } catch (e2) {
+    return parsingErr(`Problem parsing query parameters passed in: ${raw}!`, { underlying: e2 });
   }
 };
+const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, evt) => createFnWithProps(
+  async () => {
+    const page = getPageInfoBlock(p2)(evt);
+    const re = new RegExp(`${handler}((.*))`);
+    const err = kindError(`InvalidQuery<${handler}>`, { evt, page });
+    if (page) {
+      if (re.test(evt.source)) {
+        const raw = evt.source.match(re) ? stripParenthesis(Array.from(
+          evt.source.match(re)
+        )[1]) : "";
+        const result = parseQueryParams()(
+          handler,
+          raw,
+          scalarParams,
+          optionParams
+        );
+        if (isError(result)) {
+          return result;
+        } else {
+          const [scalar, options2] = result;
+          const event2 = {
+            plugin: p2,
+            page,
+            source: evt.source,
+            ctx: evt.ctx,
+            re,
+            raw,
+            scalar,
+            options: options2
+          };
+          await handlerFn(event2);
+          p2.debug(
+            `Code Block event processed by ${handler}.`,
+            { page, scalar, options: options2 }
+          );
+          return true;
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return err(`Unable to create a PageInfoBlock from the page in which the code block being parsed was found!`, { sourcePath: evt.ctx.sourcePath });
+    }
+  },
+  // properties
+  {
+    handlerName: handler
+  }
+);
+const addParams = (handler) => ({
+  /**
+   * Define the _scalar_ parameters this handler expects.
+   * 
+   * ```ts
+   * const Example = createHandler("Example")
+   * 		.scalar({
+   * 			"Foo as string",
+   * 			"Bar as opt(number)"
+   * 		});
+   * ```
+   */
+  scalar: (...scalarParams) => ({
+    /**
+     * Define the _options_ hash this handler expects.
+     */
+    options: (optionParams = {}) => ({
+      /**
+       * Provide the actual handler function; remember that
+       * the handler should be an async function.
+       */
+      handler: (handlerFn) => (p2) => {
+        return (evt) => clientHandler(p2)(
+          handler,
+          handlerFn,
+          scalarParams,
+          optionParams,
+          evt
+        );
+      }
+    })
+  })
+});
+const createHandler = (handler) => addParams(toPascalCase(handler));
+createHandler("Kind").scalar(
+  "Foo AS string",
+  "Bar AS number"
+).options({
+  foo: "string",
+  bar: "opt(bool)"
+});
+const BackLinks = createHandler("BackLinks").scalar().options().handler(async (evt) => {
+  const { plugin: p2, page } = evt;
+  const current = page.current;
+  const {
+    table: table3,
+    renderValue
+  } = page;
+  const {
+    createFileLink: createFileLink2,
+    showDesc: showDesc2,
+    showLinks: showLinks2,
+    showClassifications: showClassifications2
+  } = p2.api;
+  const links = current.file.inlinks.sort((p22) => p22 == null ? void 0 : p22.path).where((p22) => p22.path !== current.file.path);
+  p2.info("backlinks", links.map((i) => [
+    createFileLink2(i),
+    showClassifications2(i),
+    showDesc2(i),
+    showLinks2(i)
+  ]));
+  if (links.length > 0) {
+    table3(
+      ["Backlink", "Classification(s)", "Desc", "Links"],
+      links.map((i) => [
+        createFileLink2(i),
+        showClassifications2(i),
+        showDesc2(i),
+        showLinks2(i)
+      ])
+    );
+  }
+  if (links.length === 0) {
+    renderValue(`- no back links found to this page`);
+  }
+});
 var _function = {};
 (function(exports) {
   var __spreadArray = commonjsGlobal$1 && commonjsGlobal$1.__spreadArray || function(to, from, pack) {
@@ -73247,7 +73750,7 @@ const validationMessage = Symbol("validationMessage");
 const validity = Symbol("validity");
 const returnValue = Symbol("returnValue");
 const elements = Symbol("elements");
-const length = Symbol("length");
+const length$1 = Symbol("length");
 const complete = Symbol("complete");
 const naturalHeight = Symbol("naturalHeight");
 const naturalWidth = Symbol("naturalWidth");
@@ -92194,7 +92697,7 @@ let HTMLFormElement$1 = class HTMLFormElement extends HTMLElement$1 {
    * @returns Length.
    */
   get length() {
-    return this[length];
+    return this[length$1];
   }
   /**
    * Returns name.
@@ -92428,7 +92931,7 @@ let HTMLFormElement$1 = class HTMLFormElement extends HTMLElement$1 {
   /**
    * @override
    */
-  [(_HTMLFormElement_browserFrame = /* @__PURE__ */ new WeakMap(), _HTMLFormElement_instances = /* @__PURE__ */ new WeakSet(), _a$q = elements, _b$e = length, _c$a = formNode, cloneNode)](deep = false) {
+  [(_HTMLFormElement_browserFrame = /* @__PURE__ */ new WeakMap(), _HTMLFormElement_instances = /* @__PURE__ */ new WeakSet(), _a$q = elements, _b$e = length$1, _c$a = formNode, cloneNode)](deep = false) {
     return super[cloneNode](deep);
   }
   /**
@@ -92442,7 +92945,7 @@ let HTMLFormElement$1 = class HTMLFormElement extends HTMLElement$1 {
     if (!elements$1.includes(node2)) {
       this[elements$1.length] = node2;
       elements$1.push(node2);
-      this[length] = elements$1.length;
+      this[length$1] = elements$1.length;
     }
     elements$1[appendNamedItem](node2, name2);
     if (this[isValidPropertyName](name2)) {
@@ -92460,11 +92963,11 @@ let HTMLFormElement$1 = class HTMLFormElement extends HTMLElement$1 {
     const index = elements$1.indexOf(node2);
     if (index !== -1) {
       elements$1.splice(index, 1);
-      for (let i = index; i < this[length]; i++) {
+      for (let i = index; i < this[length$1]; i++) {
         this[i] = this[i + 1];
       }
-      delete this[this[length] - 1];
-      this[length]--;
+      delete this[this[length$1] - 1];
+      this[length$1]--;
     }
     elements$1[removeNamedItem](node2, name2);
     if (this[isValidPropertyName](name2)) {
@@ -94834,7 +95337,7 @@ class HTMLSelectElement extends HTMLElement$1 {
    * @returns Length.
    */
   get length() {
-    return this[length];
+    return this[length$1];
   }
   /**
    * Returns options.
@@ -95128,11 +95631,11 @@ class HTMLSelectElement extends HTMLElement$1 {
    * @see https://html.spec.whatwg.org/multipage/form-elements.html#selectedness-setting-algorithm
    * @param [selectedOption] Selected option.
    */
-  [(_HTMLSelectElement_instances = /* @__PURE__ */ new WeakSet(), _a$n = attributes, _b$b = validationMessage, _c$7 = validity, _d$4 = selectNode, _e$4 = length, _f$3 = options, updateOptionItems)](selectedOption) {
+  [(_HTMLSelectElement_instances = /* @__PURE__ */ new WeakSet(), _a$n = attributes, _b$b = validationMessage, _c$7 = validity, _d$4 = selectNode, _e$4 = length$1, _f$3 = options, updateOptionItems)](selectedOption) {
     const optionElements = this.getElementsByTagName("option");
     if (optionElements.length < this[options].length) {
       this[options].splice(this[options].length - 1, this[options].length - optionElements.length);
-      for (let i = optionElements.length - 1, max2 = this[length]; i < max2; i++) {
+      for (let i = optionElements.length - 1, max2 = this[length$1]; i < max2; i++) {
         delete this[i];
       }
     }
@@ -95150,7 +95653,7 @@ class HTMLSelectElement extends HTMLElement$1 {
         }
       }
     }
-    this[length] = optionElements.length;
+    this[length$1] = optionElements.length;
     const size = __classPrivateFieldGet$v(this, _HTMLSelectElement_instances, "m", _HTMLSelectElement_getDisplaySize).call(this);
     if (size === 1 && !selected.length) {
       for (let i = 0, max2 = optionElements.length; i < max2; i++) {
@@ -106177,7 +106680,7 @@ const worldCatBookPage = async (p2, book) => {
   return url;
 };
 const AmazonBook = async (p2, book) => {
-  var _a2, _b2, _c2, _d2, _e2, _f2, _g2, _h2, _i, _j2, _k2, _l2, _m2;
+  var _a2, _b2, _c2, _d2, _e2, _f2, _g2, _h2, _i, _j2, _k2, _l2, _m2, _n, _o2;
   const url = `https://www.amazon.com/dp/${book.asin}`;
   p2.debug(`Scraping ${url}`, book);
   let html;
@@ -106202,36 +106705,35 @@ const AmazonBook = async (p2, book) => {
   }
   let page = createDocument(html);
   p2.debug("page created");
-  let amazonRating = Number(stripAfter(query(page, "span .a-icon-alt").textContent || "", " "));
-  Number(query(page, ""));
-  let reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText") ? Number(stripAfter((_a2 = query(page, "span .arcCustomerReviewText", "throw")) == null ? void 0 : _a2.textContent, " ")) : void 0;
+  let amazonRating = page && ((_a2 = query(page, "span .a-icon-alt")) == null ? void 0 : _a2.textContent) ? Number(stripAfter(((_b2 = query(page, "span .a-icon-alt")) == null ? void 0 : _b2.textContent) || "", " ")) : void 0;
+  let reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText") ? Number(stripAfter((_c2 = query(page, "span .arcCustomerReviewText", "throw")) == null ? void 0 : _c2.textContent, " ")) : void 0;
   query(page, "#histogramTable", "undefined");
   let isKindleBook = query(page, "#rpi-attribute-book_details-ebook_pages", "undefined") ? true : false;
-  let description = (_b2 = query(page, "div[data-a-expander-name=book_description_expander] p span")) == null ? void 0 : _b2.textContent;
-  let isbn10 = (_d2 = (_c2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-10")) == null ? void 0 : _c2.nextElementSibling) == null ? void 0 : _d2.textContent;
-  let isbn13 = (_f2 = (_e2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-13")) == null ? void 0 : _e2.nextElementSibling) == null ? void 0 : _f2.textContent;
-  let [publisher, publicationDate] = ((_h2 = (_g2 = findWhere(
+  let description = (_d2 = query(page, "div[data-a-expander-name=book_description_expander] p span")) == null ? void 0 : _d2.textContent;
+  let isbn10 = (_f2 = (_e2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-10")) == null ? void 0 : _e2.nextElementSibling) == null ? void 0 : _f2.textContent;
+  let isbn13 = (_h2 = (_g2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-13")) == null ? void 0 : _g2.nextElementSibling) == null ? void 0 : _h2.textContent;
+  let [publisher, publicationDate] = ((_j2 = (_i = findWhere(
     page,
     "span.a-text-bold",
     "undefined",
     "contains",
     "Item Weight"
-  )) == null ? void 0 : _g2.nextElementSibling) == null ? void 0 : _h2.textContent.split("(")) || [void 0, void 0];
-  let weight = (_j2 = (_i = findWhere(
+  )) == null ? void 0 : _i.nextElementSibling) == null ? void 0 : _j2.textContent.split("(")) || [void 0, void 0];
+  let weight = (_l2 = (_k2 = findWhere(
     page,
     "span.a-text-bold",
     "undefined",
     "contains",
     "Item Weight"
-  )) == null ? void 0 : _i.nextElementSibling) == null ? void 0 : _j2.textContent;
+  )) == null ? void 0 : _k2.nextElementSibling) == null ? void 0 : _l2.textContent;
   let kindleVariantAvailable = isKindleBook === true ? true : query(page, "#tmm-grid-swatch-KINDLE", void 0) === void 0 ? false : true;
-  let numOfRatings = stripAfter(((_k2 = query(page, "#acrCustomerReviewText")) == null ? void 0 : _k2.textContent) || "", " ratings");
+  let numOfRatings = stripAfter(((_m2 = query(page, "#acrCustomerReviewText")) == null ? void 0 : _m2.textContent) || "", " ratings");
   let pages = isKindleBook ? stripAfter(
-    ((_l2 = query(page, "#rpi-attribute-book_details-ebook_pages .a-declarative")) == null ? void 0 : _l2.textContent) || "",
+    ((_n = query(page, "#rpi-attribute-book_details-ebook_pages .a-declarative")) == null ? void 0 : _n.textContent) || "",
     " "
   ) : retainWhile(
     stripUntil(
-      ((_m2 = query(page, "#rpi-attribute-book_details-fiona_pages")) == null ? void 0 : _m2.textContent) || "",
+      ((_o2 = query(page, "#rpi-attribute-book_details-fiona_pages")) == null ? void 0 : _o2.textContent) || "",
       ...NUMERIC_CHAR
     ),
     ...NUMERIC_CHAR
@@ -106266,241 +106768,224 @@ const AmazonBook = async (p2, book) => {
     publishDate: book.publishDate ? book.publishDate : publicationDate ? DateTime$1.fromFormat(stripTrailing(publicationDate, ")"), "DATE_MED").toFormat("yyyy-mm-dd") : void 0
   };
 };
-const Book = (p2) => async (source, container, component, filePath) => {
-  var _a2, _b2, _c2, _d2, _e2, _f2;
-  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
-  if (page) {
-    const fmt = page.format;
-    const current = page.current;
-    let book = {
-      title: current.title || ((_a2 = current["kindle-sync"]) == null ? void 0 : _a2.title) || "unknown",
-      subtitle: current.subtitle,
-      authors: current.authors ? current.authors.split(",").map((i) => i.trim()) : current.author ? current.author.split(",").map((i) => i.trim()) : current["kindle-sync"].author ? current["kindle-sync"].author.split(",").map((i) => i.trim()) : [],
-      bookCategory: current.category,
-      publisher: current.publisher,
-      publishDate: current.publishDate,
-      totalPages: current.totalPage,
-      description: current.description,
-      isbn13: current.isbn13,
-      isbn10: current.isbn10,
-      asin: ((_b2 = current["kindle-sync"]) == null ? void 0 : _b2.asin) ? current["kindle-sync"].asin : typeof (current == null ? void 0 : current.asin) === "string" ? String(current == null ? void 0 : current.asin) : void 0,
-      coverImages: [
-        ...current.coverUrl ? [current.coverUrl] : [],
-        ...((_c2 = current["kindle-sync"]) == null ? void 0 : _c2.bookImageUrl) ? [
-          (_d2 = current["kindle-sync"]) == null ? void 0 : _d2.bookImageUrl
-        ] : []
-      ],
-      worldCatSubjects: [],
-      googleBookLink: current.link,
-      /**
-       * provides a link to the WorldCat service with the featured
-       * book highlighted.
-       */
-      worldCatBookLink: void 0,
-      /**
-       * provides a list of books by the same author
-       */
-      otherBooks: current.otherBooks,
-      /**
-       * the _number_ of highlights found from a kindle device
-       */
-      kindleHighlightCount: (_e2 = current["kindle-sync"]) == null ? void 0 : _e2.highlightsCount
-    };
-    if (!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
-      p2.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
-      page.callout("warning", "No Book metadata found!", { content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)` });
-    } else {
-      book.worldCatBookLink = await worldCatBookPage(p2, book);
-      book = await AmazonBook(p2, book);
-      p2.debug("Book after Amazon Scrape", { book });
-      const cover = [
-        `<div class="book-cover" style="padding-bottom: 8px;">`,
-        book.coverImages.length > 0 ? `<img src="${book.coverImages[0]}" style="">` : ``,
+const Book = createHandler("Book").scalar().options().handler(async (evt) => {
+  var _a2, _b2, _c2, _d2, _e2, _f2, _g2, _h2;
+  const { plugin: p2, page } = evt;
+  const fmt = p2.api.format;
+  const current = page.current;
+  let book = {
+    title: current.title || ((_a2 = current["kindle-sync"]) == null ? void 0 : _a2.title) || "unknown",
+    subtitle: current.subtitle,
+    authors: current.authors ? current.authors.split(",").map((i) => i.trim()) : current.author ? current.author.split(",").map((i) => i.trim()) : ((_b2 = current["kindle-sync"]) == null ? void 0 : _b2.author) ? (_c2 = current["kindle-sync"]) == null ? void 0 : _c2.author.split(",").map((i) => i.trim()) : [],
+    bookCategory: current.category,
+    publisher: current.publisher,
+    publishDate: current.publishDate,
+    totalPages: current.totalPage,
+    description: current.description,
+    isbn13: current.isbn13,
+    isbn10: current.isbn10,
+    asin: ((_d2 = current["kindle-sync"]) == null ? void 0 : _d2.asin) ? current["kindle-sync"].asin : typeof (current == null ? void 0 : current.asin) === "string" ? String(current == null ? void 0 : current.asin) : void 0,
+    coverImages: [
+      ...current.coverUrl ? [current.coverUrl] : [],
+      ...((_e2 = current["kindle-sync"]) == null ? void 0 : _e2.bookImageUrl) ? [
+        (_f2 = current["kindle-sync"]) == null ? void 0 : _f2.bookImageUrl
+      ] : []
+    ],
+    worldCatSubjects: [],
+    googleBookLink: current.link,
+    /**
+     * provides a link to the WorldCat service with the featured
+     * book highlighted.
+     */
+    worldCatBookLink: void 0,
+    /**
+     * provides a list of books by the same author
+     */
+    otherBooks: current.otherBooks,
+    /**
+     * the _number_ of highlights found from a kindle device
+     */
+    kindleHighlightCount: (_g2 = current["kindle-sync"]) == null ? void 0 : _g2.highlightsCount
+  };
+  if (!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
+    p2.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
+    page.callout("warning", "No Book metadata found!", { content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)` });
+  } else {
+    book.worldCatBookLink = await worldCatBookPage(p2, book);
+    book = await AmazonBook(p2, book);
+    p2.debug("Book after Amazon Scrape", { book });
+    const cover = [
+      `<div class="book-cover" style="padding-bottom: 8px;">`,
+      book.coverImages.length > 0 ? `<img src="${book.coverImages[0]}" style="">` : ``,
+      `</div>`
+    ];
+    const publisher = book.publisher ? [
+      fmt.medium("Publisher:"),
+      fmt.ul([book.publisher], { indentation: "default", my: "tight" })
+    ] : [];
+    const publicationDate = book.publishDate ? [
+      fmt.medium("Publication Date:"),
+      isDateTime(book.publishDate) ? fmt.ul([(_h2 = book == null ? void 0 : book.publishDate) == null ? void 0 : _h2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
+    ] : [];
+    const pages = book.totalPages ? [
+      fmt.medium("Length:&nbsp;"),
+      fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
+    ] : [];
+    const author = book.authors.length > 0 ? [
+      fmt.medium("Written By:"),
+      fmt.ul(book.authors, { indentation: "default", my: "tight" })
+    ] : [];
+    const book_ids = [
+      `<div class="book-ids">`,
+      fmt.medium("Book Identifiers:"),
+      fmt.ul([
+        book.isbn10 ? `${fmt.light(book.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
+        book.isbn13 ? `${fmt.light(book.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
+        book.asin ? `${fmt.light(book.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
+      ], { indentation: "default", my: "tight" }),
+      `</div>`
+    ];
+    const summary = fmt.blockquote("example", "Summary", {
+      content: fmt.wrap([
+        ...cover,
+        ...author,
+        ...publisher,
+        ...publicationDate,
+        ...pages,
+        ...book_ids
+      ], { my: "4px", px: "8px" }),
+      style: {
+        mr: "8px",
+        ml: "8px"
+      }
+    });
+    const description = fmt.blockquote("info", "Book Description", {
+      fold: "+",
+      content: book.description || "no description found"
+    });
+    const otherBooks = book.otherBooks ? [
+      fmt.blockquote("info", `Books by ${book.authors[0]}`, {
+        content: book.otherBooks.map((b) => {
+          return fmt.link(
+            b.title,
+            b.titleLink,
+            { iconUrl: b.imageLink }
+          );
+        }).join("\n") || "&nbsp;",
+        icon: BOOK_ICON,
+        fold: "-"
+      })
+    ] : [];
+    const actions = fmt.blockquote("info", "Actions / Links", {
+      content: fmt.wrap([
+        book.asin ? fmt.link(
+          "Open in Kindle",
+          `kindle://book?action=open&asin=${book.asin}`,
+          { svgInline: KINDLE_ICON }
+        ) : void 0,
+        book.asin ? fmt.link(
+          "Amazon",
+          `https://www.amazon.com/dp/${book.asin}`,
+          { svgInline: AMAZON }
+        ) : void 0,
+        book.googleBookLink ? fmt.link(
+          "Google",
+          book.googleBookLink,
+          { svgInline: BOOK_ICON }
+        ) : void 0,
+        book.worldCatBookLink ? fmt.link(
+          "WorldCat",
+          book.worldCatBookLink,
+          { svgInline: BOOK_CATALOG }
+        ) : void 0,
+        fmt.link(
+          "Search",
+          `https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
+          { svgInline: SEARCH_BOOK }
+        )
+        // fmt.link(
+        // 	"Update Metadata", 
+        // 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
+        // 	{ svgInline: META_DATA}
+        // ),
+      ], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
+      fold: "+"
+    });
+    const reviews = fmt.blockquote("info", "Reviews", {
+      content: "not available currently",
+      fold: "-",
+      icon: TIP_ICON
+    });
+    const details = fmt.wrap([
+      description,
+      reviews,
+      ...otherBooks,
+      actions,
+      fmt.empty_callout({ flex: true, grow: 1 })
+    ], { flex: true, direction: "column" });
+    const html = [
+      `<div class="book-summary">`,
+      ...book.subtitle ? [
+        `<div class="book-subtitle" style="display:block; width: 100%">`,
+        fmt.blockquote("quote", book.subtitle, { style: { mb: "8px" } }),
         `</div>`
-      ];
-      const publisher = book.publisher ? [
-        fmt.medium("Publisher:"),
-        fmt.ul([book.publisher], { indentation: "default", my: "tight" })
-      ] : [];
-      const publicationDate = book.publishDate ? [
-        fmt.medium("Publication Date:"),
-        isDateTime(book.publishDate) ? fmt.ul([(_f2 = book == null ? void 0 : book.publishDate) == null ? void 0 : _f2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
-      ] : [];
-      const pages = book.totalPages ? [
-        fmt.medium("Length:&nbsp;"),
-        fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
-      ] : [];
-      const author = book.authors.length > 0 ? [
-        fmt.medium("Written By:"),
-        fmt.ul(book.authors, { indentation: "default", my: "tight" })
-      ] : [];
-      const book_ids = [
-        `<div class="book-ids">`,
-        fmt.medium("Book Identifiers:"),
-        fmt.ul([
-          book.isbn10 ? `${fmt.light(book.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
-          book.isbn13 ? `${fmt.light(book.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
-          book.asin ? `${fmt.light(book.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
-        ], { indentation: "default", my: "tight" }),
-        `</div>`
-      ];
-      const summary = fmt.blockquote("example", "Summary", {
-        content: fmt.wrap([
-          ...cover,
-          ...author,
-          ...publisher,
-          ...publicationDate,
-          ...pages,
-          ...book_ids
-        ], { my: "4px", px: "8px" }),
-        style: {
-          mr: "8px",
-          ml: "8px"
-        }
-      });
-      const description = fmt.blockquote("info", "Book Description", {
-        fold: "+",
-        content: book.description || "no description found"
-      });
-      const otherBooks = book.otherBooks ? [
-        fmt.blockquote("info", `Books by ${book.authors[0]}`, {
-          content: book.otherBooks.map((b) => {
-            return fmt.link(
-              b.title,
-              b.titleLink,
-              { iconUrl: b.imageLink }
-            );
-          }).join("\n") || "&nbsp;",
-          icon: BOOK_ICON,
-          fold: "-"
-        })
-      ] : [];
-      const actions = fmt.blockquote("info", "Actions / Links", {
-        content: fmt.wrap([
-          book.asin ? fmt.link(
-            "Open in Kindle",
-            `kindle://book?action=open&asin=${book.asin}`,
-            { svgInline: KINDLE_ICON }
-          ) : void 0,
-          book.asin ? fmt.link(
-            "Amazon",
-            `https://www.amazon.com/dp/${book.asin}`,
-            { svgInline: AMAZON }
-          ) : void 0,
-          book.googleBookLink ? fmt.link(
-            "Google",
-            book.googleBookLink,
-            { svgInline: BOOK_ICON }
-          ) : void 0,
-          book.worldCatBookLink ? fmt.link(
-            "WorldCat",
-            book.worldCatBookLink,
-            { svgInline: BOOK_CATALOG }
-          ) : void 0,
-          fmt.link(
-            "Search",
-            `https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
-            { svgInline: SEARCH_BOOK }
-          )
-          // fmt.link(
-          // 	"Update Metadata", 
-          // 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
-          // 	{ svgInline: META_DATA}
-          // ),
-        ], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
-        fold: "+"
-      });
-      const reviews = fmt.blockquote("info", "Reviews", {
-        content: "not available currently",
-        fold: "-",
-        icon: TIP_ICON
-      });
-      const details = fmt.wrap([
-        description,
-        reviews,
-        ...otherBooks,
-        actions,
-        fmt.empty_callout({ flex: true, grow: 1 })
-      ], { flex: true, direction: "column" });
-      const html = [
-        `<div class="book-summary">`,
-        ...book.subtitle ? [
-          `<div class="book-subtitle" style="display:block; width: 100%">`,
-          fmt.blockquote("quote", book.subtitle, { style: { mb: "8px" } }),
-          `</div>`
-        ] : [],
-        // column container
-        `<div class="book-cols" style="display:flex; flex-direction: cols; width: 100%;">`,
-        // LEFT / SUMMARY
-        `<div class="summary-col" style="display:flex; flex-grow:0; max-width: 30%;">${summary}</div>`,
-        // RIGHT / DETAILS
-        details,
-        `</div`
-      ];
-      await page.render(html.join("\n"));
-    }
+      ] : [],
+      // column container
+      `<div class="book-cols" style="display:flex; flex-direction: cols; width: 100%;">`,
+      // LEFT / SUMMARY
+      `<div class="summary-col" style="display:flex; flex-grow:0; max-width: 30%;">${summary}</div>`,
+      // RIGHT / DETAILS
+      details,
+      `</div`
+    ];
+    await page.render(html.join("\n"));
   }
-};
-const iconPageDefn = {
-  kind: "query-defn",
-  type: "IconPage",
-  scalar: [],
-  options: {
-    remove_columns: "enum(when,desc,links)",
-    add_columns: "columns()"
-  }
-};
-const IconPage = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
+});
+const IconPage = createHandler("IconPage").scalar().options().handler(async (evt) => {
   var _a2;
-  p2.debug("entering Icons handler");
-  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
+  const { plugin: p2, page } = evt;
+  const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.current[i]}</span>`;
+  const meta = getMetadata(p2)(page);
+  p2.info("Icon Props", { meta });
+  page.render(`## **${page.current.file.name}** is an Icon Page`);
+  page.render(`> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`);
+  page.table(
+    ["name", "icon"],
+    (_a2 = meta["svg_inline"]) == null ? void 0 : _a2.map((i) => [
+      i,
+      icon(i)
+    ])
+  );
+});
+const Kind = createHandler("Kind").scalar(
+  "kind AS string",
+  "category AS opt(string)",
+  "subcategory AS opt(string)"
+).options({
+  add_columns: `array(string)`,
+  remove_columns: "enum(when,desc,links)"
+}).handler(async (evt) => {
+  const p2 = evt.plugin;
+  const page = evt.page;
   if (page) {
-    const icon = (i) => `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.current[i]}</span>`;
-    const meta = getMetadata(p2)(page);
-    p2.info("Icon Props", { meta });
-    page.render(`## **${page.current.file.name}** is an Icon Page`);
-    page.render(`> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`);
-    page.table(
-      ["name", "icon"],
-      (_a2 = meta["svg_inline"]) == null ? void 0 : _a2.map((i) => [
-        i,
-        icon(i)
-      ])
-    );
-  }
-};
-const kind_defn = {
-  kind: "query-defn",
-  type: "Kind",
-  scalar: [
-    "kind AS string",
-    "category AS opt(string)",
-    "subcategory AS opt(string)"
-  ],
-  options: {
-    remove_columns: "enum(when,desc,links)",
-    add_columns: "columns()"
-  }
-};
-const kind_table = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
-  const dv = getPageInfoBlock(p2)(source, container, component, filePath);
-  if (dv) {
     const {
-      table: table3,
+      table: table3
+    } = page;
+    const fmt = p2.api.format;
+    const {
       showCategories: showCategories2,
       showSubcategories: showSubcategories2,
       showDesc: showDesc2,
       showLinks: showLinks2,
       createFileLink: createFileLink2
-    } = dv;
-    const fmt = dv.format;
-    const [kind, category, subcategory] = scalar;
-    const pages = subcategory ? dv.pages(`#${kind}/${category}/${subcategory}`) : category ? dv.pages(`#${kind}/${category}`) : dv.pages(`#${kind}`);
+    } = p2.api;
+    const { kind, category, subcategory } = evt.scalar;
+    const pages = subcategory ? page.pages(`#${kind}/${category}/${subcategory}`) : category ? page.pages(`#${kind}/${category}`) : page.pages(`#${kind}`);
     if (pages.length > 0) {
       table3(
         ["Repo", "Category", "Subcategory", "Desc", "Links"],
         pages.sort((p22) => p22.file.mday).map((p22) => {
-          const pg = isDvPage(p22) ? p22 : dv.page(p22);
+          const pg = isDvPage(p22) ? p22 : page.page(p22);
           return [
             createFileLink2(pg),
             showCategories2(pg),
@@ -106512,68 +106997,58 @@ const kind_table = (p2) => (source, container, component, filePath) => async (sc
       );
     } else {
       const msg2 = subcategory ? fmt.as_tag(`${kind}/${category}/${subcategory}`) : category ? fmt.as_tag(`${kind}/${category}`) : `${fmt.as_tag(kind)}`;
-      dv.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
+      page.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
     }
   }
-};
-const page_entry_defn = {
-  kind: "query-defn",
-  type: "PageEntry",
-  scalar: [],
-  options: {
-    verbose: "bool"
+});
+const PageEntry = createHandler("PageEntry").scalar().options({ verbose: "opt(bool)" }).handler(async (evt) => {
+  const { plugin: p2, page } = evt;
+  const fmt = p2.api.format;
+  const api2 = p2.api;
+  const current = page.current;
+  const banner_img = isUrl(page.current["_banner"]) ? page.current["_banner"] : void 0;
+  const banner_aspect = isCssAspectRatio(page.current["_banner_aspect"]) ? page.current["_banner_aspect"] : "32/12";
+  const hasBanner = isUrl(banner_img);
+  let [_p1, icon] = api2.getProp(page.current, "icon", "_icon", "svgIcon", "_svgIcon");
+  const hasIcon = isInlineSvg(icon);
+  let [_p2, desc] = api2.getProp(page.current, "desc", "description", "about", "tagline", "summary");
+  const hasDesc = isString$1(desc);
+  const type = current.type ? fmt.internalLink(page.page(current.type)) : void 0;
+  const kind = current.kind ? fmt.internalLink(page.page(current.kind)) : void 0;
+  const category = current.category ? fmt.internalLink(page.page(current.category)) : void 0;
+  const categories = current.categories ? current.categories.map((c) => fmt.internalLink(page.page(c))).join(fmt.light(" | ", { opacity: 0.5 })) : void 0;
+  const subcategory = current.subcategory ? fmt.internalLink(page.page(current.subcategory)) : void 0;
+  const wiki = isWikipediaUrl(current.wiki) ? fmt.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt.link("Wikipedia", current.wikipedia) : void 0;
+  const siblings = page.get_internal_links(page.current, "about", "related", "competitors", "partners").map((i) => fmt.internalLink(i));
+  const parents = page.get_internal_links(page.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt.internalLink(i));
+  const children2 = page.get_internal_links(page.current, "child", "children", "son", "daughter").map((i) => fmt.internalLink(i));
+  const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children2.length === 0;
+  const repo = find_in(isRepoUrl)(current.repo, current.github, current.git, current.homepage, current.url, current.home);
+  const repo_lnk = repo ? fmt.link("Repo", repo) : void 0;
+  const shouldDisplay = hasIcon || hasDesc || type || kind || category || categories;
+  if (shouldDisplay) {
+    const breadcrumbs = [type, kind, category, categories, subcategory].filter((i) => i).join(
+      fmt.light("&nbsp;>&nbsp;", { opacity: 0.5 })
+    );
+    const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
+    const title = isString$1(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
+    const body = isString$1(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
+    const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt.light("<i>no classification</i>");
+    await page.callout("example", title, {
+      style: {
+        mt: "0.55rem",
+        mb: "1rem"
+      },
+      icon: hasIcon ? icon : MARKDOWN_PAGE_ICON,
+      content: body,
+      toRight: right2,
+      fold: "+"
+    });
   }
-};
-const PageEntry = (p2) => (source, container, component, filePath) => async (_scalar, _opt) => {
-  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
-  if (page) {
-    const fmt = p2.api.format;
-    const api2 = p2.api;
-    const current = page.current;
-    const banner_img = isUrl(page.current["_banner"]) ? page.current["_banner"] : void 0;
-    const banner_aspect = isCssAspectRatio(page.current["_banner_aspect"]) ? page.current["_banner_aspect"] : "32/12";
-    const hasBanner = isUrl(banner_img);
-    let [_p1, icon] = api2.getProp(page.current, "icon", "_icon", "svgIcon", "_svgIcon");
-    const hasIcon = isInlineSvg(icon);
-    let [_p2, desc] = api2.getProp(page.current, "desc", "description", "about", "tagline", "summary");
-    const hasDesc = isString$1(desc);
-    const type = current.type ? fmt.internalLink(page.page(current.type)) : void 0;
-    const kind = current.kind ? fmt.internalLink(page.page(current.kind)) : void 0;
-    const category = current.category ? fmt.internalLink(page.page(current.category)) : void 0;
-    const categories = current.categories ? current.categories.map((c) => fmt.internalLink(page.page(c))).join(fmt.light(" | ", { opacity: 0.5 })) : void 0;
-    const subcategory = current.subcategory ? fmt.internalLink(page.page(current.subcategory)) : void 0;
-    const wiki = isWikipediaUrl(current.wiki) ? fmt.link("Wikipedia", current.wiki) : isWikipediaUrl(current.wikipedia) ? fmt.link("Wikipedia", current.wikipedia) : void 0;
-    const siblings = page.get_internal_links(page.current, "about", "related", "competitors", "partners").map((i) => fmt.internalLink(i));
-    const parents = page.get_internal_links(page.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map((i) => fmt.internalLink(i));
-    const children2 = page.get_internal_links(page.current, "child", "children", "son", "daughter").map((i) => fmt.internalLink(i));
-    const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children2.length === 0;
-    const repo = find_in(isRepoUrl)(current.repo, current.github, current.git, current.homepage, current.url, current.home);
-    const repo_lnk = repo ? fmt.link("Repo", repo) : void 0;
-    const shouldDisplay = hasIcon || hasDesc || type || kind || category || categories;
-    if (shouldDisplay) {
-      const breadcrumbs = [type, kind, category, categories, subcategory].filter((i) => i).join(
-        fmt.light("&nbsp;>&nbsp;", { opacity: 0.5 })
-      );
-      const ext_links = [wiki, repo_lnk].filter((i) => i).join(", ");
-      const title = isString$1(desc) ? desc.length < 120 ? desc : ext_links : ext_links;
-      const body = isString$1(desc) && desc.length >= 120 ? ensureTrailing(desc, ".") : void 0;
-      const right2 = breadcrumbs.length > 0 ? siblingsNoOthers ? `${breadcrumbs} [ ${siblings} ]` : breadcrumbs : fmt.light("<i>no classification</i>");
-      await page.callout("example", title, {
-        style: {
-          mt: "0.55rem",
-          mb: "1rem"
-        },
-        icon: hasIcon ? icon : MARKDOWN_PAGE_ICON,
-        content: body,
-        toRight: right2,
-        fold: "+"
-      });
-    }
-    if (hasBanner) {
-      page.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
-    }
+  if (hasBanner) {
+    page.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
   }
-};
+});
 function traverse(tree, cb) {
   if (isObject(tree) && "children" in tree && isArray(tree.children)) {
     for (let child of tree.children) {
@@ -106660,164 +107135,105 @@ const pageContent = (p2) => async (ref) => {
     }
   };
 };
-const video_defn = {
-  kind: "query-defn",
-  type: "Videos",
-  scalar: [],
-  options: {
-    size: "enum(S,M,L)"
-  }
-};
-const video_gallery = (p2) => (source, container, component, filePath) => async (scalar, opt2) => {
-  var _a2;
-  const page = getPageInfoBlock(p2)(source, container, component, filePath);
-  if (page) {
-    const { page: current, format: fmt } = page;
-    let videos = [];
-    let backLinks = page.as_array(((_a2 = current == null ? void 0 : current.file) == null ? void 0 : _a2.inlinks) || []);
-    let backPages = await Promise.all(
-      backLinks.map((i) => pageContent(p2)(i))
-    ).then((pgs) => pgs.filter((i) => i));
-    backPages.forEach((pg) => {
-      let [links] = pg.externalLinks();
-      videos = [
-        ...videos,
-        ...links.filter((i) => i.domain === "youtube-video").map((i) => ({
-          ...i,
-          title: i.title.toLowerCase() === "video" ? pg.page.file.name : i.title,
-          filepath: pg.filepath
-        }))
-      ];
-    });
-    let size = opt2.size || "M";
-    const grid_cols = size == "L" ? 2 : size == "M" ? 3 : size == "S" ? 4 : 5;
-    const dom = [
-      `<div class="video-gallery" style="display: grid; grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr)); gap: 8px;">`,
-      ...videos.map((v) => {
-        const src = youtubeEmbed(v.url);
-        const node2 = [
-          `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
-          `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
-          `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
-          `</div>`
-        ].join("\n");
-        return node2;
-      }),
-      "</div>"
-    ].join("\n");
-    page.render(dom);
-  }
-};
-const Page = (p2) => (source, container, component, filePath) => (scalar, obj) => {
-  var _a2, _b2, _c2, _d2;
-  const page = p2.api.getPageInfoBlock(
-    source,
-    container,
-    component,
-    filePath
-  );
-  if (page) {
-    const fmt = p2.api.format;
-    p2.info(`Page Details`, page);
-    page.render(fmt.bold("Page Information<br/>"));
-    const kindOfPage = [fmt.bold("Kind of Page"), page.type];
-    const types = ((_a2 = page.typeTags) == null ? void 0 : _a2.length) > 0 ? [fmt.bold("Types(s)"), page.kindTags.join(", ")] : void 0;
-    const kinds = ((_b2 = page.kindTags) == null ? void 0 : _b2.length) > 0 ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")] : void 0;
-    const cats = ((_c2 = page.categories) == null ? void 0 : _c2.length) > 0 ? [
-      fmt.bold("Category(s)"),
-      page.categories.map((i) => i.category).join(", ")
-    ] : void 0;
-    const subCats = ((_d2 = page.subcategories) == null ? void 0 : _d2.length) > 0 ? [
-      fmt.bold("Subcategories(s)"),
-      page.subcategories.map((i) => i.subcategory).join(", ")
-    ] : void 0;
-    const metadata = Object.keys(page.metadata).length > 0 ? [
-      fmt.bold("Frontmatter"),
-      Object.keys(page.metadata).filter((k) => !isFunction$2(page.metadata[k])).map(
-        (k) => `${k}(${page.metadata[k].join(", ")})`
-      ).join("<br/>")
-    ] : void 0;
-    const report = [
-      kindOfPage,
-      types,
-      kinds,
-      cats,
-      subCats,
-      metadata
-    ].filter((i) => i);
-    page.render(fmt.twoColumnTable(
-      "",
-      "Value",
-      ...report
-    ));
-  }
-};
-const queryHandlers = (k) => ({
-  IconPage: IconPage(k),
-  BackLinks: BackLinks(k),
-  Book: Book(k),
-  Kind: kind_table(k),
-  PageEntry: PageEntry(k),
-  Page: Page(k),
-  VideoGallery: video_gallery(k)
+const VideoGallery = createHandler("VideoGallery").scalar().options({ size: "opt(enum(S,M,L))" }).handler(async (evt) => {
+  var _a2, _b2, _c2;
+  const { plugin: p2, page } = evt;
+  let videos = [];
+  let backLinks = page.as_array(((_b2 = (_a2 = page.current) == null ? void 0 : _a2.file) == null ? void 0 : _b2.inlinks) || []);
+  let backPages = await Promise.all(
+    backLinks.map((i) => pageContent(p2)(i))
+  ).then((pgs) => pgs.filter((i) => i));
+  backPages.forEach((pg) => {
+    let [links] = pg.externalLinks();
+    videos = [
+      ...videos,
+      ...links.filter((i) => i.domain === "youtube-video").map((i) => ({
+        ...i,
+        title: i.title.toLowerCase() === "video" ? pg.page.file.name : i.title,
+        filepath: pg.filepath
+      }))
+    ];
+  });
+  let size = ((_c2 = evt == null ? void 0 : evt.options) == null ? void 0 : _c2.size) || "M";
+  const grid_cols = size == "L" ? 2 : size == "M" ? 3 : size == "S" ? 4 : 5;
+  const dom = [
+    `<div class="video-gallery" style="display: grid; grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr)); gap: 8px;">`,
+    ...videos.map((v) => {
+      const src = youtubeEmbed(v.url);
+      const node2 = [
+        `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
+        `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
+        `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
+        `</div>`
+      ].join("\n");
+      return node2;
+    }),
+    "</div>"
+  ].join("\n");
+  page.render(dom);
 });
-const obsidianApi = (p2) => {
-  return {
-    /**
-     * the full Obsidian API surface exposed on global
-     */
-    app: p2.app,
-    /**
-     * A dictionary of commands configured for the active vault
-     */
-    commands: globalThis.app.commands.commands,
-    /**
-     * Atomically read, modify, and save the frontmatter of a note. The frontmatter is passed in as a JS object, and should be mutated directly to achieve the desired result.
-     Remember to handle errors thrown by this method.
-     * @param file — the file to be modified. Must be a Markdown file.
-     * @param fn — a callback function which mutates the frontmatter object synchronously.
-     * @param options — write options.
-     * @throws — YAMLParseError if the YAML parsing fails
-     * @throws — any errors that your callback function throws
-     * 
-     * ```ts
-     * app.fileManager.processFrontMatter(file, (frontmatter) => {
-     *     frontmatter['key1'] = value;
-     *     delete frontmatter['key2'];
-     * });
-     * ```
-     */
-    processFrontmatter: p2.app.fileManager.processFrontMatter,
-    /**
-     * Resolves a unique path for the attachment file being saved.
-     * Ensures that the parent directory exists and dedupes the
-     * filename if the destination filename already exists.
-     *
-     * @param filename Name of the attachment being saved
-     * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
-     * @returns Full path for where the attachment should be saved, according to the user's settings
-     */
-    getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
-    /**
-     * A dictionary of files:
-     * 
-     * - _keys_ are the full file path
-     * - _values_ are 
-     */
-    fileCache: globalThis.app.metadataCache.fileCache,
-    /**
-     * A dictionary which can be used to lookup metadata using
-     * the `fileCache`'s hash value.
-     */
-    metaData: globalThis.app.metadataCache.metadataCache
-  };
-};
+const Page = createHandler("Page").scalar().options().handler(async (evt) => {
+  var _a2, _b2, _c2, _d2;
+  const p2 = evt.plugin;
+  const page = evt.page;
+  const fmt = p2.api.format;
+  p2.info(`Page Details`, page);
+  page.render(fmt.bold("Page Information<br/>"));
+  const kindOfPage = [fmt.bold("Kind of Page"), page.type];
+  const types = ((_a2 = page.typeTags) == null ? void 0 : _a2.length) > 0 ? [fmt.bold("Types(s)"), page.kindTags.join(", ")] : void 0;
+  const kinds = ((_b2 = page.kindTags) == null ? void 0 : _b2.length) > 0 ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")] : void 0;
+  const cats = ((_c2 = page.categories) == null ? void 0 : _c2.length) > 0 ? [
+    fmt.bold("Category(s)"),
+    page.categories.map((i) => i.category).join(", ")
+  ] : void 0;
+  const subCats = ((_d2 = page.subcategories) == null ? void 0 : _d2.length) > 0 ? [
+    fmt.bold("Subcategories(s)"),
+    page.subcategories.map((i) => i.subcategory).join(", ")
+  ] : void 0;
+  const metadata = Object.keys(page.metadata).length > 0 ? [
+    fmt.bold("Frontmatter"),
+    Object.keys(page.metadata).filter((k) => !isFunction$2(page.metadata[k])).map(
+      (k) => `${k}(${page.metadata[k].join(", ")})`
+    ).join("<br/>")
+  ] : void 0;
+  const report = [
+    kindOfPage,
+    types,
+    kinds,
+    cats,
+    subCats,
+    metadata
+  ].filter((i) => i);
+  page.render(fmt.twoColumnTable(
+    "",
+    "Value",
+    ...report
+  ));
+});
+const Subcategories = createHandler("Subcategories").scalar().options().handler(async (evt) => {
+  const { plugin: p2, page } = evt;
+  if (page.isCategoryPage) {
+    page.paragraph("category page");
+  } else {
+    page.paragraph("not category page");
+  }
+});
+const queryHandlers = (p2) => (ctx) => [
+  IconPage(p2)(ctx),
+  BackLinks(p2)(ctx),
+  Book(p2)(ctx),
+  Kind(p2)(ctx),
+  PageEntry(p2)(ctx),
+  Page(p2)(ctx),
+  VideoGallery(p2)(ctx),
+  Subcategories(p2)(ctx)
+];
 const api = (plugin4) => ({
   /**
    * The **Query Handler** API surface.
    * 
-   * - `back_links`
-   * - `video_gallery`
+   * - `BackLinks`
+   * - `VideoGallery`
    * - etc.
    */
   queryHandlers: queryHandlers(plugin4),
@@ -107131,249 +107547,23 @@ async function e() {
     return l2(88, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : w, s2, u, g, y2);
   } };
 }
-const opt = (value2) => {
-  let opt_type = stripBefore(value2, "opt(").slice(0, -1);
-  return `${opt_type} | undefined`;
-};
-const enumValues = (v) => {
-  let values = stripBefore(v == null ? void 0 : v.trim(), "enum(").slice(0, -1).split(/,\s{0,1}/).map((i) => `"${i}"`);
-  return values.join(" | ");
-};
-const opt_hash = (defn) => {
-  const keys = Object.keys(defn.options);
-  const kv = keys.reduce(
-    (acc, key) => [
-      ...acc,
-      defn.options[key].includes("opt(") ? `${key}?: ${opt(`X AS ${defn.options[key]}`)}` : defn.options[key].includes("enum(") ? `${key}?: ${enumValues(`X AS ${defn.options[key]}`)}` : `${key}?: ${stripBefore(`X AS ${defn.options[key]}`, "AS ")}`
-    ],
-    []
-  );
-  return `{
-    ${kv.join(",\n    ")}
-  }`;
-};
-const query_signature = (defn) => {
-  const scalars = defn["scalar"].map((i) => {
-    let name2 = stripAfter(i, " AS");
-    let kv = i.includes("opt(") ? `${name2}?: ${opt(i)}` : i.includes("enum(") ? `${name2}: ${enumValues(i)}` : `${name2}: ${stripBefore(i, "AS ")}`;
-    return kv;
-  });
-  const signature = `${String(defn.type)}(
-  ${scalars.join(",\n  ")},
-  options?: ${opt_hash(defn)}
-) => void`;
-  return signature;
-};
-const describe_query = (defn) => {
-  return [
-    "",
-    "<br>",
-    "",
-    "```ts",
-    query_signature(defn),
-    "```",
-    ""
-  ].join("\n");
-};
-const query_scalar_counts = (defn) => {
-  var _a2, _b2, _c2;
-  return {
-    total: ((_a2 = defn == null ? void 0 : defn.scalar) == null ? void 0 : _a2.length) || 0,
-    required: ((_b2 = defn == null ? void 0 : defn.scalar) == null ? void 0 : _b2.filter((i) => !i.contains("opt("))) || 0,
-    optional: ((_c2 = defn == null ? void 0 : defn.scalar) == null ? void 0 : _c2.filter((i) => i.contains("opt("))) || 0
-  };
-};
-const QUERY_DEFN_LOOKUP = {
-  Kind: kind_defn,
-  Videos: video_defn,
-  PageEntry: page_entry_defn
-};
-const evaluate_query_params = (p2) => (re, source, defn) => {
-  var _a2, _b2, _c2, _d2;
-  let param_str = source.match(re) ? ((_a2 = Array.from(source.match(re))[1]) == null ? void 0 : _a2.trim()) || "" : "";
-  try {
-    let params = param_str === "" ? [] : JSON.parse(`[ ${param_str} ]`);
-    const response = {
-      isOk: true,
-      scalar: params.filter((i) => isScalar(i)),
-      options: params.find((i) => isObject(i)) || {}
-    };
-    p2.debug({ defn, response });
-    const scalarCounts = query_scalar_counts(defn);
-    if (((_b2 = response == null ? void 0 : response.scalar) == null ? void 0 : _b2.length) > scalarCounts.total) {
-      return {
-        isOk: false,
-        error: new Error(`Too many scalar parameters passed into ${(defn == null ? void 0 : defn.type) || "XXX"}(); expected a maximum of ${defn == null ? void 0 : defn.scalar.length}, got ${response == null ? void 0 : response.scalar.length}`),
-        param_str
-      };
-    }
-    if (scalarCounts.required > 0 && scalarCounts.required > (response == null ? void 0 : response.scalar.length)) {
-      return {
-        isOk: false,
-        error: new Error(`the ${defn.type}() query type requires at least ${(_c2 = defn.scalar) == null ? void 0 : _c2.length} scalar parameters but only ${(_d2 = response == null ? void 0 : response.scalar) == null ? void 0 : _d2.length} were received!`),
-        param_str
-      };
-    }
-    const keys = Object.keys((response == null ? void 0 : response.options) || {});
-    const known_keys = Object.keys(defn.options || {});
-    const unknownKeys = keys.filter((i) => !known_keys.includes(i));
-    if (unknownKeys.length > 0) {
-      return {
-        isOk: false,
-        error: new Error(`Properties were provided to the options hash which are not known key's of the options type: ${unknownKeys.join(", ")}! The valid keys for this options hash are: ${known_keys.join(", ")}`),
-        param_str
-      };
-    }
-    return response;
-  } catch (e2) {
-    return {
-      isOk: false,
-      error: e2,
-      param_str
-    };
-  }
-};
-const query_error = (p2) => (source, container, component, filePath) => async (query2, err, params_str) => {
-  const page = p2.api.getPageInfoBlock(source, container, component, filePath);
-  p2.warn(err);
-  if (page) {
-    const desc = query2 in QUERY_DEFN_LOOKUP ? `<span style="margin-top: 0.75rem">This query command is defined as:</span>` + describe_query(QUERY_DEFN_LOOKUP[query2]) : `<br>${query2} is not a recognized command!`;
-    page.callout("error", `<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${page.format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
-      content: [
-        `Problems parsing parameters passed into the&nbsp;${page.format.bold(`${query2}()`)}&nbsp;${page.format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
-        `<span><b>Error:</b> ${(err == null ? void 0 : err.message) || String(err)}</span>`,
-        desc
-      ],
-      icon: ERROR_ICON,
-      toRight: page.format.inline_codeblock(` ${query2}(${(params_str == null ? void 0 : params_str.trim()) || ""}) `)
-    });
-  }
-};
-const codeblockParser = (plugin4) => {
-  let processor = async (source, el, ctx) => {
+const codeblockParser = (p2) => {
+  let callback = async (source, el, ctx) => {
     el.style.overflowX = "auto";
-    const back_links = /BackLinks\((.*)\)/;
-    const page_entry = /PageEntry\((.*)\)/;
-    const page = /Page\((.*)\)/;
-    const book = /Book\((.*)\)/;
-    const kind = /Kind\((.*)\)/;
-    const videos = /Videos\((.*)\)/;
-    const icons = /Icons\((.*)\)/;
-    const {
-      BackLinks: BackLinks2,
-      Book: Book2,
-      PageEntry: PageEntry2,
-      Kind,
-      VideoGallery,
-      IconPage: IconPage2,
-      Page: Page2
-    } = plugin4.api.queryHandlers;
-    if (back_links.test(source)) {
-      const [_, params] = Array.from(source.match(back_links) || []);
-      await BackLinks2(source, el, ctx, ctx.sourcePath)(params);
-      plugin4.debug(`back links rendered on "${ctx.sourcePath}"`);
-    } else if (page_entry.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(
-        page_entry,
-        source,
-        page_entry_defn
-      );
-      if (p2.isOk) {
-        await PageEntry2(source, el, ctx, ctx.sourcePath)(p2.scalar, p2.options);
-        plugin4.debug(`page entry rendered on "${ctx.sourcePath}"`);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "PageEntry",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else if (page.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(
-        page,
-        source,
-        page_entry_defn
-      );
-      if (p2.isOk) {
-        await Page2(source, el, ctx, ctx.sourcePath)(p2.scalar, p2.options);
-        plugin4.debug(`Page() meta info rendered on "${ctx.sourcePath}"`);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "Page",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else if (book.test(source)) {
-      await Book2(source, el, ctx, ctx.sourcePath);
-      plugin4.debug(`book rendered on "${ctx.sourcePath}"`);
-    } else if (kind.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(kind, source, kind_defn);
-      if (p2.isOk) {
-        plugin4.debug(p2);
-        await Kind(
-          source,
-          el,
-          ctx,
-          ctx.sourcePath
-        )(p2.scalar, p2.options);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "Kind",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else if (videos.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(kind, source, kind_defn);
-      if (p2.isOk) {
-        await VideoGallery(
-          source,
-          el,
-          ctx,
-          ctx.sourcePath
-        )(p2.scalar, p2.options);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "VideoGallery",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else if (icons.test(source)) {
-      let p2 = evaluate_query_params(plugin4)(kind, source, iconPageDefn);
-      if (p2.isOk) {
-        await IconPage2(
-          source,
-          el,
-          ctx,
-          ctx.sourcePath
-        )(p2.scalar, p2.options);
-      } else {
-        query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-          "IconPage",
-          p2.error,
-          p2.param_str
-        );
-        return;
-      }
-    } else {
-      const command_attempt = source.includes("(") ? retainUntil(source, "(") : "Unknown";
-      const params_attempt = command_attempt === "Unknown" ? "" : source.replace(command_attempt + "(", "").replace(/\)$/, "");
-      query_error(plugin4)(source, el, ctx, ctx.sourcePath)(
-        command_attempt,
-        new Error(`Unknown query command: ${command_attempt}()`),
-        params_attempt
-      );
+    const event = { source, el, ctx };
+    getPageInfoBlock(p2)(event);
+    const handlers = p2.api.queryHandlers(event);
+    p2.api.format;
+    const outcomes = await Promise.all(handlers.map((i) => i()));
+    p2.info(`code block processed`, outcomes);
+    if (!outcomes.some((i) => i)) {
+      handlers.map((i) => i.handlerName);
+      handlers.find((i) => isError(i));
     }
   };
-  let registration = plugin4.registerMarkdownCodeBlockProcessor(
+  let registration = p2.registerMarkdownCodeBlockProcessor(
     "km",
-    processor
+    callback
   );
   registration.sortOrder = -100;
 };

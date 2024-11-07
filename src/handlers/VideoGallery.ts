@@ -1,40 +1,18 @@
-import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { YouTubeVideoUrl,  youtubeEmbed } from "inferred-types";
 
-import KindModelPlugin from "../main";
 import { PageContent, pageContent } from "../helpers/pageContent";
 import { PagePath } from "../types/general";
-import { OptionParam, QueryDefinition, ScalarParams } from "../helpers/QueryDefinition";
-import { getPageInfoBlock } from "~/api";
-
-export const video_defn = {
-	kind: "query-defn",
-	type: "Videos",
-	scalar: [],
-	options: {
-		size: "enum(S,M,L)"
-	}
-} as const satisfies QueryDefinition;
+import { createHandler } from "./createHandler";
 
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
-export const video_gallery = (p: KindModelPlugin) => (
-	source: string,
-	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
-	filePath: string
-) => async <
-	TScalar extends ScalarParams<typeof video_defn>,
-	TOption extends OptionParam<typeof video_defn>
->(
-	scalar: TScalar,
-	opt: TOption
-) => {
-	const page = getPageInfoBlock(p)(source, container, component, filePath);
+export const VideoGallery = createHandler("VideoGallery")
+	.scalar()
+	.options({ size: "opt(enum(S,M,L))"})
+	.handler(async(evt) => {
+		const { plugin: p, page } = evt;
 
-	if(page) {
-		const { page: current, format: fmt } = page;
 	
 		type Video = {
 			url: YouTubeVideoUrl;
@@ -44,7 +22,7 @@ export const video_gallery = (p: KindModelPlugin) => (
 		// all the videos found on pages which link to current page
 		let videos: Video[] = []
 		
-		let backLinks = page.as_array(current?.file?.inlinks || []);
+		let backLinks = page.as_array(page.current?.file?.inlinks || []);
 		let backPages: PageContent[]  = await Promise.all(
 			backLinks.map(i => pageContent(p)(i))
 		).then(pgs => pgs.filter(i => i) as PageContent[])
@@ -64,7 +42,7 @@ export const video_gallery = (p: KindModelPlugin) => (
 			];
 		});
 	
-		let size = opt.size || "M";
+		let size = evt?.options?.size || "M";
 	
 		const grid_cols = size == "L"
 			? 2
@@ -91,6 +69,5 @@ export const video_gallery = (p: KindModelPlugin) => (
 		].join("\n")
 	
 		page.render(dom);
-	}
+	});
 
-}

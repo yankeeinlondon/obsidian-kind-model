@@ -1,12 +1,12 @@
-import { isObject,  retainUntil } from "inferred-types";
-import { MarkdownPostProcessorContext } from "obsidian";
+import { isObject } from "inferred-types";
+import { Component, MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
 import {  Link } from "~/types/dataview_types";
-import { query_error } from "~/handlers/query_error";
-import { evaluate_query_params } from "~/helpers/QueryDefinition";
-import { kind_defn } from "~/handlers/Kind";
-import { page_entry_defn } from "~/handlers/PageEntry";
-import { iconPageDefn } from "~/handlers/IconPage";
+
+import { ObsidianCodeblockEvent, PageInfoBlock } from "~/types";
+import { ERROR_ICON } from "~/constants";
+import { isError } from "~/type-guards";
+import { getPageInfoBlock } from "~/api";
 
 
 export const isPageLink= (v: unknown): v is Link => {
@@ -23,138 +23,44 @@ export const isPageLink= (v: unknown): v is Link => {
  * - it parses blocks and hands off responsibility to the appropriate handler
  * - if no handler is found, an error is raised in the UI
  */
-export const codeblockParser = (plugin: KindModelPlugin) => {
-	let processor = async (
+export const codeblockParser = (p: KindModelPlugin) => {
+	let callback = async (
 		source: string, 
 		el: HTMLElement, 
-		ctx: MarkdownPostProcessorContext
+		ctx: MarkdownPostProcessorContext & Component
 	) => {
 		el.style.overflowX = "auto"; 
-		
-		const back_links = /BackLinks\((.*)\)/;
-		const page_entry = /PageEntry\((.*)\)/;
-		const page = /Page\((.*)\)/;
-		const book = /Book\((.*)\)/; 
-		const kind = /Kind\((.*)\)/;
-		const videos = /Videos\((.*)\)/;
-		const icons = /Icons\((.*)\)/;
 
-		const { 
-			BackLinks,
-			Book,
-			PageEntry,
-			Kind,
-			VideoGallery,
-			IconPage,
-			Page
-		} = plugin.api.queryHandlers
+		const event: ObsidianCodeblockEvent = {source,el,ctx};
+		const page = getPageInfoBlock(p)(event) as PageInfoBlock;
+		const handlers = p.api.queryHandlers(event);
+		const fmt = p.api.format;
 
-		if (back_links.test(source)) {
-			const [_, params] = Array.from(source.match(back_links) || []);
-			await BackLinks(source,el,ctx,ctx.sourcePath)(params);
-			plugin.debug(`back links rendered on "${ctx.sourcePath}"`)
-		}
-		else if (page_entry.test(source)) {
-			let p = evaluate_query_params(plugin)(
-				page_entry, source, page_entry_defn
-			);
-			if (p.isOk) {
-				await PageEntry(source,el,ctx,ctx.sourcePath)(p.scalar, p.options);
-				plugin.debug(`page entry rendered on "${ctx.sourcePath}"`);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"PageEntry",
-					p.error,
-					p.param_str
-				)
-				return
-			}
-		}
-		else if (page.test(source)) {
-			let p = evaluate_query_params(plugin)(
-				page, source, page_entry_defn
-			);
-			if (p.isOk) {
-				await Page(source,el,ctx,ctx.sourcePath)(p.scalar, p.options);
-				plugin.debug(`Page() meta info rendered on "${ctx.sourcePath}"`);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"Page",
-					p.error,
-					p.param_str
-				)
-				return
-			}
-		}
-		else if (book.test(source)) {
-			await Book(source,el,ctx,ctx.sourcePath);
-			plugin.debug(`book rendered on "${ctx.sourcePath}"`);
-		} 
-		else if (kind.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
-			if (p.isOk) {
-				plugin.debug(p)
-				await Kind(
-					source,el,ctx,ctx.sourcePath
-				)(p.scalar, p.options);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"Kind",
-					p.error,
-					p.param_str
-				);
-				return
-			} 
-		}
-		else if (videos.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, kind_defn);
-			if (p.isOk) {
-				await VideoGallery(
-					source,el,ctx,ctx.sourcePath
-				)(p.scalar, p.options);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"VideoGallery",
-					p.error,
-					p.param_str
-				);
-				return
-			} 
-		} else if (icons.test(source)) {
-			let p = evaluate_query_params(plugin)(kind, source, iconPageDefn);
-			if (p.isOk) {
-				await IconPage(
-					source,el,ctx,ctx.sourcePath
-				)(p.scalar, p.options);
-			} else {
-				query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-					"IconPage",
-					p.error,
-					p.param_str
-				)
-				return
-			} 
-		}
-		else {
-			// doesn't match any known syntax
-			const command_attempt = source.includes("(")
-				? retainUntil(source, "(")
-				: "Unknown";
-			const params_attempt = command_attempt === "Unknown"
-				? ""
-				: source.replace(command_attempt + "(", "").replace(/\)$/, "");
+		const outcomes = await Promise.all(handlers.map(i => i()));
+		p.info(`code block processed`, outcomes)
 
-			query_error(plugin)(source,el,ctx,ctx.sourcePath)(
-				command_attempt as any,
-				new Error(`Unknown query command: ${command_attempt}()`),
-				params_attempt
-			);
+		if (!outcomes.some(i => i)) {
+			// no handlers attempted to handle the event payload
+			const handlerNames = handlers.map(i => i.handlerName);
+			const withError = handlers.find(i => isError(i));
+
+			// page.callout(
+			// 	"error", 
+			// 	`<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
+			// content: [
+			// 	`Problems parsing parameters passed into the&nbsp;${fmt.bold(`${query}()`)}&nbsp;${fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
+			// 	`<span><b>Error:</b> ${err?.message || String(err)}</span>`,
+			// 	desc
+			// ],
+			// icon: ERROR_ICON,
+			// toRight: fmt.inline_codeblock(` ${query}(${params_str?.trim() || ""}) `)
 		}
 	}
 
-	let registration = plugin.registerMarkdownCodeBlockProcessor(
+	
+	let registration = p.registerMarkdownCodeBlockProcessor(
 		"km", 
-		processor
+		callback
 	);
 	registration.sortOrder = -100;
 }

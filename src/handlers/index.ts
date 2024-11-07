@@ -2,30 +2,55 @@ import KindModelPlugin from "~/main";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
 import { IconPage } from "./IconPage";
-import { kind_table } from "./Kind";
+import { Kind } from "./Kind";
 import { PageEntry } from "./PageEntry";
-import { video_gallery } from "./VideoGallery";
+import { VideoGallery } from "./VideoGallery";
 import { Page } from "./Page";
+import { Subcategories } from "./Subcategories";
+import { Component, MarkdownPostProcessorContext } from "obsidian";
+import { ObsidianCodeblockEvent } from "~/types";
 
-export const queryHandlers = (k: KindModelPlugin) => ({
-	IconPage: IconPage(k),
-	BackLinks: BackLinks(k),
-	Book: Book(k),
-	Kind: kind_table(k),
-	PageEntry: PageEntry(k),
-	Page: Page(k),
-	VideoGallery: video_gallery(k),
-});
+export * from "./createHandler";
+
+export type QueryHandlerContext = [
+	source: string,
+	container: HTMLElement,
+	component: Component & MarkdownPostProcessorContext,
+	filePath: string
+];
 
 
-export type QueryHandlers = ReturnType<typeof queryHandlers>;
+/**
+ * **queryHandlers**
+ * 
+ * a higher order function which produces either a partial application
+ * of the query handlers when passed just the plugin as `p` or a 
+ * _full application_ when passed both `p` and `ctx` parameters.
+ * 
+ * ```ts
+ * const partial = queryParameter(p);
+ * const full = queryParameters(p, {source, container, component, filePath})
+ * ```
+ */
+export const queryHandlers = (
+	p: KindModelPlugin
+) => (ctx: ObsidianCodeblockEvent) => [
+	IconPage(p)(ctx),
+	BackLinks(p)(ctx),
+	Book(p)(ctx),
+	Kind(p)(ctx),
+	PageEntry(p)(ctx),
+	Page(p)(ctx),
+	VideoGallery(p)(ctx),
+	Subcategories(p)(ctx)
+];
 
-export {
+export { 
 	BackLinks,
 	Book,
 	IconPage,
-	kind_table,
+	Kind,
 	PageEntry,
-	video_gallery,
+	VideoGallery,
 	Page
 }

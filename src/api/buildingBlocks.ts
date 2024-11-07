@@ -36,7 +36,6 @@ import {
 	DecomposedSubcategoryTag,
 	DecomposedKindTag,
 	Frontmatter,
-	Link,
 	PageMetadata
 } from "../types";
 import { BuildingBlocksApi } from "../types";
@@ -57,11 +56,10 @@ export const getKnownKindTags = (p: KindModelPlugin) => (
 		: Array.from(p.cache?.kindDefinitionsByTag?.keys() || []);
 }
 
-
-export const isKeyOf = <
-	TContainer,
-	TKey
->(container: TContainer, key: TKey): key is TContainer extends Container ? TKey & keyof TContainer : TKey => {
+export const isKeyOf = <TContainer,TKey>(
+	container: TContainer, 
+	key: TKey
+): key is TContainer extends Container ? TKey & keyof TContainer : TKey => {
 	return (
 		isContainer(container) && (isString(key) || isNumber(key)) && key in container ? true : false
 	);
@@ -72,7 +70,6 @@ export const isKeyOf = <
  */
 export const isKindTag = (p: KindModelPlugin) => (tag: string): boolean => {
 	const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
-	const parts = safeTag.split("/");
 	const valid = getKnownKindTags(p)();
 
 	return valid.includes(safeTag);
@@ -966,7 +963,7 @@ export const getClassification = (p: KindModelPlugin) => (
 
 		for (let tag of kindTags) {
 			tag = stripLeading(tag, "#");
-			p.info(`tag ${tag}`);
+			p.debug(`tag ${tag}`);
 
 			const kd = lookupKindByTag(p)(tag);
 			const kp = kd ? getPage(p)(kd.path) : undefined;

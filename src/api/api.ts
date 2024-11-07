@@ -1,5 +1,6 @@
 import KindModelPlugin from "~/main";
 import { buildingBlocks } from "./buildingBlocks";
+import { obsidianApi } from "./obsidian";
 import { getPath } from "./getPath";
 import { createPageView } from "../page/createPageView";
 import { getPageInfo } from "../page/getPageInfo";
@@ -9,7 +10,6 @@ import { iconApi } from "./iconApi";
 import { showApi } from "./showApi";
 import { getPageInfoBlock } from "../page/getPageBlock";
 import { queryHandlers } from "~/handlers";
-import { obsidianApi } from "./obsidian";
 import { getPage } from "~/page";
 import { fmApi } from "./fm";
 
@@ -17,8 +17,8 @@ export const api = (plugin: KindModelPlugin) => ({
 	/**
 	 * The **Query Handler** API surface.
 	 * 
-	 * - `back_links`
-	 * - `video_gallery`
+	 * - `BackLinks`
+	 * - `VideoGallery`
 	 * - etc.
 	 */
 	queryHandlers: queryHandlers(plugin),

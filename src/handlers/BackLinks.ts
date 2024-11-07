@@ -2,6 +2,7 @@ import { Component, MarkdownPostProcessorContext } from "obsidian";
 import { TupleToUnion } from "inferred-types";
 import type KindModelPlugin from "../main";
 import { Tag } from "../types/general";
+import { createHandler } from "./createHandler";
 
 
 
@@ -46,19 +47,12 @@ export type BackLinkOptions = {
 /**
  * Renders back links for any obsidian page
  */
-export const BackLinks = (p: KindModelPlugin) => (
-	source: string,
-	container: HTMLElement,
-	component: Component & MarkdownPostProcessorContext,
-	filePath: string
-) => async(
-	params_str: string = ""
-) => {
-	const page = p.api.getPageInfoBlock(
-		source, container, component, filePath
-	);
+export const BackLinks = createHandler("BackLinks")
+	.scalar()
+	.options()
+	.handler(async(evt) => {
+		const { plugin: p, page } = evt;
 
-	if (page) {
 		const current = page.current;
 
 		const {	
@@ -88,7 +82,7 @@ export const BackLinks = (p: KindModelPlugin) => (
 
 		if (links.length > 0) {
 			table(
-				["Page", "Classification(s)", "Desc", "Links"],
+				["Backlink", "Classification(s)", "Desc", "Links"],
 				links.map(i => [
 					createFileLink(i),
 					showClassifications(i),
@@ -101,5 +95,7 @@ export const BackLinks = (p: KindModelPlugin) => (
 		if(links.length === 0) {
 			renderValue(`- no back links found to this page`)
 		}
-	}
-}
+
+	});
+
+

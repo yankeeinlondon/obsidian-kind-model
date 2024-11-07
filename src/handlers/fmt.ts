@@ -1,13 +1,8 @@
 import { 
-	EmptyObject, 
-	EscapeFunction, 
-	TypedFunction, 
-	createFnWithProps, 
 	ensureLeading, 
-	isFunction 
 } from "inferred-types";
 import KindModelPlugin from "../main";
-import { ObsidianCalloutColors, ObsidianFoldOptions } from "../types/ObsidianCallouts";
+import { ObsidianCalloutColors } from "../types/ObsidianCallouts";
 import { 
 	BUG_ICON, 
 	ERROR_ICON, 
@@ -21,9 +16,9 @@ import {
 	TIP_ICON, 
 	WARN_ICON 
 } from "../constants/obsidian-constants";
-import { BlockQuoteOptions, DvPage, Link, ListItemsCallback, ListStyle, StyleOptions } from "types";
-import { isDvPage, isLink } from "type-guards";
-import { listStyle, renderListItems, style } from "api";
+import { BlockQuoteOptions, DvPage, Link, ListItemsCallback, ListStyle, StyleOptions } from "~/types";
+import { isDvPage, isLink } from "~/type-guards";
+import {  renderListItems, style } from "~/api";
 
 
 

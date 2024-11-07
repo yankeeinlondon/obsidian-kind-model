@@ -6,43 +6,20 @@ import {
 	isString, 
 	isUrl 
 } from "inferred-types";
-import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import { DvPage } from "~/types";
 import { MARKDOWN_PAGE_ICON } from "~/constants";
-import KindModelPlugin from "~/main";
-import { 
-	OptionParam, 
-	QueryDefinition, 
-	ScalarParams 
-} from "../helpers/QueryDefinition";
 import { find_in, isWikipediaUrl } from "~/type-guards";
-
-export const page_entry_defn = {
-	kind: "query-defn",
-	type: "PageEntry",
-	scalar: [],
-	options: {
-		verbose: "bool"
-	}
-} as const satisfies QueryDefinition;
+import { createHandler } from "./createHandler";
 
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
-export const PageEntry = (p: KindModelPlugin) => (
-	source: string,
-	container: HTMLElement,
-	component: Component | MarkdownPostProcessorContext,
-	filePath: string
-) => async <
-	TScalar extends ScalarParams<typeof page_entry_defn>,
-	TOption extends OptionParam<typeof page_entry_defn>
->(
-_scalar: TScalar,
-_opt: TOption
-) => {
-	const page = p.api.getPageInfoBlock(source, container, component, filePath);
-	if(page) {
+export const PageEntry = createHandler("PageEntry")
+	.scalar()
+	.options({ verbose: "opt(bool)"})
+	.handler(async(evt) => {
+		const {plugin: p, page } = evt;
+
 		const fmt = p.api.format;
 		const api = p.api;
 		const current = page.current;
@@ -148,7 +125,9 @@ _opt: TOption
 		if(hasBanner) {
 			page.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `)
 		}
+	});
 
-	}
-}
+
+
+
 
