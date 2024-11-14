@@ -74,7 +74,7 @@ const error = <TLevel extends LogLevel>(level: TLevel) => (...args: unknown[]) =
     }
   }
 
-  throw new KindModelError(msg(args)|| "Kind Model error");
+  throw new KindModelError(args.map(i => String(i)).join(", ") || "Kind Model error");
 }
 
 export interface Logger<TLevel extends LogLevel = LogLevel> {

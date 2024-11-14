@@ -1,6 +1,5 @@
 import { Component, MarkdownPostProcessorContext } from "obsidian";
 import KindModelPlugin from "~/main";
-import { ERROR_ICON } from "~/constants";
 
 
 

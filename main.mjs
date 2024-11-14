@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
-import { Scope, TFolder, Setting, Modal, PluginSettingTab, getIcon, TFile, Notice, Plugin as Plugin$1 } from "obsidian";
+import { Scope, TFolder, Setting, Modal, PluginSettingTab, getIcon, TFile, Notice, EditorSuggest, MarkdownView, Plugin as Plugin$1 } from "obsidian";
 import { DateTime as DateTime$1 } from "luxon";
 var commonjsGlobal$1 = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x2) {
@@ -9119,7 +9119,7 @@ const error$3 = (level) => (...args) => {
       super(msg2);
     }
   }
-  throw new KindModelError(msg(args) || "Kind Model error");
+  throw new KindModelError(args.map((i) => String(i)).join(", ") || "Kind Model error");
 };
 const logger = (level, context) => {
   const api2 = {
@@ -20945,6 +20945,11 @@ const wait = (delay) => {
     }, delay);
   });
 };
+const showQueryError = (p2) => (handler, page, content2) => {
+  page.callout("error", `Query error in ${handler}`, {
+    content: content2
+  });
+};
 const findStaleByTag = async (p2) => {
   const kinds = p2.dv.pages(`#kind`).where((k) => {
     var _a2, _b2;
@@ -21255,6 +21260,7 @@ const showCategories = (p2) => (pg, opt) => {
   const page = p2.api.getPage(pg);
   let links = [];
   isUndefined(opt == null ? void 0 : opt.withTag) ? true : opt.withTag;
+  const currentPage = (opt == null ? void 0 : opt.currentPage) ? getPage(p2)(opt.currentPage) : {};
   if (page) {
     const cats = getCategories(p2)(page);
     const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
@@ -21264,7 +21270,7 @@ const showCategories = (p2) => (pg, opt) => {
         pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
       });
       links.push(
-        htmlLink(p2)(page, { display: cat.category })
+        getPath(page) === getPath(currentPage) ? "(this)" : htmlLink(p2)(page, { display: cat.category })
       );
     }
   }
@@ -21818,8 +21824,6 @@ const isKindedPage = (p2) => (pg) => {
   if (page) {
     return hasKindProp(p2)(page) && !hasKindDefinitionTag(p2)(page) ? true : hasKindTag(p2)(page) ? true : false;
   }
-  const err = new Error(`Call to isKindedPage() was unable to resolve the page reference to a page in the vault: ${JSON.stringify(page)}`);
-  p2.error(err);
   return false;
 };
 const isKindDefnPage = (p2) => (ref) => {
@@ -22038,15 +22042,25 @@ const obsidianApi = (p2) => {
   };
 };
 const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
-  const invalid = kindError(`InvalidQuery<${name2}>`, { raw, scalar, options: options2 });
-  const parsingErr = kindError(`ParsingError<${name2}>`, { raw, scalar, options: options2 });
-  const requiredScalar = scalar.findIndex((i) => !i.contains("opt(")) + 1;
+  const requiredScalar = scalar.filter((i) => !i.contains("opt(")).length;
+  const invalid = kindError(`InvalidQuery<${name2}>`, {
+    raw,
+    scalar,
+    options: options2,
+    requiredScalar
+  });
+  const parsingErr = kindError(`ParsingError<${name2}>`, {
+    raw,
+    scalar,
+    options: options2,
+    requiredScalar
+  });
   const scalarOrder = scalar.map((s2) => {
     return [retainUntil(s2, " "), retainAfter(s2, "AS ")];
   });
   if (!raw || raw.trim() === "") {
     if (requiredScalar > 0) {
-      return invalid(`The $${name2} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler!`);
+      return invalid(`The ${name2} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler and none were provided!`);
     }
     return [
       {},
@@ -22060,11 +22074,11 @@ const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
     const optionsHash = hasOptionsHash ? parsed[optionsPosition] : {};
     const optionsInTerminalPosition = optionsPosition === -1 ? true : optionsPosition === length - 1;
     const scalarParams = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
-    const hasEnoughScalarParams = requiredScalar > 0 && scalarParams.length >= requiredScalar ? true : false;
+    const notEnoughScalarParams = requiredScalar > 0 && scalarParams.length < requiredScalar ? true : false;
     if (!optionsInTerminalPosition) {
       return invalid(`Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`);
     }
-    if (!hasEnoughScalarParams) {
+    if (notEnoughScalarParams) {
       return invalid(`the ${name2} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`);
     }
     if (optionsPosition !== -1) {
@@ -22190,27 +22204,21 @@ const BackLinks = createHandler("BackLinks").scalar().options().handler(async (e
     table: table3,
     renderValue
   } = page;
-  const {
-    createFileLink: createFileLink2,
-    showDesc: showDesc2,
-    showLinks: showLinks2,
-    showClassifications: showClassifications2
-  } = p2.api;
   const links = current.file.inlinks.sort((p22) => p22 == null ? void 0 : p22.path).where((p22) => p22.path !== current.file.path);
   p2.info("backlinks", links.map((i) => [
-    createFileLink2(i),
-    showClassifications2(i),
-    showDesc2(i),
-    showLinks2(i)
+    createFileLink(p2)(i),
+    showClassifications(p2)(i),
+    showDesc(p2)(i),
+    showLinks(p2)(i)
   ]));
   if (links.length > 0) {
     table3(
       ["Backlink", "Classification(s)", "Desc", "Links"],
       links.map((i) => [
-        createFileLink2(i),
-        showClassifications2(i),
-        showDesc2(i),
-        showLinks2(i)
+        createFileLink(p2)(i),
+        showClassifications(p2)(i),
+        showDesc(p2)(i),
+        showLinks(p2)(i)
       ])
     );
   }
@@ -106958,12 +106966,12 @@ const IconPage = createHandler("IconPage").scalar().options().handler(async (evt
   );
 });
 const Kind = createHandler("Kind").scalar(
-  "kind AS string",
+  "kind AS opt(string)",
   "category AS opt(string)",
   "subcategory AS opt(string)"
 ).options({
-  add_columns: `array(string)`,
-  remove_columns: "enum(when,desc,links)"
+  show: "array(string)",
+  hide: "array(string)"
 }).handler(async (evt) => {
   const p2 = evt.plugin;
   const page = evt.page;
@@ -106979,16 +106987,22 @@ const Kind = createHandler("Kind").scalar(
       showLinks: showLinks2,
       createFileLink: createFileLink2
     } = p2.api;
-    const { kind, category, subcategory } = evt.scalar;
+    let { kind, category, subcategory } = evt.scalar;
+    kind = kind ? kind : page.kindTags[0];
     const pages = subcategory ? page.pages(`#${kind}/${category}/${subcategory}`) : category ? page.pages(`#${kind}/${category}`) : page.pages(`#${kind}`);
     if (pages.length > 0) {
       table3(
-        ["Repo", "Category", "Subcategory", "Desc", "Links"],
+        [
+          "Category",
+          "Subcategory",
+          "Desc",
+          "Links"
+        ],
         pages.sort((p22) => p22.file.mday).map((p22) => {
           const pg = isDvPage(p22) ? p22 : page.page(p22);
           return [
             createFileLink2(pg),
-            showCategories2(pg),
+            showCategories2(pg, { currentPage: page }),
             showSubcategories2(pg),
             showDesc2(pg),
             showLinks2(pg)
@@ -107210,12 +107224,39 @@ const Page = createHandler("Page").scalar().options().handler(async (evt) => {
     ...report
   ));
 });
-const Subcategories = createHandler("Subcategories").scalar().options().handler(async (evt) => {
-  const { plugin: p2, page } = evt;
-  if (page.isCategoryPage) {
-    page.paragraph("category page");
+const Subcategories = createHandler("Subcategories").scalar(
+  "category AS opt(string)"
+).options().handler(async (evt) => {
+  const { plugin: p2, page, scalar } = evt;
+  const kind = page.kindTags[0];
+  const categories = scalar.category && scalar.category.includes("/") ? [
+    [
+      ensureLeading(scalar.category.split("/")[0], "#"),
+      "subcategory",
+      scalar.category.split("/")[1]
+    ].join("/")
+  ] : scalar.category && kind ? [`${ensureLeading(kind, "#")}/subcategory/${stripLeading(scalar.category, "#")}`] : page.categories.map((i) => {
+    const [k, c] = i.kindedTag.split("/");
+    return `${ensureLeading(k, "#")}/subcategory/${c}`;
+  });
+  if (categories.length === 0) {
+    showQueryError()("Subcategories", page, `no subcategories`);
   } else {
-    page.paragraph("not category page");
+    for (const cat of categories) {
+      const pages = p2.dv.pages(cat).sort((i) => i.file.name);
+      if (pages.length > 0) {
+        page.table(
+          ["Subcategory", "Desc", "Links"],
+          pages.map((i) => [
+            createFileLink(p2)(i),
+            showDesc(p2)(i),
+            showLinks(p2)(i)
+          ])
+        );
+      } else {
+        page.renderValue(`- _no subcategories for ${ensureLeading(cat.split("/")[2], "#")} category_`);
+      }
+    }
   }
 });
 const queryHandlers = (p2) => (ctx) => [
@@ -107402,78 +107443,11 @@ const on_editor_change = (plugin4) => {
     )
   );
 };
-const update_kinded_page = (p2) => async (editor, view) => {
-  var _a2;
-  const page = p2.api.createPageView(view);
-  if (page.type !== "none") {
-    p2.info("update-kinded-page", page);
-    let changes = false;
-    if (page.hasKindTag && page.kindTags.length === 1 && !page.hasKindProp) {
-      changes = true;
-      await page.setFmKey(
-        "kind",
-        createVaultLink(p2)((_a2 = page.classifications[0]) == null ? void 0 : _a2.kind)
-      );
-      new Notice("Set 'kind' property", 5e3);
-      if (page.hasKindsProp) {
-        page.removeFmKey("kinds");
-        new Notice("Removed 'kinds' property'", 5e3);
-      }
-    }
-    if (page.hasKindTag && page.kindTags.length > 1 && !page.hasKindsProp) {
-      changes = true;
-      await page.setFmKey(
-        "kinds",
-        page.classifications.map(
-          (c) => createVaultLink(p2)(c.kind)
-        )
-      );
-      new Notice("Set 'kinds' property", 5e3);
-      if (page.hasKindProp) {
-        page.removeFmKey("kind");
-        new Notice("Removed 'kind' property'", 5e3);
-      }
-    }
-    if (page.hasCategoryTag && !page.isCategoryPage && page.categories.length === 1 && !page.hasCategoryProp) {
-      new Notice("'category' property added", 5e3);
-      await page.setFmKey(
-        "category",
-        createVaultLink(p2)(page.categories[0].page)
-      );
-      if (page.hasCategoriesProp) {
-        new Notice("'categories' property removed", 5e3);
-        page.removeFmKey("categories");
-      }
-      changes = true;
-    }
-    if (page.hasCategoryProp && page.categories.length > 1 && !page.hasCategoriesProp) {
-      await page.setFmKey(
-        "categories",
-        page.categories.map((i) => createVaultLink(p2)(i.page)).filter((i) => i)
-      );
-      if (page.hasCategoryProp) {
-        new Notice("'category' property removed");
-        page.removeFmKey("category");
-      }
-    }
-    if (page.hasSubcategoryTag && !page.hasSubcategoryProp) {
-      changes = true;
-    }
-    if (!changes) {
-      new Notice("No changes necessary for Update command", 4e3);
-    } else {
-      new Notice("Updates completed");
-    }
-  }
-};
 const add_commands = (plugin4) => {
   plugin4.addCommand({
     id: "create-new-kinded-page",
     name: "create a new (kinded) page",
-    editorCallback: (editor, view) => {
-      const content2 = view.getViewData();
-      plugin4.info("create-new-kinded-page", { content: content2 });
-    }
+    editorCallback: create_new_kinded_page(plugin4)
   });
   plugin4.addCommand({
     id: "create-new-classification-page",
@@ -107494,87 +107468,9 @@ const add_commands = (plugin4) => {
   plugin4.addCommand({
     id: "update-kinded-page",
     name: "update this page",
-    editorCallback: update_kinded_page(plugin4)
+    editorCallback: update_kinded_page(plugin4),
+    icon: "refresh"
   });
-};
-const t = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 48, 8, 96, 3, 127, 127, 127, 0, 96, 3, 127, 127, 127, 1, 127, 96, 2, 127, 127, 0, 96, 2, 127, 126, 0, 96, 1, 127, 1, 127, 96, 1, 127, 1, 126, 96, 3, 127, 127, 126, 1, 126, 96, 3, 126, 127, 127, 1, 126, 3, 11, 10, 1, 1, 2, 0, 4, 6, 7, 3, 0, 5, 5, 3, 1, 0, 1, 7, 85, 9, 3, 109, 101, 109, 2, 0, 5, 120, 120, 104, 51, 50, 0, 0, 6, 105, 110, 105, 116, 51, 50, 0, 2, 8, 117, 112, 100, 97, 116, 101, 51, 50, 0, 3, 8, 100, 105, 103, 101, 115, 116, 51, 50, 0, 4, 5, 120, 120, 104, 54, 52, 0, 5, 6, 105, 110, 105, 116, 54, 52, 0, 7, 8, 117, 112, 100, 97, 116, 101, 54, 52, 0, 8, 8, 100, 105, 103, 101, 115, 116, 54, 52, 0, 9, 10, 211, 23, 10, 242, 1, 1, 4, 127, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 16, 79, 4, 127, 32, 3, 65, 16, 107, 33, 6, 32, 2, 65, 168, 136, 141, 161, 2, 106, 33, 3, 32, 2, 65, 247, 148, 175, 175, 120, 106, 33, 4, 32, 2, 65, 177, 243, 221, 241, 121, 107, 33, 5, 3, 64, 32, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 5, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 0, 65, 4, 106, 34, 0, 32, 6, 77, 13, 0, 11, 32, 2, 65, 12, 119, 32, 5, 65, 18, 119, 106, 32, 4, 65, 7, 119, 106, 32, 3, 65, 1, 119, 106, 5, 32, 2, 65, 177, 207, 217, 178, 1, 106, 11, 32, 1, 106, 32, 0, 32, 1, 65, 15, 113, 16, 1, 11, 146, 1, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 4, 106, 32, 2, 75, 69, 4, 64, 32, 1, 40, 2, 0, 65, 189, 220, 202, 149, 124, 108, 32, 0, 106, 65, 17, 119, 65, 175, 214, 211, 190, 2, 108, 33, 0, 32, 1, 65, 4, 106, 33, 1, 12, 1, 11, 11, 3, 64, 32, 1, 32, 2, 79, 69, 4, 64, 32, 1, 45, 0, 0, 65, 177, 207, 217, 178, 1, 108, 32, 0, 106, 65, 11, 119, 65, 177, 243, 221, 241, 121, 108, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 65, 15, 118, 32, 0, 115, 65, 247, 148, 175, 175, 120, 108, 34, 0, 32, 0, 65, 13, 118, 115, 65, 189, 220, 202, 149, 124, 108, 34, 0, 32, 0, 65, 16, 118, 115, 11, 63, 0, 32, 0, 65, 8, 106, 32, 1, 65, 168, 136, 141, 161, 2, 106, 54, 2, 0, 32, 0, 65, 12, 106, 32, 1, 65, 247, 148, 175, 175, 120, 106, 54, 2, 0, 32, 0, 65, 16, 106, 32, 1, 54, 2, 0, 32, 0, 65, 20, 106, 32, 1, 65, 177, 243, 221, 241, 121, 107, 54, 2, 0, 11, 211, 4, 1, 6, 127, 32, 1, 32, 2, 106, 33, 6, 32, 0, 65, 24, 106, 33, 5, 32, 0, 65, 40, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 40, 2, 0, 32, 2, 106, 54, 2, 0, 32, 0, 65, 4, 106, 34, 4, 32, 4, 40, 2, 0, 32, 2, 65, 16, 79, 32, 0, 40, 2, 0, 65, 16, 79, 114, 114, 54, 2, 0, 32, 2, 32, 3, 106, 65, 16, 73, 4, 64, 32, 3, 32, 5, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 5, 106, 32, 1, 65, 16, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 40, 2, 0, 32, 5, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 12, 106, 34, 3, 40, 2, 0, 32, 5, 65, 4, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 16, 106, 34, 3, 40, 2, 0, 32, 5, 65, 8, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 34, 3, 40, 2, 0, 32, 5, 65, 12, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 40, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 32, 6, 65, 16, 107, 77, 4, 64, 32, 6, 65, 16, 107, 33, 8, 32, 0, 65, 8, 106, 40, 2, 0, 33, 2, 32, 0, 65, 12, 106, 40, 2, 0, 33, 3, 32, 0, 65, 16, 106, 40, 2, 0, 33, 4, 32, 0, 65, 20, 106, 40, 2, 0, 33, 7, 3, 64, 32, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 7, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 7, 32, 1, 65, 4, 106, 34, 1, 32, 8, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 2, 54, 2, 0, 32, 0, 65, 12, 106, 32, 3, 54, 2, 0, 32, 0, 65, 16, 106, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 32, 7, 54, 2, 0, 11, 32, 1, 32, 6, 73, 4, 64, 32, 5, 32, 1, 32, 6, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 1, 54, 2, 0, 11, 11, 97, 1, 1, 127, 32, 0, 65, 16, 106, 40, 2, 0, 33, 1, 32, 0, 65, 4, 106, 40, 2, 0, 4, 127, 32, 1, 65, 12, 119, 32, 0, 65, 20, 106, 40, 2, 0, 65, 18, 119, 106, 32, 0, 65, 12, 106, 40, 2, 0, 65, 7, 119, 106, 32, 0, 65, 8, 106, 40, 2, 0, 65, 1, 119, 106, 5, 32, 1, 65, 177, 207, 217, 178, 1, 106, 11, 32, 0, 40, 2, 0, 106, 32, 0, 65, 24, 106, 32, 0, 65, 40, 106, 40, 2, 0, 16, 1, 11, 157, 4, 2, 1, 127, 3, 126, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 32, 79, 4, 126, 32, 3, 65, 32, 107, 33, 3, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 4, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 5, 32, 2, 66, 0, 124, 33, 6, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 33, 2, 3, 64, 32, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 4, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 4, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 5, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 5, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 2, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 2, 32, 0, 65, 8, 106, 34, 0, 32, 3, 77, 13, 0, 11, 32, 6, 66, 12, 137, 32, 2, 66, 18, 137, 124, 32, 5, 66, 7, 137, 124, 32, 4, 66, 1, 137, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 6, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 2, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 1, 173, 124, 32, 0, 32, 1, 65, 31, 113, 16, 6, 11, 137, 2, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 8, 106, 32, 2, 77, 4, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 27, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 33, 0, 32, 1, 65, 8, 106, 33, 1, 12, 1, 11, 11, 32, 1, 65, 4, 106, 32, 2, 77, 4, 64, 32, 1, 53, 2, 0, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 23, 137, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 124, 33, 0, 32, 1, 65, 4, 106, 33, 1, 11, 3, 64, 32, 1, 32, 2, 73, 4, 64, 32, 1, 49, 0, 0, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 126, 32, 0, 133, 66, 11, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 66, 33, 136, 32, 0, 133, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 34, 0, 32, 0, 66, 29, 136, 133, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 126, 34, 0, 32, 0, 66, 32, 136, 133, 11, 88, 0, 32, 0, 65, 8, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 16, 106, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 24, 106, 32, 1, 55, 3, 0, 32, 0, 65, 32, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 55, 3, 0, 11, 132, 5, 2, 3, 127, 4, 126, 32, 1, 32, 2, 106, 33, 5, 32, 0, 65, 40, 106, 33, 4, 32, 0, 65, 200, 0, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 41, 3, 0, 32, 2, 173, 124, 55, 3, 0, 32, 2, 32, 3, 106, 65, 32, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 32, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 41, 3, 0, 32, 4, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 34, 3, 41, 3, 0, 32, 4, 65, 8, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 24, 106, 34, 3, 41, 3, 0, 32, 4, 65, 16, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 32, 106, 34, 3, 41, 3, 0, 32, 4, 65, 24, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 200, 0, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 65, 32, 106, 32, 5, 77, 4, 64, 32, 5, 65, 32, 107, 33, 2, 32, 0, 65, 8, 106, 41, 3, 0, 33, 6, 32, 0, 65, 16, 106, 41, 3, 0, 33, 7, 32, 0, 65, 24, 106, 41, 3, 0, 33, 8, 32, 0, 65, 32, 106, 41, 3, 0, 33, 9, 3, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 7, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 7, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 8, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 8, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 9, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 9, 32, 1, 65, 8, 106, 34, 1, 32, 2, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 32, 7, 55, 3, 0, 32, 0, 65, 24, 106, 32, 8, 55, 3, 0, 32, 0, 65, 32, 106, 32, 9, 55, 3, 0, 11, 32, 1, 32, 5, 73, 4, 64, 32, 4, 32, 1, 32, 5, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 1, 54, 2, 0, 11, 11, 200, 2, 1, 5, 126, 32, 0, 65, 24, 106, 41, 3, 0, 33, 1, 32, 0, 41, 3, 0, 34, 2, 66, 32, 90, 4, 126, 32, 0, 65, 8, 106, 41, 3, 0, 34, 3, 66, 1, 137, 32, 0, 65, 16, 106, 41, 3, 0, 34, 4, 66, 7, 137, 124, 32, 1, 66, 12, 137, 32, 0, 65, 32, 106, 41, 3, 0, 34, 5, 66, 18, 137, 124, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 1, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 2, 124, 32, 0, 65, 40, 106, 32, 2, 66, 31, 131, 167, 16, 6, 11]);
-async function e() {
-  const { instance: { exports: { mem: e2, xxh32: n2, xxh64: r, init32: i, update32: o, digest32: h, init64: s2, update64: u, digest64: g } } } = await WebAssembly.instantiate(t);
-  let a = new Uint8Array(e2.buffer);
-  function c(t2, n3) {
-    if (e2.buffer.byteLength < t2 + n3) {
-      const r2 = Math.ceil((t2 + n3 - e2.buffer.byteLength) / 65536);
-      e2.grow(r2), a = new Uint8Array(e2.buffer);
-    }
-  }
-  function l2(t2, e3, n3, r2, i2, o2) {
-    c(t2);
-    const h2 = new Uint8Array(t2);
-    return a.set(h2), n3(0, e3), h2.set(a.slice(0, t2)), { update(e4) {
-      let n4;
-      return a.set(h2), "string" == typeof e4 ? (c(3 * e4.length, t2), n4 = b.encodeInto(e4, a.subarray(t2)).written) : (c(e4.byteLength, t2), a.set(e4, t2), n4 = e4.byteLength), r2(0, t2, n4), h2.set(a.slice(0, t2)), this;
-    }, digest: () => (a.set(h2), o2(i2(0))) };
-  }
-  function d(t2) {
-    return t2 >>> 0;
-  }
-  const f = 2n ** 64n - 1n;
-  function y2(t2) {
-    return t2 & f;
-  }
-  const b = new TextEncoder(), w = 0n;
-  function p2(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
-    return c(3 * t2.length, 0), d(n2(0, b.encodeInto(t2, a).written, e3));
-  }
-  function v(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
-    return c(3 * t2.length, 0), y2(r(0, b.encodeInto(t2, a).written, e3));
-  }
-  return { h32: p2, h32ToString(t2) {
-    return p2(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0).toString(16).padStart(8, "0");
-  }, h32Raw(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
-    return c(t2.byteLength, 0), a.set(t2), d(n2(0, t2.byteLength, e3));
-  }, create32() {
-    return l2(48, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, i, o, h, d);
-  }, h64: v, h64ToString(t2) {
-    return v(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w).toString(16).padStart(16, "0");
-  }, h64Raw(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
-    return c(t2.byteLength, 0), a.set(t2), y2(r(0, t2.byteLength, e3));
-  }, create64() {
-    return l2(88, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : w, s2, u, g, y2);
-  } };
-}
-const codeblockParser = (p2) => {
-  let callback = async (source, el, ctx) => {
-    el.style.overflowX = "auto";
-    const event = { source, el, ctx };
-    getPageInfoBlock(p2)(event);
-    const handlers = p2.api.queryHandlers(event);
-    p2.api.format;
-    const outcomes = await Promise.all(handlers.map((i) => i()));
-    p2.info(`code block processed`, outcomes);
-    if (!outcomes.some((i) => i)) {
-      handlers.map((i) => i.handlerName);
-      handlers.find((i) => isError(i));
-    }
-  };
-  let registration = p2.registerMarkdownCodeBlockProcessor(
-    "km",
-    callback
-  );
-  registration.sortOrder = -100;
-};
-const on_file_created = (plugin4) => {
-  plugin4.registerEvent(plugin4.app.vault.on("create", (evt) => {
-    const kind_folder = plugin4.settings.kind_folder;
-    const find = new RegExp(`^${kind_folder}$`);
-    if (find.test(evt.path)) {
-      new Notice("Kind file added");
-    }
-  }));
 };
 const EventHandler = (plugin4) => ({
   /** a new active tab has been selected */
@@ -107675,6 +107571,205 @@ const EventHandler = (plugin4) => ({
     });
   }
 });
+class TextInputModal extends Modal {
+  constructor(app2, title, defaultValue, resolve3) {
+    super(app2);
+    this.title = title;
+    this.defaultValue = defaultValue;
+    this.resolve = resolve3;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.createEl("h2", { text: this.title });
+    const inputEl = contentEl.createEl("input", {
+      type: "text",
+      value: this.defaultValue
+    });
+    inputEl.addClass("text-input-modal-input");
+    inputEl.focus();
+    inputEl.onkeydown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.submit(inputEl.value);
+      }
+    };
+    contentEl.createEl("br");
+    const buttonContainer = contentEl.createDiv({ cls: "text-input-modal-buttons" });
+    const submitBtn = buttonContainer.createEl("button", { text: "Submit" });
+    submitBtn.addClass("mod-cta");
+    submitBtn.onClickEvent(() => {
+      this.submit(inputEl.value);
+    });
+    const cancelBtn = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelBtn.onClickEvent(() => {
+      this.close();
+      this.resolve(null);
+    });
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+  submit(value2) {
+    this.close();
+    this.resolve(value2);
+  }
+}
+const create_new_kinded_page = (p2) => async (editor, view) => {
+  let value2;
+  const modal = new TextInputModal(p2.app, "Filename", "", (v) => {
+    value2 = v;
+  });
+  const fileName = await modal.open();
+  console.log("value", value2, fileName);
+};
+const update_kinded_page = (p2) => async (editor, view) => {
+  var _a2;
+  const page = p2.api.createPageView(view);
+  if (page.type !== "none") {
+    p2.info("update-kinded-page", page);
+    let changes = false;
+    if (page.hasKindTag && page.kindTags.length === 1 && !page.hasKindProp) {
+      changes = true;
+      await page.setFmKey(
+        "kind",
+        createVaultLink(p2)((_a2 = page.classifications[0]) == null ? void 0 : _a2.kind)
+      );
+      new Notice("Set 'kind' property", 5e3);
+      if (page.hasKindsProp) {
+        page.removeFmKey("kinds");
+        new Notice("Removed 'kinds' property'", 5e3);
+      }
+    }
+    if (page.hasKindTag && page.kindTags.length > 1 && !page.hasKindsProp) {
+      changes = true;
+      await page.setFmKey(
+        "kinds",
+        page.classifications.map(
+          (c) => createVaultLink(p2)(c.kind)
+        )
+      );
+      new Notice("Set 'kinds' property", 5e3);
+      if (page.hasKindProp) {
+        page.removeFmKey("kind");
+        new Notice("Removed 'kind' property'", 5e3);
+      }
+    }
+    if (page.hasCategoryTag && !page.isCategoryPage && page.categories.length === 1 && !page.hasCategoryProp) {
+      new Notice("'category' property added", 5e3);
+      await page.setFmKey(
+        "category",
+        createVaultLink(p2)(page.categories[0].page)
+      );
+      if (page.hasCategoriesProp) {
+        new Notice("'categories' property removed", 5e3);
+        page.removeFmKey("categories");
+      }
+      changes = true;
+    }
+    if (page.hasCategoryProp && page.categories.length > 1 && !page.hasCategoriesProp) {
+      await page.setFmKey(
+        "categories",
+        page.categories.map((i) => createVaultLink(p2)(i.page)).filter((i) => i)
+      );
+      if (page.hasCategoryProp) {
+        new Notice("'category' property removed");
+        page.removeFmKey("category");
+      }
+    }
+    if (page.hasSubcategoryTag && !page.hasSubcategoryProp) {
+      changes = true;
+      await page.setFmKey(
+        "subcategories",
+        page.subcategories.map((i) => createVaultLink(p2)(i.page)).filter((i) => i)
+      );
+    }
+    if (!changes) {
+      new Notice("No changes necessary for Update command", 4e3);
+    } else {
+      new Notice("Updates completed");
+    }
+  }
+};
+const t = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 48, 8, 96, 3, 127, 127, 127, 0, 96, 3, 127, 127, 127, 1, 127, 96, 2, 127, 127, 0, 96, 2, 127, 126, 0, 96, 1, 127, 1, 127, 96, 1, 127, 1, 126, 96, 3, 127, 127, 126, 1, 126, 96, 3, 126, 127, 127, 1, 126, 3, 11, 10, 1, 1, 2, 0, 4, 6, 7, 3, 0, 5, 5, 3, 1, 0, 1, 7, 85, 9, 3, 109, 101, 109, 2, 0, 5, 120, 120, 104, 51, 50, 0, 0, 6, 105, 110, 105, 116, 51, 50, 0, 2, 8, 117, 112, 100, 97, 116, 101, 51, 50, 0, 3, 8, 100, 105, 103, 101, 115, 116, 51, 50, 0, 4, 5, 120, 120, 104, 54, 52, 0, 5, 6, 105, 110, 105, 116, 54, 52, 0, 7, 8, 117, 112, 100, 97, 116, 101, 54, 52, 0, 8, 8, 100, 105, 103, 101, 115, 116, 54, 52, 0, 9, 10, 211, 23, 10, 242, 1, 1, 4, 127, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 16, 79, 4, 127, 32, 3, 65, 16, 107, 33, 6, 32, 2, 65, 168, 136, 141, 161, 2, 106, 33, 3, 32, 2, 65, 247, 148, 175, 175, 120, 106, 33, 4, 32, 2, 65, 177, 243, 221, 241, 121, 107, 33, 5, 3, 64, 32, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 5, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 0, 65, 4, 106, 34, 0, 32, 6, 77, 13, 0, 11, 32, 2, 65, 12, 119, 32, 5, 65, 18, 119, 106, 32, 4, 65, 7, 119, 106, 32, 3, 65, 1, 119, 106, 5, 32, 2, 65, 177, 207, 217, 178, 1, 106, 11, 32, 1, 106, 32, 0, 32, 1, 65, 15, 113, 16, 1, 11, 146, 1, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 4, 106, 32, 2, 75, 69, 4, 64, 32, 1, 40, 2, 0, 65, 189, 220, 202, 149, 124, 108, 32, 0, 106, 65, 17, 119, 65, 175, 214, 211, 190, 2, 108, 33, 0, 32, 1, 65, 4, 106, 33, 1, 12, 1, 11, 11, 3, 64, 32, 1, 32, 2, 79, 69, 4, 64, 32, 1, 45, 0, 0, 65, 177, 207, 217, 178, 1, 108, 32, 0, 106, 65, 11, 119, 65, 177, 243, 221, 241, 121, 108, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 65, 15, 118, 32, 0, 115, 65, 247, 148, 175, 175, 120, 108, 34, 0, 32, 0, 65, 13, 118, 115, 65, 189, 220, 202, 149, 124, 108, 34, 0, 32, 0, 65, 16, 118, 115, 11, 63, 0, 32, 0, 65, 8, 106, 32, 1, 65, 168, 136, 141, 161, 2, 106, 54, 2, 0, 32, 0, 65, 12, 106, 32, 1, 65, 247, 148, 175, 175, 120, 106, 54, 2, 0, 32, 0, 65, 16, 106, 32, 1, 54, 2, 0, 32, 0, 65, 20, 106, 32, 1, 65, 177, 243, 221, 241, 121, 107, 54, 2, 0, 11, 211, 4, 1, 6, 127, 32, 1, 32, 2, 106, 33, 6, 32, 0, 65, 24, 106, 33, 5, 32, 0, 65, 40, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 40, 2, 0, 32, 2, 106, 54, 2, 0, 32, 0, 65, 4, 106, 34, 4, 32, 4, 40, 2, 0, 32, 2, 65, 16, 79, 32, 0, 40, 2, 0, 65, 16, 79, 114, 114, 54, 2, 0, 32, 2, 32, 3, 106, 65, 16, 73, 4, 64, 32, 3, 32, 5, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 5, 106, 32, 1, 65, 16, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 40, 2, 0, 32, 5, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 12, 106, 34, 3, 40, 2, 0, 32, 5, 65, 4, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 16, 106, 34, 3, 40, 2, 0, 32, 5, 65, 8, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 34, 3, 40, 2, 0, 32, 5, 65, 12, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 40, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 32, 6, 65, 16, 107, 77, 4, 64, 32, 6, 65, 16, 107, 33, 8, 32, 0, 65, 8, 106, 40, 2, 0, 33, 2, 32, 0, 65, 12, 106, 40, 2, 0, 33, 3, 32, 0, 65, 16, 106, 40, 2, 0, 33, 4, 32, 0, 65, 20, 106, 40, 2, 0, 33, 7, 3, 64, 32, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 7, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 7, 32, 1, 65, 4, 106, 34, 1, 32, 8, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 2, 54, 2, 0, 32, 0, 65, 12, 106, 32, 3, 54, 2, 0, 32, 0, 65, 16, 106, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 32, 7, 54, 2, 0, 11, 32, 1, 32, 6, 73, 4, 64, 32, 5, 32, 1, 32, 6, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 1, 54, 2, 0, 11, 11, 97, 1, 1, 127, 32, 0, 65, 16, 106, 40, 2, 0, 33, 1, 32, 0, 65, 4, 106, 40, 2, 0, 4, 127, 32, 1, 65, 12, 119, 32, 0, 65, 20, 106, 40, 2, 0, 65, 18, 119, 106, 32, 0, 65, 12, 106, 40, 2, 0, 65, 7, 119, 106, 32, 0, 65, 8, 106, 40, 2, 0, 65, 1, 119, 106, 5, 32, 1, 65, 177, 207, 217, 178, 1, 106, 11, 32, 0, 40, 2, 0, 106, 32, 0, 65, 24, 106, 32, 0, 65, 40, 106, 40, 2, 0, 16, 1, 11, 157, 4, 2, 1, 127, 3, 126, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 32, 79, 4, 126, 32, 3, 65, 32, 107, 33, 3, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 4, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 5, 32, 2, 66, 0, 124, 33, 6, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 33, 2, 3, 64, 32, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 4, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 4, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 5, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 5, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 2, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 2, 32, 0, 65, 8, 106, 34, 0, 32, 3, 77, 13, 0, 11, 32, 6, 66, 12, 137, 32, 2, 66, 18, 137, 124, 32, 5, 66, 7, 137, 124, 32, 4, 66, 1, 137, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 6, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 2, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 1, 173, 124, 32, 0, 32, 1, 65, 31, 113, 16, 6, 11, 137, 2, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 8, 106, 32, 2, 77, 4, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 27, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 33, 0, 32, 1, 65, 8, 106, 33, 1, 12, 1, 11, 11, 32, 1, 65, 4, 106, 32, 2, 77, 4, 64, 32, 1, 53, 2, 0, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 23, 137, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 124, 33, 0, 32, 1, 65, 4, 106, 33, 1, 11, 3, 64, 32, 1, 32, 2, 73, 4, 64, 32, 1, 49, 0, 0, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 126, 32, 0, 133, 66, 11, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 66, 33, 136, 32, 0, 133, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 34, 0, 32, 0, 66, 29, 136, 133, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 126, 34, 0, 32, 0, 66, 32, 136, 133, 11, 88, 0, 32, 0, 65, 8, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 16, 106, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 24, 106, 32, 1, 55, 3, 0, 32, 0, 65, 32, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 55, 3, 0, 11, 132, 5, 2, 3, 127, 4, 126, 32, 1, 32, 2, 106, 33, 5, 32, 0, 65, 40, 106, 33, 4, 32, 0, 65, 200, 0, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 41, 3, 0, 32, 2, 173, 124, 55, 3, 0, 32, 2, 32, 3, 106, 65, 32, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 32, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 41, 3, 0, 32, 4, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 34, 3, 41, 3, 0, 32, 4, 65, 8, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 24, 106, 34, 3, 41, 3, 0, 32, 4, 65, 16, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 32, 106, 34, 3, 41, 3, 0, 32, 4, 65, 24, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 200, 0, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 65, 32, 106, 32, 5, 77, 4, 64, 32, 5, 65, 32, 107, 33, 2, 32, 0, 65, 8, 106, 41, 3, 0, 33, 6, 32, 0, 65, 16, 106, 41, 3, 0, 33, 7, 32, 0, 65, 24, 106, 41, 3, 0, 33, 8, 32, 0, 65, 32, 106, 41, 3, 0, 33, 9, 3, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 7, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 7, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 8, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 8, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 9, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 9, 32, 1, 65, 8, 106, 34, 1, 32, 2, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 32, 7, 55, 3, 0, 32, 0, 65, 24, 106, 32, 8, 55, 3, 0, 32, 0, 65, 32, 106, 32, 9, 55, 3, 0, 11, 32, 1, 32, 5, 73, 4, 64, 32, 4, 32, 1, 32, 5, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 1, 54, 2, 0, 11, 11, 200, 2, 1, 5, 126, 32, 0, 65, 24, 106, 41, 3, 0, 33, 1, 32, 0, 41, 3, 0, 34, 2, 66, 32, 90, 4, 126, 32, 0, 65, 8, 106, 41, 3, 0, 34, 3, 66, 1, 137, 32, 0, 65, 16, 106, 41, 3, 0, 34, 4, 66, 7, 137, 124, 32, 1, 66, 12, 137, 32, 0, 65, 32, 106, 41, 3, 0, 34, 5, 66, 18, 137, 124, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 1, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 2, 124, 32, 0, 65, 40, 106, 32, 2, 66, 31, 131, 167, 16, 6, 11]);
+async function e() {
+  const { instance: { exports: { mem: e2, xxh32: n2, xxh64: r, init32: i, update32: o, digest32: h, init64: s2, update64: u, digest64: g } } } = await WebAssembly.instantiate(t);
+  let a = new Uint8Array(e2.buffer);
+  function c(t2, n3) {
+    if (e2.buffer.byteLength < t2 + n3) {
+      const r2 = Math.ceil((t2 + n3 - e2.buffer.byteLength) / 65536);
+      e2.grow(r2), a = new Uint8Array(e2.buffer);
+    }
+  }
+  function l2(t2, e3, n3, r2, i2, o2) {
+    c(t2);
+    const h2 = new Uint8Array(t2);
+    return a.set(h2), n3(0, e3), h2.set(a.slice(0, t2)), { update(e4) {
+      let n4;
+      return a.set(h2), "string" == typeof e4 ? (c(3 * e4.length, t2), n4 = b.encodeInto(e4, a.subarray(t2)).written) : (c(e4.byteLength, t2), a.set(e4, t2), n4 = e4.byteLength), r2(0, t2, n4), h2.set(a.slice(0, t2)), this;
+    }, digest: () => (a.set(h2), o2(i2(0))) };
+  }
+  function d(t2) {
+    return t2 >>> 0;
+  }
+  const f = 2n ** 64n - 1n;
+  function y2(t2) {
+    return t2 & f;
+  }
+  const b = new TextEncoder(), w = 0n;
+  function p2(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
+    return c(3 * t2.length, 0), d(n2(0, b.encodeInto(t2, a).written, e3));
+  }
+  function v(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
+    return c(3 * t2.length, 0), y2(r(0, b.encodeInto(t2, a).written, e3));
+  }
+  return { h32: p2, h32ToString(t2) {
+    return p2(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0).toString(16).padStart(8, "0");
+  }, h32Raw(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
+    return c(t2.byteLength, 0), a.set(t2), d(n2(0, t2.byteLength, e3));
+  }, create32() {
+    return l2(48, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, i, o, h, d);
+  }, h64: v, h64ToString(t2) {
+    return v(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w).toString(16).padStart(16, "0");
+  }, h64Raw(t2) {
+    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
+    return c(t2.byteLength, 0), a.set(t2), y2(r(0, t2.byteLength, e3));
+  }, create64() {
+    return l2(88, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : w, s2, u, g, y2);
+  } };
+}
+const codeblockParser = (p2) => {
+  let callback = async (source, el, ctx) => {
+    el.style.overflowX = "auto";
+    const event = { source, el, ctx };
+    getPageInfoBlock(p2)(event);
+    const handlers = p2.api.queryHandlers(event);
+    p2.api.format;
+    const outcomes = await Promise.all(handlers.map((i) => i()));
+    p2.info(`code block processed`, outcomes);
+    if (!outcomes.some((i) => i)) {
+      handlers.map((i) => i.handlerName);
+      handlers.find((i) => isError(i));
+    }
+  };
+  let registration = p2.registerMarkdownCodeBlockProcessor(
+    "km",
+    callback
+  );
+  registration.sortOrder = -100;
+};
+const on_file_created = (plugin4) => {
+  plugin4.registerEvent(plugin4.app.vault.on("create", (evt) => {
+    const kind_folder = plugin4.settings.kind_folder;
+    const find = new RegExp(`^${kind_folder}$`);
+    if (find.test(evt.path)) {
+      new Notice("Kind file added");
+    }
+  }));
+};
 const on_file_deleted = (plugin4) => {
   EventHandler(plugin4).onFileDeleted((evt) => {
     const kind_folder = plugin4.settings.kind_folder;
@@ -107688,7 +107783,7 @@ const on_file_deleted = (plugin4) => {
 };
 const on_file_modified = (plugin4) => {
   EventHandler(plugin4).onFileModified((evt) => {
-    if (isString$1(evt == null ? void 0 : evt.path) && isKindedPage(plugin4)(evt == null ? void 0 : evt.path)) {
+    if (isString$1((evt == null ? void 0 : evt.path) || null) && isKindedPage(plugin4)(evt == null ? void 0 : evt.path)) {
       const kind_folder = plugin4.settings.kind_folder;
       const find = new RegExp(`^${kind_folder}`);
       if (find.test(evt.path)) {
@@ -107715,6 +107810,154 @@ const on_tab_change = (p2) => {
     );
   });
 };
+const electron = window.require("electron");
+const { clipboard } = electron;
+class KindSuggest extends EditorSuggest {
+  constructor(app2, plugin4) {
+    super(app2);
+    this.plugin = plugin4;
+    plugin4.debug("KindSuggest instantiated");
+  }
+  onTrigger(cursor, editor) {
+    const currentLine = editor.getLine(cursor.line);
+    const beforeCursor = currentLine.substring(0, cursor.ch);
+    const isUrl2 = ["https://", "http://"].some((i) => currentLine.startsWith(i));
+    if (isUrl2) {
+      return {
+        start: {
+          line: cursor.line,
+          ch: 0
+        },
+        end: cursor,
+        query: currentLine
+      };
+    }
+    console.log(`feeling triggerred(${beforeCursor})`);
+    const match2 = beforeCursor.match(/\/([^\s]*)$/);
+    if (match2) {
+      return {
+        start: {
+          line: cursor.line,
+          ch: cursor.ch - match2[1].length - 1
+        },
+        end: cursor,
+        query: match2[1]
+      };
+    }
+    return null;
+  }
+  getSuggestions(context) {
+    var _a2;
+    let suggestions = [];
+    this.plugin.info("getting suggestions", { query: context.query });
+    const file = (_a2 = this.context) == null ? void 0 : _a2.file;
+    if (file) {
+      const page = getPageInfo(this.plugin)(file);
+      let isReallyImportant = false;
+      const clipboardText = clipboard.readText();
+      const hasURLInClipboard = ["https://", "http://"].some((i) => clipboardText.startsWith(i));
+      const allCommands = [
+        ...page.isKindedPage || page.isCategoryPage || page.isSubcategoryPage || page.isKindDefnPage ? ["Update Kind Page 😊"] : []
+      ];
+      const query2 = context.query.toLowerCase();
+      if (file) {
+        const metadata = this.app.metadataCache.getFileCache(file);
+        if (metadata && metadata.frontmatter) {
+          isReallyImportant = metadata.frontmatter.isReallyImportant === true;
+        }
+      }
+      suggestions = [
+        ...allCommands.filter(
+          (cmd) => cmd.toLowerCase().includes(query2)
+        ),
+        ...hasURLInClipboard ? [`Paste the URL "${clipboardText}" as 🚀`] : []
+      ];
+      if (isReallyImportant) {
+        const insertDateIndex = suggestions.findIndex(
+          (cmd) => cmd === "Insert Date"
+        );
+        if (insertDateIndex > -1) {
+          const [insertDateCmd] = suggestions.splice(insertDateIndex, 1);
+          suggestions.unshift(insertDateCmd);
+        }
+      }
+    }
+    return suggestions;
+  }
+  renderSuggestion(suggestion, el) {
+    el.createEl("div", { text: suggestion });
+  }
+  selectSuggestion(suggestion, evt) {
+    if (this.context) {
+      const { editor, start: start2, end: end2, file } = this.context;
+      const selectedText = editor.getSelection();
+      const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+      const page = getPageInfo(this.plugin)(file);
+      if (page && view) {
+        ({
+          isKindedPage: isKindedPage(this.plugin)(page),
+          isCategoryPage: isCategoryPage(this.plugin)(page),
+          isSubcategoryPage: isSubcategoryPage(this.plugin)(page)
+        });
+        switch (suggestion) {
+          case "Update":
+            editor.exec("update-kinded-model");
+            break;
+          case "Bold":
+            if (selectedText) {
+              editor.replaceSelection(`**${selectedText}**`);
+            } else {
+              editor.replaceRange("****", start2, end2);
+              editor.setCursor({ line: start2.line, ch: start2.ch + 2 });
+            }
+            break;
+          case "Italic":
+            if (selectedText) {
+              editor.replaceSelection(`*${selectedText}*`);
+            } else {
+              editor.replaceRange("**", start2, end2);
+              editor.setCursor({ line: start2.line, ch: start2.ch + 1 });
+            }
+            break;
+          case "Underline":
+            if (selectedText) {
+              editor.replaceSelection(`<u>${selectedText}</u>`);
+            } else {
+              editor.replaceRange("<u></u>", start2, end2);
+              editor.setCursor({ line: start2.line, ch: start2.ch + 3 });
+            }
+            break;
+          case "Insert Date":
+            editor.replaceRange(
+              (/* @__PURE__ */ new Date()).toLocaleDateString(),
+              start2,
+              end2
+            );
+            break;
+          case "Link":
+            if (selectedText) {
+              const url = prompt("Enter URL:");
+              if (url) {
+                editor.replaceSelection(`[${selectedText}](${url})`);
+              }
+            } else {
+              const text2 = prompt("Enter Link Text:") || "";
+              const url = prompt("Enter URL:") || "";
+              editor.replaceRange(`[${text2}](${url})`, start2, end2);
+            }
+            break;
+          default:
+            editor.replaceRange(suggestion, start2, end2);
+            break;
+        }
+      } else {
+        this.plugin.debug(`The selectSuggestion() method was triggered but couldn't create a PageInfo structure (or possibly a view for page)!`, file, view, page);
+      }
+    } else {
+      this.plugin.debug(`The selectSuggestion() method was triggered but no context was provided on instantiated class!`, this);
+    }
+  }
+}
 let hasher = null;
 class KindModelPlugin extends Plugin$1 {
   constructor() {
@@ -107756,6 +107999,7 @@ class KindModelPlugin extends Plugin$1 {
     this.error = error2;
     this.hasher = hasher ? hasher : (await e()).h32;
     hasher = this.hasher;
+    this.registerEditorSuggest(new KindSuggest(this.app, this));
     this.ready = false;
     const caching = initializeKindCaches(this);
     caching.then(() => {

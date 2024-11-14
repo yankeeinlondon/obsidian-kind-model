@@ -9,7 +9,7 @@ import KindModelPlugin from "~/main";
  */
 export const on_file_modified = (plugin: KindModelPlugin) => {
 	EventHandler(plugin).onFileModified((evt) => {
-		if (isString(evt?.path) && isKindedPage(plugin)(evt?.path)) {
+		if (isString(evt?.path || null) && isKindedPage(plugin)(evt?.path)) {
 			const kind_folder = plugin.settings.kind_folder;
 			const find = new RegExp(`^${kind_folder}`);
 			if (find.test(evt.path)) {

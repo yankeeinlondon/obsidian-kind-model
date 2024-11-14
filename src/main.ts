@@ -10,7 +10,7 @@ import { Logger, logger } from './utils/logging';
 import { api } from './api/api';
 import { csv } from './events/on_load/csv';
 import { on_editor_change } from './events/on_editor_change';
-import { add_commands } from './events/on_load/add_commands';
+import { add_commands } from '~/commands/index';
 import xx from "xxhash-wasm";
 
 import { 
@@ -23,6 +23,7 @@ import {
 } from './events';
 import { KindCache, KindDefinition } from './types';
 import { initializeKindCaches } from './cache';
+import { KindSuggest } from './suggest';
 
 let hasher: null | ((input: string, seed?: number) => number) = null;
 
@@ -83,6 +84,8 @@ export default class KindModelPlugin extends Plugin {
 			: (await xx()).h32;
 		hasher = this.hasher;
 
+		this.registerEditorSuggest(new KindSuggest(this.app, this));
+		
 		// start the cache refresh process
 		// -------------------------------
 		// synchronous return happens at point that what was
@@ -90,6 +93,7 @@ export default class KindModelPlugin extends Plugin {
 		// async component runs queries to refresh any aspects
 		// which might be stale.
 		this.ready = false;
+
 		const caching = initializeKindCaches(this);
 		caching.then(() => {
 			this.ready = true;
@@ -101,8 +105,8 @@ export default class KindModelPlugin extends Plugin {
 		this.dv = getAPI(this.app);
 		// expose Kind Model API
 		this.api = api(this);
+	
 		
-		// initialize_cache(this);
 		csv(this);
 		on_editor_change(this);
 		add_commands(this);
@@ -112,6 +116,7 @@ export default class KindModelPlugin extends Plugin {
 		on_file_modified(this);
 		on_layout_change(this);
 		on_tab_change(this);
+
 
 		// `km` code blocks
 		codeblockParser(this);

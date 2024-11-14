@@ -780,8 +780,7 @@ export const isKindedPage = (p: KindModelPlugin) => (pg: PageReference): boolean
 			: false
 	} 
 
-	const err = new Error(`Call to isKindedPage() was unable to resolve the page reference to a page in the vault: ${JSON.stringify(page)}`);
-	p.error(err);
+
 	return false;
 }
 

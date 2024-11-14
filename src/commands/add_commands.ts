@@ -1,5 +1,5 @@
 import KindModelPlugin from "~/main";
-import { update_kinded_page } from "~/commands/update_kinded_page";
+import { create_new_kinded_page, update_kinded_page } from "~/commands/index";
 import { Editor, MarkdownView } from "obsidian";
 
 /**
@@ -14,10 +14,7 @@ export const add_commands = (plugin: KindModelPlugin) => {
 	plugin.addCommand({
 		id: "create-new-kinded-page",
 		name: "create a new (kinded) page",
-		editorCallback: (editor: Editor, view: MarkdownView) => {
-			const content = view.getViewData();
-			plugin.info("create-new-kinded-page", {content})
-		},
+		editorCallback: create_new_kinded_page(plugin),
 	});
 	plugin.addCommand({
 		id: "create-new-classification-page",
@@ -40,7 +37,8 @@ export const add_commands = (plugin: KindModelPlugin) => {
 	plugin.addCommand({
 		id: "update-kinded-page",
 		name: "update this page",
-		editorCallback: update_kinded_page(plugin)
+		editorCallback: update_kinded_page(plugin),
+		icon: "refresh"
 	});
 
 };

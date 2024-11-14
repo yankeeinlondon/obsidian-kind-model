@@ -12,6 +12,7 @@ import {
 	isKindTag 
 } from "./buildingBlocks";
 import { getPage } from "~/page";
+import { getPath } from "./getPath";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -433,6 +434,9 @@ export const showCategories = (p: KindModelPlugin) => (
 	const page = p.api.getPage(pg);
 	let links: string[] = [];
 	const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
+	const currentPage = opt?.currentPage 
+		? getPage(p)(opt.currentPage)
+		: {};
 
 	if(page) {
 		const cats = getCategories(p)(page);
@@ -447,7 +451,9 @@ export const showCategories = (p: KindModelPlugin) => (
 			}
 
 			links.push(
-				htmlLink(p)(page, { display: cat.category })
+				getPath(page) === getPath(currentPage)
+					? "(this)"
+					: htmlLink(p)(page, { display: cat.category })
 			);
 		}
 	}
@@ -456,6 +462,7 @@ export const showCategories = (p: KindModelPlugin) => (
 }
 
 export type CategoryOptions = {
+	currentPage?: PageReference;
 	category?: string;
 	kind?: string;
 	/** display the tag for the subcategory next to the link */

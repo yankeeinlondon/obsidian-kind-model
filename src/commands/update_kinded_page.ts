@@ -82,6 +82,11 @@ export const update_kinded_page = (p: KindModelPlugin) => async (
 		
 		if (page.hasSubcategoryTag && !page.hasSubcategoryProp) {
 			changes = true;
+			await page.setFmKey(
+				"subcategories",
+				page.subcategories.map(i => createVaultLink(p)(i.page)).filter(i => i)
+			);
+
 		}
 
 		if(!changes) {

@@ -13,3 +13,5 @@ export * from "./strip_page_alias";
 export * from "./type-utils";
 export * from "./Utils";
 export * from "./wait";
+export * from "./showQueryError";
+export * from "./isValidUrl";

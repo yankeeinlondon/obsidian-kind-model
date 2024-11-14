@@ -7,7 +7,12 @@ import {
 	isString
 } from "inferred-types";
 import KindModelPlugin from "~/main";
-import { OptionParams, OptionsDefn, ScalarDefn, ScalarParams } from "~/types";
+import { 
+	OptionParams, 
+	OptionsDefn, 
+	ScalarDefn, 
+	ScalarParams 
+} from "~/types";
 
 
 export const parseQueryParams = (p: KindModelPlugin) => <
@@ -22,12 +27,19 @@ export const parseQueryParams = (p: KindModelPlugin) => <
 	/** the options hash definition */
 	options: TOpt
 ): Error | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
-	const invalid = kindError(`InvalidQuery<${name}>`, {raw,scalar,options});
-	const parsingErr = kindError(`ParsingError<${name}>`, {raw,scalar,options});
+
 
 	/** the quantity of scalars that MUST be in place */
 	const requiredScalar = scalar
-		.findIndex(i => !i.contains("opt(")) + 1;
+		.filter(i => !i.contains("opt("))
+		.length ;
+
+	const invalid = kindError(`InvalidQuery<${name}>`, {
+		raw,scalar,options,requiredScalar
+	});
+	const parsingErr = kindError(`ParsingError<${name}>`, {
+		raw,scalar,options,requiredScalar
+	});
 
 	/** the order of scalar parameters (in tuple form of `[name, type]`) */
 	const scalarOrder = scalar.map(s => {
@@ -38,7 +50,7 @@ export const parseQueryParams = (p: KindModelPlugin) => <
 		// no parameters provided
 
 		if (requiredScalar > 0) {
-			return invalid(`The $${name} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler!`)
+			return invalid(`The ${name} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler and none were provided!`)
 		}
 
 		return [
@@ -68,7 +80,7 @@ export const parseQueryParams = (p: KindModelPlugin) => <
 			? parsed
 			: parsed.slice(0,optionsPosition);
 		
-		const hasEnoughScalarParams = requiredScalar > 0 && scalarParams.length >= requiredScalar
+		const notEnoughScalarParams = requiredScalar > 0 && scalarParams.length < requiredScalar
 			? true
 			: false;
 	
@@ -77,7 +89,7 @@ export const parseQueryParams = (p: KindModelPlugin) => <
 			return invalid(`Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition+1} element was the options hash on a parameter array which had ${parsed.length} parameters.`)
 		}
 
-		if (!hasEnoughScalarParams) {
+		if (notEnoughScalarParams) {
 			return invalid(`the ${name} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`)
 		}
 

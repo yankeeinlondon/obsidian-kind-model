@@ -3,6 +3,9 @@ import { TupleToUnion } from "inferred-types";
 import type KindModelPlugin from "../main";
 import { Tag } from "../types/general";
 import { createHandler } from "./createHandler";
+import { getPage } from "~/page";
+import { PageReference } from "~/types";
+import { createFileLink, showClassifications, showDesc, showLinks } from "~/api";
 
 
 
@@ -60,13 +63,6 @@ export const BackLinks = createHandler("BackLinks")
 			renderValue,
 		} = page;
 
-		const {
-			createFileLink,
-			showDesc,
-			showLinks,
-			showClassifications
-		} = p.api;
-
 		/** 
 		 * all in-bound links for the page with the exception of self-references */
 		const links = current.file.inlinks
@@ -74,20 +70,20 @@ export const BackLinks = createHandler("BackLinks")
 			.where(p => p.path !== current.file.path);
 
 		p.info("backlinks",links.map(i => [
-			createFileLink(i),
-			showClassifications(i),
-			showDesc(i),
-			showLinks(i)
-		]))
+			createFileLink(p)(i),
+			showClassifications(p)(i),
+			showDesc(p)(i),
+			showLinks(p)(i)
+		]));
 
 		if (links.length > 0) {
 			table(
 				["Backlink", "Classification(s)", "Desc", "Links"],
 				links.map(i => [
-					createFileLink(i),
-					showClassifications(i),
-					showDesc(i),
-					showLinks(i)
+					createFileLink(p)(i),
+					showClassifications(p)(i),
+					showDesc(p)(i),
+					showLinks(p)(i)
 				])
 			)
 		}

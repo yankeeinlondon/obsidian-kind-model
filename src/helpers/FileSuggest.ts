@@ -2,8 +2,8 @@
 
 import { TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "./Suggest";
-import { get_tfiles_from_folder } from "utils/Utils";
-import KindModelPlugin from "~main";
+import { get_tfiles_from_folder } from "~/utils/Utils";
+import KindModelPlugin from "~/main";
 
 export enum FileSuggestMode {
     TemplateFiles,
