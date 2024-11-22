@@ -1,8 +1,21 @@
 import KindModelPlugin from "~/main";
-import { isArray, isString, isUndefined, keysOf, OptionalSpace, StripLeading } from "inferred-types";
-import { DvPage, PageReference, FileLink, ShowApi } from "~/types";
+import { 
+	isArray, 
+	isString, 
+	isUndefined, 
+	keysOf, 
+	OptionalSpace, 
+	StripLeading, 
+	stripTrailing
+} from "inferred-types";
+import { 
+	DvPage, 
+	PageReference, 
+	FileLink, 
+	ShowApi 
+} from "~/types";
 import { lookupKindByTag } from "~/cache";
-import { hasFileLink, isDvPage, isFileLink, isLink } from "~/type-guards";
+import { hasFileLink, isDvPage, isFileLink, isLink, isPageReference, isValidPath } from "~/type-guards";
 import { DateTime } from "luxon";
 import { 
 	getCategories,  
@@ -13,6 +26,7 @@ import {
 } from "./buildingBlocks";
 import { getPage } from "~/page";
 import { getPath } from "./getPath";
+import { isToday, isTomorrow, isYesterday } from "./dateTime";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
@@ -413,17 +427,63 @@ export const showKind = (p: KindModelPlugin) => (
 	return links.join(", ");
 }
 
+
+
+// <a data-tooltip-position="top" aria-label="Aggregation Switch" data-href="Aggregation Switch" href="Aggregation Switch" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener nofollow" data-link-tags="#hardware/network/switch" data-link-path="hardware/networking/Aggregation Switch.md" style="--data-link-tags: #hardware/network/switch; --data-link-path: hardware/networking/Aggregation Switch.md;">Aggregation Switch</a>
+
+const link = (
+	name: string,
+	path: string,
+	display: string,
+) => {
+	return [
+		`<a data-href="${name}" href="${path}" `,
+		`class="internal-link data-link-icon data-link-icon-after data-link-text" `,
+		`target="_blank" rel="noopener">`,
+		display,
+		`</a>`
+	].join("")
+}
+
+
 export const htmlLink = (p: KindModelPlugin) => (
-	pageLike: PageReference | undefined,
+	ref: PageReference | undefined,
 	opt?: MarkdownLinkOpt
 ): string => {
-	const page = p.api.getPage(pageLike);
-	if (page) {
-		const text = opt?.display || page.file.name || page.file.path;
+	
+	const page = getPage(p)(ref);
 
-		return `<a data-href="${page.file.name}" href="${page.file.path}" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener">${text}</a>`
+
+	if (page) {
+		const name = page.file.name;
+		const path = stripTrailing(page.file.path, ".md");
+		const display = opt?.display || page.file.name || page.file.path;
+
+		return link(name,path,display);
+	} else {
+		console.log(`invalid: ${ref}`)
 	}
-	return "<!-- no link -->";
+	
+	if (opt?.createPageWhereMissing && isValidPath(ref)) {
+		const parts = ref.split("/");
+		const display = opt.display || parts.pop() || "";
+
+		return link(
+			stripTrailing(ref, ".md"), 
+			ref,
+			isToday(display) 
+				? "today"
+				: isYesterday(display)
+				? "yesterday" 
+				: isTomorrow(display)
+				? "tomorrow"
+				: display, 
+		);
+	}
+
+	return isValidPath(ref)
+		? `<!-- no link [${String(ref)}] -->`
+		: `<!-- no link [invalid path: ${String(ref)}] -->`;
 }
 
 
@@ -601,6 +661,9 @@ export type MarkdownLinkOpt = {
 	 * Add any text/html that you want _after_ the link
 	 */
 	post?: string;
+
+
+	createPageWhereMissing?: boolean;
 }
 
 /**

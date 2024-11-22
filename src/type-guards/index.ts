@@ -16,6 +16,8 @@ export * from "./isTFile";
 export * from "./isTag";
 export * from "./isValidReference";
 export * from "./isWikipediaUrl";
+export * from "./isValidPath";
+export * from "./isMoment";
 
 export * from "./isPageReference";
 export * from "./isFrontmatter";

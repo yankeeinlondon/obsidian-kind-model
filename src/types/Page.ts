@@ -6,21 +6,25 @@ import { RenderableTreeNode, Node } from "@markdoc/markdoc";
 import { Frontmatter, HeadingTag } from "./frontmatter";
 import { DateTime } from "luxon";
 
-import { PageBlock, PropertyType, ShowApi, Tag } from "~/types";
+import { PageBlock, PropertyType, Tag } from "~/types";
 import { removeFmKey, RenderApi, setFmKey } from "~/api";
 import { TypedFunction } from "inferred-types";
 
-
-export type PageType = "kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn" | "none";
-
+export type PageType =
+	| "kinded"
+	| "kinded > category"
+	| "kinded > subcategory"
+	| "kind-defn"
+	| "type-defn"
+	| "none";
 
 export type PageInfo = {
-	/** 
+	/**
 	 * whether page is _kinded_, a _kind definition_, a _type definition_, or none of the above.
 	 */
 	type: PageType;
 
-	/** 
+	/**
 	 * The obsidian hash value for this file/page
 	 */
 	_hash?: string;
@@ -35,7 +39,7 @@ export type PageInfo = {
 
 	/**
 	 * the frontmatter dictionary on the current page
-	 * 
+	 *
 	 * **Note:** this is just an alias to `.page.file.frontmatter` property.
 	 */
 	fm: Frontmatter;
@@ -43,15 +47,15 @@ export type PageInfo = {
 	/**
 	 * _set_ a key/value pair in the frontmatter of the current page
 	 */
-	setFmKey: ReturnType<ReturnType<typeof setFmKey>>,
+	setFmKey: ReturnType<ReturnType<typeof setFmKey>>;
 	/**
 	 * _remove_ a key/value pair in the frontmatter of the current page
 	 */
-	removeFmKey: ReturnType<ReturnType<typeof removeFmKey>>,
+	removeFmKey: ReturnType<ReturnType<typeof removeFmKey>>;
 
-	/** 
+	/**
 	 * All of the categories which the current page belongs to.
-	 * 
+	 *
 	 * - this is drawn from both `category` and `categories` props as well
 	 * - as any category tags found on the page
 	 * - the `PageCategory` return type organizes the categories by the "kind" property
@@ -76,11 +80,11 @@ export type PageInfo = {
 	hasCategoriesProp: boolean;
 
 	/**
-	 * **hasAnyCategoryProp** 
-	 * 
-	 * Boolean flag which indicates if _either_ the `category` or `categories` 
-	 * property is set. 
-	 * 
+	 * **hasAnyCategoryProp**
+	 *
+	 * Boolean flag which indicates if _either_ the `category` or `categories`
+	 * property is set.
+	 *
 	 * **Notes:**
 	 * - a `categories` property which is empty or missing any vault links is not
 	 * considered valid and ignored in check
@@ -92,7 +96,6 @@ export type PageInfo = {
 	hasSubcategoryTag: boolean;
 
 	hasSubcategoryProp: boolean;
-
 
 	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
 	isSubcategoryPage: boolean;
@@ -111,13 +114,13 @@ export type PageInfo = {
 	hasTypeDefinitionTag: boolean;
 
 	/**
-	 * whether the page has a "kind" property which indicates the page's "kind"; 
+	 * whether the page has a "kind" property which indicates the page's "kind";
 	 * this is **any** "kind" property which links to another page inside
 	 * the vault (aka, it should be a kind definition but for this flag it doesn't
-	 * have to be). 
-	 * 
+	 * have to be).
+	 *
 	 * The one exception, is when the kind property points directly to the `kind` Kind definition
-	 * as this indicates it is a 
+	 * as this indicates it is a
 	 */
 	hasKindProp: boolean;
 
@@ -128,7 +131,7 @@ export type PageInfo = {
 
 	/**
 	 * whether the page has a "kinds" property which indicates the page's "kind"
-	 * (or multiple kinds); this looks for a list where at least one item in the 
+	 * (or multiple kinds); this looks for a list where at least one item in the
 	 * list is a link to another page in the vault.
 	 */
 	hasKindsProp: boolean;
@@ -139,14 +142,14 @@ export type PageInfo = {
 	 */
 	hasAnyKindProp: boolean;
 
-	/** 
+	/**
 	 * The `DvPage` API surface for the given page
 	 */
 	current: DvPage;
 
 	/**
 	 * The _kind_ tag or tags associated with the current page:
-	 * 
+	 *
 	 * - `#kind/foobar` resolves to `[ "foobar" ]`
 	 * - `#foobar/foo/bar` resolves to `[ "foobar" ]`
 	 * - `#foobar/foo #product` resolves to `[ "foobar", "product" ]`
@@ -154,7 +157,7 @@ export type PageInfo = {
 	kindTags: string[];
 
 	/**
-	 * The _type_ tag or tags associated with the current page. A _type_ 
+	 * The _type_ tag or tags associated with the current page. A _type_
 	 * is inherited by the _kind(s)_ which the page associated with.
 	 */
 	typeTags: string[];
@@ -163,18 +166,19 @@ export type PageInfo = {
 	 * Reports on the current page's frontmatter property organized by
 	 * `PropertyType` (aka, "link", "list::link", "inline-svg")
 	 */
-	metadata: Record<Partial<PropertyType>,string[]>
-} ;
+	metadata: Record<Partial<PropertyType>, string[]>;
+};
 
-export type PageInfoBlock = PageInfo & RenderApi & {
-	/** the content of the code block */
-	content: string;
-	/** the Obsidian Component instance */
-	component: ObsidianComponent;
+export type PageInfoBlock = PageInfo &
+	RenderApi & {
+		/** the content of the code block */
+		content: string;
+		/** the Obsidian Component instance */
+		component: ObsidianComponent;
 
-	/** the HTML Element of the code block */
-	container: HTMLElement;
-}
+		/** the HTML Element of the code block */
+		container: HTMLElement;
+	};
 
 /**
  * references to DOM elements found on a Markdown View derived page
@@ -192,13 +196,13 @@ export type PageDomElements = {
 	actions?: HTMLElement;
 	modeButton?: HTMLElement;
 	backlinks?: HTMLElement;
-}
+};
 
 export type MarkdownViewMeta = {
 	/**
 	 * **titleTimestamp**
-	 * 
-	 * Only available if the file has a date inside its file name 
+	 *
+	 * Only available if the file has a date inside its file name
 	 * (of form yyyy-mm-dd or yyyymmdd), or has a Date field/inline field.
 	 */
 	title_timestamp?: DateTime;
@@ -223,24 +227,24 @@ export type MarkdownViewMeta = {
 	/**
 	 * The width of the window which is hosting the current file
 	 */
-	leaf_width?:  number ;
-	leaf_id?: string ;
+	leaf_width?: number;
+	leaf_id?: string;
 	popover: MarkdownView["hoverPopover"];
 	allowNoFile: MarkdownView["allowNoFile"];
 	previewMode: MarkdownView["previewMode"];
 	/**
 	 * A textual representation of the type of view you have.
-	 * 
+	 *
 	 * - if you're editing a markdown file it should be `markdown`
 	 */
 	viewType: ReturnType<MarkdownView["getViewType"]>;
 	showBackLinks?: boolean;
 
 	/**
-	 * Whether or not the view is intended for navigation. If your view is a static view that 
-	 * is not intended to be navigated away, set this to false. (For example: File explorer, 
-	 * calendar, etc.) If your view opens a file or can be otherwise navigated, set this to 
-	 * true. (For example: Markdown editor view, Kanban view, PDF view, etc.) File views can 
+	 * Whether or not the view is intended for navigation. If your view is a static view that
+	 * is not intended to be navigated away, set this to false. (For example: File explorer,
+	 * calendar, etc.) If your view opens a file or can be otherwise navigated, set this to
+	 * true. (For example: Markdown editor view, Kanban view, PDF view, etc.) File views can
 	 * be navigated by default.
 	 */
 	navigation: MarkdownView["navigation"];
@@ -262,7 +266,7 @@ export type MarkdownViewMeta = {
 	onRename: MarkdownView["onRename"];
 	/**
 	 * Populates the pane menu.
-	 * 
+	 *
 	 * (Replaces the previously removed onHeaderMenu and onMoreOptionsMenu)
 	 */
 	onPaneMenu: MarkdownView["onPaneMenu"];
@@ -273,9 +277,9 @@ export type MarkdownViewMeta = {
 	registerDomEvent: MarkdownView["registerDomEvent"];
 	/** Registers an event to be detached when unloading */
 	registerEvent: MarkdownView["registerEvent"];
-	/** Registers an interval (from setInterval) to be cancelled when unloading 
-	 * Use window.setInterval instead of setInterval to avoid TypeScript confusing 
-	 * between NodeJS vs Browser API 
+	/** Registers an interval (from setInterval) to be cancelled when unloading
+	 * Use window.setInterval instead of setInterval to avoid TypeScript confusing
+	 * between NodeJS vs Browser API
 	 */
 	registerInterval: MarkdownView["registerInterval"];
 
@@ -292,31 +296,31 @@ export type MarkdownViewMeta = {
 	/**
 	 * Properties derived from the `content` property based on both a
 	 * **regex** decomposition as well as using [Markdoc](https://markdoc.dev/)'s
-	 * AST parsing as well as the further refined 
+	 * AST parsing as well as the further refined
 	 * [renderable tree node](https://markdoc.dev/docs/render#transform).
 	 */
 	contentStructure: {
 		/**
 		 * **ast**
-		 * 
+		 *
 		 * MarkDoc AST tree from root of Document.
-		 * 
+		 *
 		 * References: [docs](markdoc.dev), [sandbox](https://markdoc.dev/sandbox)
 		 */
 		ast: Node;
 
 		/**
 		 * **renderableTree**
-		 * 
+		 *
 		 * MarkDoc's `RenderableTreeNode` representation of the page. This
 		 * is a higher level representation of the AST and often a better tool
-		 * for extraction of structural content on the page 
+		 * for extraction of structural content on the page
 		 * (like a table of contents, etc.).
-		 * 
+		 *
 		 * References: [docs](markdoc.dev/docs/render#transform), [sandbox](https://markdoc.dev/sandbox)
 		 */
 		renderableTree: RenderableTreeNode | RenderableTreeNode[];
-		
+
 		/** the raw YAML content/frontmatter at top of page  */
 		yaml: string | undefined;
 
@@ -333,26 +337,28 @@ export type MarkdownViewMeta = {
 		/**
 		 * The page broken down by H2 headings
 		 */
-		blocks: {name: string; content: string;}[];
-	}
-}
+		blocks: { name: string; content: string }[];
+	};
+};
 
 /**
  * **PageView**
- * 
+ *
  * Is provided by the createPageView() utility when a `MarkdownView` is available.
  * It provides all the properties of the `PageInfo` data structure along with additional
- * endpoints which can only be provided when a "view" is underlying the 
+ * endpoints which can only be provided when a "view" is underlying the
  */
 export type PageView = PageInfo & {
 	dom: PageDomElements;
-	component: Component & { getSectionInfo: TypedFunction; sourcePath: string };
+	component: Component & {
+		getSectionInfo: TypedFunction;
+		sourcePath: string;
+	};
 	/**
 	 * Metadata derived from the `MarkdownView` provided to create the `PageView`
 	 */
 	view: MarkdownViewMeta;
-}
-
+};
 
 export type PageIcons = {
 	hasIcon?: boolean;
@@ -361,7 +367,7 @@ export type PageIcons = {
 	categoryIcon?: string;
 	subcategoryIcon?: string;
 	pageIcon?: string;
-}
+};
 export type PageBanners = {
 	hasBanner?: boolean;
 	typeBanner?: string;
@@ -369,20 +375,26 @@ export type PageBanners = {
 	categoryBanner?: string;
 	subcategoryBanner?: string;
 	pageBanner?: string;
-}
+};
 
-export type PageSuggestion = 
-| "add-kind-prop"
-| "add-kind-tag"
-| "add-kinded-prop"
-| "add-kinded-tag"
-| "add-category-tag"
-| "add-category-prop"
-| "add-subcategory-tag"
-| "add-subcategory-prop";
+export type PageSuggestion =
+	| "add-kind-prop"
+	| "add-kind-tag"
+	| "add-kinded-prop"
+	| "add-kinded-tag"
+	| "add-category-tag"
+	| "add-category-prop"
+	| "add-subcategory-tag"
+	| "add-subcategory-prop";
 
-
-export type PageReference = PageInfo | PageBlock |  DvPage | TFile |TAbstractFile | Link | string;
+export type PageReference =
+	| PageInfo
+	| PageBlock
+	| DvPage
+	| TFile
+	| TAbstractFile
+	| Link
+	| string;
 
 /**
  * represents a static "kind" and the categories that a given page has of this
@@ -391,18 +403,18 @@ export type PageReference = PageInfo | PageBlock |  DvPage | TFile |TAbstractFil
 export type PageCategory = {
 	/** the kind name of the category */
 	kind: string;
-	/** the `DvPage` for the category page */	
+	/** the `DvPage` for the category page */
 	page: DvPage;
 	/** the **tag** to identify the category */
 	category: string;
 	/** the **tag**: `#[kind]/[cat]` */
 	kindedTag: `${Tag}/${string}`;
-	/** 
-	 * a _full qualified_ tag path to the category definition: 
-	 * `#[kind]/category/[cat]` 
+	/**
+	 * a _full qualified_ tag path to the category definition:
+	 * `#[kind]/category/[cat]`
 	 */
 	defnTag: `${Tag}/category/${string}`;
-}
+};
 
 /**
  * represents a static "kind" and "category" and a set of subcategories which
@@ -411,7 +423,7 @@ export type PageCategory = {
 export type PageSubcategory = {
 	/** the kind name of the subcategory */
 	kind: string;
-	/** the `DvPage` for the category page */	
+	/** the `DvPage` for the category page */
 	page: DvPage;
 	/** the category name */
 	category: string;
@@ -419,9 +431,9 @@ export type PageSubcategory = {
 	subcategory: string;
 	/** the **tag**: `#[kind]/[cat]` */
 	kindedTag: `${Tag}/${string}/${string}`;
-	/** 
-	 * a _full qualified_ tag path to the subcategory definition: 
-	 * `#[kind]/category/[cat]/[subcat]` 
+	/**
+	 * a _full qualified_ tag path to the subcategory definition:
+	 * `#[kind]/category/[cat]/[subcat]`
 	 */
 	defnTag: `${Tag}/subcategory/${string}/${string}`;
-}
+};

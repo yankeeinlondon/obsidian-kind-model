@@ -1,6 +1,6 @@
 import { FileManager } from "obsidian";
 import KindModelPlugin from "~/main";
-import { ObsidianApp, PageReference } from "~/types";
+import { ObsidianApp } from "~/types";
 
 type Global = {
 	app: ObsidianApp

@@ -50,11 +50,12 @@ export const Kind = createHandler("Kind")
 			if (pages.length > 0) {
 				table(
 					[ 
-						"Category", 
+						"Page",
+						!page.isCategoryPage ?  "Category" : undefined, 
 						"Subcategory", 
 						"Desc", 
 						"Links" 
-					],
+					].filter(i => i) as string[],
 					pages
 						.sort(p => p.file.mday)
 						.map(p => {
@@ -62,11 +63,11 @@ export const Kind = createHandler("Kind")
 		
 						return [
 							createFileLink(pg),
-							showCategories(pg, {currentPage: page}),
+							!page.isCategoryPage ? showCategories(pg, {currentPage: page}) : undefined,
 							showSubcategories(pg),
 							showDesc(pg),
 							showLinks(pg)
-						]
+						].filter(i => i)
 					})
 				)
 			} else {

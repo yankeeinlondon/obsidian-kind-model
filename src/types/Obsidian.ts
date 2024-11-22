@@ -1,6 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FSWatcher } from "fs";
-import { AlphaChar, AlphaNumericChar, Dictionary, HtmlElement, NonZeroNumericChar, SemanticVersion, SpecialChar, StringDelimiter, TypedFunction,  UrlPath } from "inferred-types";
-import { EventRef, Stat,  Vault } from "obsidian";
+import {
+	AlphaChar,
+	AlphaNumericChar,
+	Dictionary,
+	NonZeroNumericChar,
+	SemanticVersion,
+	SpecialChar,
+	StringDelimiter,
+	TypedFunction,
+	UrlPath,
+} from "inferred-types";
+import { EventRef, Stat, Vault } from "obsidian";
 import { Tag } from ".";
 
 export interface TFile extends TAbstractFile {
@@ -17,22 +28,19 @@ export interface TFile extends TAbstractFile {
 	 * whether the file was deleted or not
 	 */
 	deleted: boolean;
-
 }
 
 export interface TFolder extends TAbstractFile {
-    /**
-     * files in the directory
-     */
-    children: TAbstractFile[];
+	/**
+	 * files in the directory
+	 */
+	children: TAbstractFile[];
 
-    /**
-     * is the root of the vault
-     */
-    isRoot(): boolean;
+	/**
+	 * is the root of the vault
+	 */
+	isRoot(): boolean;
 }
-
-
 
 /**
  * This can be either a `TFile` or a `TFolder`.
@@ -43,26 +51,24 @@ export interface TAbstractFile {
 	 */
 	name: string;
 
-    /**
-     * @public
-     */
-    vault: Vault;
-    /**
-     * the full path to the file
-     */
-    path: string;
-    /**
-     * the name without the file extension
-     */
-    basename: string;
+	/**
+	 * @public
+	 */
+	vault: Vault;
+	/**
+	 * the full path to the file
+	 */
+	path: string;
+	/**
+	 * the name without the file extension
+	 */
+	basename: string;
 
 	/**
-     * the parent folder
-     */
+	 * the parent folder
+	 */
 	parent: TFolder | null;
-
 }
-
 
 export interface ObsidianComponent {
 	/**
@@ -101,95 +107,153 @@ export interface ObsidianComponent {
 	 * Registers an DOM event to be detached when unloading
 	 */
 	registerDomEvent<K extends keyof WindowEventMap>(
-		el: Window, 
-		type: K, 
-		callback: (this: HTMLElement, ev: WindowEventMap[K]) => any, options?: boolean | AddEventListenerOptions
+		el: Window,
+		type: K,
+		callback: (this: HTMLElement, ev: WindowEventMap[K]) => any,
+		options?: boolean | AddEventListenerOptions,
 	): void;
 	/**
 	 * Registers an DOM event to be detached when unloading
 	 */
-	registerDomEvent<K extends keyof DocumentEventMap>(el: Document, type: K, callback: (
-		this: HTMLElement, 
-		ev: DocumentEventMap[K]
-	) => any, options?: boolean | AddEventListenerOptions): void;
+	registerDomEvent<K extends keyof DocumentEventMap>(
+		el: Document,
+		type: K,
+		callback: (this: HTMLElement, ev: DocumentEventMap[K]) => any,
+		options?: boolean | AddEventListenerOptions,
+	): void;
 	/**
 	 * Registers an DOM event to be detached when unloading
 	 */
-	registerDomEvent<K extends keyof HTMLElementEventMap>(el: HTMLElement, type: K, callback: (
-		this: HTMLElement, 
-		ev: HTMLElementEventMap[K]
-	) => any, options?: boolean | AddEventListenerOptions): void;
+	registerDomEvent<K extends keyof HTMLElementEventMap>(
+		el: HTMLElement,
+		type: K,
+		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+		options?: boolean | AddEventListenerOptions,
+	): void;
 
 	/**
 	 * Registers an interval (from setInterval) to be cancelled when unloading
-	 * Use {@link window.setInterval} instead of {@link setInterval} to 
+	 * Use {@link window.setInterval} instead of {@link setInterval} to
 	 * avoid TypeScript confusing between NodeJS vs Browser API
 	 */
 	registerInterval(id: number): number;
 }
 
-
-
-
-
-export interface ObsidianSvgElement extends SVGGraphicsElement, SVGFitToViewBox, WindowEventHandlers {
-    currentScale: number;
-    readonly currentTranslate: DOMPointReadOnly;
-    readonly height: SVGAnimatedLength;
-    readonly width: SVGAnimatedLength;
-    readonly x: SVGAnimatedLength;
-    readonly y: SVGAnimatedLength;
-    animationsPaused(): boolean;
-    checkEnclosure(element: SVGElement, rect: DOMRectReadOnly): boolean;
-    checkIntersection(element: SVGElement, rect: DOMRectReadOnly): boolean;
-    createSVGAngle(): SVGAngle;
-    createSVGLength(): SVGLength;
-    createSVGMatrix(): DOMMatrix;
-    createSVGNumber(): SVGNumber;
-    createSVGPoint(): DOMPoint;
-    createSVGRect(): DOMRect;
-    createSVGTransform(): SVGTransform;
-    createSVGTransformFromMatrix(matrix?: DOMMatrix2DInit): SVGTransform;
-    deselectAll(): void;
-    /** @deprecated */
-    forceRedraw(): void;
-    getCurrentTime(): number;
-    getElementById(elementId: string): Element;
-    getEnclosureList(rect: DOMRectReadOnly, referenceElement: SVGElement | null): NodeListOf<SVGCircleElement | SVGEllipseElement | SVGImageElement | SVGLineElement | SVGPathElement | SVGPolygonElement | SVGPolylineElement | SVGRectElement | SVGTextElement | SVGUseElement>;
-    getIntersectionList(rect: DOMRectReadOnly, referenceElement: SVGElement | null): NodeListOf<SVGCircleElement | SVGEllipseElement | SVGImageElement | SVGLineElement | SVGPathElement | SVGPolygonElement | SVGPolylineElement | SVGRectElement | SVGTextElement | SVGUseElement>;
-    pauseAnimations(): void;
-    setCurrentTime(seconds: number): void;
-    /** @deprecated */
-    suspendRedraw(maxWaitMilliseconds: number): number;
-    unpauseAnimations(): void;
-    /** @deprecated */
-    unsuspendRedraw(suspendHandleID: number): void;
-    /** @deprecated */
-    unsuspendRedrawAll(): void;
-    addEventListener<K extends keyof SVGSVGElementEventMap>(type: K, listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-    removeEventListener<K extends keyof SVGSVGElementEventMap>(type: K, listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+export interface ObsidianSvgElement
+	extends SVGGraphicsElement,
+		SVGFitToViewBox,
+		WindowEventHandlers {
+	currentScale: number;
+	readonly currentTranslate: DOMPointReadOnly;
+	readonly height: SVGAnimatedLength;
+	readonly width: SVGAnimatedLength;
+	readonly x: SVGAnimatedLength;
+	readonly y: SVGAnimatedLength;
+	animationsPaused(): boolean;
+	checkEnclosure(element: SVGElement, rect: DOMRectReadOnly): boolean;
+	checkIntersection(element: SVGElement, rect: DOMRectReadOnly): boolean;
+	createSVGAngle(): SVGAngle;
+	createSVGLength(): SVGLength;
+	createSVGMatrix(): DOMMatrix;
+	createSVGNumber(): SVGNumber;
+	createSVGPoint(): DOMPoint;
+	createSVGRect(): DOMRect;
+	createSVGTransform(): SVGTransform;
+	createSVGTransformFromMatrix(matrix?: DOMMatrix2DInit): SVGTransform;
+	deselectAll(): void;
+	/** @deprecated */
+	forceRedraw(): void;
+	getCurrentTime(): number;
+	getElementById(elementId: string): Element;
+	getEnclosureList(
+		rect: DOMRectReadOnly,
+		referenceElement: SVGElement | null,
+	): NodeListOf<
+		| SVGCircleElement
+		| SVGEllipseElement
+		| SVGImageElement
+		| SVGLineElement
+		| SVGPathElement
+		| SVGPolygonElement
+		| SVGPolylineElement
+		| SVGRectElement
+		| SVGTextElement
+		| SVGUseElement
+	>;
+	getIntersectionList(
+		rect: DOMRectReadOnly,
+		referenceElement: SVGElement | null,
+	): NodeListOf<
+		| SVGCircleElement
+		| SVGEllipseElement
+		| SVGImageElement
+		| SVGLineElement
+		| SVGPathElement
+		| SVGPolygonElement
+		| SVGPolylineElement
+		| SVGRectElement
+		| SVGTextElement
+		| SVGUseElement
+	>;
+	pauseAnimations(): void;
+	setCurrentTime(seconds: number): void;
+	/** @deprecated */
+	suspendRedraw(maxWaitMilliseconds: number): number;
+	unpauseAnimations(): void;
+	/** @deprecated */
+	unsuspendRedraw(suspendHandleID: number): void;
+	/** @deprecated */
+	unsuspendRedrawAll(): void;
+	addEventListener<K extends keyof SVGSVGElementEventMap>(
+		type: K,
+		listener: (
+			this: ObsidianSvgElement,
+			ev: SVGSVGElementEventMap[K],
+		) => any,
+		options?: boolean | AddEventListenerOptions,
+	): void;
+	addEventListener(
+		type: string,
+		listener: EventListenerOrEventListenerObject,
+		options?: boolean | AddEventListenerOptions,
+	): void;
+	removeEventListener<K extends keyof SVGSVGElementEventMap>(
+		type: K,
+		listener: (
+			this: ObsidianSvgElement,
+			ev: SVGSVGElementEventMap[K],
+		) => any,
+		options?: boolean | EventListenerOptions,
+	): void;
+	removeEventListener(
+		type: string,
+		listener: EventListenerOrEventListenerObject,
+		options?: boolean | EventListenerOptions,
+	): void;
 }
 
-
 export type ObsidianModifier = "Mod" | "Alt" | "";
-export type ObsidianKey = `F${NonZeroNumericChar}` | "UpArrow" | "DownArrow" | "LeftArrow" | "RightArrow" | AlphaNumericChar;
+export type ObsidianKey =
+	| `F${NonZeroNumericChar}`
+	| "UpArrow"
+	| "DownArrow"
+	| "LeftArrow"
+	| "RightArrow"
+	| AlphaNumericChar;
 
 export type GetIconFromObsidian = (iconId: string) => ObsidianSvgElement | null;
 export type ObsidianHotKey = {
 	key: ObsidianKey;
 	modifiers: ObsidianModifier[];
-}
+};
 
 /**
  * The keys which makeup the dictionary of commands.
- * 
+ *
  * - to the left of the color is the plugin name
  * - to the right is the command name
  */
 export type ObsidianCommandKey = `${string}:${string}`;
-
 
 export type ObsidianFile = {
 	type: "file" | `${string}`;
@@ -197,7 +261,7 @@ export type ObsidianFile = {
 	mtime: number;
 	realpath: string;
 	size: number;
-}
+};
 
 export type ObsidianMappedFile = {
 	/** the name of the file without the extension */
@@ -217,15 +281,14 @@ export type ObsidianMappedFile = {
 		ctime: number;
 		mtime: number;
 		size: number;
-	}
+	};
 	vault: any;
-}
+};
 
 export type ObsidianWatcher = {
 	watcher: FSWatcher;
 	resolvedPath: string;
-}
-
+};
 
 export type ObsidianAdaptor = {
 	basePath: string;
@@ -251,10 +314,10 @@ export type ObsidianAdaptor = {
 		resolve: (...args: string[]) => unknown;
 		sep: AlphaChar | SpecialChar | StringDelimiter | ":";
 		toNamespacedPath: (path: string) => unknown;
-	},
+	};
 	url: {
 		/** URL class */
-		URL: any
+		URL: any;
 		Url: TypedFunction;
 		domainToASCII: (domain: unknown) => unknown;
 		domainToUnicode: (domain: unknown) => unknown;
@@ -265,16 +328,16 @@ export type ObsidianAdaptor = {
 		resolve: TypedFunction;
 		resolveObject: TypedFunction;
 		urlToHttpOptions: TypedFunction;
-	}
+	};
 	watcher: null | unknown;
 	watchers: Record<`/${string}`, ObsidianWatcher>;
-}
+};
 
 export type ObsidianFileCache = {
 	mtime: number;
 	size: number;
 	hash: string;
-}
+};
 
 export type ObsidianCommandProps = {
 	checkCallback: TypedFunction;
@@ -282,22 +345,21 @@ export type ObsidianCommandProps = {
 	id: string;
 	name: string;
 	hotkeys?: ObsidianHotKey[];
-
-}
+};
 
 export type ObsidianTheme = {
 	name: string;
 	version: SemanticVersion;
 	minAppVersion: SemanticVersion;
 	author: string;
-	authorUrl: UrlPath
-}
+	authorUrl: UrlPath;
+};
 
 export type ObsidianPosition = {
 	line: number;
 	col: number;
 	offset: number;
-}
+};
 
 export type ObsidianMetaLink = {
 	link: string;
@@ -306,49 +368,54 @@ export type ObsidianMetaLink = {
 	position: {
 		end: ObsidianPosition;
 		start: ObsidianPosition;
-	}
-}
+	};
+};
 
-export type ObsidianFrontmatterValue = string | string[] | number[] | number | boolean | null;
+export type ObsidianFrontmatterValue =
+	| string
+	| string[]
+	| number[]
+	| number
+	| boolean
+	| null;
 
-export type ObsidianSectionType = 
-| "yaml"
-| "paragraph"
-| "blockquote"
-| "heading"
-| "list"
-;
+export type ObsidianSectionType =
+	| "yaml"
+	| "paragraph"
+	| "blockquote"
+	| "heading"
+	| "list";
 
 export type ObsidianTagMeta = {
 	tag: Tag;
 	position: {
 		start: ObsidianPosition;
 		end: ObsidianPosition;
-	}
-}
+	};
+};
 
 export type ObsidianSection = {
 	type: ObsidianSectionType;
 	position: {
 		start: ObsidianPosition;
 		end: ObsidianPosition;
-	}
-}
+	};
+};
 
 export type ObsidianFrontmatterLink = {
 	key: string;
 	link: string;
 	original: `[[${string}]]`;
 	displayText: string;
-}
+};
 
 export type ObsidianListItem = {
 	parent: number;
 	position: {
 		start: ObsidianPosition;
 		end: ObsidianPosition;
-	}
-}
+	};
+};
 
 export type ObsidianHeading = {
 	heading: string;
@@ -356,8 +423,8 @@ export type ObsidianHeading = {
 	position: {
 		start: ObsidianPosition;
 		end: ObsidianPosition;
-	}
-}
+	};
+};
 
 export type ObsidianMetadataCache = {
 	frontmatter: Record<string, ObsidianFrontmatterValue>;
@@ -371,8 +438,7 @@ export type ObsidianMetadataCache = {
 	listItems: ObsidianListItem[];
 	sections: ObsidianSection[];
 	tags: ObsidianTagMeta[];
-}
-
+};
 
 export type ObsidianApp = {
 	appId: string;
@@ -382,9 +448,9 @@ export type ObsidianApp = {
 		commands: Record<ObsidianCommandKey, ObsidianCommandProps>;
 		editorCommands: Record<ObsidianCommandKey, ObsidianCommandProps>;
 		executeCommand: TypedFunction;
-	}
+	};
 	customCss: {
-		boundRaw: () => unknown,
+		boundRaw: () => unknown;
 		/**
 		 * - the key is the file path to the css file
 		 * - the value is the CSS file's content
@@ -403,8 +469,6 @@ export type ObsidianApp = {
 		snippets: string[];
 		styleEl: HTMLStyleElement;
 		updates: Dictionary;
-
-
 	};
 
 	dom: {
@@ -452,7 +516,7 @@ export type ObsidianApp = {
 			wav: TypedFunction;
 			webm: TypedFunction;
 			webp: TypedFunction;
-		}
+		};
 	};
 
 	fileManager: {
@@ -464,7 +528,7 @@ export type ObsidianApp = {
 		inProgressUpdates: null | unknown;
 		linkUpdaters: {
 			canvas: any;
-		}
+		};
 		updateQueue: any;
 		vault: {
 			adapter: ObsidianAdaptor;
@@ -482,7 +546,7 @@ export type ObsidianApp = {
 			reloadConfig: () => void;
 			requestSaveConfig: () => void;
 			root: any;
-		}
+		};
 	};
 	foldManager: any;
 	hotKeyManager: any;
@@ -507,7 +571,7 @@ export type ObsidianApp = {
 			 * I believe this keyed off of the hash value from `fileCache`
 			 */
 			metadataCache: Record<string, ObsidianMetadataCache>;
-		}
+		};
 	};
 	isMobile: boolean;
 	keymap: any;
@@ -536,7 +600,6 @@ export type ObsidianApp = {
 		userIgnoreFilters: any;
 		userIgnoreFiltersString: any;
 		vault: any;
-
 	};
 
 	metadataTypeManager: any;
@@ -550,7 +613,6 @@ export type ObsidianApp = {
 	shareReceiver: any;
 	statusBar: any;
 	title: string;
-
 
 	vault: {
 		adaptor: ObsidianAdaptor;
@@ -594,6 +656,6 @@ export type ObsidianApp = {
 		rightSplit: any;
 		scope: any;
 		setActiveLeaf: TypedFunction;
-		undoHistory: any[]
+		undoHistory: any[];
 	};
-}
+};

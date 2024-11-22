@@ -10,3 +10,4 @@ export * from "./getPath";
 export * from "./fm";
 export * from "./showApi";
 export * from "./createVaultLink";
+export * from "./dateTime";

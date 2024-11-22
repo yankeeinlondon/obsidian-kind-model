@@ -22,43 +22,39 @@ const defaultLinkIcons = {
 	pin: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M12 20.556q-.235 0-.47-.077t-.432-.25q-1.067-.98-2.163-2.185q-1.097-1.204-1.992-2.493t-1.467-2.633t-.572-2.622q0-3.173 2.066-5.234T12 3t5.03 2.062t2.066 5.234q0 1.279-.572 2.613q-.572 1.333-1.458 2.632q-.885 1.3-1.981 2.494T12.92 20.21q-.191.173-.434.26t-.487.086m.003-8.825q.668 0 1.14-.476t.472-1.143t-.475-1.14t-1.143-.472t-1.14.476t-.472 1.143t.475 1.14t1.143.472"/></svg>`,
 	map: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M14.485 19.737L9 17.823l-3.902 1.509q-.21.083-.401.053t-.354-.132t-.252-.274Q4 18.806 4 18.583V6.41q0-.282.13-.499t.378-.303l3.957-1.345q.124-.05.257-.075T9 4.163t.278.025t.257.075L15 6.177l3.902-1.509q.21-.083.401-.053t.354.132t.252.274q.091.173.091.396v12.259q0 .284-.159.495t-.426.298l-3.9 1.287q-.13.05-.256.065q-.125.016-.26.016t-.26-.025t-.254-.075m.015-1.033v-11.7l-5-1.746v11.7zm1 0L19 17.55V5.7l-3.5 1.304zM5 18.3l3.5-1.342v-11.7L5 6.45zM15.5 7.004v11.7zm-7-1.746v11.7z"/></svg>`,
 	home: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M6 19h3v-5q0-.425.288-.712T10 13h4q.425 0 .713.288T15 14v5h3v-9l-6-4.5L6 10zm-2 0v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-4q-.425 0-.712-.288T13 20v-5h-2v5q0 .425-.288.713T10 21H6q-.825 0-1.412-.587T4 19m8-6.75"/></svg>`,
-	office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`
-
-}
+	office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`,
+};
 
 type LinkIcons = typeof defaultLinkIcons & Record<string, InlineSvg>;
-
 
 /**
  * The **Icon API** provides means to work with icons in Obsidian including
  * using an abstraction leveraging the concept of a an "Icon Page".
  */
 export const iconApi = (p: KindModelPlugin) => {
-	const linkIcons = (
-		getPage(p)("Link Icons") || defaultLinkIcons 
-	) as unknown as LinkIcons;
+	const linkIcons = (getPage(p)("Link Icons") ||
+		defaultLinkIcons) as unknown as LinkIcons;
 
 	return {
 		/**
-		 * The designated page for _link icons_ with a backup of core icons so 
+		 * The designated page for _link icons_ with a backup of core icons so
 		 * even if `Link Icons` page is missing we'll have a decent selection.
 		 */
 		linkIcons,
 
-
 		/**
 		 * Returns the current icon associated with a page.
-		 * 
+		 *
 		 * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
 		 */
 		currentIcon: (pg: PageReference) => {
 			const page = getPage(p)(pg);
-			if(page) {
+			if (page) {
 				const path = getPath(page) as string;
 				return getIcon(path);
-			} 
+			}
 
-			return	"broken-link";
+			return "broken-link";
 		},
 
 		/**
@@ -68,14 +64,10 @@ export const iconApi = (p: KindModelPlugin) => {
 			const page = getPage(p)(pg);
 
 			if (page) {
-				return getMetadata(p)(page)["svg::inline"];
+				return getMetadata(p)(page)["svg_inline"];
 			}
 
 			return [];
-		}
-
-
-
-		
-	}
-}
+		},
+	};
+};

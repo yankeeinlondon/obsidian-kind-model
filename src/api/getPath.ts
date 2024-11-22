@@ -9,7 +9,7 @@ export const getPath = <T extends PageReference  | undefined>(
 	pg: T
 ): string | undefined => {
 
-	return isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
+	return	isTFile(pg) || isTAbstractFile(pg) || isLink(pg)
 	? pg.path
 	: isDvPage(pg)
 	? pg.file.path

@@ -3,6 +3,7 @@ import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
 import { IconPage } from "./IconPage";
 import { Kind } from "./Kind";
+import { Journal } from "./Journal";
 import { PageEntry } from "./PageEntry";
 import { VideoGallery } from "./VideoGallery";
 import { Page } from "./Page";
@@ -41,6 +42,7 @@ export const queryHandlers = (
 	Kind(p)(ctx),
 	PageEntry(p)(ctx),
 	Page(p)(ctx),
+	Journal(p)(ctx),
 	VideoGallery(p)(ctx),
 	Subcategories(p)(ctx)
 ];
@@ -50,6 +52,7 @@ export {
 	Book,
 	IconPage,
 	Kind,
+	Journal,
 	PageEntry,
 	VideoGallery,
 	Page

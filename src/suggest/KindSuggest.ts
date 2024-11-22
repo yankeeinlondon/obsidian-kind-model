@@ -16,6 +16,13 @@ import { isValidURL } from "~/utils"
 const electron = (window as any).require('electron');
 const { clipboard } = electron;
 
+const commands = [
+	"PageEntry()",
+	"Page()",
+	"BackLinks()",
+	'Kind("kind","opt:category","opt:subcategory")'
+];
+
 
 export class KindSuggest extends EditorSuggest<string> {
 	plugin: KindModelPlugin;
@@ -26,29 +33,47 @@ export class KindSuggest extends EditorSuggest<string> {
 		plugin.debug("KindSuggest instantiated");
 	}
 
-
 	onTrigger(
 		cursor: EditorPosition, 
 		editor: Editor
 	): EditorSuggestTriggerInfo | null {
 		const currentLine = editor.getLine(cursor.line);
+		const priorLine = editor.getLine(Math.max(cursor.line - 1, 0));
 		const beforeCursor = currentLine.substring(0, cursor.ch);
+		const words  = currentLine.split(/\s+/);
+		const lastWord = words.pop() || "";
+		const lastWordLoc = currentLine.indexOf(lastWord);
+		this.plugin.info(`lastWord: ${lastWord}`, isValidURL(lastWord))
 
-		const isUrl = ["https://", "http://"].some(i => currentLine.startsWith(i));
+		const isUrl = ["https://", "http://"].some(i => lastWord.startsWith(i));
 
-		if(isUrl) {
+		if (isValidURL(lastWord)) {
 			return {
 				start: {
 					line: cursor.line,
-					ch: 0
+					ch: lastWordLoc
 				},
 				end: cursor,
 				query: currentLine
 			}
 		}
 
+		const completeKindQuery = priorLine.includes('km') && currentLine.length > 0 && commands.some(c => c.startsWith(currentLine));
 
-		console.log(`feeling triggerred(${beforeCursor})`);
+		if (completeKindQuery) {
+			return {
+				start: {
+					line: cursor.line,
+					ch: 0,
+				},
+				end: cursor,
+				query: currentLine,
+			};
+		}
+
+
+
+		// console.log(`feeling triggerred(${beforeCursor}): ${priorLine}`);
 
 		const match = beforeCursor.match(/\/([^\s]*)$/);
 		if (match) {
@@ -65,13 +90,33 @@ export class KindSuggest extends EditorSuggest<string> {
 		return null;
 	}
 
-	getSuggestions(context: EditorSuggestContext): string[] {
+	getSuggestions(ctx: EditorSuggestContext): string[] {
 		let suggestions: string[] = [];
 
-		this.plugin.info("getting suggestions", { query: context.query });
+		this.plugin.info("getting suggestions", { query: ctx.query, isUrl: isValidURL(ctx.query.trim()) });
+
+		if (ctx.query.length > 0 &&  commands.some(i => i.startsWith(ctx.query))) {
+			const suggestions = commands.filter(c => c.startsWith(ctx.query));
+
+			return suggestions
+		}
+
+		if (isValidURL(ctx.query.trim())) {
+			this.plugin.info("is URL");
+			const suggestions = [
+				`Add the URL "${ctx.query.trim()}" as frontmatter property 🤘`,
+				`Convert to a markdown link 🔗`,
+				`Leave raw URL "as is"`,
+			]
+
+			return suggestions;
+		} else {
+			this.plugin.info("not URL", ctx.query.trim());
+		}
 
 		const file = this.context?.file;
 		if(file) {
+
 			const page = getPageInfo(this.plugin)(file) as PageInfo;
 			let isReallyImportant = false;
 	
@@ -85,7 +130,7 @@ export class KindSuggest extends EditorSuggest<string> {
 						: []
 				),
 			];
-			const query = context.query.toLowerCase();
+			const query = ctx.query.toLowerCase();
 	
 			if (file) {
 				const metadata = this.app.metadataCache.getFileCache(file);
@@ -130,7 +175,7 @@ export class KindSuggest extends EditorSuggest<string> {
 		evt: MouseEvent | KeyboardEvent
 	): void {
 		if (this.context) {
-			const { editor, start, end, file } = this.context;
+			const { editor, start, end, file, query } = this.context;
 			const selectedText = editor.getSelection();
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 			const page = getPageInfo(this.plugin)(file);
@@ -141,6 +186,8 @@ export class KindSuggest extends EditorSuggest<string> {
 					isCategoryPage: isCategoryPage(this.plugin)(page),
 					isSubcategoryPage: isSubcategoryPage(this.plugin)(page),
 				};
+
+				this.plugin.info("Suggestion", suggestion); 
 
 				switch (suggestion) {
 					case "Update":
@@ -155,7 +202,7 @@ export class KindSuggest extends EditorSuggest<string> {
 							editor.setCursor({ line: start.line, ch: start.ch + 2 });
 						}
 						break;
-					case 'Italic':
+					case 'Italic':v
 						if (selectedText) {
 							editor.replaceSelection(`*${selectedText}*`);
 						} else {
@@ -190,8 +237,19 @@ export class KindSuggest extends EditorSuggest<string> {
 							editor.replaceRange(`[${text}](${url})`, start, end);
 						}
 						break;
+					case "Convert to a markdown link 🔗":
+						editor.replaceRange(`[${query}](${query})`, start, end);
+						break;
+
+
 					default:
-						editor.replaceRange(suggestion, start, end);
+						if (commands.includes(selectedText.trim())) {
+
+						} else {
+
+							editor.replaceRange(suggestion, start, end);
+						}
+
 						break;
 				}
 			} else {

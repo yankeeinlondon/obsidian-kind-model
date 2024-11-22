@@ -1,5 +1,6 @@
 import { 
 	createFnWithProps, 
+	CssColor, 
 	ensureLeading, 
 	EscapeFunction, 
 	isFunction, 
@@ -25,6 +26,13 @@ type ListItemsApi<_W extends WrapperCallback> = {
 	done: EscapeFunction
 };
 
+export const badge = (
+	text: string, 
+	color: CssColor = "gray" as CssColor, 
+	textColor: CssColor = "white" as CssColor
+) => {
+	return `<span class="badge" style="background-color: ${color}; padding: 0.25rem; font-size: 10px; border-radius: 8px; text-color: ${textColor}">${text}</span>`
+}
 
 
 export const removePound = (tag: string | undefined) => {
@@ -75,11 +83,13 @@ const italics = (text: string | number, fmt?: Omit<StyleOptions, "fs">) => {
 	return `<span ${style({...(fmt || { fw: "400"}), fs: "italic" } as StyleOptions)}>${text}</span>`
 };
 
-const bold = (text: string, fmt?: Omit<StyleOptions, "fw">) => {
+export const italic = (text: string | number, fmt?: Omit<StyleOptions, "fs">) => italics(text,fmt);
+
+export const bold = (text: string, fmt?: Omit<StyleOptions, "fw">) => {
 	return `<span ${style({...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`
 };
 
-const light = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
+export const light = (text: string | number, fmt?: Omit<StyleOptions, "fw">) => {
 	return `<span ${style({...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`
 };
 

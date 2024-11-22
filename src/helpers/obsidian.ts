@@ -1,6 +1,6 @@
 import {  Iso8601 } from "inferred-types";
 import { RequestUrlParam } from "obsidian";
-import { GetIconFromObsidian, ObsidianSvgElement } from "types";
+import { GetIconFromObsidian, ObsidianSvgElement } from "~/types";
 
 export type CommonHeaders = {
 	"cache-control"?: string;

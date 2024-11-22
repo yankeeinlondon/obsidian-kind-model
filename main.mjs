@@ -1224,7 +1224,7 @@ function objToLocalTS(obj) {
   return +d;
 }
 function weeksInWeekYear(weekYear) {
-  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last2 = weekYear - 1, p2 = (last2 + Math.floor(last2 / 4) - Math.floor(last2 / 100) + Math.floor(last2 / 400)) % 7;
+  const p1 = (weekYear + Math.floor(weekYear / 4) - Math.floor(weekYear / 100) + Math.floor(weekYear / 400)) % 7, last = weekYear - 1, p2 = (last + Math.floor(last / 4) - Math.floor(last / 100) + Math.floor(last / 400)) % 7;
   return p1 === 4 || p2 === 3 ? 53 : 52;
 }
 function untruncateYear(year) {
@@ -1266,9 +1266,9 @@ function normalizeObject(obj, normalizer) {
   const normalized = {};
   for (const u in obj) {
     if (hasOwnProperty(obj, u)) {
-      const v = obj[u];
-      if (v === void 0 || v === null) continue;
-      normalized[normalizer(u)] = asNumber(v);
+      const v2 = obj[u];
+      if (v2 === void 0 || v2 === null) continue;
+      normalized[normalizer(u)] = asNumber(v2);
     }
   }
   return normalized;
@@ -4467,8 +4467,8 @@ class DateTime {
     }
     let foundFirst = false;
     for (const u of units) {
-      const v = normalized[u];
-      if (!isUndefined$1(v)) {
+      const v2 = normalized[u];
+      if (!isUndefined$1(v2)) {
         foundFirst = true;
       } else if (foundFirst) {
         normalized[u] = defaultValues[u];
@@ -6034,7 +6034,7 @@ var parsimmon_umd_min = { exports: {} };
           return t3.readUIntBE(0, n3);
         });
       }
-      function v(n3) {
+      function v2(n3) {
         return p2("uintLE", n3), h("uintLE(" + n3 + ")", n3).map(function(t3) {
           return t3.readUIntLE(0, n3);
         });
@@ -6129,7 +6129,7 @@ var parsimmon_umd_min = { exports: {} };
         var r2, e3, u2, o2, f2, c2 = t3.index, s3 = c2.offset, l3 = 1;
         if (s3 === n3.length) return "Got the end of the input";
         if (w(n3)) {
-          var h2 = s3 - s3 % I, p3 = s3 - h2, d2 = W(h2, F, M + I, n3.length), v2 = a(function(n4) {
+          var h2 = s3 - s3 % I, p3 = s3 - h2, d2 = W(h2, F, M + I, n3.length), v3 = a(function(n4) {
             return a(function(n5) {
               return U(n5.toString(16), 2, "0");
             }, n4);
@@ -6143,7 +6143,7 @@ var parsimmon_umd_min = { exports: {} };
             return 0 === n4.from && 1 === n4.to ? { from: n4.from, to: n4.to } : { from: n4.from / I, to: Math.floor(n4.to / I) };
           }(d2), e3 = h2 / I, r2 = 3 * p3, p3 >= 4 && (r2 += 1), l3 = 2, u2 = a(function(n4) {
             return n4.length <= 4 ? n4.join(" ") : n4.slice(0, 4).join(" ") + "  " + n4.slice(4).join(" ");
-          }, v2), (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2);
+          }, v3), (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2);
         } else {
           var g2 = n3.split(/\r\n|[\n\r\u2028\u2029]/);
           r2 = c2.column - 1, e3 = c2.line - 1, o2 = W(e3, q, A, g2.length), u2 = g2.slice(o2.from, o2.to), f2 = o2.to.toString().length;
@@ -6491,7 +6491,7 @@ var parsimmon_umd_min = { exports: {} };
         return h("string", t3).map(function(t4) {
           return t4.toString(n3);
         });
-      }, uintBE: d, uint8BE: d(1), uint16BE: d(2), uint32BE: d(4), uintLE: v, uint8LE: v(1), uint16LE: v(2), uint32LE: v(4), intBE: g, int8BE: g(1), int16BE: g(2), int32BE: g(4), intLE: m, int8LE: m(1), int16LE: m(2), int32LE: m(4), floatBE: h("floatBE", 4).map(function(n3) {
+      }, uintBE: d, uint8BE: d(1), uint16BE: d(2), uint32BE: d(4), uintLE: v2, uint8LE: v2(1), uint16LE: v2(2), uint32LE: v2(4), intBE: g, int8BE: g(1), int16BE: g(2), int32BE: g(4), intLE: m, int8LE: m(1), int16LE: m(2), int32LE: m(4), floatBE: h("floatBE", 4).map(function(n3) {
         return n3.readFloatBE(0);
       }), floatLE: h("floatLE", 4).map(function(n3) {
         return n3.readFloatLE(0);
@@ -6749,7 +6749,7 @@ var Values;
     if (field === null || field === void 0)
       return field;
     if (Values2.isArray(field)) {
-      return [].concat(field.map((v) => deepCopy(v)));
+      return [].concat(field.map((v2) => deepCopy(v2)));
     } else if (Values2.isObject(field)) {
       let result = {};
       for (let [key, value2] of Object.entries(field))
@@ -7834,8 +7834,8 @@ function within(min$1, value2, max2) {
   return max$1(min$1, min(value2, max2));
 }
 function withinMaxClamp(min2, value2, max2) {
-  var v = within(min2, value2, max2);
-  return v > max2 ? max2 : v;
+  var v2 = within(min2, value2, max2);
+  return v2 > max2 ? max2 : v2;
 }
 function getFreshSideObject() {
   return {
@@ -8909,6 +8909,11 @@ const wrapAround = (value2, size) => {
 };
 class Suggest {
   constructor(owner, containerEl, scope) {
+    __publicField(this, "owner");
+    __publicField(this, "values");
+    __publicField(this, "suggestions");
+    __publicField(this, "selectedItem");
+    __publicField(this, "containerEl");
     this.owner = owner;
     this.containerEl = containerEl;
     containerEl.on(
@@ -8985,6 +8990,11 @@ class Suggest {
 }
 class TextInputSuggest {
   constructor(inputEl) {
+    __publicField(this, "inputEl");
+    __publicField(this, "popper");
+    __publicField(this, "scope");
+    __publicField(this, "suggestEl");
+    __publicField(this, "suggest");
     this.inputEl = inputEl;
     this.scope = new Scope();
     this.suggestEl = createDiv("suggestion-container");
@@ -9117,6 +9127,7 @@ const error$3 = (level) => (...args) => {
   class KindModelError extends Error {
     constructor(msg2) {
       super(msg2);
+      __publicField(this, "kind");
     }
   }
   throw new KindModelError(args.map((i) => String(i)).join(", ") || "Kind Model error");
@@ -9190,12 +9201,12 @@ const componentApi = (el, base2, global_opt, log_level) => (name2, desc, prop) =
             dd.setValue(value2);
           }
         }
-        dd.onChange((v) => {
+        dd.onChange((v2) => {
           if (isNotNull(prop, base2)) {
             const prior_value = base2[prop];
-            base2[prop] = isKeyValueDict ? choices[v] : v;
+            base2[prop] = isKeyValueDict ? choices[v2] : v2;
             debug2(`Updating ${name2} dropdown`, `new value is:
-${JSON.stringify(v, null, 2)}`, `prior value was:
+${JSON.stringify(v2, null, 2)}`, `prior value was:
 ${JSON.stringify(prior_value, null, 2)}`);
             if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
@@ -9211,7 +9222,7 @@ ${JSON.stringify(base2, null, 2)}`);
             s2.setName(resolve$2(name2));
             s2.setDesc(resolve$2(desc));
           } else {
-            debug2(`the dropdown "${name2}" changed state but no property was set to record this.`, "this may be ok but is typically an error", `the new state is now: ${v}`);
+            debug2(`the dropdown "${name2}" changed state but no property was set to record this.`, "this may be ok but is typically an error", `the new state is now: ${v2}`);
           }
         });
       });
@@ -9222,16 +9233,16 @@ ${JSON.stringify(base2, null, 2)}`);
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v) => {
+        t2.onChange((v2) => {
           if (isNotNull(prop, base2)) {
             s2.setName(resolve$2(name2));
             s2.setDesc(resolve$2(desc));
-            base2[prop] = v;
+            base2[prop] = v2;
             if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
                 error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
               }
-              info2("auto save", `the toggle switch for "${prop}" detected a change`, `the new value for "${prop}" is: ${v}`);
+              info2("auto save", `the toggle switch for "${prop}" detected a change`, `the new value for "${prop}" is: ${v2}`);
               global_opt.saveState();
             } else {
               debug2(`no auto save: state changed on "${name2}" on property`);
@@ -9249,9 +9260,9 @@ ${JSON.stringify(base2, null, 2)}`);
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v) => {
+        t2.onChange((v2) => {
           if (isNotNull(prop, base2)) {
-            base2[prop] = v;
+            base2[prop] = v2;
           } else {
             debug2(`state changed on the property "${name2}" but because "prop" was null it will not be recorded.`);
           }
@@ -9280,16 +9291,16 @@ ${JSON.stringify(base2, null, 2)}`);
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v) => {
+        t2.onChange((v2) => {
           s2.setName(resolve$2(name2));
           s2.setDesc(resolve$2(desc));
           if (isNotNull(prop, base2)) {
-            base2[prop] = v;
+            base2[prop] = v2;
             if (global_opt == null ? void 0 : global_opt.saveState) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
                 error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
               } else {
-                info2(`auto save`, `folder prop ${name2} [${prop}] changed state to:`, v);
+                info2(`auto save`, `folder prop ${name2} [${prop}] changed state to:`, v2);
                 global_opt.saveState();
               }
             } else {
@@ -9339,6 +9350,9 @@ const UiBuilder = (el, base2, log_level, global_opt = {}) => {
 class KindModal extends Modal {
   constructor(app2, kind, log_level) {
     super(app2);
+    __publicField(this, "kind");
+    __publicField(this, "log_level");
+    __publicField(this, "contentEl");
     this.kind = kind;
     this.log_level = log_level;
   }
@@ -9472,6 +9486,13 @@ const classification = (c) => ({
 class SettingsTab extends PluginSettingTab {
   constructor(app2, plugin4) {
     super(app2, plugin4);
+    __publicField(this, "app");
+    __publicField(this, "plugin");
+    __publicField(this, "saveSettings");
+    __publicField(this, "debug");
+    __publicField(this, "info");
+    __publicField(this, "warn");
+    __publicField(this, "error");
     this.app = app2;
     this.plugin = plugin4;
   }
@@ -9857,12 +9878,6 @@ const relative = function(from, to) {
   }
   return [..._from.map(() => ".."), ..._to].join("/");
 };
-function createConstant$1(kind) {
-  return {
-    _type: "Constant",
-    kind
-  };
-}
 var LOWER_ALPHA_CHARS = [
   "a",
   "b",
@@ -9962,7 +9977,6 @@ var entry = (refType, desc, ...params) => [
   // TODO: get the below working`
   "ContainsSome": entry((t2) => t2.tuple(), "must be a tuple and have elements that extends the value [[0]]", (t2) => t2.singularTuple())
 });
-var Never$1 = createConstant$1("never");
 var SIMPLE_SCALAR_TOKENS = [
   "string",
   "number",
@@ -11109,8 +11123,8 @@ var isRatio = (val) => /[0-9]{1,4}\s*\/\s*[0-9]{1,4}/.test(val);
 var isCssAspectRatio = (val) => {
   return isString$1(val) && val.split(/\s+/).every((i) => tokens.includes(i) || isRatio(i));
 };
-var isInlineSvg = (v) => {
-  return isString$1(v) && v.trim().startsWith(`<svg`) && v.trim().endsWith(`</svg>`);
+var isInlineSvg = (v2) => {
+  return isString$1(v2) && v2.trim().startsWith(`<svg`) && v2.trim().endsWith(`</svg>`);
 };
 var hasUrlQueryParameter = (val, prop) => {
   return isString$1(getUrlQueryParams(val, prop));
@@ -11147,6 +11161,9 @@ var isPhoneNumber = (val) => {
     "-"
   ]);
   return chars.every((i) => valid.includes(i)) && svelte.startsWith(`+`) ? numeric.length >= 8 : svelte.startsWith(`00`) ? numeric.length >= 10 : numeric.length >= 7 && nothing === "";
+};
+var isStringArray = (val) => {
+  return Array.isArray(val) && val.every((i) => isString$1(i));
 };
 SIMPLE_TOKENS.map((i) => i.split("TOKEN"));
 SIMPLE_SCALAR_TOKENS.map((i) => i.split("TOKEN"));
@@ -11346,9 +11363,6 @@ var isYouTubeFeedUrl = (val, type) => {
 var isYouTubeCreatorUrl = (url) => {
   return isString$1(url) && (url.startsWith(`https://www.youtube.com/@`) || url.startsWith(`https://youtube.com/@`) || url.startsWith(`https://www.youtube.com/channel/`));
 };
-var isYouTubeVideosInPlaylist = (val) => {
-  return isString$1(val) && (val.startsWith(`https://www.youtube.com/playlist?`) || val.startsWith(`https://youtube.com/playlist?`)) && hasUrlQueryParameter(val, "list");
-};
 var URL2 = AUSTRALIAN_NEWS.flatMap((i) => i.baseUrls);
 var isAustralianNewsUrl = (val) => {
   return isString$1(val) && val.startsWith("https://") && (URL2.includes(val) || URL2.some((i) => i.startsWith(`${i}/`)));
@@ -11424,6 +11438,56 @@ var isUsNewsUrl = (val) => {
 CHINESE_NEWS.flatMap((i) => i.baseUrls);
 var isNewsUrl = (val) => {
   return isAustralianNewsUrl(val) || isBelgiumNewsUrl(val) || isCanadianNewsUrl(val) || isDanishNewsUrl(val) || isDutchNewsUrl(val) || isFrenchNewsUrl(val) || isGermanNewsUrl(val) || isIndianNewsUrl(val) || isItalianNewsUrl(val) || isJapaneseNewsUrl(val) || isMexicanNewsUrl(val) || isNorwegianNewsUrl(val) || isSouthKoreanNewsUrl(val) || isSpanishNewsUrl(val) || isSwissNewsUrl(val) || isTurkishNewsUrl(val) || isUkNewsUrl(val) || isUsNewsUrl(val);
+};
+var isIsoDateTime = (val) => {
+  if (isString$1(val)) {
+    return val.includes(":") && val.includes("-") && val.split("-").length === 3 && val.split(":").length > 1 && (!val.includes("Z") || isNumberLike(val.slice(-1)) || val.endsWith("Z")) && (!val.includes("Z") || ["+", "-"].includes(stripUntil(val, "Z").slice(1, 2)) || val.endsWith("Z"));
+  }
+  return false;
+};
+var isIsoExplicitTime = (val) => {
+  if (isString$1(val)) {
+    const parts = stripLeading(stripAfter(val, "Z"), "T").split(/[:.]/).map((i) => Number(i));
+    return val.startsWith("T") && val.includes(":") && val.split(":").length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59;
+  } else {
+    return false;
+  }
+};
+var isIsoImplicitTime = (val) => {
+  if (isString$1(val)) {
+    const parts = stripAfter(val, "Z").split(/[:.]/).map((i) => Number(i));
+    return val.includes(":") && val.split(":").length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59;
+  } else {
+    return false;
+  }
+};
+var isIsoTime = (val) => {
+  return isIsoExplicitTime(val) || isIsoImplicitTime(val);
+};
+var isIsoExplicitDate = (val) => {
+  if (isString$1(val)) {
+    const parts = val.split("-").map((i) => Number(i));
+    return val.includes("-") ? val.split("-").every((i) => isNumberLike(i)) ? parts[0] >= 0 && parts[0] <= 9999 && parts[1] >= 1 && parts[1] <= 12 && parts[2] >= 1 && parts[2] <= 31 : false : false;
+  } else {
+    return false;
+  }
+};
+var isIsoImplicitDate = (val) => {
+  if (isString$1(val) && val.length === 8 && isNumberLike(val)) {
+    const year = Number(val.slice(0, 4));
+    const month = Number(val.slice(4, 6));
+    const date = Number(val.slice(6, 8));
+    return year >= 0 && year <= 9999 && month >= 1 && month <= 12 && date >= 1 && date <= 31;
+  } else {
+    return false;
+  }
+};
+var isIsoDate = (val) => {
+  if (isString$1(val)) {
+    return val.includes("-") ? isIsoExplicitDate(val) : isIsoImplicitDate(val);
+  } else {
+    return false;
+  }
 };
 function stripTrailing(content2, ...strip) {
   let output = String(content2);
@@ -11562,12 +11626,6 @@ var createFnWithProps = (fn2, props, narrowing = false) => {
   }
   return isTrue(narrowing) ? fnWithProps : fnWithProps;
 };
-var last = (list2) => {
-  return [...list2].pop();
-};
-var getYouTubePageType = (url) => {
-  return isYouTubeUrl(url) ? isYouTubeVideoUrl(url) && (hasUrlQueryParameter(url, "v") || isYouTubeShareUrl(url)) ? hasUrlQueryParameter(url, "list") ? isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::in-list::share-link::with-timestamp` : `play::video::in-list::share-link` : `play::video::in-list` : isYouTubeShareUrl(url) ? hasUrlQueryParameter(url, "t") ? `play::video::solo::share-link::with-timestamp` : `play::video::solo::share-link` : `play::video::solo` : isYouTubeCreatorUrl(url) ? getUrlPath(url).includes("/videos") ? "creator::videos" : getUrlPath(url).includes("/playlists") ? "creator::playlists" : last(getUrlPath(url).split("/")).startsWith("@") || getUrlPath(url).includes("/featured") ? "creator::featured" : "creator::other" : isYouTubeFeedUrl(url) ? isYouTubeFeedUrl(url, "history") ? "feed::history" : isYouTubeFeedUrl(url, "playlists") ? "feed::playlists" : isYouTubeFeedUrl(url, "liked") ? "feed::liked" : isYouTubeFeedUrl(url, "subscriptions") ? "feed::subscriptions" : isYouTubeFeedUrl(url, "trending") ? "feed::trending" : "feed::other" : isYouTubeVideosInPlaylist(url) ? "playlist::show" : "other" : Never$1;
-};
 var youtubeEmbed = (url) => {
   if (hasUrlQueryParameter(url, "v")) {
     const id = getUrlQueryParams(url, "v");
@@ -11584,18 +11642,6 @@ var youtubeEmbed = (url) => {
   }
 };
 Object.values(NETWORK_PROTOCOL_LOOKUP).flat().filter((i) => i !== "");
-var removeUrlProtocol = (url) => {
-  return stripBefore(url, "://");
-};
-var ensurePath = (val) => {
-  const val2 = ensureLeading(val, "/");
-  return val === "" ? "" : stripTrailing(val2, "/");
-};
-var getUrlPath = (url) => {
-  return isUrl(url) ? ensurePath(
-    stripAfter(stripBefore(removeUrlProtocol(url), "/"), "?")
-  ) : Never$1;
-};
 var getUrlQueryParams = (url, specific = void 0) => {
   const qp = stripBefore(url, "?");
   if (specific) {
@@ -11621,7 +11667,7 @@ identity({
   never: "<<never>>"
 });
 const find_in = (tg) => (...values) => {
-  const found = values.find((v) => tg(v));
+  const found = values.find((v2) => tg(v2));
   return found;
 };
 const isDateTime = (val) => {
@@ -11640,22 +11686,28 @@ const isLink = (val) => {
   return isObject(val) && "path" in val && isString$1(val.path) && "embed" in val && typeof val.embed === "boolean";
 };
 const isPageInfo = (val) => {
-  return isObject(val) && "current" in val && "categories" in val && "type" in val;
+  return isObject(val) && "current" in val && "categories" in val && "type" in val && isDvPage(val.current);
 };
-const isTAbstractFile = (v) => {
-  return isObject(v) && "basename" in v && "path" in v;
+const isTAbstractFile = (v2) => {
+  return isObject(v2) && "basename" in v2 && "path" in v2;
 };
-const isTFile = (v) => {
-  return isObject(v) && "name" in v && "extension" in v && "path" in v;
+const isTFile = (v2) => {
+  return isObject(v2) && "name" in v2 && "extension" in v2 && "path" in v2;
 };
 const isWikipediaUrl = (val) => {
   return isString$1(val) && val.startsWith("https://") && val.includes("wikipedia.org/");
 };
-const isPageReference = (v) => {
-  return isDvPage(v) || isFileLink(v) || isPageInfo(v) || isTFile(v) || isTAbstractFile(v) || isString$1(v);
+const isValidPath = (val) => {
+  return isString$1(val) && !val.startsWith("/") && !val.startsWith(".") && val.length > 2;
 };
-const isFrontmatter = (v) => {
-  return isObject(v) && !isFunction$2(v);
+const isMoment = (val) => {
+  return isObject(val) && "toISOString" in val && "calendar" in val && "dayOfYear" in val;
+};
+const isPageReference = (v2) => {
+  return isDvPage(v2) || isFileLink(v2) || isPageInfo(v2) || isTFile(v2) || isTAbstractFile(v2) || isString$1(v2);
+};
+const isFrontmatter = (v2) => {
+  return isObject(v2) && !isFunction$2(v2);
 };
 const isTagKindDefinition = (val) => {
   return isObject(val) && "tag" in val && typeof val.tag === "string";
@@ -15014,11 +15066,11 @@ var require_code = __commonJS({
       if (state.md.options.allowIndentation) {
         return false;
       }
-      var nextLine, last2, token;
+      var nextLine, last, token;
       if (state.sCount[startLine] - state.blkIndent < 4) {
         return false;
       }
-      last2 = nextLine = startLine + 1;
+      last = nextLine = startLine + 1;
       while (nextLine < endLine) {
         if (state.isEmpty(nextLine)) {
           nextLine++;
@@ -15026,14 +15078,14 @@ var require_code = __commonJS({
         }
         if (state.sCount[nextLine] - state.blkIndent >= 4) {
           nextLine++;
-          last2 = nextLine;
+          last = nextLine;
           continue;
         }
         break;
       }
-      state.line = last2;
+      state.line = last;
       token = state.push("code_block", "code", 0);
-      token.content = state.getLines(startLine, last2, 4 + state.blkIndent, false) + "\n";
+      token.content = state.getLines(startLine, last, 4 + state.blkIndent, false) + "\n";
       token.map = [startLine, state.line];
       return true;
     };
@@ -16091,7 +16143,7 @@ var require_state_block = __commonJS({
       return pos;
     };
     StateBlock.prototype.getLines = function getLines(begin, end2, indent, keepLastLF) {
-      var i, lineIndent, ch, first, last2, queue, lineStart, line = begin;
+      var i, lineIndent, ch, first, last, queue, lineStart, line = begin;
       if (begin >= end2) {
         return "";
       }
@@ -16100,11 +16152,11 @@ var require_state_block = __commonJS({
         lineIndent = 0;
         lineStart = first = this.bMarks[line];
         if (line + 1 < end2 || keepLastLF) {
-          last2 = this.eMarks[line] + 1;
+          last = this.eMarks[line] + 1;
         } else {
-          last2 = this.eMarks[line];
+          last = this.eMarks[line];
         }
-        while (first < last2 && lineIndent < indent) {
+        while (first < last && lineIndent < indent) {
           ch = this.src.charCodeAt(first);
           if (isSpace(ch)) {
             if (ch === 9) {
@@ -16120,9 +16172,9 @@ var require_state_block = __commonJS({
           first++;
         }
         if (lineIndent > indent) {
-          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last2);
+          queue[i] = new Array(lineIndent - indent + 1).join(" ") + this.src.slice(first, last);
         } else {
-          queue[i] = this.src.slice(first, last2);
+          queue[i] = this.src.slice(first, last);
         }
       }
       return queue.join("");
@@ -16956,8 +17008,8 @@ var require_balance_pairs = __commonJS({
 var require_text_collapse = __commonJS({
   "node_modules/markdown-it/lib/rules_inline/text_collapse.js"(exports, module) {
     module.exports = function text_collapse(state) {
-      var curr, last2, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
-      for (curr = last2 = 0; curr < max2; curr++) {
+      var curr, last, level = 0, tokens2 = state.tokens, max2 = state.tokens.length;
+      for (curr = last = 0; curr < max2; curr++) {
         if (tokens2[curr].nesting < 0)
           level--;
         tokens2[curr].level = level;
@@ -16966,14 +17018,14 @@ var require_text_collapse = __commonJS({
         if (tokens2[curr].type === "text" && curr + 1 < max2 && tokens2[curr + 1].type === "text") {
           tokens2[curr + 1].content = tokens2[curr].content + tokens2[curr + 1].content;
         } else {
-          if (curr !== last2) {
-            tokens2[last2] = tokens2[curr];
+          if (curr !== last) {
+            tokens2[last] = tokens2[curr];
           }
-          last2++;
+          last++;
         }
       }
-      if (curr !== last2) {
-        tokens2.length = last2;
+      if (curr !== last) {
+        tokens2.length = last;
       }
     };
   }
@@ -18062,14 +18114,14 @@ function* getAstValues(value2) {
   if (value2 == null || typeof value2 !== "object")
     return;
   if (Array.isArray(value2))
-    for (const v of value2)
-      yield* getAstValues(v);
+    for (const v2 of value2)
+      yield* getAstValues(v2);
   if (isAst(value2))
     yield value2;
   if (Object.getPrototypeOf(value2) !== Object.prototype)
     return;
-  for (const v of Object.values(value2))
-    yield* getAstValues(v);
+  for (const v2 of Object.values(value2))
+    yield* getAstValues(v2);
 }
 function resolve(value2, config = {}) {
   if (value2 == null || typeof value2 !== "object")
@@ -18081,8 +18133,8 @@ function resolve(value2, config = {}) {
   if (Object.getPrototypeOf(value2) !== Object.prototype)
     return value2;
   const output = {};
-  for (const [k, v] of Object.entries(value2))
-    output[k] = resolve(v, config);
+  for (const [k, v2] of Object.entries(value2))
+    output[k] = resolve(v2, config);
   return output;
 }
 var Tag = class {
@@ -18112,8 +18164,8 @@ var Class = class {
     if (!value2 || typeof value2 === "string")
       return value2;
     const classes = [];
-    for (const [k, v] of Object.entries(value2 ?? {}))
-      if (v)
+    for (const [k, v2] of Object.entries(value2 ?? {}))
+      if (v2)
         classes.push(k);
     return classes.join(" ");
   }
@@ -18414,23 +18466,23 @@ function* formatInline(g) {
 function* formatTableRow(items) {
   yield `| ${items.join(" | ")} |`;
 }
-function formatScalar(v) {
-  if (v === void 0) {
+function formatScalar(v2) {
+  if (v2 === void 0) {
     return void 0;
   }
-  if (ast_default.isAst(v)) {
-    return format(v);
+  if (ast_default.isAst(v2)) {
+    return format(v2);
   }
-  if (v === null) {
+  if (v2 === null) {
     return "null";
   }
-  if (Array.isArray(v)) {
-    return "[" + v.map(formatScalar).join(SEP) + "]";
+  if (Array.isArray(v2)) {
+    return "[" + v2.map(formatScalar).join(SEP) + "]";
   }
-  if (typeof v === "object") {
-    return "{" + Object.entries(v).map(([key, value2]) => `${isIdentifier(key) ? key : `"${key}"`}: ${formatScalar(value2)}`).join(SEP) + "}";
+  if (typeof v2 === "object") {
+    return "{" + Object.entries(v2).map(([key, value2]) => `${isIdentifier(key) ? key : `"${key}"`}: ${formatScalar(value2)}`).join(SEP) + "}";
   }
-  return JSON.stringify(v);
+  return JSON.stringify(v2);
 }
 function formatAnnotationValue(a) {
   const formattedValue = formatScalar(a.value);
@@ -18461,9 +18513,9 @@ function* formatAnnotations(n2) {
     yield SPACE + CLOSE;
   }
 }
-function* formatVariable(v) {
+function* formatVariable(v2) {
   yield "$";
-  yield v.path.map((p2, i) => {
+  yield v2.path.map((p2, i) => {
     if (i === 0)
       return p2;
     if (isIdentifier(p2))
@@ -18603,7 +18655,7 @@ function* formatNode(n2, o = {}) {
         yield indent;
       }
       const open = OPEN + SPACE;
-      const attributes2 = [...formatAttributes(n2)].filter((v) => v !== void 0);
+      const attributes2 = [...formatAttributes(n2)].filter((v2) => v2 !== void 0);
       const tag = [open + n2.tag, ...attributes2];
       const inlineTag = tag.join(SPACE);
       const isLongTagOpening = inlineTag.length + open.length * 2 > (o.maxTagOpeningWidth || MAX_TAG_OPENING_WIDTH);
@@ -18740,46 +18792,46 @@ function* formatNode(n2, o = {}) {
     }
   }
 }
-function* formatValue(v, o = {}) {
-  switch (typeof v) {
+function* formatValue(v2, o = {}) {
+  switch (typeof v2) {
     case "undefined":
       break;
     case "boolean":
     case "number":
     case "string": {
-      yield v.toString();
+      yield v2.toString();
       break;
     }
     case "object": {
-      if (v === null)
+      if (v2 === null)
         break;
-      if (Array.isArray(v)) {
-        for (const n2 of v)
+      if (Array.isArray(v2)) {
+        for (const n2 of v2)
           yield* formatValue(n2, o);
         break;
       }
-      switch (v.$$mdtype) {
+      switch (v2.$$mdtype) {
         case "Function": {
-          yield* formatFunction(v);
+          yield* formatFunction(v2);
           break;
         }
         case "Node":
-          yield* formatNode(v, o);
+          yield* formatNode(v2, o);
           break;
         case "Variable": {
-          yield* formatVariable(v);
+          yield* formatVariable(v2);
           break;
         }
         default:
-          throw new Error(`Unimplemented: "${v.$$mdtype}"`);
+          throw new Error(`Unimplemented: "${v2.$$mdtype}"`);
       }
       break;
     }
   }
 }
-function format(v, options2) {
+function format(v2, options2) {
   let doc = "";
-  for (const s2 of formatValue(v, options2))
+  for (const s2 of formatValue(v2, options2))
     doc += s2;
   return doc.trimStart();
 }
@@ -18845,7 +18897,7 @@ var not = {
 var equals = {
   transform(parameters) {
     const values = Object.values(parameters);
-    return values.every((v) => v === values[0]);
+    return values.every((v2) => v2 === values[0]);
   }
 };
 var debug = {
@@ -19090,7 +19142,7 @@ __export(schema_exports, {
   image: () => image,
   inline: () => inline,
   item: () => item,
-  link: () => link,
+  link: () => link$1,
   list: () => list,
   node: () => node,
   paragraph: () => paragraph,
@@ -19277,7 +19329,7 @@ var inline = {
     "comment"
   ]
 };
-var link = {
+var link$1 = {
   render: "a",
   children: ["strong", "em", "s", "code", "text", "tag"],
   attributes: {
@@ -19347,8 +19399,8 @@ function render(node2) {
   if (!name2)
     return render(children2);
   let output = `<${name2}`;
-  for (const [k, v] of Object.entries(attributes2 ?? {}))
-    output += ` ${k.toLowerCase()}="${escapeHtml(String(v))}"`;
+  for (const [k, v2] of Object.entries(attributes2 ?? {}))
+    output += ` ${k.toLowerCase()}="${escapeHtml(String(v2))}"`;
   output += ">";
   if (voidElements.has(name2))
     return output;
@@ -19371,8 +19423,8 @@ function dynamic(node2, React, { components = {} } = {}) {
     if (typeof value2 !== "object")
       return value2;
     const output = {};
-    for (const [k, v] of Object.entries(value2))
-      output[k] = deepRender2(v);
+    for (const [k, v2] of Object.entries(value2))
+      output[k] = deepRender2(v2);
     return output;
   }
   function render3(node3) {
@@ -19406,7 +19458,7 @@ function deepRender(value2) {
     return render2(value2);
   if (typeof value2 !== "object")
     return JSON.stringify(value2);
-  const object = Object.entries(value2).map(([k, v]) => [JSON.stringify(k), deepRender(v)].join(": ")).join(", ");
+  const object = Object.entries(value2).map(([k, v2]) => [JSON.stringify(k), deepRender(v2)].join(": ")).join(", ");
   return `{${object}}`;
 }
 function render2(node2) {
@@ -19991,8 +20043,8 @@ Markdoc.validate = validate;
 Markdoc.createElement = createElement$1;
 Markdoc.truthy = truthy;
 Markdoc.format = format;
-const isTag = (v) => {
-  return typeof v === "object" ? true : false;
+const isTag = (v2) => {
+  return typeof v2 === "object" ? true : false;
 };
 const getHeadingLevel = (file, content2, level, plugin4) => {
   const root = transform2(parse3(content2 || ""));
@@ -20315,13 +20367,13 @@ const iconApi = (p2) => {
   const linkIcons = getPage(p2)("Link Icons") || defaultLinkIcons;
   return {
     /**
-     * The designated page for _link icons_ with a backup of core icons so 
+     * The designated page for _link icons_ with a backup of core icons so
      * even if `Link Icons` page is missing we'll have a decent selection.
      */
     linkIcons,
     /**
      * Returns the current icon associated with a page.
-     * 
+     *
      * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
      */
     currentIcon: (pg) => {
@@ -20338,7 +20390,7 @@ const iconApi = (p2) => {
     getIconProperties: (pg) => {
       const page = getPage(p2)(pg);
       if (page) {
-        return getMetadata(p2)(page)["svg::inline"];
+        return getMetadata(p2)(page)["svg_inline"];
       }
       return [];
     }
@@ -20361,6 +20413,7 @@ const KINDLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="
 const SEARCH_BOOK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M11.724 7.447a2.276 2.276 0 1 0 0 4.553a2.276 2.276 0 0 0 0-4.553M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5zm10.819 7.295a3.724 3.724 0 1 0-1.024 1.024l2.476 2.475l.067.058l.008.006a.724.724 0 0 0 .942-1.093z"/></svg>`;
 const AMAZON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M15.93 17.09c-.18.16-.43.17-.63.06c-.89-.74-1.05-1.08-1.54-1.79c-1.47 1.5-2.51 1.95-4.42 1.95c-2.25 0-4.01-1.39-4.01-4.17c0-2.18 1.17-3.64 2.86-4.38c1.46-.64 3.49-.76 5.04-.93V7.5c0-.66.05-1.41-.33-1.96c-.32-.49-.95-.7-1.5-.7c-1.02 0-1.93.53-2.15 1.61c-.05.24-.25.48-.47.49l-2.6-.28c-.22-.05-.46-.22-.4-.56c.6-3.15 3.45-4.1 6-4.1c1.3 0 3 .35 4.03 1.33C17.11 4.55 17 6.18 17 7.95v4.17c0 1.25.5 1.81 1 2.48c.17.25.21.54 0 .71l-2.06 1.78h-.01m-2.7-6.53V10c-1.94 0-3.99.39-3.99 2.67c0 1.16.61 1.95 1.63 1.95c.76 0 1.43-.47 1.86-1.22c.52-.93.5-1.8.5-2.84m6.93 8.98C18 21.14 14.82 22 12.1 22c-3.81 0-7.25-1.41-9.85-3.76c-.2-.18-.02-.43.25-.29c2.78 1.63 6.25 2.61 9.83 2.61c2.41 0 5.07-.5 7.51-1.53c.37-.16.66.24.32.51m.91-1.04c-.28-.36-1.85-.17-2.57-.08c-.19.02-.22-.16-.03-.3c1.24-.88 3.29-.62 3.53-.33c.24.3-.07 2.35-1.24 3.32c-.18.16-.35.07-.26-.11c.26-.67.85-2.14.57-2.5z" fill="currentColor"/></svg>`;
 const BOOK_CATALOG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.3 42.5h34.1m-34-2l7-.2l-.5-34.7l-6.3-.1Zm8.6-27l-.3 26.3l6.5-.2l.8-25.9Zm9-5.6l-1.4 32.2l8.7-.1L33 8.4Zm10 6.3l-1.5 26.3l7.8.1l1.4-26.3Zm1 0a8.5 8.5 0 0 1 5.7-3.7M12.9 5.6L14.8 9l.1 4.6m-1.5 26.7l1.3-.5"/></svg>`;
+const CALENDAR_DATE = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M8 2v4m8-4v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></g></svg>`;
 const obsidian_blockquote = (kind, title, opts) => [
   `<div data-callout-metadata="" data-callout-fold="${(opts == null ? void 0 : opts.fold) || ""}" data-callout="${kind}" class="callout" ${style$1((opts == null ? void 0 : opts.style) || {})}>`,
   `<div class="callout-title" style="gap:15px; align-items: center">`,
@@ -20402,6 +20455,9 @@ const blockquote = (kind, title, opts) => {
     (opts == null ? void 0 : opts.icon) && opts.icon in iconLookup ? { ...opts, icon: iconLookup[opts.icon] } : opts
   );
 };
+const badge = (text2, color = "gray", textColor = "white") => {
+  return `<span class="badge" style="background-color: ${color}; padding: 0.25rem; font-size: 10px; border-radius: 8px; text-color: ${textColor}">${text2}</span>`;
+};
 const removePound$1 = (tag) => {
   return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
 };
@@ -20420,6 +20476,7 @@ const span = (text2, fmt) => {
 const italics = (text2, fmt) => {
   return `<span ${style$1({ ...fmt || { fw: "400" }, fs: "italic" })}>${text2}</span>`;
 };
+const italic = (text2, fmt) => italics(text2, fmt);
 const bold = (text2, fmt) => {
   return `<span ${style$1({ ...fmt || {}, fw: "700" })}>${text2}</span>`;
 };
@@ -20655,8 +20712,8 @@ const renderApi = (p2) => (el, filePath) => {
      * Utility function which ensures that the passed in value _is_ an array,
      * and that any DvArray[] proxy is converted to a normal JS array
      */
-    as_array: (v) => {
-      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
+    as_array: (v2) => {
+      return p2.dv.isDataArray(v2) ? Array.from(v2.values) : isArray(v2) ? v2.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v2];
     },
     /**
      * Return an array of paths (as strings) corresponding to pages 
@@ -20950,6 +21007,14 @@ const showQueryError = (p2) => (handler, page, content2) => {
     content: content2
   });
 };
+const isValidURL = (str) => {
+  try {
+    new URL(str);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
 const findStaleByTag = async (p2) => {
   const kinds = p2.dv.pages(`#kind`).where((k) => {
     var _a2, _b2;
@@ -21062,6 +21127,121 @@ const lookupKindByTag = (p2) => (tag) => {
 const lookupKnownKindTags = (p2) => {
   const tags = Array.from(p2.cache.kindDefinitionsByTag.keys());
   return tags;
+};
+const moment = globalThis.moment;
+const getWhenDate = (p2) => (ref) => {
+  const page = getPageInfo(p2)(ref);
+  if (page) {
+    const { when, date } = page.current.file.frontmatter;
+    const prop = when || date;
+    if (prop && isIsoExplicitDate(prop)) {
+      return prop;
+    }
+    if (page.name.includes("-")) {
+      const pre = retainUntil(page.name, ...WHITESPACE_CHARS);
+      if (isIsoExplicitDate(pre)) {
+        return pre;
+      }
+    }
+  }
+  p2.info("when", { page, ref });
+  return void 0;
+};
+const todaysYear = () => String(moment(Date.now()).year());
+const todaysMonth = () => String(moment(Date.now()).month());
+const todaysDate = () => String(moment(Date.now()).date());
+const getToday = () => {
+  const dt = moment(Date.now()).toISOString(true);
+  return stripAfter(dt, "T");
+};
+const getYesterday = () => {
+  const dt = moment(Date.now()).subtract("1", "day").toISOString(true);
+  return stripAfter(dt, "T");
+};
+const getTomorrow = () => {
+  const dt = moment(Date.now()).add("1", "day").toISOString(true);
+  return stripAfter(dt, "T");
+};
+const isThisYear = (date) => {
+  const year = isMoment(date) ? String(date.year()) : date.slice(0, 4);
+  return year === todaysYear();
+};
+const getYear = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[0] : date.slice(0, 4);
+};
+const getMonth = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[1] : date.slice(4, 6);
+};
+const getDate = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[2] : date.slice(6, 8);
+};
+const isToday = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getToday();
+  } else if (isMoment(test)) {
+    return asExplicitIso8601Date(test.toISOString()) === getToday();
+  }
+  return false;
+};
+const isYesterday = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getYesterday();
+  } else if (isMoment(test)) {
+    return asExplicitIso8601Date(test.toISOString()) === getYesterday();
+  }
+  return false;
+};
+const isTomorrow = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getTomorrow();
+  } else if (isMoment(test)) {
+    return asExplicitIso8601Date(test.toISOString()) === getTomorrow();
+  }
+  return false;
+};
+const priorDay = (date) => {
+  const prior = stripAfter(
+    moment(date).subtract("1", "day").toISOString(true),
+    "T"
+  );
+  return prior;
+};
+const nextDay = (date) => {
+  const next = stripAfter(
+    moment(date).add("1", "day").toISOString(true),
+    "T"
+  );
+  return next;
+};
+const journalFile = (format2, dayOf = void 0) => {
+  const [year, month, day] = dayOf ? [getYear(dayOf), getMonth(dayOf), getDate(dayOf)] : [todaysYear(), todaysMonth(), todaysDate()];
+  if (!format2.includes("YYYY") && !format2.includes("MM") && !format2.includes("DD")) {
+    throw new Error(
+      `a journal file was passed in with a static format string: ${format2}; must have at least one dynamic segment!`
+    );
+  }
+  const filepath = format2.replaceAll("YYYY", year).replaceAll("MM", month).replaceAll("DD", day);
+  return filepath;
+};
+const asExplicitIso8601Date = (date) => {
+  const d = stripAfter(date, "T");
+  return isIsoExplicitDate(d) ? d : `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+};
+const describeDate = (date, offset2 = 0, sameYear = "MMM Do", diffYear = "MMM Do, YYYY") => {
+  const d = moment(asExplicitIso8601Date(date)).add(offset2, "days");
+  console.log("describe", {
+    d,
+    offset: offset2,
+    isToday: isToday(d),
+    isYesterday: isYesterday(d)
+  });
+  return isToday(d) ? "today" : isYesterday(d) ? "yesterday" : isTomorrow(d) ? "tomorrow" : isThisYear(d) ? d.format(sameYear) : d.format(diffYear);
 };
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 const showCreatedDate = (p2) => (pg, format2) => {
@@ -21201,7 +21381,7 @@ const showProp = (p2) => (pg, ...props) => {
     if (isKeyOf(page, found)) {
       const value2 = page[found];
       try {
-        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v) => isLink(v) ? v : isDvPage(v) ? v.file.link : "").filter((i) => i).join(", ") : "";
+        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v2) => isLink(v2) ? v2 : isDvPage(v2) ? v2.file.link : "").filter((i) => i).join(", ") : "";
       } catch (e2) {
         p2.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e2);
         return "";
@@ -21248,13 +21428,35 @@ const showKind = (p2) => (pg, withTag) => {
   }
   return links.join(", ");
 };
-const htmlLink = (p2) => (pageLike, opt) => {
-  const page = p2.api.getPage(pageLike);
+const link = (name2, path, display) => {
+  return [
+    `<a data-href="${name2}" href="${path}" `,
+    `class="internal-link data-link-icon data-link-icon-after data-link-text" `,
+    `target="_blank" rel="noopener">`,
+    display,
+    `</a>`
+  ].join("");
+};
+const htmlLink = (p2) => (ref, opt) => {
+  const page = getPage(p2)(ref);
   if (page) {
-    const text2 = (opt == null ? void 0 : opt.display) || page.file.name || page.file.path;
-    return `<a data-href="${page.file.name}" href="${page.file.path}" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener">${text2}</a>`;
+    const name2 = page.file.name;
+    const path = stripTrailing(page.file.path, ".md");
+    const display = (opt == null ? void 0 : opt.display) || page.file.name || page.file.path;
+    return link(name2, path, display);
+  } else {
+    console.log(`invalid: ${ref}`);
   }
-  return "<!-- no link -->";
+  if ((opt == null ? void 0 : opt.createPageWhereMissing) && isValidPath(ref)) {
+    const parts = ref.split("/");
+    const display = opt.display || parts.pop() || "";
+    return link(
+      stripTrailing(ref, ".md"),
+      ref,
+      isToday(display) ? "today" : isYesterday(display) ? "yesterday" : isTomorrow(display) ? "tomorrow" : display
+    );
+  }
+  return isValidPath(ref) ? `<!-- no link [${String(ref)}] -->` : `<!-- no link [invalid path: ${String(ref)}] -->`;
 };
 const showCategories = (p2) => (pg, opt) => {
   const page = p2.api.getPage(pg);
@@ -21445,11 +21647,7 @@ const getPageInfo = (p2) => (pg) => {
   }
 };
 const getPageInfoBlock = (p2) => (evt) => {
-  const {
-    source,
-    el,
-    ctx
-  } = evt;
+  const { source, el, ctx } = evt;
   const filePath = ctx.sourcePath;
   const page = getPageInfo(p2)(filePath);
   if (page) {
@@ -21466,7 +21664,6 @@ const getPageInfoBlock = (p2) => (evt) => {
 };
 const getPropertyType = (p2) => (value2) => {
   if (isYouTubeUrl(value2)) {
-    getYouTubePageType(value2);
     if (isYouTubeCreatorUrl(value2)) {
       return `youtube_creator_featured`;
     }
@@ -21502,8 +21699,17 @@ const getPropertyType = (p2) => (value2) => {
     if (isMetric(value2)) {
       return "metric";
     }
+    if (isDateTime(value2)) {
+      return "datetime";
+    }
+    if (isIsoDate(value2)) {
+      return "date";
+    }
+    if (isIsoTime(value2)) {
+      return "time";
+    }
     if (isZipCode(value2)) {
-      return "geo_zip-code";
+      return "geo_zip";
     }
     if (isIso3166CountryCode(value2) || isIso3166CountryName(value2)) {
       return "geo_country";
@@ -21540,7 +21746,9 @@ const getPropertyType = (p2) => (value2) => {
   if (isUndefined(value2)) {
     return "empty";
   } else if (isArray(value2) && value2.length > 0) {
-    const variants = new Set(value2.map(getPropertyType(p2)));
+    const variants = new Set(
+      value2.map(getPropertyType(p2))
+    );
     if (variants.size === 1) {
       return `list_${Array.from(variants)[0]}`;
     } else {
@@ -21551,7 +21759,9 @@ const getPropertyType = (p2) => (value2) => {
 };
 const getKnownKindTags = (p2) => (tag) => {
   var _a2, _b2, _c2, _d2;
-  return tag ? Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).filter((i) => i.includes(tag)) : Array.from(((_d2 = (_c2 = p2.cache) == null ? void 0 : _c2.kindDefinitionsByTag) == null ? void 0 : _d2.keys()) || []);
+  return tag ? Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).filter(
+    (i) => i.includes(tag)
+  ) : Array.from(((_d2 = (_c2 = p2.cache) == null ? void 0 : _c2.kindDefinitionsByTag) == null ? void 0 : _d2.keys()) || []);
 };
 const isKeyOf = (container, key) => {
   return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
@@ -21564,8 +21774,12 @@ const isKindTag = (p2) => (tag) => {
 const hasCategoryTagDefn = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const hasBareCategory = page.file.etags.find((t2) => t2.startsWith(`#category/`)) ? true : false;
-    const hasKindCategory = page.file.etags.find((t2) => t2.split("/")[1] === "category" && t2.split("/").length === 3);
+    const hasBareCategory = page.file.etags.find(
+      (t2) => t2.startsWith(`#category/`)
+    ) ? true : false;
+    const hasKindCategory = page.file.etags.find(
+      (t2) => t2.split("/")[1] === "category" && t2.split("/").length === 3
+    );
     return hasBareCategory || hasKindCategory ? true : false;
   }
   return false;
@@ -21573,8 +21787,12 @@ const hasCategoryTagDefn = (p2) => (pg) => {
 const hasSubcategoryTagDefn = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const hasBareSubcategory = page.file.etags.find((t2) => t2.startsWith(`#subcategory/`)) ? true : false;
-    const hasKindSubcategory = page.file.etags.find((t2) => t2.split("/")[1] === "subcategory" && t2.split("/").length === 4);
+    const hasBareSubcategory = page.file.etags.find(
+      (t2) => t2.startsWith(`#subcategory/`)
+    ) ? true : false;
+    const hasKindSubcategory = page.file.etags.find(
+      (t2) => t2.split("/")[1] === "subcategory" && t2.split("/").length === 4
+    );
     return hasBareSubcategory || hasKindSubcategory ? true : false;
   }
   return false;
@@ -21589,7 +21807,9 @@ const hasSubcategoryTag = (p2) => (pg) => {
 const hasCategoryTag = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const kindTags = Array.from(page.file.tags).filter((t2) => isKindTag(stripLeading(t2.split("/")[0], "#")));
+    const kindTags = Array.from(page.file.tags).filter(
+      (t2) => isKindTag(p2)(stripLeading(t2.split("/")[0], "#"))
+    );
     const withCategory = kindTags.filter((t2) => t2.split("/").length > 1).map((t2) => t2.split("/")[1]);
     return withCategory.length > 0;
   }
@@ -21598,7 +21818,9 @@ const hasCategoryTag = (p2) => (pg) => {
 const hasCategoryProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const catType = getPropertyType(p2)(page.file.frontmatter["category"]);
+    const catType = getPropertyType(p2)(
+      page.file.frontmatter["category"]
+    );
     return page.category && catType.startsWith("link") ? true : false;
   }
   return false;
@@ -21606,7 +21828,9 @@ const hasCategoryProp = (p2) => (pg) => {
 const hasSubcategoryProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const catType = getPropertyType(p2)(page.file.frontmatter["subcategory"]);
+    const catType = getPropertyType(p2)(
+      page.file.frontmatter["subcategory"]
+    );
     return page.category && catType.startsWith("link") ? true : false;
   }
   return false;
@@ -21614,7 +21838,9 @@ const hasSubcategoryProp = (p2) => (pg) => {
 const hasSubcategoriesProp = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const catType = getPropertyType(p2)(page.file.frontmatter["subcategory"]);
+    const catType = getPropertyType(p2)(
+      page.file.frontmatter["subcategory"]
+    );
     return page.category && catType.startsWith("link") ? true : false;
   }
   return false;
@@ -21630,7 +21856,9 @@ const hasCategoriesProp = (p2) => (pg) => {
 const hasAnyCategoryProp = (p2) => (pg) => hasCategoriesProp(p2)(pg) || hasCategoryProp(p2)(pg);
 const isCategoryPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
-  return page && page.file.etags.some((i) => i.split("/").length === 3 && i.split("/")[1] === "category") ? true : false;
+  return page && page.file.etags.some(
+    (i) => i.split("/").length === 3 && i.split("/")[1] === "category"
+  ) ? true : false;
 };
 const isSubcategoryPage = (p2) => (pg) => {
   const page = getPage(p2)(pg);
@@ -21645,7 +21873,9 @@ const hasMultipleKinds = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
     const tags = page.file.tags;
-    const kindTags = tags.filter((t2) => isKindTag(p2)(stripLeading(t2.split("/")[0], "#")));
+    const kindTags = tags.filter(
+      (t2) => isKindTag(p2)(stripLeading(t2.split("/")[0], "#"))
+    );
     return kindTags.length > 1 ? true : false;
   }
   return false;
@@ -21710,7 +21940,10 @@ const getFrontmatter = (p2) => (from) => {
   if (page) {
     return page.file.frontmatter;
   } else {
-    p2.debug(`call to getFrontmatter() was unable to load a valid page so returned an empty object.`, { from });
+    p2.debug(
+      `call to getFrontmatter() was unable to load a valid page so returned an empty object.`,
+      { from }
+    );
     return {};
   }
 };
@@ -21728,42 +21961,38 @@ const getCategories = (p2) => (pg) => {
       (t2) => t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
     ).map((i) => catTag(i.split("/")[0], i.split("/")[2]));
     const kinded = page.file.etags.filter(
-      (t2) => t2.split("/").length > 1 && !["category", "subcategory"].includes(t2.split("/")[1]) && isKindTag(p2)(t2.split("/")[0])
+      (t2) => t2.split("/").length > 1 && !["category", "subcategory"].includes(
+        t2.split("/")[1]
+      ) && isKindTag(p2)(t2.split("/")[0])
     ).map((i) => catTag(i.split("/")[0], i.split("/")[1]));
-    const tags = /* @__PURE__ */ new Set(
-      [
-        ...kinded,
-        ...kindedCat,
-        ...kindedSubcat
-      ]
-    );
+    const tags = /* @__PURE__ */ new Set([
+      ...kinded,
+      ...kindedCat,
+      ...kindedSubcat
+    ]);
     const missing = [];
-    const pages = Array.from(tags).map(
-      (t2) => {
-        const [kind, cat] = t2.split("/");
-        const pgs = p2.dv.pages(`${kind}/category/${cat}`);
-        if (pgs.length > 0) {
-          return [t2, pgs[0]];
-        } else {
-          missing.push(`${t2} on page "${page.file.path}"`);
-          return void 0;
-        }
+    const pages = Array.from(tags).map((t2) => {
+      const [kind, cat] = t2.split("/");
+      const pgs = p2.dv.pages(`${kind}/category/${cat}`);
+      if (pgs.length > 0) {
+        return [t2, pgs[0]];
+      } else {
+        missing.push(`${t2} on page "${page.file.path}"`);
+        return void 0;
       }
-    ).filter((i) => i);
+    }).filter((i) => i);
     if (missing.length > 0) {
       p2.warn("Some category tags didn't not map to a page", missing);
     }
-    return pages.map(
-      ([t2, pg2]) => {
-        return {
-          kind: stripLeading(t2.split("/")[0], "#"),
-          page: pg2,
-          category: t2.split("/")[1],
-          kindedTag: ensureLeading(t2, "#"),
-          defnTag: `${ensureLeading(t2.split("/")[0], "#")}/category/${t2.split("/")[1]}`
-        };
-      }
-    );
+    return pages.map(([t2, pg2]) => {
+      return {
+        kind: stripLeading(t2.split("/")[0], "#"),
+        page: pg2,
+        category: t2.split("/")[1],
+        kindedTag: ensureLeading(t2, "#"),
+        defnTag: `${ensureLeading(t2.split("/")[0], "#")}/category/${t2.split("/")[1]}`
+      };
+    });
   }
   return categories;
 };
@@ -21775,47 +22004,55 @@ const getSubcategories = (p2) => (pg) => {
   if (page) {
     const kindedSubcat = page.file.etags.filter(
       (t2) => t2.split("/").length === 4 && t2.split("/")[1] === "subcategory"
-    ).map((i) => subCatTag(i.split("/")[0], i.split("/")[2], i.split("/")[3]));
-    const kinded = page.file.etags.filter(
-      (t2) => t2.split("/").length === 3 && !["category", "subcategory"].includes(t2.split("/")[1]) && isKindTag(p2)(t2.split("/")[0])
     ).map(
-      (i) => subCatTag(i.split("/")[0], i.split("/")[1], i.split("/")[2])
+      (i) => subCatTag(
+        i.split("/")[0],
+        i.split("/")[2],
+        i.split("/")[3]
+      )
     );
-    const tags = /* @__PURE__ */ new Set(
-      [
-        ...kinded,
-        ...kindedSubcat
-      ]
+    const kinded = page.file.etags.filter(
+      (t2) => t2.split("/").length === 3 && !["category", "subcategory"].includes(
+        t2.split("/")[1]
+      ) && isKindTag(p2)(t2.split("/")[0])
+    ).map(
+      (i) => subCatTag(
+        i.split("/")[0],
+        i.split("/")[1],
+        i.split("/")[2]
+      )
     );
+    const tags = /* @__PURE__ */ new Set([...kinded, ...kindedSubcat]);
     const missing = [];
-    const pages = Array.from(tags).map(
-      (t2) => {
-        const [kind, cat, subcat] = t2.split("/");
-        const pgs = p2.dv.pages(`${kind}/subcategory/${cat}/${subcat}`);
-        if (pgs.length > 0) {
-          return [t2, pgs[0]];
-        } else {
-          missing.push(`${t2} on page "${page.file.path}"`);
-          return void 0;
-        }
+    const pages = Array.from(tags).map((t2) => {
+      const [kind, cat, subcat] = t2.split("/");
+      const pgs = p2.dv.pages(
+        `${kind}/subcategory/${cat}/${subcat}`
+      );
+      if (pgs.length > 0) {
+        return [t2, pgs[0]];
+      } else {
+        missing.push(`${t2} on page "${page.file.path}"`);
+        return void 0;
       }
-    ).filter((i) => i);
+    }).filter((i) => i);
     if (missing.length > 0) {
-      p2.warn("Some subcategory tags didn't not map to a page", missing);
+      p2.warn(
+        "Some subcategory tags didn't not map to a page",
+        missing
+      );
     }
-    return pages.map(
-      ([t2, pg2]) => {
-        const parts = t2.split("/");
-        return {
-          kind: stripLeading(parts[0], "#"),
-          page: pg2,
-          category: parts[1],
-          subcategory: parts[2],
-          kindedTag: ensureLeading(t2, "#"),
-          defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${parts[2]}`
-        };
-      }
-    );
+    return pages.map(([t2, pg2]) => {
+      const parts = t2.split("/");
+      return {
+        kind: stripLeading(parts[0], "#"),
+        page: pg2,
+        category: parts[1],
+        subcategory: parts[2],
+        kindedTag: ensureLeading(t2, "#"),
+        defnTag: `${ensureLeading(parts[0], "#")}/subcategories/${parts[1]}/${parts[2]}`
+      };
+    });
   }
   return [];
 };
@@ -21846,17 +22083,13 @@ const getKindTagsOfPage = (p2) => (pg) => {
     const kinded = page.file.etags.filter(
       (t2) => isKindTag(p2)(t2.split("/")[0]) && !["category", "subcategory"].includes(t2.split("/")[1])
     ).map((i) => i.split("/")[0]);
-    const kindDefn = page.file.etags.filter(
-      (t2) => t2.startsWith("#kind/")
-    ).map((i) => i.split("/")[1]);
-    const tags = /* @__PURE__ */ new Set(
-      [
-        ...kinded,
-        ...kindedCat,
-        ...kindedSubcat,
-        ...kindDefn
-      ]
-    );
+    const kindDefn = page.file.etags.filter((t2) => t2.startsWith("#kind/")).map((i) => i.split("/")[1]);
+    const tags = /* @__PURE__ */ new Set([
+      ...kinded,
+      ...kindedCat,
+      ...kindedSubcat,
+      ...kindDefn
+    ]);
     return Array.from(tags).map((i) => stripLeading(i, "#"));
   }
   return [];
@@ -21889,6 +22122,30 @@ const getMetadata = (p2) => (pg) => {
     meta.hasUrls = () => {
       return Object.keys(meta).includes("url") || Object.keys(meta).includes("url_social") || Object.keys(meta).includes("url_book") || Object.keys(meta).includes("url_retail") || Object.keys(meta).includes("url_profile") || Object.keys(meta).includes("url_repo") || Object.keys(meta).includes("url_news") || Object.keys(meta).includes("url_youtube");
     };
+    meta.getFirstDateFrom = (...props) => {
+      const sources = [
+        ...meta["date"] || [],
+        ...meta["list_date"] || [],
+        ...meta["datetime"] || [],
+        ...meta["list_datetime"] || []
+      ];
+      const targets = props.filter((i) => sources.includes(i));
+      let found = void 0;
+      let idx = 0;
+      while (idx <= targets.length || isIsoExplicitDate(found)) {
+        const prop = targets[idx];
+        if (isStringArray(prop)) {
+          const candidate = prop.find(
+            (i) => isIsoDate(i) || isIsoDateTime(i)
+          );
+          if (candidate) {
+            found = asExplicitIso8601Date(candidate);
+          }
+        }
+        idx++;
+      }
+      return found;
+    };
     meta.hasGeoInfo = () => {
       return Object.keys(meta).includes("geo") || Object.keys(meta).includes("geo_country") || Object.keys(meta).includes("geo_zip") || Object.keys(meta).includes("geo_state") || Object.keys(meta).includes("geo_city");
     };
@@ -21902,10 +22159,9 @@ const getMetadata = (p2) => (pg) => {
       const listLinks = (meta["list_url_youtube"] || []).flatMap(
         (i) => meta[i]
       );
-      const links = [
-        ...unitLinks,
-        ...listLinks
-      ].filter((i) => isYouTubeVideoUrl(i));
+      const links = [...unitLinks, ...listLinks].filter(
+        (i) => isYouTubeVideoUrl(i)
+      );
       return links;
     };
     return meta;
@@ -21930,33 +22186,48 @@ const getClassification = (p2) => (pg, cats, subCats) => {
         classification2.push({
           kind: kp,
           kindTag: tag,
-          categories: pgCats.filter((c) => c.kind === stripLeading(tag, "#")),
-          subcategory: pgSubCats.find((c) => c.kind === stripLeading(tag, "#"))
+          categories: pgCats.filter(
+            (c) => c.kind === stripLeading(tag, "#")
+          ),
+          subcategory: pgSubCats.find(
+            (c) => c.kind === stripLeading(tag, "#")
+          )
         });
       } else {
         const defn = p2.dv.pages(`#kind/${tag}`);
         if (defn.length > 0) {
-          p2.debug(`tag lookup of ${tag} failed but found kind definition with dataview query`);
+          p2.debug(
+            `tag lookup of ${tag} failed but found kind definition with dataview query`
+          );
           const kindPage = Array.from(defn)[0];
-          if (kindPage && kindPage.file.etags.some((i) => i.startsWith("#kind/"))) {
+          if (kindPage && kindPage.file.etags.some(
+            (i) => i.startsWith("#kind/")
+          )) {
             classification2.push({
               kind: kindPage,
               kindTag: tag,
-              categories: pgCats.filter((c) => c.kind === stripLeading(tag, "#")),
-              subcategory: pgSubCats.find((c) => c.kind === stripLeading(tag, "#"))
+              categories: pgCats.filter(
+                (c) => c.kind === stripLeading(tag, "#")
+              ),
+              subcategory: pgSubCats.find(
+                (c) => c.kind === stripLeading(tag, "#")
+              )
             });
             return classification2;
           }
         }
-        p2.warn(`no 'kind' could be identified for the page ${page.file.path}`, {
-          categories: pgCats,
-          subcategories: pgSubCats,
-          etags: Array.from(page.file.etags),
-          kindTags,
-          tag,
-          kd,
-          kp
-        });
+        p2.warn(
+          `no 'kind' could be identified for the page ${page.file.path}`,
+          {
+            categories: pgCats,
+            subcategories: pgSubCats,
+            etags: Array.from(page.file.etags),
+            kindTags,
+            tag,
+            kd,
+            kp
+          }
+        );
       }
     }
   }
@@ -71049,7 +71320,7 @@ function validateLabel(label, {
     }
   }
   if (checkJoiners) {
-    let last2 = 0;
+    let last = 0;
     for (const [i, ch] of codePoints.entries()) {
       if (ch === "‌" || ch === "‍") {
         if (i > 0) {
@@ -71058,9 +71329,9 @@ function validateLabel(label, {
           }
           if (ch === "‌") {
             const next = codePoints.indexOf("‌", i + 1);
-            const test = next < 0 ? codePoints.slice(last2) : codePoints.slice(last2, next);
+            const test = next < 0 ? codePoints.slice(last) : codePoints.slice(last, next);
             if (regexes.validZWNJ.test(test.join(""))) {
-              last2 = i + 1;
+              last = i + 1;
               continue;
             }
           }
@@ -71645,11 +71916,11 @@ var percentEncoding$1 = {
       }
       parts.pop();
     }
-    const last2 = parts[parts.length - 1];
-    if (parseIPv4Number(last2) !== failure) {
+    const last = parts[parts.length - 1];
+    if (parseIPv4Number(last) !== failure) {
       return true;
     }
-    if (/^[0-9]+$/u.test(last2)) {
+    if (/^[0-9]+$/u.test(last)) {
       return true;
     }
     return false;
@@ -72429,15 +72700,15 @@ function requireUrlencoded() {
   }
   function strictlySplitByteSequence(buf, cp) {
     const list2 = [];
-    let last2 = 0;
+    let last = 0;
     let i = buf.indexOf(cp);
     while (i >= 0) {
-      list2.push(buf.slice(last2, i));
-      last2 = i + 1;
-      i = buf.indexOf(cp, last2);
+      list2.push(buf.slice(last, i));
+      last = i + 1;
+      i = buf.indexOf(cp, last);
     }
-    if (last2 !== buf.length) {
-      list2.push(buf.slice(last2));
+    if (last !== buf.length) {
+      list2.push(buf.slice(last));
     }
     return list2;
   }
@@ -73104,10 +73375,10 @@ function requireURLImpl() {
     get href() {
       return usm.serializeURL(this._url);
     }
-    set href(v) {
-      const parsedURL = usm.basicURLParse(v);
+    set href(v2) {
+      const parsedURL = usm.basicURLParse(v2);
       if (parsedURL === null) {
-        throw new TypeError(`Invalid URL: ${v}`);
+        throw new TypeError(`Invalid URL: ${v2}`);
       }
       this._url = parsedURL;
       this._query._list.splice(0);
@@ -73122,26 +73393,26 @@ function requireURLImpl() {
     get protocol() {
       return `${this._url.scheme}:`;
     }
-    set protocol(v) {
-      usm.basicURLParse(`${v}:`, { url: this._url, stateOverride: "scheme start" });
+    set protocol(v2) {
+      usm.basicURLParse(`${v2}:`, { url: this._url, stateOverride: "scheme start" });
     }
     get username() {
       return this._url.username;
     }
-    set username(v) {
+    set username(v2) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      usm.setTheUsername(this._url, v);
+      usm.setTheUsername(this._url, v2);
     }
     get password() {
       return this._url.password;
     }
-    set password(v) {
+    set password(v2) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      usm.setThePassword(this._url, v);
+      usm.setThePassword(this._url, v2);
     }
     get host() {
       const url = this._url;
@@ -73153,11 +73424,11 @@ function requireURLImpl() {
       }
       return `${usm.serializeHost(url.host)}:${usm.serializeInteger(url.port)}`;
     }
-    set host(v) {
+    set host(v2) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
-      usm.basicURLParse(v, { url: this._url, stateOverride: "host" });
+      usm.basicURLParse(v2, { url: this._url, stateOverride: "host" });
     }
     get hostname() {
       if (this._url.host === null) {
@@ -73165,11 +73436,11 @@ function requireURLImpl() {
       }
       return usm.serializeHost(this._url.host);
     }
-    set hostname(v) {
+    set hostname(v2) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
-      usm.basicURLParse(v, { url: this._url, stateOverride: "hostname" });
+      usm.basicURLParse(v2, { url: this._url, stateOverride: "hostname" });
     }
     get port() {
       if (this._url.port === null) {
@@ -73177,25 +73448,25 @@ function requireURLImpl() {
       }
       return usm.serializeInteger(this._url.port);
     }
-    set port(v) {
+    set port(v2) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      if (v === "") {
+      if (v2 === "") {
         this._url.port = null;
       } else {
-        usm.basicURLParse(v, { url: this._url, stateOverride: "port" });
+        usm.basicURLParse(v2, { url: this._url, stateOverride: "port" });
       }
     }
     get pathname() {
       return usm.serializePath(this._url);
     }
-    set pathname(v) {
+    set pathname(v2) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
       this._url.path = [];
-      usm.basicURLParse(v, { url: this._url, stateOverride: "path start" });
+      usm.basicURLParse(v2, { url: this._url, stateOverride: "path start" });
     }
     get search() {
       if (this._url.query === null || this._url.query === "") {
@@ -73203,15 +73474,15 @@ function requireURLImpl() {
       }
       return `?${this._url.query}`;
     }
-    set search(v) {
+    set search(v2) {
       const url = this._url;
-      if (v === "") {
+      if (v2 === "") {
         url.query = null;
         this._query._list = [];
         this._potentiallyStripTrailingSpacesFromAnOpaquePath();
         return;
       }
-      const input = v[0] === "?" ? v.substring(1) : v;
+      const input = v2[0] === "?" ? v2.substring(1) : v2;
       url.query = "";
       usm.basicURLParse(input, { url, stateOverride: "query" });
       this._query._list = urlencoded2.parseUrlencodedString(input);
@@ -73225,13 +73496,13 @@ function requireURLImpl() {
       }
       return `#${this._url.fragment}`;
     }
-    set hash(v) {
-      if (v === "") {
+    set hash(v2) {
+      if (v2 === "") {
         this._url.fragment = null;
         this._potentiallyStripTrailingSpacesFromAnOpaquePath();
         return;
       }
-      const input = v[0] === "#" ? v.substring(1) : v;
+      const input = v2[0] === "#" ? v2.substring(1) : v2;
       this._url.fragment = "";
       usm.basicURLParse(input, { url: this._url, stateOverride: "fragment" });
     }
@@ -93758,7 +94029,7 @@ class ValidityState {
   }
 }
 const NEW_LINES_REGEXP = /[\n\r]/gm;
-const parseInts = (a) => a.map((v) => parseInt(v, 10));
+const parseInts = (a) => a.map((v2) => parseInt(v2, 10));
 class HTMLInputElementValueSanitizer {
   /**
    * Sanitizes a value.
@@ -101224,22 +101495,22 @@ class Base64 {
     let p2 = -6;
     let a = 0;
     let i = 0;
-    let v = 0;
+    let v2 = 0;
     let c;
     while (i < str.length || p2 > -6) {
       if (p2 < 0) {
         if (i < str.length) {
           c = str.charCodeAt(i++);
-          v += 8;
+          v2 += 8;
         } else {
           c = 0;
         }
         a = (a & 255) << 8 | c & 255;
         p2 += 8;
       }
-      t2 += BASE64_CHARS.charAt(v > 0 ? a >> p2 & 63 : 64);
+      t2 += BASE64_CHARS.charAt(v2 > 0 ? a >> p2 & 63 : 64);
       p2 -= 6;
-      v -= 6;
+      v2 -= 6;
     }
     return t2;
   }
@@ -102073,8 +102344,8 @@ class HTMLButtonElement extends HTMLElement$1 {
    *
    * @param v Type
    */
-  set type(v) {
-    this.setAttribute("type", __classPrivateFieldGet$6(this, _HTMLButtonElement_instances, "m", _HTMLButtonElement_sanitizeType).call(this, v));
+  set type(v2) {
+    this.setAttribute("type", __classPrivateFieldGet$6(this, _HTMLButtonElement_instances, "m", _HTMLButtonElement_sanitizeType).call(this, v2));
   }
   /**
    * Returns form action.
@@ -106993,25 +107264,131 @@ const Kind = createHandler("Kind").scalar(
     if (pages.length > 0) {
       table3(
         [
-          "Category",
+          "Page",
+          !page.isCategoryPage ? "Category" : void 0,
           "Subcategory",
           "Desc",
           "Links"
-        ],
+        ].filter((i) => i),
         pages.sort((p22) => p22.file.mday).map((p22) => {
           const pg = isDvPage(p22) ? p22 : page.page(p22);
           return [
             createFileLink2(pg),
-            showCategories2(pg, { currentPage: page }),
+            !page.isCategoryPage ? showCategories2(pg, { currentPage: page }) : void 0,
             showSubcategories2(pg),
             showDesc2(pg),
             showLinks2(pg)
-          ];
+          ].filter((i) => i);
         })
       );
     } else {
       const msg2 = subcategory ? fmt.as_tag(`${kind}/${category}/${subcategory}`) : category ? fmt.as_tag(`${kind}/${category}`) : `${fmt.as_tag(kind)}`;
       page.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
+    }
+  }
+});
+const Journal = createHandler("Journal").scalar().options({
+  thisYearFormat: "string",
+  otherYearFormat: "string",
+  fileFormat: "string"
+}).handler(async (evt) => {
+  const p2 = evt.plugin;
+  const page = evt.page;
+  if (page) {
+    let when = getWhenDate(p2)(page);
+    if (when) {
+      const format2 = evt.options.fileFormat || "journal/YYYY/YYYY-MM-DD";
+      const prev = htmlLink(p2)(
+        journalFile(format2, priorDay(when)),
+        {
+          createPageWhereMissing: true,
+          display: describeDate(when, -1)
+        }
+      );
+      const next = htmlLink(p2)(
+        journalFile(format2, nextDay(when)),
+        {
+          createPageWhereMissing: true,
+          display: describeDate(when, 1)
+        }
+      );
+      const holidays = p2.dv.pages(
+        `#holiday/${getMonth(when)}-${getDate(when)} OR #day/${getMonth(when)}-${getDate(when)}`
+      ).where((p22) => p22.file.tags.includes("#holiday"));
+      const holiday = holidays.values.map(
+        (h) => h.file.name
+      ).join(" / ");
+      p2.info("journal", holidays.length, holidays);
+      p2.info("journal", holidays.length, holidays, holiday);
+      let events = Array.from(p2.dv.pages(
+        [
+          `#event/${getMonth(when)}-${getDate(when)} `,
+          `#event/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+          `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+          `#day/${getMonth(when)}-${getDate(when)}`
+        ].join(" OR ")
+      ).where((p22) => p22.file.tags.includes("#event")).map(
+        (e2) => {
+          return `<li>${htmlLink(p2)(e2.file.path)}</li>`;
+        }
+      )).join("\n");
+      let meetings = Array.from(p2.dv.pages(
+        [
+          `#meeting/${getMonth(when)}-${getDate(when)} `,
+          `#meeting/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+          `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+          `#day/${getMonth(when)}-${getDate(when)}`
+        ].join(" OR ")
+      ).where((p22) => p22.file.tags.includes("#meeting")).map(
+        (e2) => {
+          return `<li>${htmlLink(p2)(e2.file.path)}</li>`;
+        }
+      )).join("\n");
+      const heading2 = [
+        `<div id="journal-heading" style="width:100%">`,
+        `<h1 id="day-and-date" style="margin-bottom: 4px">`,
+        CALENDAR_DATE,
+        isThisYear(when) ? moment(when).format("ddd, MMMM Do") : moment(when).format("ddd, MMM Do, YYYY"),
+        `</h1>`,
+        `<div class="secondary-bar" style="display: flex; width: 100%; padding-bottom: 1rem;">`,
+        `<span class="relative-date" style="flex-grow: 1">${holiday ? `${holiday},` : ""}`,
+        isToday(when) || isYesterday(when) || isTomorrow(when) ? badge(
+          retainUntil(
+            moment(when).calendar(),
+            ...WHITESPACE_CHARS
+          ),
+          isToday(when) ? "green" : isYesterday(when) ? "gray" : "blue"
+        ) : light(italic(moment(when).fromNow())),
+        `</span>`,
+        `<span id="date-nav" style="display: flex; ">`,
+        `<span class="spacer" style="display: flex; flex-grow: 1"> </span>`,
+        `<span class="nav-buttons" style="display:flex; flex-grow: 0">`,
+        prev,
+        "&nbsp;▫️&nbsp;",
+        next,
+        `</span>`,
+        `</span>`,
+        `</div>`,
+        events.length > 0 ? [
+          `<h3 id="journal-events">Events</h3>`,
+          `<ul>`,
+          events,
+          `</ul>`
+        ].join("\n") : `<!-- no events -->`,
+        meetings.length > 0 ? [
+          `<h3 id="journal-meetings">Meetings</h3>`,
+          `<ul>`,
+          meetings,
+          `</ul>`
+        ].join("\n") : `<!-- no events -->`
+      ].join("\n");
+      page.render(heading2);
+    } else {
+      page.render(
+        blockquote("error", "Invalid Date", {
+          content: `The ${bold("Journal")} kind query expects the "when" or "date" frontmatter property to be set with a valid ISO 8601 date string; or as a fallback that the title/name of the page lead with an ISO 8601 date.`
+        })
+      );
     }
   }
 });
@@ -107172,12 +107549,12 @@ const VideoGallery = createHandler("VideoGallery").scalar().options({ size: "opt
   const grid_cols = size == "L" ? 2 : size == "M" ? 3 : size == "S" ? 4 : 5;
   const dom = [
     `<div class="video-gallery" style="display: grid; grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr)); gap: 8px;">`,
-    ...videos.map((v) => {
-      const src = youtubeEmbed(v.url);
+    ...videos.map((v2) => {
+      const src = youtubeEmbed(v2.url);
       const node2 = [
         `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
         `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
-        `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
+        `<a data-tooltip-position="top" aria-label="${v2.filepath}" data-href="${v2.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v2.filepath}" style="">${v2.title}</a>`,
         `</div>`
       ].join("\n");
       return node2;
@@ -107266,6 +107643,7 @@ const queryHandlers = (p2) => (ctx) => [
   Kind(p2)(ctx),
   PageEntry(p2)(ctx),
   Page(p2)(ctx),
+  Journal(p2)(ctx),
   VideoGallery(p2)(ctx),
   Subcategories(p2)(ctx)
 ];
@@ -107574,6 +107952,9 @@ const EventHandler = (plugin4) => ({
 class TextInputModal extends Modal {
   constructor(app2, title, defaultValue, resolve3) {
     super(app2);
+    __publicField(this, "title");
+    __publicField(this, "defaultValue");
+    __publicField(this, "resolve");
     this.title = title;
     this.defaultValue = defaultValue;
     this.resolve = resolve3;
@@ -107617,8 +107998,8 @@ class TextInputModal extends Modal {
 }
 const create_new_kinded_page = (p2) => async (editor, view) => {
   let value2;
-  const modal = new TextInputModal(p2.app, "Filename", "", (v) => {
-    value2 = v;
+  const modal = new TextInputModal(p2.app, "Filename", "", (v2) => {
+    value2 = v2;
   });
   const fileName = await modal.open();
   console.log("value", value2, fileName);
@@ -107691,55 +108072,41 @@ const update_kinded_page = (p2) => async (editor, view) => {
     }
   }
 };
-const t = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 48, 8, 96, 3, 127, 127, 127, 0, 96, 3, 127, 127, 127, 1, 127, 96, 2, 127, 127, 0, 96, 2, 127, 126, 0, 96, 1, 127, 1, 127, 96, 1, 127, 1, 126, 96, 3, 127, 127, 126, 1, 126, 96, 3, 126, 127, 127, 1, 126, 3, 11, 10, 1, 1, 2, 0, 4, 6, 7, 3, 0, 5, 5, 3, 1, 0, 1, 7, 85, 9, 3, 109, 101, 109, 2, 0, 5, 120, 120, 104, 51, 50, 0, 0, 6, 105, 110, 105, 116, 51, 50, 0, 2, 8, 117, 112, 100, 97, 116, 101, 51, 50, 0, 3, 8, 100, 105, 103, 101, 115, 116, 51, 50, 0, 4, 5, 120, 120, 104, 54, 52, 0, 5, 6, 105, 110, 105, 116, 54, 52, 0, 7, 8, 117, 112, 100, 97, 116, 101, 54, 52, 0, 8, 8, 100, 105, 103, 101, 115, 116, 54, 52, 0, 9, 10, 211, 23, 10, 242, 1, 1, 4, 127, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 16, 79, 4, 127, 32, 3, 65, 16, 107, 33, 6, 32, 2, 65, 168, 136, 141, 161, 2, 106, 33, 3, 32, 2, 65, 247, 148, 175, 175, 120, 106, 33, 4, 32, 2, 65, 177, 243, 221, 241, 121, 107, 33, 5, 3, 64, 32, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 5, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 0, 65, 4, 106, 34, 0, 32, 6, 77, 13, 0, 11, 32, 2, 65, 12, 119, 32, 5, 65, 18, 119, 106, 32, 4, 65, 7, 119, 106, 32, 3, 65, 1, 119, 106, 5, 32, 2, 65, 177, 207, 217, 178, 1, 106, 11, 32, 1, 106, 32, 0, 32, 1, 65, 15, 113, 16, 1, 11, 146, 1, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 4, 106, 32, 2, 75, 69, 4, 64, 32, 1, 40, 2, 0, 65, 189, 220, 202, 149, 124, 108, 32, 0, 106, 65, 17, 119, 65, 175, 214, 211, 190, 2, 108, 33, 0, 32, 1, 65, 4, 106, 33, 1, 12, 1, 11, 11, 3, 64, 32, 1, 32, 2, 79, 69, 4, 64, 32, 1, 45, 0, 0, 65, 177, 207, 217, 178, 1, 108, 32, 0, 106, 65, 11, 119, 65, 177, 243, 221, 241, 121, 108, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 65, 15, 118, 32, 0, 115, 65, 247, 148, 175, 175, 120, 108, 34, 0, 32, 0, 65, 13, 118, 115, 65, 189, 220, 202, 149, 124, 108, 34, 0, 32, 0, 65, 16, 118, 115, 11, 63, 0, 32, 0, 65, 8, 106, 32, 1, 65, 168, 136, 141, 161, 2, 106, 54, 2, 0, 32, 0, 65, 12, 106, 32, 1, 65, 247, 148, 175, 175, 120, 106, 54, 2, 0, 32, 0, 65, 16, 106, 32, 1, 54, 2, 0, 32, 0, 65, 20, 106, 32, 1, 65, 177, 243, 221, 241, 121, 107, 54, 2, 0, 11, 211, 4, 1, 6, 127, 32, 1, 32, 2, 106, 33, 6, 32, 0, 65, 24, 106, 33, 5, 32, 0, 65, 40, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 40, 2, 0, 32, 2, 106, 54, 2, 0, 32, 0, 65, 4, 106, 34, 4, 32, 4, 40, 2, 0, 32, 2, 65, 16, 79, 32, 0, 40, 2, 0, 65, 16, 79, 114, 114, 54, 2, 0, 32, 2, 32, 3, 106, 65, 16, 73, 4, 64, 32, 3, 32, 5, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 5, 106, 32, 1, 65, 16, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 40, 2, 0, 32, 5, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 12, 106, 34, 3, 40, 2, 0, 32, 5, 65, 4, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 16, 106, 34, 3, 40, 2, 0, 32, 5, 65, 8, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 34, 3, 40, 2, 0, 32, 5, 65, 12, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 3, 32, 4, 54, 2, 0, 32, 0, 65, 40, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 32, 6, 65, 16, 107, 77, 4, 64, 32, 6, 65, 16, 107, 33, 8, 32, 0, 65, 8, 106, 40, 2, 0, 33, 2, 32, 0, 65, 12, 106, 40, 2, 0, 33, 3, 32, 0, 65, 16, 106, 40, 2, 0, 33, 4, 32, 0, 65, 20, 106, 40, 2, 0, 33, 7, 3, 64, 32, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 2, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 3, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 4, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 32, 7, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 7, 32, 1, 65, 4, 106, 34, 1, 32, 8, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 2, 54, 2, 0, 32, 0, 65, 12, 106, 32, 3, 54, 2, 0, 32, 0, 65, 16, 106, 32, 4, 54, 2, 0, 32, 0, 65, 20, 106, 32, 7, 54, 2, 0, 11, 32, 1, 32, 6, 73, 4, 64, 32, 5, 32, 1, 32, 6, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 1, 54, 2, 0, 11, 11, 97, 1, 1, 127, 32, 0, 65, 16, 106, 40, 2, 0, 33, 1, 32, 0, 65, 4, 106, 40, 2, 0, 4, 127, 32, 1, 65, 12, 119, 32, 0, 65, 20, 106, 40, 2, 0, 65, 18, 119, 106, 32, 0, 65, 12, 106, 40, 2, 0, 65, 7, 119, 106, 32, 0, 65, 8, 106, 40, 2, 0, 65, 1, 119, 106, 5, 32, 1, 65, 177, 207, 217, 178, 1, 106, 11, 32, 0, 40, 2, 0, 106, 32, 0, 65, 24, 106, 32, 0, 65, 40, 106, 40, 2, 0, 16, 1, 11, 157, 4, 2, 1, 127, 3, 126, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 32, 79, 4, 126, 32, 3, 65, 32, 107, 33, 3, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 4, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 33, 5, 32, 2, 66, 0, 124, 33, 6, 32, 2, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 33, 2, 3, 64, 32, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 4, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 4, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 5, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 5, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 2, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 2, 32, 0, 65, 8, 106, 34, 0, 32, 3, 77, 13, 0, 11, 32, 6, 66, 12, 137, 32, 2, 66, 18, 137, 124, 32, 5, 66, 7, 137, 124, 32, 4, 66, 1, 137, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 6, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 2, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 1, 173, 124, 32, 0, 32, 1, 65, 31, 113, 16, 6, 11, 137, 2, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 8, 106, 32, 2, 77, 4, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 27, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 33, 0, 32, 1, 65, 8, 106, 33, 1, 12, 1, 11, 11, 32, 1, 65, 4, 106, 32, 2, 77, 4, 64, 32, 1, 53, 2, 0, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 23, 137, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 124, 33, 0, 32, 1, 65, 4, 106, 33, 1, 11, 3, 64, 32, 1, 32, 2, 73, 4, 64, 32, 1, 49, 0, 0, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 126, 32, 0, 133, 66, 11, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 66, 33, 136, 32, 0, 133, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 34, 0, 32, 0, 66, 29, 136, 133, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 126, 34, 0, 32, 0, 66, 32, 136, 133, 11, 88, 0, 32, 0, 65, 8, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 124, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 16, 106, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 124, 55, 3, 0, 32, 0, 65, 24, 106, 32, 1, 55, 3, 0, 32, 0, 65, 32, 106, 32, 1, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 125, 55, 3, 0, 11, 132, 5, 2, 3, 127, 4, 126, 32, 1, 32, 2, 106, 33, 5, 32, 0, 65, 40, 106, 33, 4, 32, 0, 65, 200, 0, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 41, 3, 0, 32, 2, 173, 124, 55, 3, 0, 32, 2, 32, 3, 106, 65, 32, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 32, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 41, 3, 0, 32, 4, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 34, 3, 41, 3, 0, 32, 4, 65, 8, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 24, 106, 34, 3, 41, 3, 0, 32, 4, 65, 16, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 32, 106, 34, 3, 41, 3, 0, 32, 4, 65, 24, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 3, 32, 6, 55, 3, 0, 32, 0, 65, 200, 0, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 65, 32, 106, 32, 5, 77, 4, 64, 32, 5, 65, 32, 107, 33, 2, 32, 0, 65, 8, 106, 41, 3, 0, 33, 6, 32, 0, 65, 16, 106, 41, 3, 0, 33, 7, 32, 0, 65, 24, 106, 41, 3, 0, 33, 8, 32, 0, 65, 32, 106, 41, 3, 0, 33, 9, 3, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 6, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 7, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 7, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 8, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 8, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 32, 9, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 9, 32, 1, 65, 8, 106, 34, 1, 32, 2, 77, 13, 0, 11, 32, 0, 65, 8, 106, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 32, 7, 55, 3, 0, 32, 0, 65, 24, 106, 32, 8, 55, 3, 0, 32, 0, 65, 32, 106, 32, 9, 55, 3, 0, 11, 32, 1, 32, 5, 73, 4, 64, 32, 4, 32, 1, 32, 5, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 1, 54, 2, 0, 11, 11, 200, 2, 1, 5, 126, 32, 0, 65, 24, 106, 41, 3, 0, 33, 1, 32, 0, 41, 3, 0, 34, 2, 66, 32, 90, 4, 126, 32, 0, 65, 8, 106, 41, 3, 0, 34, 3, 66, 1, 137, 32, 0, 65, 16, 106, 41, 3, 0, 34, 4, 66, 7, 137, 124, 32, 1, 66, 12, 137, 32, 0, 65, 32, 106, 41, 3, 0, 34, 5, 66, 18, 137, 124, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 0, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 227, 220, 202, 149, 252, 206, 242, 245, 133, 127, 124, 5, 32, 1, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 2, 124, 32, 0, 65, 40, 106, 32, 2, 66, 31, 131, 167, 16, 6, 11]);
+const t = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 48, 8, 96, 3, 127, 127, 127, 1, 127, 96, 3, 127, 127, 127, 0, 96, 2, 127, 127, 0, 96, 1, 127, 1, 127, 96, 3, 127, 127, 126, 1, 126, 96, 3, 126, 127, 127, 1, 126, 96, 2, 127, 126, 0, 96, 1, 127, 1, 126, 3, 11, 10, 0, 0, 2, 1, 3, 4, 5, 6, 1, 7, 5, 3, 1, 0, 1, 7, 85, 9, 3, 109, 101, 109, 2, 0, 5, 120, 120, 104, 51, 50, 0, 0, 6, 105, 110, 105, 116, 51, 50, 0, 2, 8, 117, 112, 100, 97, 116, 101, 51, 50, 0, 3, 8, 100, 105, 103, 101, 115, 116, 51, 50, 0, 4, 5, 120, 120, 104, 54, 52, 0, 5, 6, 105, 110, 105, 116, 54, 52, 0, 7, 8, 117, 112, 100, 97, 116, 101, 54, 52, 0, 8, 8, 100, 105, 103, 101, 115, 116, 54, 52, 0, 9, 10, 251, 22, 10, 242, 1, 1, 4, 127, 32, 0, 32, 1, 106, 33, 3, 32, 1, 65, 16, 79, 4, 127, 32, 3, 65, 16, 107, 33, 6, 32, 2, 65, 168, 136, 141, 161, 2, 106, 33, 3, 32, 2, 65, 137, 235, 208, 208, 7, 107, 33, 4, 32, 2, 65, 207, 140, 162, 142, 6, 106, 33, 5, 3, 64, 32, 3, 32, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 4, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 4, 32, 2, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 5, 32, 0, 65, 4, 106, 34, 0, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 6, 32, 0, 65, 4, 106, 34, 0, 79, 13, 0, 11, 32, 2, 65, 12, 119, 32, 5, 65, 18, 119, 106, 32, 4, 65, 7, 119, 106, 32, 3, 65, 1, 119, 106, 5, 32, 2, 65, 177, 207, 217, 178, 1, 106, 11, 32, 1, 106, 32, 0, 32, 1, 65, 15, 113, 16, 1, 11, 146, 1, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 1, 65, 4, 106, 32, 2, 75, 69, 4, 64, 32, 0, 32, 1, 40, 2, 0, 65, 189, 220, 202, 149, 124, 108, 106, 65, 17, 119, 65, 175, 214, 211, 190, 2, 108, 33, 0, 32, 1, 65, 4, 106, 33, 1, 12, 1, 11, 11, 3, 64, 32, 1, 32, 2, 79, 69, 4, 64, 32, 0, 32, 1, 45, 0, 0, 65, 177, 207, 217, 178, 1, 108, 106, 65, 11, 119, 65, 177, 243, 221, 241, 121, 108, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 32, 0, 65, 15, 118, 115, 65, 247, 148, 175, 175, 120, 108, 34, 0, 65, 13, 118, 32, 0, 115, 65, 189, 220, 202, 149, 124, 108, 34, 0, 65, 16, 118, 32, 0, 115, 11, 63, 0, 32, 0, 65, 8, 106, 32, 1, 65, 168, 136, 141, 161, 2, 106, 54, 2, 0, 32, 0, 65, 12, 106, 32, 1, 65, 137, 235, 208, 208, 7, 107, 54, 2, 0, 32, 0, 65, 16, 106, 32, 1, 54, 2, 0, 32, 0, 65, 20, 106, 32, 1, 65, 207, 140, 162, 142, 6, 106, 54, 2, 0, 11, 195, 4, 1, 6, 127, 32, 1, 32, 2, 106, 33, 6, 32, 0, 65, 24, 106, 33, 4, 32, 0, 65, 40, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 40, 2, 0, 32, 2, 106, 54, 2, 0, 32, 0, 65, 4, 106, 34, 5, 32, 5, 40, 2, 0, 32, 2, 65, 16, 79, 32, 0, 40, 2, 0, 65, 16, 79, 114, 114, 54, 2, 0, 32, 2, 32, 3, 106, 65, 16, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 16, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 32, 3, 40, 2, 0, 32, 4, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 54, 2, 0, 32, 0, 65, 12, 106, 34, 3, 32, 3, 40, 2, 0, 32, 4, 65, 4, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 54, 2, 0, 32, 0, 65, 16, 106, 34, 3, 32, 3, 40, 2, 0, 32, 4, 65, 8, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 54, 2, 0, 32, 0, 65, 20, 106, 34, 3, 32, 3, 40, 2, 0, 32, 4, 65, 12, 106, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 54, 2, 0, 32, 0, 65, 40, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 32, 6, 65, 16, 107, 77, 4, 64, 32, 6, 65, 16, 107, 33, 8, 32, 0, 65, 8, 106, 40, 2, 0, 33, 2, 32, 0, 65, 12, 106, 40, 2, 0, 33, 3, 32, 0, 65, 16, 106, 40, 2, 0, 33, 5, 32, 0, 65, 20, 106, 40, 2, 0, 33, 7, 3, 64, 32, 2, 32, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 2, 32, 3, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 3, 32, 5, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 5, 32, 7, 32, 1, 65, 4, 106, 34, 1, 40, 2, 0, 65, 247, 148, 175, 175, 120, 108, 106, 65, 13, 119, 65, 177, 243, 221, 241, 121, 108, 33, 7, 32, 8, 32, 1, 65, 4, 106, 34, 1, 79, 13, 0, 11, 32, 0, 65, 8, 106, 32, 2, 54, 2, 0, 32, 0, 65, 12, 106, 32, 3, 54, 2, 0, 32, 0, 65, 16, 106, 32, 5, 54, 2, 0, 32, 0, 65, 20, 106, 32, 7, 54, 2, 0, 11, 32, 1, 32, 6, 73, 4, 64, 32, 4, 32, 1, 32, 6, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 40, 106, 32, 1, 54, 2, 0, 11, 11, 97, 1, 1, 127, 32, 0, 65, 16, 106, 40, 2, 0, 33, 1, 32, 0, 65, 4, 106, 40, 2, 0, 4, 127, 32, 1, 65, 12, 119, 32, 0, 65, 20, 106, 40, 2, 0, 65, 18, 119, 106, 32, 0, 65, 12, 106, 40, 2, 0, 65, 7, 119, 106, 32, 0, 65, 8, 106, 40, 2, 0, 65, 1, 119, 106, 5, 32, 1, 65, 177, 207, 217, 178, 1, 106, 11, 32, 0, 40, 2, 0, 106, 32, 0, 65, 24, 106, 32, 0, 65, 40, 106, 40, 2, 0, 16, 1, 11, 255, 3, 2, 3, 126, 1, 127, 32, 0, 32, 1, 106, 33, 6, 32, 1, 65, 32, 79, 4, 126, 32, 6, 65, 32, 107, 33, 6, 32, 2, 66, 214, 235, 130, 238, 234, 253, 137, 245, 224, 0, 124, 33, 3, 32, 2, 66, 177, 169, 172, 193, 173, 184, 212, 166, 61, 125, 33, 4, 32, 2, 66, 249, 234, 208, 208, 231, 201, 161, 228, 225, 0, 124, 33, 5, 3, 64, 32, 3, 32, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 3, 32, 4, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 4, 32, 2, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 2, 32, 5, 32, 0, 65, 8, 106, 34, 0, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 5, 32, 6, 32, 0, 65, 8, 106, 34, 0, 79, 13, 0, 11, 32, 2, 66, 12, 137, 32, 5, 66, 18, 137, 124, 32, 4, 66, 7, 137, 124, 32, 3, 66, 1, 137, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 2, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 5, 32, 2, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 1, 173, 124, 32, 0, 32, 1, 65, 31, 113, 16, 6, 11, 134, 2, 0, 32, 1, 32, 2, 106, 33, 2, 3, 64, 32, 2, 32, 1, 65, 8, 106, 79, 4, 64, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 32, 0, 133, 66, 27, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 33, 0, 32, 1, 65, 8, 106, 33, 1, 12, 1, 11, 11, 32, 1, 65, 4, 106, 32, 2, 77, 4, 64, 32, 0, 32, 1, 53, 2, 0, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 23, 137, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 124, 33, 0, 32, 1, 65, 4, 106, 33, 1, 11, 3, 64, 32, 1, 32, 2, 73, 4, 64, 32, 0, 32, 1, 49, 0, 0, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 126, 133, 66, 11, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 0, 32, 1, 65, 1, 106, 33, 1, 12, 1, 11, 11, 32, 0, 32, 0, 66, 33, 136, 133, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 34, 0, 32, 0, 66, 29, 136, 133, 66, 249, 243, 221, 241, 153, 246, 153, 171, 22, 126, 34, 0, 32, 0, 66, 32, 136, 133, 11, 77, 0, 32, 0, 65, 8, 106, 32, 1, 66, 214, 235, 130, 238, 234, 253, 137, 245, 224, 0, 124, 55, 3, 0, 32, 0, 65, 16, 106, 32, 1, 66, 177, 169, 172, 193, 173, 184, 212, 166, 61, 125, 55, 3, 0, 32, 0, 65, 24, 106, 32, 1, 55, 3, 0, 32, 0, 65, 32, 106, 32, 1, 66, 249, 234, 208, 208, 231, 201, 161, 228, 225, 0, 124, 55, 3, 0, 11, 244, 4, 2, 3, 127, 4, 126, 32, 1, 32, 2, 106, 33, 5, 32, 0, 65, 40, 106, 33, 4, 32, 0, 65, 200, 0, 106, 40, 2, 0, 33, 3, 32, 0, 32, 0, 41, 3, 0, 32, 2, 173, 124, 55, 3, 0, 32, 2, 32, 3, 106, 65, 32, 73, 4, 64, 32, 3, 32, 4, 106, 32, 1, 32, 2, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 2, 32, 3, 106, 54, 2, 0, 15, 11, 32, 3, 4, 64, 32, 3, 32, 4, 106, 32, 1, 65, 32, 32, 3, 107, 34, 2, 252, 10, 0, 0, 32, 0, 65, 8, 106, 34, 3, 32, 3, 41, 3, 0, 32, 4, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 55, 3, 0, 32, 0, 65, 16, 106, 34, 3, 32, 3, 41, 3, 0, 32, 4, 65, 8, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 55, 3, 0, 32, 0, 65, 24, 106, 34, 3, 32, 3, 41, 3, 0, 32, 4, 65, 16, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 55, 3, 0, 32, 0, 65, 32, 106, 34, 3, 32, 3, 41, 3, 0, 32, 4, 65, 24, 106, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 55, 3, 0, 32, 0, 65, 200, 0, 106, 65, 0, 54, 2, 0, 32, 1, 32, 2, 106, 33, 1, 11, 32, 1, 65, 32, 106, 32, 5, 77, 4, 64, 32, 5, 65, 32, 107, 33, 2, 32, 0, 65, 8, 106, 41, 3, 0, 33, 6, 32, 0, 65, 16, 106, 41, 3, 0, 33, 7, 32, 0, 65, 24, 106, 41, 3, 0, 33, 8, 32, 0, 65, 32, 106, 41, 3, 0, 33, 9, 3, 64, 32, 6, 32, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 6, 32, 7, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 7, 32, 8, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 8, 32, 9, 32, 1, 65, 8, 106, 34, 1, 41, 3, 0, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 124, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 33, 9, 32, 2, 32, 1, 65, 8, 106, 34, 1, 79, 13, 0, 11, 32, 0, 65, 8, 106, 32, 6, 55, 3, 0, 32, 0, 65, 16, 106, 32, 7, 55, 3, 0, 32, 0, 65, 24, 106, 32, 8, 55, 3, 0, 32, 0, 65, 32, 106, 32, 9, 55, 3, 0, 11, 32, 1, 32, 5, 73, 4, 64, 32, 4, 32, 1, 32, 5, 32, 1, 107, 34, 1, 252, 10, 0, 0, 32, 0, 65, 200, 0, 106, 32, 1, 54, 2, 0, 11, 11, 188, 2, 1, 5, 126, 32, 0, 65, 24, 106, 41, 3, 0, 33, 1, 32, 0, 41, 3, 0, 34, 2, 66, 32, 90, 4, 126, 32, 0, 65, 8, 106, 41, 3, 0, 34, 3, 66, 1, 137, 32, 0, 65, 16, 106, 41, 3, 0, 34, 4, 66, 7, 137, 124, 32, 1, 66, 12, 137, 32, 0, 65, 32, 106, 41, 3, 0, 34, 5, 66, 18, 137, 124, 124, 32, 3, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 4, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 1, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 32, 5, 66, 207, 214, 211, 190, 210, 199, 171, 217, 66, 126, 66, 31, 137, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 133, 66, 135, 149, 175, 175, 152, 182, 222, 155, 158, 127, 126, 66, 157, 163, 181, 234, 131, 177, 141, 138, 250, 0, 125, 5, 32, 1, 66, 197, 207, 217, 178, 241, 229, 186, 234, 39, 124, 11, 32, 2, 124, 32, 0, 65, 40, 106, 32, 2, 66, 31, 131, 167, 16, 6, 11]);
 async function e() {
-  const { instance: { exports: { mem: e2, xxh32: n2, xxh64: r, init32: i, update32: o, digest32: h, init64: s2, update64: u, digest64: g } } } = await WebAssembly.instantiate(t);
-  let a = new Uint8Array(e2.buffer);
-  function c(t2, n3) {
-    if (e2.buffer.byteLength < t2 + n3) {
-      const r2 = Math.ceil((t2 + n3 - e2.buffer.byteLength) / 65536);
-      e2.grow(r2), a = new Uint8Array(e2.buffer);
+  return function(t2) {
+    const { exports: { mem: e2, xxh32: n2, xxh64: r, init32: i, update32: a, digest32: o, init64: s2, update64: u, digest64: c } } = t2;
+    let h = new Uint8Array(e2.buffer);
+    function g(t3, n3) {
+      if (e2.buffer.byteLength < t3 + n3) {
+        const r2 = Math.ceil((t3 + n3 - e2.buffer.byteLength) / 65536);
+        e2.grow(r2), h = new Uint8Array(e2.buffer);
+      }
     }
-  }
-  function l2(t2, e3, n3, r2, i2, o2) {
-    c(t2);
-    const h2 = new Uint8Array(t2);
-    return a.set(h2), n3(0, e3), h2.set(a.slice(0, t2)), { update(e4) {
-      let n4;
-      return a.set(h2), "string" == typeof e4 ? (c(3 * e4.length, t2), n4 = b.encodeInto(e4, a.subarray(t2)).written) : (c(e4.byteLength, t2), a.set(e4, t2), n4 = e4.byteLength), r2(0, t2, n4), h2.set(a.slice(0, t2)), this;
-    }, digest: () => (a.set(h2), o2(i2(0))) };
-  }
-  function d(t2) {
-    return t2 >>> 0;
-  }
-  const f = 2n ** 64n - 1n;
-  function y2(t2) {
-    return t2 & f;
-  }
-  const b = new TextEncoder(), w = 0n;
-  function p2(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
-    return c(3 * t2.length, 0), d(n2(0, b.encodeInto(t2, a).written, e3));
-  }
-  function v(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
-    return c(3 * t2.length, 0), y2(r(0, b.encodeInto(t2, a).written, e3));
-  }
-  return { h32: p2, h32ToString(t2) {
-    return p2(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0).toString(16).padStart(8, "0");
-  }, h32Raw(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
-    return c(t2.byteLength, 0), a.set(t2), d(n2(0, t2.byteLength, e3));
-  }, create32() {
-    return l2(48, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, i, o, h, d);
-  }, h64: v, h64ToString(t2) {
-    return v(t2, arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w).toString(16).padStart(16, "0");
-  }, h64Raw(t2) {
-    let e3 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : w;
-    return c(t2.byteLength, 0), a.set(t2), y2(r(0, t2.byteLength, e3));
-  }, create64() {
-    return l2(88, arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : w, s2, u, g, y2);
-  } };
+    function f(t3, e3, n3, r2, i2, a2) {
+      g(t3);
+      const o2 = new Uint8Array(t3);
+      return h.set(o2), n3(0, e3), o2.set(h.subarray(0, t3)), { update(e4) {
+        let n4;
+        return h.set(o2), "string" == typeof e4 ? (g(3 * e4.length, t3), n4 = w.encodeInto(e4, h.subarray(t3)).written) : (g(e4.byteLength, t3), h.set(e4, t3), n4 = e4.byteLength), r2(0, t3, n4), o2.set(h.subarray(0, t3)), this;
+      }, digest: () => (h.set(o2), a2(i2(0))) };
+    }
+    function y2(t3) {
+      return t3 >>> 0;
+    }
+    const b = 2n ** 64n - 1n;
+    function d(t3) {
+      return t3 & b;
+    }
+    const w = new TextEncoder(), l2 = 0, p2 = 0n;
+    function x2(t3, e3 = l2) {
+      return g(3 * t3.length, 0), y2(n2(0, w.encodeInto(t3, h).written, e3));
+    }
+    function L(t3, e3 = p2) {
+      return g(3 * t3.length, 0), d(r(0, w.encodeInto(t3, h).written, e3));
+    }
+    return { h32: x2, h32ToString: (t3, e3 = l2) => x2(t3, e3).toString(16).padStart(8, "0"), h32Raw: (t3, e3 = l2) => (g(t3.byteLength, 0), h.set(t3), y2(n2(0, t3.byteLength, e3))), create32: (t3 = l2) => f(48, t3, i, a, o, y2), h64: L, h64ToString: (t3, e3 = p2) => L(t3, e3).toString(16).padStart(16, "0"), h64Raw: (t3, e3 = p2) => (g(t3.byteLength, 0), h.set(t3), d(r(0, t3.byteLength, e3))), create64: (t3 = p2) => f(88, t3, s2, u, c, d) };
+  }((await WebAssembly.instantiate(t)).instance);
 }
 const codeblockParser = (p2) => {
   let callback = async (source, el, ctx) => {
@@ -107812,17 +108179,40 @@ const on_tab_change = (p2) => {
 };
 const electron = window.require("electron");
 const { clipboard } = electron;
+const commands = [
+  "PageEntry()",
+  "Page()",
+  "BackLinks()",
+  'Kind("kind","opt:category","opt:subcategory")'
+];
 class KindSuggest extends EditorSuggest {
   constructor(app2, plugin4) {
     super(app2);
+    __publicField(this, "plugin");
     this.plugin = plugin4;
     plugin4.debug("KindSuggest instantiated");
   }
   onTrigger(cursor, editor) {
     const currentLine = editor.getLine(cursor.line);
+    const priorLine = editor.getLine(Math.max(cursor.line - 1, 0));
     const beforeCursor = currentLine.substring(0, cursor.ch);
-    const isUrl2 = ["https://", "http://"].some((i) => currentLine.startsWith(i));
-    if (isUrl2) {
+    const words = currentLine.split(/\s+/);
+    const lastWord = words.pop() || "";
+    const lastWordLoc = currentLine.indexOf(lastWord);
+    this.plugin.info(`lastWord: ${lastWord}`, isValidURL(lastWord));
+    ["https://", "http://"].some((i) => lastWord.startsWith(i));
+    if (isValidURL(lastWord)) {
+      return {
+        start: {
+          line: cursor.line,
+          ch: lastWordLoc
+        },
+        end: cursor,
+        query: currentLine
+      };
+    }
+    const completeKindQuery = priorLine.includes("km") && currentLine.length > 0 && commands.some((c) => c.startsWith(currentLine));
+    if (completeKindQuery) {
       return {
         start: {
           line: cursor.line,
@@ -107832,7 +108222,6 @@ class KindSuggest extends EditorSuggest {
         query: currentLine
       };
     }
-    console.log(`feeling triggerred(${beforeCursor})`);
     const match2 = beforeCursor.match(/\/([^\s]*)$/);
     if (match2) {
       return {
@@ -107846,10 +108235,25 @@ class KindSuggest extends EditorSuggest {
     }
     return null;
   }
-  getSuggestions(context) {
+  getSuggestions(ctx) {
     var _a2;
     let suggestions = [];
-    this.plugin.info("getting suggestions", { query: context.query });
+    this.plugin.info("getting suggestions", { query: ctx.query, isUrl: isValidURL(ctx.query.trim()) });
+    if (ctx.query.length > 0 && commands.some((i) => i.startsWith(ctx.query))) {
+      const suggestions2 = commands.filter((c) => c.startsWith(ctx.query));
+      return suggestions2;
+    }
+    if (isValidURL(ctx.query.trim())) {
+      this.plugin.info("is URL");
+      const suggestions2 = [
+        `Add the URL "${ctx.query.trim()}" as frontmatter property 🤘`,
+        `Convert to a markdown link 🔗`,
+        `Leave raw URL "as is"`
+      ];
+      return suggestions2;
+    } else {
+      this.plugin.info("not URL", ctx.query.trim());
+    }
     const file = (_a2 = this.context) == null ? void 0 : _a2.file;
     if (file) {
       const page = getPageInfo(this.plugin)(file);
@@ -107859,7 +108263,7 @@ class KindSuggest extends EditorSuggest {
       const allCommands = [
         ...page.isKindedPage || page.isCategoryPage || page.isSubcategoryPage || page.isKindDefnPage ? ["Update Kind Page 😊"] : []
       ];
-      const query2 = context.query.toLowerCase();
+      const query2 = ctx.query.toLowerCase();
       if (file) {
         const metadata = this.app.metadataCache.getFileCache(file);
         if (metadata && metadata.frontmatter) {
@@ -107889,7 +108293,7 @@ class KindSuggest extends EditorSuggest {
   }
   selectSuggestion(suggestion, evt) {
     if (this.context) {
-      const { editor, start: start2, end: end2, file } = this.context;
+      const { editor, start: start2, end: end2, file, query: query2 } = this.context;
       const selectedText = editor.getSelection();
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
       const page = getPageInfo(this.plugin)(file);
@@ -107899,6 +108303,7 @@ class KindSuggest extends EditorSuggest {
           isCategoryPage: isCategoryPage(this.plugin)(page),
           isSubcategoryPage: isSubcategoryPage(this.plugin)(page)
         });
+        this.plugin.info("Suggestion", suggestion);
         switch (suggestion) {
           case "Update":
             editor.exec("update-kinded-model");
@@ -107912,6 +108317,7 @@ class KindSuggest extends EditorSuggest {
             }
             break;
           case "Italic":
+            v;
             if (selectedText) {
               editor.replaceSelection(`*${selectedText}*`);
             } else {
@@ -107946,8 +108352,14 @@ class KindSuggest extends EditorSuggest {
               editor.replaceRange(`[${text2}](${url})`, start2, end2);
             }
             break;
+          case "Convert to a markdown link 🔗":
+            editor.replaceRange(`[${query2}](${query2})`, start2, end2);
+            break;
           default:
-            editor.replaceRange(suggestion, start2, end2);
+            if (commands.includes(selectedText.trim())) ;
+            else {
+              editor.replaceRange(suggestion, start2, end2);
+            }
             break;
         }
       } else {
@@ -107962,16 +108374,25 @@ let hasher = null;
 class KindModelPlugin extends Plugin$1 {
   constructor() {
     super(...arguments);
-    this.dv = globalThis["DataviewAPI"];
-    this.cache = {
+    __publicField(this, "settings");
+    /** the Dataview API surface */
+    __publicField(this, "dv", globalThis["DataviewAPI"]);
+    __publicField(this, "api");
+    __publicField(this, "log");
+    __publicField(this, "debug");
+    __publicField(this, "info");
+    __publicField(this, "warn");
+    __publicField(this, "error");
+    __publicField(this, "cache", {
       kindDefinitionsByPath: /* @__PURE__ */ new Map(),
       kindDefinitionsByTag: /* @__PURE__ */ new Map(),
       typeDefinitionsByPath: /* @__PURE__ */ new Map(),
       typeDefinitionsByTag: /* @__PURE__ */ new Map(),
       kindTagDuplicates: /* @__PURE__ */ new Map(),
       typeTagDuplicates: /* @__PURE__ */ new Map()
-    };
-    this.cache_ready = false;
+    });
+    __publicField(this, "hasher");
+    __publicField(this, "cache_ready", false);
   }
   /**
    * provides a boolean flag which indicates whether this plugin's 
