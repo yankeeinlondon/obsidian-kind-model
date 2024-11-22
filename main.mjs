@@ -1266,9 +1266,9 @@ function normalizeObject(obj, normalizer) {
   const normalized = {};
   for (const u in obj) {
     if (hasOwnProperty(obj, u)) {
-      const v2 = obj[u];
-      if (v2 === void 0 || v2 === null) continue;
-      normalized[normalizer(u)] = asNumber(v2);
+      const v = obj[u];
+      if (v === void 0 || v === null) continue;
+      normalized[normalizer(u)] = asNumber(v);
     }
   }
   return normalized;
@@ -4467,8 +4467,8 @@ class DateTime {
     }
     let foundFirst = false;
     for (const u of units) {
-      const v2 = normalized[u];
-      if (!isUndefined$1(v2)) {
+      const v = normalized[u];
+      if (!isUndefined$1(v)) {
         foundFirst = true;
       } else if (foundFirst) {
         normalized[u] = defaultValues[u];
@@ -6034,7 +6034,7 @@ var parsimmon_umd_min = { exports: {} };
           return t3.readUIntBE(0, n3);
         });
       }
-      function v2(n3) {
+      function v(n3) {
         return p2("uintLE", n3), h("uintLE(" + n3 + ")", n3).map(function(t3) {
           return t3.readUIntLE(0, n3);
         });
@@ -6129,7 +6129,7 @@ var parsimmon_umd_min = { exports: {} };
         var r2, e3, u2, o2, f2, c2 = t3.index, s3 = c2.offset, l3 = 1;
         if (s3 === n3.length) return "Got the end of the input";
         if (w(n3)) {
-          var h2 = s3 - s3 % I, p3 = s3 - h2, d2 = W(h2, F, M + I, n3.length), v3 = a(function(n4) {
+          var h2 = s3 - s3 % I, p3 = s3 - h2, d2 = W(h2, F, M + I, n3.length), v2 = a(function(n4) {
             return a(function(n5) {
               return U(n5.toString(16), 2, "0");
             }, n4);
@@ -6143,7 +6143,7 @@ var parsimmon_umd_min = { exports: {} };
             return 0 === n4.from && 1 === n4.to ? { from: n4.from, to: n4.to } : { from: n4.from / I, to: Math.floor(n4.to / I) };
           }(d2), e3 = h2 / I, r2 = 3 * p3, p3 >= 4 && (r2 += 1), l3 = 2, u2 = a(function(n4) {
             return n4.length <= 4 ? n4.join(" ") : n4.slice(0, 4).join(" ") + "  " + n4.slice(4).join(" ");
-          }, v3), (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2);
+          }, v2), (f2 = (8 * (o2.to > 0 ? o2.to - 1 : o2.to)).toString(16).length) < 2 && (f2 = 2);
         } else {
           var g2 = n3.split(/\r\n|[\n\r\u2028\u2029]/);
           r2 = c2.column - 1, e3 = c2.line - 1, o2 = W(e3, q, A, g2.length), u2 = g2.slice(o2.from, o2.to), f2 = o2.to.toString().length;
@@ -6491,7 +6491,7 @@ var parsimmon_umd_min = { exports: {} };
         return h("string", t3).map(function(t4) {
           return t4.toString(n3);
         });
-      }, uintBE: d, uint8BE: d(1), uint16BE: d(2), uint32BE: d(4), uintLE: v2, uint8LE: v2(1), uint16LE: v2(2), uint32LE: v2(4), intBE: g, int8BE: g(1), int16BE: g(2), int32BE: g(4), intLE: m, int8LE: m(1), int16LE: m(2), int32LE: m(4), floatBE: h("floatBE", 4).map(function(n3) {
+      }, uintBE: d, uint8BE: d(1), uint16BE: d(2), uint32BE: d(4), uintLE: v, uint8LE: v(1), uint16LE: v(2), uint32LE: v(4), intBE: g, int8BE: g(1), int16BE: g(2), int32BE: g(4), intLE: m, int8LE: m(1), int16LE: m(2), int32LE: m(4), floatBE: h("floatBE", 4).map(function(n3) {
         return n3.readFloatBE(0);
       }), floatLE: h("floatLE", 4).map(function(n3) {
         return n3.readFloatLE(0);
@@ -6749,7 +6749,7 @@ var Values;
     if (field === null || field === void 0)
       return field;
     if (Values2.isArray(field)) {
-      return [].concat(field.map((v2) => deepCopy(v2)));
+      return [].concat(field.map((v) => deepCopy(v)));
     } else if (Values2.isObject(field)) {
       let result = {};
       for (let [key, value2] of Object.entries(field))
@@ -7834,8 +7834,8 @@ function within(min$1, value2, max2) {
   return max$1(min$1, min(value2, max2));
 }
 function withinMaxClamp(min2, value2, max2) {
-  var v2 = within(min2, value2, max2);
-  return v2 > max2 ? max2 : v2;
+  var v = within(min2, value2, max2);
+  return v > max2 ? max2 : v;
 }
 function getFreshSideObject() {
   return {
@@ -9050,7 +9050,7 @@ class TextInputSuggest {
     });
   }
   close() {
-    app.keymap.popScope(this.scope);
+    globalThis.obsidian.app.keymap.popScope(this.scope);
     this.suggest.setSuggestions([]);
     if (this.popper) this.popper.destroy();
     this.suggestEl.detach();
@@ -9149,23 +9149,26 @@ const resolve$2 = (val) => typeof val === "function" ? val() : val;
 const contextApi = (el, base2, global_opt, log_level) => ({
   sectionHeading: (heading2, sub_text) => {
     const color = "rgba(15, 117, 224, .75) ";
-    const headingText = createEl(
-      "h2",
-      {
-        cls: "section-header",
-        text: heading2,
-        attr: { style: `font-size: larger; padding-bottom: 0; margin-bottom: 0; margin-top: 0.75rem` }
+    const headingText = createEl("h2", {
+      cls: "section-header",
+      text: heading2,
+      attr: {
+        style: `font-size: larger; padding-bottom: 0; margin-bottom: 0; margin-top: 0.75rem`
       }
-    );
+    });
     const sub_text_el = sub_text ? createEl("div", {
       cls: "section-sub-text",
       text: sub_text,
-      attr: { style: `font-size: smaller; border-left: 2px solid ${color}; padding-left: 8px;` }
+      attr: {
+        style: `font-size: smaller; border-left: 2px solid ${color}; padding-left: 8px;`
+      }
     }) : void 0;
     const sectionInput = createEl("div", {
       cls: "input-section",
       text: "",
-      attr: { style: `border-left: 2px solid ${color}; padding-left: 8px; ` }
+      attr: {
+        style: `border-left: 2px solid ${color}; padding-left: 8px; `
+      }
     });
     const section_heading = createEl("div").appendChild(headingText);
     if (sub_text_el) {
@@ -9173,18 +9176,26 @@ const contextApi = (el, base2, global_opt, log_level) => ({
     }
     section_heading.appendChild(sectionInput);
     const bottom_pad = "padding-bottom: 0.25rem";
-    el.createEl("h2", { text: heading2, attr: { style: `font-size: larger; padding-top: 0.75rem"; ${sub_text ? "" : bottom_pad}` } });
+    el.createEl("h2", {
+      text: heading2,
+      attr: {
+        style: `font-size: larger; padding-top: 0.75rem"; ${sub_text ? "" : bottom_pad}`
+      }
+    });
     if (sub_text) {
-      el.createEl("p", { cls: "settings-desc", text: sub_text, attr: { style: `${bottom_pad}; font-size: smaller` } });
+      el.createEl("p", {
+        cls: "settings-desc",
+        text: sub_text,
+        attr: { style: `${bottom_pad}; font-size: smaller` }
+      });
     }
     el.appendChild(sectionInput);
     const fn2 = inputRow(sectionInput, base2, global_opt, log_level);
     fn2["section"] = heading2;
     return fn2;
   },
-  iterateOver: (prop, cb) => {
+  iterateOver: (prop, _cb) => {
     const settings = [];
-    base2[prop];
     return settings;
   }
 });
@@ -9201,51 +9212,84 @@ const componentApi = (el, base2, global_opt, log_level) => (name2, desc, prop) =
             dd.setValue(value2);
           }
         }
-        dd.onChange((v2) => {
+        dd.onChange((v) => {
           if (isNotNull(prop, base2)) {
             const prior_value = base2[prop];
-            base2[prop] = isKeyValueDict ? choices[v2] : v2;
-            debug2(`Updating ${name2} dropdown`, `new value is:
-${JSON.stringify(v2, null, 2)}`, `prior value was:
-${JSON.stringify(prior_value, null, 2)}`);
+            base2[prop] = isKeyValueDict ? choices[v] : v;
+            debug2(
+              `Updating ${name2} dropdown`,
+              `new value is:
+${JSON.stringify(v, null, 2)}`,
+              `prior value was:
+${JSON.stringify(prior_value, null, 2)}`
+            );
             if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
-                error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
+                error2(
+                  `saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`
+                );
               } else {
-                info2(`auto save`, `the dropdown "${String(prop)}" triggered saving state`, `the current state is: 
-${JSON.stringify(base2, null, 2)}`);
+                info2(
+                  `auto save`,
+                  `the dropdown "${String(prop)}" triggered saving state`,
+                  `the current state is: 
+${JSON.stringify(base2, null, 2)}`
+                );
                 global_opt.saveState();
               }
             } else {
-              debug2(`no auto save: state changed on "${name2}" property but state is not automatically save after state changes`);
+              debug2(
+                `no auto save: state changed on "${name2}" property but state is not automatically save after state changes`
+              );
             }
             s2.setName(resolve$2(name2));
             s2.setDesc(resolve$2(desc));
           } else {
-            debug2(`the dropdown "${name2}" changed state but no property was set to record this.`, "this may be ok but is typically an error", `the new state is now: ${v2}`);
+            debug2(
+              `the dropdown "${name2}" changed state but no property was set to record this.`,
+              "this may be ok but is typically an error",
+              `the new state is now: ${v}`
+            );
           }
         });
       });
-      return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+      return componentApi(
+        el,
+        base2,
+        global_opt,
+        log_level
+      )(
+        name2,
+        desc,
+        prop
+      )(s2);
     },
     addToggleSwitch(opt = {}) {
       s2.addToggle((t2) => {
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v2) => {
+        t2.onChange((v) => {
           if (isNotNull(prop, base2)) {
             s2.setName(resolve$2(name2));
             s2.setDesc(resolve$2(desc));
-            base2[prop] = v2;
+            base2[prop] = v;
             if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
-                error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
+                error2(
+                  `saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`
+                );
               }
-              info2("auto save", `the toggle switch for "${prop}" detected a change`, `the new value for "${prop}" is: ${v2}`);
+              info2(
+                "auto save",
+                `the toggle switch for "${prop}" detected a change`,
+                `the new value for "${prop}" is: ${v}`
+              );
               global_opt.saveState();
             } else {
-              debug2(`no auto save: state changed on "${name2}" on property`);
+              debug2(
+                `no auto save: state changed on "${name2}" on property`
+              );
             }
           }
           if (opt.refreshDomOnChange) {
@@ -9253,18 +9297,29 @@ ${JSON.stringify(base2, null, 2)}`);
           }
         });
       });
-      return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+      return componentApi(
+        el,
+        base2,
+        global_opt,
+        log_level
+      )(
+        name2,
+        desc,
+        prop
+      )(s2);
     },
     addTextInput(opt = {}) {
       s2.addText((t2) => {
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v2) => {
+        t2.onChange((v) => {
           if (isNotNull(prop, base2)) {
-            base2[prop] = v2;
+            base2[prop] = v;
           } else {
-            debug2(`state changed on the property "${name2}" but because "prop" was null it will not be recorded.`);
+            debug2(
+              `state changed on the property "${name2}" but because "prop" was null it will not be recorded.`
+            );
           }
           s2.setName(resolve$2(name2));
           s2.setDesc(resolve$2(desc));
@@ -9273,38 +9328,63 @@ ${JSON.stringify(base2, null, 2)}`);
           }
           if ((global_opt == null ? void 0 : global_opt.saveState) && prop !== null) {
             if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
-              error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
+              error2(
+                `saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`
+              );
             }
-            debug2(`toggle switch for "${String(prop)}" saving state`);
+            debug2(
+              `toggle switch for "${String(prop)}" saving state`
+            );
             global_opt.saveState();
           } else {
-            debug2(`no auto save: state changed on "${name2}" on property`);
+            debug2(
+              `no auto save: state changed on "${name2}" on property`
+            );
           }
         });
       });
-      return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+      return componentApi(
+        el,
+        base2,
+        global_opt,
+        log_level
+      )(
+        name2,
+        desc,
+        prop
+      )(s2);
     },
     addFolderSearch(opt = {}) {
       s2.addSearch((t2) => {
         new FolderSuggest(t2.inputEl);
-        t2.setPlaceholder(opt.placeholder || "Example: folder1/folder2");
+        t2.setPlaceholder(
+          opt.placeholder || "Example: folder1/folder2"
+        );
         if (isNotNull(prop, base2)) {
           t2.setValue(base2[prop]);
         }
-        t2.onChange((v2) => {
+        t2.onChange((v) => {
           s2.setName(resolve$2(name2));
           s2.setDesc(resolve$2(desc));
           if (isNotNull(prop, base2)) {
-            base2[prop] = v2;
+            base2[prop] = v;
             if (global_opt == null ? void 0 : global_opt.saveState) {
               if (typeof (global_opt == null ? void 0 : global_opt.saveState) !== "function") {
-                error2(`saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`);
+                error2(
+                  `saveState property was passed into UiBuilder but it's type is "${typeof (global_opt == null ? void 0 : global_opt.saveState)}" instead of being a function!`
+                );
               } else {
-                info2(`auto save`, `folder prop ${name2} [${prop}] changed state to:`, v2);
+                info2(
+                  `auto save`,
+                  `folder prop ${name2} [${prop}] changed state to:`,
+                  v
+                );
                 global_opt.saveState();
               }
             } else {
-              debug2(`no auto save: state changed on "${name2}" on property`);
+              debug2(
+                `no auto save: state changed on "${name2}" on property`
+              );
             }
           }
           if (opt.refreshDomOnChange) {
@@ -9312,11 +9392,24 @@ ${JSON.stringify(base2, null, 2)}`);
           }
         });
       });
-      return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+      return componentApi(
+        el,
+        base2,
+        global_opt,
+        log_level
+      )(
+        name2,
+        desc,
+        prop
+      )(s2);
     },
     addButton: (o) => {
       s2.addButton((b) => {
-        b.setTooltip((o == null ? void 0 : o.tooltip) || resolve$2(desc)).setButtonText((o == null ? void 0 : o.buttonText) || "+").setCta().onClick((o == null ? void 0 : o.onClick) ? o.onClick : () => warn2(`${name2} button for "${String(o == null ? void 0 : o.buttonText)}" does not have a click handler`));
+        b.setTooltip((o == null ? void 0 : o.tooltip) || resolve$2(desc)).setButtonText((o == null ? void 0 : o.buttonText) || "+").setCta().onClick(
+          (o == null ? void 0 : o.onClick) ? o.onClick : () => warn2(
+            `${name2} button for "${String(o == null ? void 0 : o.buttonText)}" does not have a click handler`
+          )
+        );
         if (o == null ? void 0 : o.backgroundColor) {
           b.setClass(`bg-${o.backgroundColor}`);
         }
@@ -9324,14 +9417,25 @@ ${JSON.stringify(base2, null, 2)}`);
           b.setIcon(o.icon);
         }
       });
-      return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+      return componentApi(
+        el,
+        base2,
+        global_opt,
+        log_level
+      )(
+        name2,
+        desc,
+        prop
+      )(s2);
     },
     done: () => s2
   };
 };
 const inputRow = (el, base2, global_opt, log_level) => (name2, desc, prop) => {
   const s2 = new Setting(el).setName(resolve$2(name2)).setDesc(resolve$2(desc));
-  return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(s2);
+  return componentApi(el, base2, global_opt, log_level)(name2, desc, prop)(
+    s2
+  );
 };
 const UiBuilder = (el, base2, log_level, global_opt = {}) => {
   const { h1, style: style2 } = global_opt;
@@ -9357,7 +9461,9 @@ class KindModal extends Modal {
     this.log_level = log_level;
   }
   onOpen() {
-    const ui = UiBuilder(this.contentEl, this.kind, this.log_level, { h1: "New Kind model" });
+    const ui = UiBuilder(this.contentEl, this.kind, this.log_level, {
+      h1: "New Kind model"
+    });
     const core2 = ui.sectionHeading("Core Config");
     core2("Name", "the unique name for this Kind", "name").addTextInput();
     core2(
@@ -9415,7 +9521,11 @@ class KindModal extends Modal {
       icon: "key",
       buttonText: "+",
       onClick: () => {
-        this.kind._relationships.push({ prop: "", fk_kind: "", cardinality: "0:1" });
+        this.kind._relationships.push({
+          prop: "",
+          fk_kind: "",
+          cardinality: "0:1"
+        });
       }
     });
     properties(
@@ -9438,7 +9548,10 @@ class KindModal extends Modal {
         key
       ).addDropdown(UOM_TYPES);
     }
-    const auto2 = ui.sectionHeading("Auto Aliases", "When you're working on a kind page -- or any classification of a kind page -- you configure whether the `aliases` assigned to that page are automatically added to in smart ways.");
+    const auto2 = ui.sectionHeading(
+      "Auto Aliases",
+      "When you're working on a kind page -- or any classification of a kind page -- you configure whether the `aliases` assigned to that page are automatically added to in smart ways."
+    );
     auto2(
       "Plural/Singular",
       "Ensure that both the singular and plural versions of a Kind page are available",
@@ -9456,11 +9569,7 @@ class KindModal extends Modal {
   }
 }
 const ClassificationLookup = {
-  category: [
-    ["category"],
-    {},
-    "A 0:1 relationship to a category only"
-  ],
+  category: [["category"], {}, "A 0:1 relationship to a category only"],
   "category and subcategory": [
     ["category", "sub_category"],
     {},
@@ -9498,12 +9607,18 @@ class SettingsTab extends PluginSettingTab {
   }
   display() {
     const { info: info2, debug: debug2 } = logger(this.plugin.settings.log_level);
-    debug2(`The settings menu has been brought up and we start in this state: `, this.plugin.settings);
+    debug2(
+      `The settings menu has been brought up and we start in this state: `,
+      this.plugin.settings
+    );
     const ui = UiBuilder(
       this.containerEl,
       this.plugin.settings,
       this.plugin.settings.log_level,
-      { h1: "Kind Models", saveState: this.plugin.saveSettings.bind(this.plugin) }
+      {
+        h1: "Kind Models",
+        saveState: this.plugin.saveSettings.bind(this.plugin)
+      }
     );
     ui(
       "Handle Tags",
@@ -9531,7 +9646,11 @@ class SettingsTab extends PluginSettingTab {
     ).addButton({
       icon: "package-plus",
       onClick: () => {
-        new KindModal(this.app, DEFAULT_KIND, this.plugin.settings.log_level).open();
+        new KindModal(
+          this.app,
+          DEFAULT_KIND,
+          this.plugin.settings.log_level
+        ).open();
       }
     });
     const types = ui.sectionHeading(
@@ -11123,8 +11242,8 @@ var isRatio = (val) => /[0-9]{1,4}\s*\/\s*[0-9]{1,4}/.test(val);
 var isCssAspectRatio = (val) => {
   return isString$1(val) && val.split(/\s+/).every((i) => tokens.includes(i) || isRatio(i));
 };
-var isInlineSvg = (v2) => {
-  return isString$1(v2) && v2.trim().startsWith(`<svg`) && v2.trim().endsWith(`</svg>`);
+var isInlineSvg = (v) => {
+  return isString$1(v) && v.trim().startsWith(`<svg`) && v.trim().endsWith(`</svg>`);
 };
 var hasUrlQueryParameter = (val, prop) => {
   return isString$1(getUrlQueryParams(val, prop));
@@ -11667,7 +11786,7 @@ identity({
   never: "<<never>>"
 });
 const find_in = (tg) => (...values) => {
-  const found = values.find((v2) => tg(v2));
+  const found = values.find((v) => tg(v));
   return found;
 };
 const isDateTime = (val) => {
@@ -11688,11 +11807,11 @@ const isLink = (val) => {
 const isPageInfo = (val) => {
   return isObject(val) && "current" in val && "categories" in val && "type" in val && isDvPage(val.current);
 };
-const isTAbstractFile = (v2) => {
-  return isObject(v2) && "basename" in v2 && "path" in v2;
+const isTAbstractFile = (v) => {
+  return isObject(v) && "basename" in v && "path" in v;
 };
-const isTFile = (v2) => {
-  return isObject(v2) && "name" in v2 && "extension" in v2 && "path" in v2;
+const isTFile = (v) => {
+  return isObject(v) && "name" in v && "extension" in v && "path" in v;
 };
 const isWikipediaUrl = (val) => {
   return isString$1(val) && val.startsWith("https://") && val.includes("wikipedia.org/");
@@ -11703,11 +11822,11 @@ const isValidPath = (val) => {
 const isMoment = (val) => {
   return isObject(val) && "toISOString" in val && "calendar" in val && "dayOfYear" in val;
 };
-const isPageReference = (v2) => {
-  return isDvPage(v2) || isFileLink(v2) || isPageInfo(v2) || isTFile(v2) || isTAbstractFile(v2) || isString$1(v2);
+const isPageReference = (v) => {
+  return isDvPage(v) || isFileLink(v) || isPageInfo(v) || isTFile(v) || isTAbstractFile(v) || isString$1(v);
 };
-const isFrontmatter = (v2) => {
-  return isObject(v2) && !isFunction$2(v2);
+const isFrontmatter = (v) => {
+  return isObject(v) && !isFunction$2(v);
 };
 const isTagKindDefinition = (val) => {
   return isObject(val) && "tag" in val && typeof val.tag === "string";
@@ -18114,14 +18233,14 @@ function* getAstValues(value2) {
   if (value2 == null || typeof value2 !== "object")
     return;
   if (Array.isArray(value2))
-    for (const v2 of value2)
-      yield* getAstValues(v2);
+    for (const v of value2)
+      yield* getAstValues(v);
   if (isAst(value2))
     yield value2;
   if (Object.getPrototypeOf(value2) !== Object.prototype)
     return;
-  for (const v2 of Object.values(value2))
-    yield* getAstValues(v2);
+  for (const v of Object.values(value2))
+    yield* getAstValues(v);
 }
 function resolve(value2, config = {}) {
   if (value2 == null || typeof value2 !== "object")
@@ -18133,8 +18252,8 @@ function resolve(value2, config = {}) {
   if (Object.getPrototypeOf(value2) !== Object.prototype)
     return value2;
   const output = {};
-  for (const [k, v2] of Object.entries(value2))
-    output[k] = resolve(v2, config);
+  for (const [k, v] of Object.entries(value2))
+    output[k] = resolve(v, config);
   return output;
 }
 var Tag = class {
@@ -18164,8 +18283,8 @@ var Class = class {
     if (!value2 || typeof value2 === "string")
       return value2;
     const classes = [];
-    for (const [k, v2] of Object.entries(value2 ?? {}))
-      if (v2)
+    for (const [k, v] of Object.entries(value2 ?? {}))
+      if (v)
         classes.push(k);
     return classes.join(" ");
   }
@@ -18466,23 +18585,23 @@ function* formatInline(g) {
 function* formatTableRow(items) {
   yield `| ${items.join(" | ")} |`;
 }
-function formatScalar(v2) {
-  if (v2 === void 0) {
+function formatScalar(v) {
+  if (v === void 0) {
     return void 0;
   }
-  if (ast_default.isAst(v2)) {
-    return format(v2);
+  if (ast_default.isAst(v)) {
+    return format(v);
   }
-  if (v2 === null) {
+  if (v === null) {
     return "null";
   }
-  if (Array.isArray(v2)) {
-    return "[" + v2.map(formatScalar).join(SEP) + "]";
+  if (Array.isArray(v)) {
+    return "[" + v.map(formatScalar).join(SEP) + "]";
   }
-  if (typeof v2 === "object") {
-    return "{" + Object.entries(v2).map(([key, value2]) => `${isIdentifier(key) ? key : `"${key}"`}: ${formatScalar(value2)}`).join(SEP) + "}";
+  if (typeof v === "object") {
+    return "{" + Object.entries(v).map(([key, value2]) => `${isIdentifier(key) ? key : `"${key}"`}: ${formatScalar(value2)}`).join(SEP) + "}";
   }
-  return JSON.stringify(v2);
+  return JSON.stringify(v);
 }
 function formatAnnotationValue(a) {
   const formattedValue = formatScalar(a.value);
@@ -18513,9 +18632,9 @@ function* formatAnnotations(n2) {
     yield SPACE + CLOSE;
   }
 }
-function* formatVariable(v2) {
+function* formatVariable(v) {
   yield "$";
-  yield v2.path.map((p2, i) => {
+  yield v.path.map((p2, i) => {
     if (i === 0)
       return p2;
     if (isIdentifier(p2))
@@ -18655,7 +18774,7 @@ function* formatNode(n2, o = {}) {
         yield indent;
       }
       const open = OPEN + SPACE;
-      const attributes2 = [...formatAttributes(n2)].filter((v2) => v2 !== void 0);
+      const attributes2 = [...formatAttributes(n2)].filter((v) => v !== void 0);
       const tag = [open + n2.tag, ...attributes2];
       const inlineTag = tag.join(SPACE);
       const isLongTagOpening = inlineTag.length + open.length * 2 > (o.maxTagOpeningWidth || MAX_TAG_OPENING_WIDTH);
@@ -18792,46 +18911,46 @@ function* formatNode(n2, o = {}) {
     }
   }
 }
-function* formatValue(v2, o = {}) {
-  switch (typeof v2) {
+function* formatValue(v, o = {}) {
+  switch (typeof v) {
     case "undefined":
       break;
     case "boolean":
     case "number":
     case "string": {
-      yield v2.toString();
+      yield v.toString();
       break;
     }
     case "object": {
-      if (v2 === null)
+      if (v === null)
         break;
-      if (Array.isArray(v2)) {
-        for (const n2 of v2)
+      if (Array.isArray(v)) {
+        for (const n2 of v)
           yield* formatValue(n2, o);
         break;
       }
-      switch (v2.$$mdtype) {
+      switch (v.$$mdtype) {
         case "Function": {
-          yield* formatFunction(v2);
+          yield* formatFunction(v);
           break;
         }
         case "Node":
-          yield* formatNode(v2, o);
+          yield* formatNode(v, o);
           break;
         case "Variable": {
-          yield* formatVariable(v2);
+          yield* formatVariable(v);
           break;
         }
         default:
-          throw new Error(`Unimplemented: "${v2.$$mdtype}"`);
+          throw new Error(`Unimplemented: "${v.$$mdtype}"`);
       }
       break;
     }
   }
 }
-function format(v2, options2) {
+function format(v, options2) {
   let doc = "";
-  for (const s2 of formatValue(v2, options2))
+  for (const s2 of formatValue(v, options2))
     doc += s2;
   return doc.trimStart();
 }
@@ -18897,7 +19016,7 @@ var not = {
 var equals = {
   transform(parameters) {
     const values = Object.values(parameters);
-    return values.every((v2) => v2 === values[0]);
+    return values.every((v) => v === values[0]);
   }
 };
 var debug = {
@@ -19399,8 +19518,8 @@ function render(node2) {
   if (!name2)
     return render(children2);
   let output = `<${name2}`;
-  for (const [k, v2] of Object.entries(attributes2 ?? {}))
-    output += ` ${k.toLowerCase()}="${escapeHtml(String(v2))}"`;
+  for (const [k, v] of Object.entries(attributes2 ?? {}))
+    output += ` ${k.toLowerCase()}="${escapeHtml(String(v))}"`;
   output += ">";
   if (voidElements.has(name2))
     return output;
@@ -19423,8 +19542,8 @@ function dynamic(node2, React, { components = {} } = {}) {
     if (typeof value2 !== "object")
       return value2;
     const output = {};
-    for (const [k, v2] of Object.entries(value2))
-      output[k] = deepRender2(v2);
+    for (const [k, v] of Object.entries(value2))
+      output[k] = deepRender2(v);
     return output;
   }
   function render3(node3) {
@@ -19458,7 +19577,7 @@ function deepRender(value2) {
     return render2(value2);
   if (typeof value2 !== "object")
     return JSON.stringify(value2);
-  const object = Object.entries(value2).map(([k, v2]) => [JSON.stringify(k), deepRender(v2)].join(": ")).join(", ");
+  const object = Object.entries(value2).map(([k, v]) => [JSON.stringify(k), deepRender(v)].join(": ")).join(", ");
   return `{${object}}`;
 }
 function render2(node2) {
@@ -20043,8 +20162,8 @@ Markdoc.validate = validate;
 Markdoc.createElement = createElement$1;
 Markdoc.truthy = truthy;
 Markdoc.format = format;
-const isTag = (v2) => {
-  return typeof v2 === "object" ? true : false;
+const isTag = (v) => {
+  return typeof v === "object" ? true : false;
 };
 const getHeadingLevel = (file, content2, level, plugin4) => {
   const root = transform2(parse3(content2 || ""));
@@ -20118,8 +20237,6 @@ const getContentStructure = (p2) => (content2, path) => {
 const getViewMeta = (p2) => (view, info2) => {
   var _a2, _b2, _c2;
   const content2 = view.getViewData();
-  const ast = Markdoc.parse(content2);
-  Markdoc.transform(ast);
   return {
     iconAssigned: view.icon,
     mode: view.currentMode,
@@ -20153,7 +20270,7 @@ const getViewMeta = (p2) => (view, info2) => {
     contentStructure: getContentStructure(p2)(content2, info2.path)
   };
 };
-const getDomMeta = (view, info2) => ({
+const getDomMeta = (view, _info) => ({
   container: view.containerEl,
   content: view.contentEl,
   icon: view == null ? void 0 : view.iconEl,
@@ -20465,9 +20582,12 @@ const list_items_api = (wrapper) => ({
   indent: (...items) => renderListItems(wrapper, items),
   done: createFnWithProps(() => "", { escape: true })
 });
+const wrap_ol = (items, opts) => `<ol ${listStyle(opts)}>${items}</ol>`;
 const wrap_ul = (items, opts) => `<ul ${listStyle(opts)}>${items}</ul>`;
 const renderListItems = (wrapper, items, opts) => wrapper(
-  items.filter((i) => i !== void 0).map((i) => isFunction$2(i) ? isFunction$2(i(list_items_api)) ? "" : i(list_items_api) : `<li ${style$1((opts == null ? void 0 : opts.li) ? isFunction$2(opts == null ? void 0 : opts.li) ? opts.li(i ? i : "") : opts.li : {})}>${i}</li>`).filter((i) => i !== "").join("\n"),
+  items.filter((i) => i !== void 0).map(
+    (i) => isFunction$2(i) ? isFunction$2(i(list_items_api)) ? "" : i(list_items_api) : `<li ${style$1((opts == null ? void 0 : opts.li) ? isFunction$2(opts == null ? void 0 : opts.li) ? opts.li(i ? i : "") : opts.li : {})}>${i}</li>`
+  ).filter((i) => i !== "").join("\n"),
   opts
 );
 const span = (text2, fmt) => {
@@ -20514,18 +20634,22 @@ const formattingApi = (p2) => {
      * returns the HTML for an unordered list
      */
     ul(items, opts) {
-      return renderListItems(wrap_ul, items.filter((i) => i !== void 0), opts);
+      return renderListItems(
+        wrap_ul,
+        items.filter((i) => i !== void 0),
+        opts
+      );
     },
     // /**
     //  * **renderToRight**`(text)`
-    //  * 
+    //  *
     //  * Takes text/html and renders it to the right.
-    //  * 
+    //  *
     //  * Note: use `toRight` just to wrap this text in the appropriate HTML
     //  * to move content to right.
     //  */
     // renderToRight: (text: string) => p.dv.renderValue(
-    // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`, 
+    // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`,
     // 	container,p, filePath, true
     // ),
     toRight: (content2, fmt) => {
@@ -20541,9 +20665,9 @@ const formattingApi = (p2) => {
     },
     /**
      * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
-     * 
+     *
      * Note: for external links use the `link` helper instead as the generated link
-     * here provides the reference as meta-data other then the traditional `href` 
+     * here provides the reference as meta-data other then the traditional `href`
      * property.
      */
     internalLink: internalLink(p2),
@@ -20571,22 +20695,18 @@ const formattingApi = (p2) => {
     link: (title, url, opts) => {
       return [
         `<a href="${url}" >`,
-        ...(opts == null ? void 0 : opts.iconUrl) || (opts == null ? void 0 : opts.svgInline) ? (opts == null ? void 0 : opts.titlePosition) === "top" ? [
-          normal(title)
-        ] : [
+        ...(opts == null ? void 0 : opts.iconUrl) || (opts == null ? void 0 : opts.svgInline) ? (opts == null ? void 0 : opts.titlePosition) === "top" ? [normal(title)] : [
           `<span class="grouping" ${style$1((opts == null ? void 0 : opts.style) || { alignItems: "center", flex: true })}>`,
           (opts == null ? void 0 : opts.iconUrl) ? `<img src="${opts.iconUrl}" style="padding-right: 4px">` : opts == null ? void 0 : opts.svgInline,
           normal(title),
           `</span>`
-        ] : [
-          normal(title)
-        ],
+        ] : [normal(title)],
         `</a>`
       ].join("\n");
     },
     /**
      * **as_tag**`(text)`
-     * 
+     *
      * Puts the provided text into a _code block_ and ensures that the
      * leading character is a `#` symbol.
      */
@@ -20594,10 +20714,10 @@ const formattingApi = (p2) => {
     inline_codeblock: (text2) => `<code class="inline-codeblock" style="display: flex; flex-direction: row;">${text2}</code>`,
     /**
      * **blockquote**`(kind, title, opts)`
-     * 
+     *
      * Produces the HTML for a callout.
-     * 
-     * **Note:** use `callout` for same functionality but 
+     *
+     * **Note:** use `callout` for same functionality but
      * with HTML _rendered_ rather than _returned_.
      */
     blockquote: (kind, title, opts) => blockquote(kind, title, opts),
@@ -20630,7 +20750,7 @@ const formattingApi = (p2) => {
 function removePound(tag) {
   return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
 }
-const get_internal_links = (p2) => (pg, ...props) => {
+const get_internal_links = (_p2) => (pg, ...props) => {
   let links = [];
   for (const prop of props) {
     const pgProp = pg[prop];
@@ -20650,7 +20770,9 @@ const get_internal_links = (p2) => (pg, ...props) => {
 const renderApi = (p2) => (el, filePath) => {
   const current = getPage(p2)(filePath);
   if (!current) {
-    throw new Error(`Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`);
+    throw new Error(
+      `Attempt to initialize dv_page() with an invalid sourcePath: ${filePath}!`
+    );
   }
   return {
     /**
@@ -20663,29 +20785,29 @@ const renderApi = (p2) => (el, filePath) => {
     /** the current page represented as a `DvPage` */
     current,
     /**
-     * simply utility to ensure that a tag string has it's 
+     * simply utility to ensure that a tag string has it's
      * leading pound symbol removed.
      */
     removePound,
     /**
      * **get_classification**`(page)`
-     * 
+     *
      * Gets a page's classification {`isCategory`,`isSubcategory`,`category`,`subcategory`}
      */
     getClassification: getClassification(p2),
     /**
      * **get_internal_links**
-     * 
-     * Gets any links to pages in the vault found across the various 
+     *
+     * Gets any links to pages in the vault found across the various
      * properties passed in.
      */
     get_internal_links: get_internal_links(),
     /**
      * **callout**`(kind, title, opts)`
-     * 
+     *
      * Renders a callout to the current block.
-     * 
-     * **Note:** use `blockquote` for same functionality but 
+     *
+     * **Note:** use `blockquote` for same functionality but
      * with HTML returned rather than _rendered_.
      */
     callout: (kind, title, opts) => p2.dv.renderValue(
@@ -20697,7 +20819,7 @@ const renderApi = (p2) => (el, filePath) => {
     ),
     /**
      * **page**`(path, [originFile])`
-     * 
+     *
      * Map a page path to the actual data contained within that page.
      */
     page(pg, originFile) {
@@ -20708,15 +20830,15 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **as_array**`(v)`
-     * 
+     *
      * Utility function which ensures that the passed in value _is_ an array,
      * and that any DvArray[] proxy is converted to a normal JS array
      */
-    as_array: (v2) => {
-      return p2.dv.isDataArray(v2) ? Array.from(v2.values) : isArray(v2) ? v2.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v2];
+    as_array: (v) => {
+      return p2.dv.isDataArray(v) ? Array.from(v.values) : isArray(v) ? v.map((i) => p2.dv.isDataArray(i) ? i.values : i) : [v];
     },
     /**
-     * Return an array of paths (as strings) corresponding to pages 
+     * Return an array of paths (as strings) corresponding to pages
      * which match the query.
      */
     pagePaths(query2, originFile) {
@@ -20724,7 +20846,7 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **date**`(pathLike)`
-     * 
+     *
      * Attempt to extract a date from a string, link or date.
      */
     date(pathLike) {
@@ -20732,7 +20854,7 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **duration**`(pathLike)`
-     * 
+     *
      * Attempt to extract a duration from a string or duration.
      */
     duration(str) {
@@ -20740,7 +20862,7 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **fileLink**`(path, [embed],[display])`
-     * 
+     *
      * Create a dataview file link to the given path.
      */
     fileLink(path, embed, displayAs) {
@@ -20748,7 +20870,7 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **sectionLink**`(path, [embed],[display])`
-     * 
+     *
      * Create a dataview section link to the given path.
      */
     sectionLink(path, embed, display) {
@@ -20756,7 +20878,7 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **blockLink**`(path, [embed],[display])`
-     * 
+     *
      * Create a dataview block link to the given path.
      */
     blockLink(path, embed, display) {
@@ -20764,8 +20886,8 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **table**`(headers,values,container,component,filePath)`
-     * 
-     * Render a dataview table with the given headers, and the 
+     *
+     * Render a dataview table with the given headers, and the
      * 2D array of values.
      */
     async table(headers, values) {
@@ -20773,27 +20895,27 @@ const renderApi = (p2) => (el, filePath) => {
     },
     /**
      * **renderValue**`(value, [inline])`
-     * 
+     *
      * Render an arbitrary value into a container.
      */
     async renderValue(value2, inline4 = false) {
       return p2.dv.renderValue(value2, el, p2, filePath, inline4);
     },
-    /** 
+    /**
      * **taskList**`(tasks,groupByFile)`
-     * 
-     * Render a dataview task view with the given tasks. 
+     *
+     * Render a dataview task view with the given tasks.
      */
     async taskList(tasks, groupByFile) {
       return p2.dv.taskList(tasks, groupByFile, el, p2, filePath);
     },
     /**
      * **list**(values, container, component, filePath)
-     * 
+     *
      * Render a dataview **list** of the given values by:
-     * 
+     *
      * - adding a sub-container DIV to the passed in _container_
-     * - using the `component`'s `addChild()` method to 
+     * - using the `component`'s `addChild()` method to
      * adding a child element which is given the sub-container
      * for rendering purposes
      */
@@ -20805,7 +20927,9 @@ const renderApi = (p2) => (el, filePath) => {
     },
     async ul(...items) {
       const wrap_ul2 = (items2) => `<ul>${items2}</ul>`;
-      const render_items = (items2) => items2.map((i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`).filter((i) => i !== "").join("\n");
+      const render_items = (items2) => items2.map(
+        (i) => isFunction$2(i) ? isFunction$2(i(ul_api)) ? "" : i(ul_api) : `<li>${i}</li>`
+      ).filter((i) => i !== "").join("\n");
       const ul_api = {
         indent: (...items2) => wrap_ul2(render_items(items2)),
         done: createFnWithProps(() => "", { escape: true })
@@ -20827,13 +20951,7 @@ const renderApi = (p2) => (el, filePath) => {
         false
       );
     },
-    code: (code2) => p2.dv.renderValue(
-      `<code>${code2}</code>`,
-      el,
-      p2,
-      filePath,
-      true
-    )
+    code: (code2) => p2.dv.renderValue(`<code>${code2}</code>`, el, p2, filePath, true)
   };
 };
 const removeFmKey = (p2) => (
@@ -20850,10 +20968,15 @@ const removeFmKey = (p2) => (
       if (abstractFile instanceof TFile) {
         const file = abstractFile;
         try {
-          await p2.app.fileManager.processFrontMatter(file, (frontmatter) => {
-            delete frontmatter[key];
-          });
-          p2.debug(`Frontmatter key '${key}' removed successfully from file: ${path}`);
+          await p2.app.fileManager.processFrontMatter(
+            file,
+            (frontmatter) => {
+              delete frontmatter[key];
+            }
+          );
+          p2.debug(
+            `Frontmatter key '${key}' removed successfully from file: ${path}`
+          );
         } catch (error2) {
           p2.error("Error removing frontmatter key:", error2);
         }
@@ -20872,12 +20995,18 @@ const setFmKey = (p2) => (path) => (
     if (abstractFile instanceof TFile) {
       const file = abstractFile;
       try {
-        await p2.app.fileManager.processFrontMatter(file, (frontmatter) => {
-          frontmatter[key] = value2;
-        });
+        await p2.app.fileManager.processFrontMatter(
+          file,
+          (frontmatter) => {
+            frontmatter[key] = value2;
+          }
+        );
         p2.debug(`Frontmatter updated successfully for file: ${path}`);
       } catch (error2) {
-        p2.error(`Error updating frontmatter [${key}] for file "${path}":`, error2);
+        p2.error(
+          `Error updating frontmatter [${key}] for file "${path}":`,
+          error2
+        );
       }
     } else {
       console.error(`File "${path}" not found or is a folder.`);
@@ -21299,12 +21428,20 @@ const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
   }
 };
 const showTags = (p2) => (pg, ...exclude) => {
-  return pg.file.etags.filter((t2) => !exclude.some((i) => t2.startsWith(i) ? true : false)).map((t2) => `\`${t2}\``).join(", ") || "";
+  return pg.file.etags.filter(
+    (t2) => !exclude.some((i) => t2.startsWith(i) ? true : false)
+  ).map((t2) => `\`${t2}\``).join(", ") || "";
 };
 const showLinks = (p2) => (pg) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const [_, pageIcon] = getProp(p2)(pg, "icon", "svg_icon", "_icon", "_svg_icon");
+    const [_, pageIcon] = getProp(p2)(
+      pg,
+      "icon",
+      "svg_icon",
+      "_icon",
+      "_svg_icon"
+    );
     const link_props = {
       website: "website",
       wikipedia: "wikipedia",
@@ -21372,18 +21509,27 @@ const showProp = (p2) => (pg, ...props) => {
   const page = getPage(p2)(pg);
   if (page) {
     if (!((_a2 = page == null ? void 0 : page.file) == null ? void 0 : _a2.name)) {
-      throw new Error(`Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`);
+      throw new Error(
+        `Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`
+      );
     }
-    const found = props.find((prop) => isKeyOf(page, prop) && page[prop] !== void 0);
+    const found = props.find(
+      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
+    );
     if (!found) {
       return "";
     }
     if (isKeyOf(page, found)) {
       const value2 = page[found];
       try {
-        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map((v2) => isLink(v2) ? v2 : isDvPage(v2) ? v2.file.link : "").filter((i) => i).join(", ") : "";
+        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map(
+          (v) => isLink(v) ? v : isDvPage(v) ? v.file.link : ""
+        ).filter((i) => i).join(", ") : "";
       } catch (e2) {
-        p2.error(`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`, e2);
+        p2.error(
+          `Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`,
+          e2
+        );
         return "";
       }
     }
@@ -21393,7 +21539,9 @@ const showProp = (p2) => (pg, ...props) => {
 const getProp = (p2) => (pg, ...props) => {
   const page = getPage(p2)(pg);
   if (page) {
-    const found = props.find((prop) => isKeyOf(page, prop) && page[prop] !== void 0);
+    const found = props.find(
+      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
+    );
     if (!found) {
       return [void 0, void 0];
     } else {
@@ -21404,7 +21552,10 @@ const getProp = (p2) => (pg, ...props) => {
       ];
     }
   }
-  p2.error(`Call to getProp(pg) passed in an invalid DvPage`, { pg, props });
+  p2.error(`Call to getProp(pg) passed in an invalid DvPage`, {
+    pg,
+    props
+  });
   return [void 0, void 0];
 };
 const showAbout = (p2) => (pg) => {
@@ -21490,9 +21641,7 @@ const showSubcategories = (p2) => (pg, opt) => {
       ({
         pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
       });
-      links.push(
-        htmlLink(p2)(page, { display: cat.subcategory })
-      );
+      links.push(htmlLink(p2)(page, { display: cat.subcategory }));
     }
   }
   return links.join(", ");
@@ -21523,7 +21672,11 @@ const showClassifications = (p2) => (pg) => {
         // CATEGORY
         i.categories.length === 0 ? "" : i.categories && i.categories.length === 1 ? htmlLink(p2)(
           i.categories[0].category,
-          opt(p2.api.format.as_tag(i.categories[0].category))
+          opt(
+            p2.api.format.as_tag(
+              i.categories[0].category
+            )
+          )
         ) : `<span style="opacity: 0.8">[ </span>` + i.categories.map(
           (ii) => htmlLink(p2)(
             ii.category,
@@ -22279,7 +22432,7 @@ const obsidianApi = (p2) => {
      * @param options — write options.
      * @throws — YAMLParseError if the YAML parsing fails
      * @throws — any errors that your callback function throws
-     * 
+     *
      * ```ts
      * app.fileManager.processFrontMatter(file, (frontmatter) => {
      *     frontmatter['key1'] = value;
@@ -22300,9 +22453,9 @@ const obsidianApi = (p2) => {
     getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
     /**
      * A dictionary of files:
-     * 
+     *
      * - _keys_ are the full file path
-     * - _values_ are 
+     * - _values_ are
      */
     fileCache: globalThis.app.metadataCache.fileCache,
     /**
@@ -22312,7 +22465,7 @@ const obsidianApi = (p2) => {
     metaData: globalThis.app.metadataCache.metadataCache
   };
 };
-const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
+const parseQueryParams = (_p2) => (name2, raw, scalar, options2) => {
   const requiredScalar = scalar.filter((i) => !i.contains("opt(")).length;
   const invalid = kindError(`InvalidQuery<${name2}>`, {
     raw,
@@ -22331,12 +22484,11 @@ const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
   });
   if (!raw || raw.trim() === "") {
     if (requiredScalar > 0) {
-      return invalid(`The ${name2} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler and none were provided!`);
+      return invalid(
+        `The ${name2} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler and none were provided!`
+      );
     }
-    return [
-      {},
-      {}
-    ];
+    return [{}, {}];
   }
   try {
     const parsed = JSON.parse(`[ ${raw} ]`);
@@ -22347,17 +22499,25 @@ const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
     const scalarParams = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
     const notEnoughScalarParams = requiredScalar > 0 && scalarParams.length < requiredScalar ? true : false;
     if (!optionsInTerminalPosition) {
-      return invalid(`Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`);
+      return invalid(
+        `Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`
+      );
     }
     if (notEnoughScalarParams) {
-      return invalid(`the ${name2} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`);
+      return invalid(
+        `the ${name2} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`
+      );
     }
     if (optionsPosition !== -1) {
-      const requiredOpts = Object.keys(options2).filter((i) => !i.includes("opt("));
+      const requiredOpts = Object.keys(options2).filter(
+        (i) => !i.includes("opt(")
+      );
       const opts = parsed[optionsPosition];
       for (const key of requiredOpts) {
         if (!(key in opts)) {
-          return invalid(`The "${name2}" query parser received an options hash but did not provide all of the required properties!`);
+          return invalid(
+            `The "${name2}" query parser received an options hash but did not provide all of the required properties!`
+          );
         }
       }
     }
@@ -22365,29 +22525,38 @@ const parseQueryParams = (p2) => (name2, raw, scalar, options2) => {
     let idx = 0;
     for (const [key, typeOf] of scalarOrder) {
       if (typeOf.startsWith("string") && !isString$1(scalarParams[idx])) {
-        return invalid(`the scalar property "${key}" is required and expected to be a string; type was ${typeof scalarParams[idx]}`);
+        return invalid(
+          `the scalar property "${key}" is required and expected to be a string; type was ${typeof scalarParams[idx]}`
+        );
       }
       scalar2[key] = scalarParams[idx];
       idx++;
     }
-    return [
-      scalar2,
-      optionsHash
-    ];
+    return [scalar2, optionsHash];
   } catch (e2) {
-    return parsingErr(`Problem parsing query parameters passed in: ${raw}!`, { underlying: e2 });
+    return parsingErr(
+      `Problem parsing query parameters passed in: ${raw}!`,
+      { underlying: e2 }
+    );
   }
 };
 const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, evt) => createFnWithProps(
   async () => {
     const page = getPageInfoBlock(p2)(evt);
     const re = new RegExp(`${handler}((.*))`);
-    const err = kindError(`InvalidQuery<${handler}>`, { evt, page });
+    const err = kindError(`InvalidQuery<${handler}>`, {
+      evt,
+      page
+    });
     if (page) {
       if (re.test(evt.source)) {
-        const raw = evt.source.match(re) ? stripParenthesis(Array.from(
-          evt.source.match(re)
-        )[1]) : "";
+        const raw = evt.source.match(re) ? stripParenthesis(
+          Array.from(
+            evt.source.match(
+              re
+            )
+          )[1]
+        ) : "";
         const result = parseQueryParams()(
           handler,
           raw,
@@ -22398,7 +22567,7 @@ const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, e
           return result;
         } else {
           const [scalar, options2] = result;
-          const event2 = {
+          const event = {
             plugin: p2,
             page,
             source: evt.source,
@@ -22408,7 +22577,7 @@ const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, e
             scalar,
             options: options2
           };
-          await handlerFn(event2);
+          await handlerFn(event);
           p2.debug(
             `Code Block event processed by ${handler}.`,
             { page, scalar, options: options2 }
@@ -22419,7 +22588,10 @@ const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, e
         return false;
       }
     } else {
-      return err(`Unable to create a PageInfoBlock from the page in which the code block being parsed was found!`, { sourcePath: evt.ctx.sourcePath });
+      return err(
+        `Unable to create a PageInfoBlock from the page in which the code block being parsed was found!`,
+        { sourcePath: evt.ctx.sourcePath }
+      );
     }
   },
   // properties
@@ -22430,7 +22602,7 @@ const clientHandler = (p2) => (handler, handlerFn, scalarParams, optionParams, e
 const addParams = (handler) => ({
   /**
    * Define the _scalar_ parameters this handler expects.
-   * 
+   *
    * ```ts
    * const Example = createHandler("Example")
    * 		.scalar({
@@ -22461,27 +22633,20 @@ const addParams = (handler) => ({
   })
 });
 const createHandler = (handler) => addParams(toPascalCase(handler));
-createHandler("Kind").scalar(
-  "Foo AS string",
-  "Bar AS number"
-).options({
-  foo: "string",
-  bar: "opt(bool)"
-});
 const BackLinks = createHandler("BackLinks").scalar().options().handler(async (evt) => {
   const { plugin: p2, page } = evt;
   const current = page.current;
-  const {
-    table: table3,
-    renderValue
-  } = page;
+  const { table: table3, renderValue } = page;
   const links = current.file.inlinks.sort((p22) => p22 == null ? void 0 : p22.path).where((p22) => p22.path !== current.file.path);
-  p2.info("backlinks", links.map((i) => [
-    createFileLink(p2)(i),
-    showClassifications(p2)(i),
-    showDesc(p2)(i),
-    showLinks(p2)(i)
-  ]));
+  p2.info(
+    "backlinks",
+    links.map((i) => [
+      createFileLink(p2)(i),
+      showClassifications(p2)(i),
+      showDesc(p2)(i),
+      showLinks(p2)(i)
+    ])
+  );
   if (links.length > 0) {
     table3(
       ["Backlink", "Classification(s)", "Desc", "Links"],
@@ -73375,10 +73540,10 @@ function requireURLImpl() {
     get href() {
       return usm.serializeURL(this._url);
     }
-    set href(v2) {
-      const parsedURL = usm.basicURLParse(v2);
+    set href(v) {
+      const parsedURL = usm.basicURLParse(v);
       if (parsedURL === null) {
-        throw new TypeError(`Invalid URL: ${v2}`);
+        throw new TypeError(`Invalid URL: ${v}`);
       }
       this._url = parsedURL;
       this._query._list.splice(0);
@@ -73393,26 +73558,26 @@ function requireURLImpl() {
     get protocol() {
       return `${this._url.scheme}:`;
     }
-    set protocol(v2) {
-      usm.basicURLParse(`${v2}:`, { url: this._url, stateOverride: "scheme start" });
+    set protocol(v) {
+      usm.basicURLParse(`${v}:`, { url: this._url, stateOverride: "scheme start" });
     }
     get username() {
       return this._url.username;
     }
-    set username(v2) {
+    set username(v) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      usm.setTheUsername(this._url, v2);
+      usm.setTheUsername(this._url, v);
     }
     get password() {
       return this._url.password;
     }
-    set password(v2) {
+    set password(v) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      usm.setThePassword(this._url, v2);
+      usm.setThePassword(this._url, v);
     }
     get host() {
       const url = this._url;
@@ -73424,11 +73589,11 @@ function requireURLImpl() {
       }
       return `${usm.serializeHost(url.host)}:${usm.serializeInteger(url.port)}`;
     }
-    set host(v2) {
+    set host(v) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
-      usm.basicURLParse(v2, { url: this._url, stateOverride: "host" });
+      usm.basicURLParse(v, { url: this._url, stateOverride: "host" });
     }
     get hostname() {
       if (this._url.host === null) {
@@ -73436,11 +73601,11 @@ function requireURLImpl() {
       }
       return usm.serializeHost(this._url.host);
     }
-    set hostname(v2) {
+    set hostname(v) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
-      usm.basicURLParse(v2, { url: this._url, stateOverride: "hostname" });
+      usm.basicURLParse(v, { url: this._url, stateOverride: "hostname" });
     }
     get port() {
       if (this._url.port === null) {
@@ -73448,25 +73613,25 @@ function requireURLImpl() {
       }
       return usm.serializeInteger(this._url.port);
     }
-    set port(v2) {
+    set port(v) {
       if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
         return;
       }
-      if (v2 === "") {
+      if (v === "") {
         this._url.port = null;
       } else {
-        usm.basicURLParse(v2, { url: this._url, stateOverride: "port" });
+        usm.basicURLParse(v, { url: this._url, stateOverride: "port" });
       }
     }
     get pathname() {
       return usm.serializePath(this._url);
     }
-    set pathname(v2) {
+    set pathname(v) {
       if (usm.hasAnOpaquePath(this._url)) {
         return;
       }
       this._url.path = [];
-      usm.basicURLParse(v2, { url: this._url, stateOverride: "path start" });
+      usm.basicURLParse(v, { url: this._url, stateOverride: "path start" });
     }
     get search() {
       if (this._url.query === null || this._url.query === "") {
@@ -73474,15 +73639,15 @@ function requireURLImpl() {
       }
       return `?${this._url.query}`;
     }
-    set search(v2) {
+    set search(v) {
       const url = this._url;
-      if (v2 === "") {
+      if (v === "") {
         url.query = null;
         this._query._list = [];
         this._potentiallyStripTrailingSpacesFromAnOpaquePath();
         return;
       }
-      const input = v2[0] === "?" ? v2.substring(1) : v2;
+      const input = v[0] === "?" ? v.substring(1) : v;
       url.query = "";
       usm.basicURLParse(input, { url, stateOverride: "query" });
       this._query._list = urlencoded2.parseUrlencodedString(input);
@@ -73496,13 +73661,13 @@ function requireURLImpl() {
       }
       return `#${this._url.fragment}`;
     }
-    set hash(v2) {
-      if (v2 === "") {
+    set hash(v) {
+      if (v === "") {
         this._url.fragment = null;
         this._potentiallyStripTrailingSpacesFromAnOpaquePath();
         return;
       }
-      const input = v2[0] === "#" ? v2.substring(1) : v2;
+      const input = v[0] === "#" ? v.substring(1) : v;
       this._url.fragment = "";
       usm.basicURLParse(input, { url: this._url, stateOverride: "fragment" });
     }
@@ -94029,7 +94194,7 @@ class ValidityState {
   }
 }
 const NEW_LINES_REGEXP = /[\n\r]/gm;
-const parseInts = (a) => a.map((v2) => parseInt(v2, 10));
+const parseInts = (a) => a.map((v) => parseInt(v, 10));
 class HTMLInputElementValueSanitizer {
   /**
    * Sanitizes a value.
@@ -101495,22 +101660,22 @@ class Base64 {
     let p2 = -6;
     let a = 0;
     let i = 0;
-    let v2 = 0;
+    let v = 0;
     let c;
     while (i < str.length || p2 > -6) {
       if (p2 < 0) {
         if (i < str.length) {
           c = str.charCodeAt(i++);
-          v2 += 8;
+          v += 8;
         } else {
           c = 0;
         }
         a = (a & 255) << 8 | c & 255;
         p2 += 8;
       }
-      t2 += BASE64_CHARS.charAt(v2 > 0 ? a >> p2 & 63 : 64);
+      t2 += BASE64_CHARS.charAt(v > 0 ? a >> p2 & 63 : 64);
       p2 -= 6;
-      v2 -= 6;
+      v -= 6;
     }
     return t2;
   }
@@ -102344,8 +102509,8 @@ class HTMLButtonElement extends HTMLElement$1 {
    *
    * @param v Type
    */
-  set type(v2) {
-    this.setAttribute("type", __classPrivateFieldGet$6(this, _HTMLButtonElement_instances, "m", _HTMLButtonElement_sanitizeType).call(this, v2));
+  set type(v) {
+    this.setAttribute("type", __classPrivateFieldGet$6(this, _HTMLButtonElement_instances, "m", _HTMLButtonElement_sanitizeType).call(this, v));
   }
   /**
    * Returns form action.
@@ -106979,18 +107144,50 @@ const AmazonBook = async (p2, book) => {
     html = req.text;
     p2.debug("Returned from Amazon API call", html);
   } catch (e2) {
-    p2.error(`Problems loading book information from Amazon (${url})`, e2 == null ? void 0 : e2.msg);
+    p2.error(
+      `Problems loading book information from Amazon (${url})`,
+      e2 == null ? void 0 : e2.msg
+    );
     return book;
   }
   let page = createDocument(html);
   p2.debug("page created");
-  let amazonRating = page && ((_a2 = query(page, "span .a-icon-alt")) == null ? void 0 : _a2.textContent) ? Number(stripAfter(((_b2 = query(page, "span .a-icon-alt")) == null ? void 0 : _b2.textContent) || "", " ")) : void 0;
-  let reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText") ? Number(stripAfter((_c2 = query(page, "span .arcCustomerReviewText", "throw")) == null ? void 0 : _c2.textContent, " ")) : void 0;
+  let amazonRating = page && ((_a2 = query(page, "span .a-icon-alt")) == null ? void 0 : _a2.textContent) ? Number(
+    stripAfter(
+      ((_b2 = query(page, "span .a-icon-alt")) == null ? void 0 : _b2.textContent) || "",
+      " "
+    )
+  ) : void 0;
+  let reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText") ? Number(
+    stripAfter(
+      (_c2 = query(page, "span .arcCustomerReviewText", "throw")) == null ? void 0 : _c2.textContent,
+      " "
+    )
+  ) : void 0;
   query(page, "#histogramTable", "undefined");
-  let isKindleBook = query(page, "#rpi-attribute-book_details-ebook_pages", "undefined") ? true : false;
-  let description = (_d2 = query(page, "div[data-a-expander-name=book_description_expander] p span")) == null ? void 0 : _d2.textContent;
-  let isbn10 = (_f2 = (_e2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-10")) == null ? void 0 : _e2.nextElementSibling) == null ? void 0 : _f2.textContent;
-  let isbn13 = (_h2 = (_g2 = findWhere(page, "span.a-text-bold", "undefined", "contains", "ISBN-13")) == null ? void 0 : _g2.nextElementSibling) == null ? void 0 : _h2.textContent;
+  let isKindleBook = query(
+    page,
+    "#rpi-attribute-book_details-ebook_pages",
+    "undefined"
+  ) ? true : false;
+  let description = (_d2 = query(
+    page,
+    "div[data-a-expander-name=book_description_expander] p span"
+  )) == null ? void 0 : _d2.textContent;
+  let isbn10 = (_f2 = (_e2 = findWhere(
+    page,
+    "span.a-text-bold",
+    "undefined",
+    "contains",
+    "ISBN-10"
+  )) == null ? void 0 : _e2.nextElementSibling) == null ? void 0 : _f2.textContent;
+  let isbn13 = (_h2 = (_g2 = findWhere(
+    page,
+    "span.a-text-bold",
+    "undefined",
+    "contains",
+    "ISBN-13"
+  )) == null ? void 0 : _g2.nextElementSibling) == null ? void 0 : _h2.textContent;
   let [publisher, publicationDate] = ((_j2 = (_i = findWhere(
     page,
     "span.a-text-bold",
@@ -107006,9 +107203,15 @@ const AmazonBook = async (p2, book) => {
     "Item Weight"
   )) == null ? void 0 : _k2.nextElementSibling) == null ? void 0 : _l2.textContent;
   let kindleVariantAvailable = isKindleBook === true ? true : query(page, "#tmm-grid-swatch-KINDLE", void 0) === void 0 ? false : true;
-  let numOfRatings = stripAfter(((_m2 = query(page, "#acrCustomerReviewText")) == null ? void 0 : _m2.textContent) || "", " ratings");
+  let numOfRatings = stripAfter(
+    ((_m2 = query(page, "#acrCustomerReviewText")) == null ? void 0 : _m2.textContent) || "",
+    " ratings"
+  );
   let pages = isKindleBook ? stripAfter(
-    ((_n = query(page, "#rpi-attribute-book_details-ebook_pages .a-declarative")) == null ? void 0 : _n.textContent) || "",
+    ((_n = query(
+      page,
+      "#rpi-attribute-book_details-ebook_pages .a-declarative"
+    )) == null ? void 0 : _n.textContent) || "",
     " "
   ) : retainWhile(
     stripUntil(
@@ -107044,7 +107247,10 @@ const AmazonBook = async (p2, book) => {
     isbn13: book.isbn13 ? book.isbn13 : isbn13,
     weight: book.weight ? book.weight : weight,
     publisher: book.publisher ? book.publisher : publisher == null ? void 0 : publisher.trim(),
-    publishDate: book.publishDate ? book.publishDate : publicationDate ? DateTime$1.fromFormat(stripTrailing(publicationDate, ")"), "DATE_MED").toFormat("yyyy-mm-dd") : void 0
+    publishDate: book.publishDate ? book.publishDate : publicationDate ? DateTime$1.fromFormat(
+      stripTrailing(publicationDate, ")"),
+      "DATE_MED"
+    ).toFormat("yyyy-mm-dd") : void 0
   };
 };
 const Book = createHandler("Book").scalar().options().handler(async (evt) => {
@@ -107066,9 +107272,7 @@ const Book = createHandler("Book").scalar().options().handler(async (evt) => {
     asin: ((_d2 = current["kindle-sync"]) == null ? void 0 : _d2.asin) ? current["kindle-sync"].asin : typeof (current == null ? void 0 : current.asin) === "string" ? String(current == null ? void 0 : current.asin) : void 0,
     coverImages: [
       ...current.coverUrl ? [current.coverUrl] : [],
-      ...((_e2 = current["kindle-sync"]) == null ? void 0 : _e2.bookImageUrl) ? [
-        (_f2 = current["kindle-sync"]) == null ? void 0 : _f2.bookImageUrl
-      ] : []
+      ...((_e2 = current["kindle-sync"]) == null ? void 0 : _e2.bookImageUrl) ? [(_f2 = current["kindle-sync"]) == null ? void 0 : _f2.bookImageUrl] : []
     ],
     worldCatSubjects: [],
     googleBookLink: current.link,
@@ -107087,8 +107291,12 @@ const Book = createHandler("Book").scalar().options().handler(async (evt) => {
     kindleHighlightCount: (_g2 = current["kindle-sync"]) == null ? void 0 : _g2.highlightsCount
   };
   if (!book.title && (!book.isbn10 || !book.isbn13 || !book.asin)) {
-    p2.error(`Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`);
-    page.callout("warning", "No Book metadata found!", { content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)` });
+    p2.error(
+      `Book() query requested on a page without necessary metadata! Page must have at least a title and some book identifier (e.g., ISBN10, ISBN13, or ASIN).`
+    );
+    page.callout("warning", "No Book metadata found!", {
+      content: `A kind-model query for a book summary was made but we rely on at least a "title" and some book identifier (isbn10, isbn13, or asin are all ok)`
+    });
   } else {
     book.worldCatBookLink = await worldCatBookPage(p2, book);
     book = await AmazonBook(p2, book);
@@ -107100,39 +107308,59 @@ const Book = createHandler("Book").scalar().options().handler(async (evt) => {
     ];
     const publisher = book.publisher ? [
       fmt.medium("Publisher:"),
-      fmt.ul([book.publisher], { indentation: "default", my: "tight" })
+      fmt.ul([book.publisher], {
+        indentation: "default",
+        my: "tight"
+      })
     ] : [];
     const publicationDate = book.publishDate ? [
       fmt.medium("Publication Date:"),
-      isDateTime(book.publishDate) ? fmt.ul([(_h2 = book == null ? void 0 : book.publishDate) == null ? void 0 : _h2.toFormat("LLL yyyy")], { indentation: "default", my: "tight" }) : "unknown format"
+      isDateTime(book.publishDate) ? fmt.ul(
+        [(_h2 = book == null ? void 0 : book.publishDate) == null ? void 0 : _h2.toFormat("LLL yyyy")],
+        { indentation: "default", my: "tight" }
+      ) : "unknown format"
     ] : [];
     const pages = book.totalPages ? [
       fmt.medium("Length:&nbsp;"),
-      fmt.ul([`${fmt.normal(book.totalPages)} ${fmt.light("pages", { ts: "sm" })}`], { indentation: "default", my: "tight" })
+      fmt.ul(
+        [
+          `${fmt.normal(book.totalPages)} ${fmt.light("pages", { ts: "sm" })}`
+        ],
+        { indentation: "default", my: "tight" }
+      )
     ] : [];
     const author = book.authors.length > 0 ? [
       fmt.medium("Written By:"),
-      fmt.ul(book.authors, { indentation: "default", my: "tight" })
+      fmt.ul(book.authors, {
+        indentation: "default",
+        my: "tight"
+      })
     ] : [];
     const book_ids = [
       `<div class="book-ids">`,
       fmt.medium("Book Identifiers:"),
-      fmt.ul([
-        book.isbn10 ? `${fmt.light(book.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
-        book.isbn13 ? `${fmt.light(book.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
-        book.asin ? `${fmt.light(book.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
-      ], { indentation: "default", my: "tight" }),
+      fmt.ul(
+        [
+          book.isbn10 ? `${fmt.light(book.isbn10, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn10", { ts: "xs" })}` : void 0,
+          book.isbn13 ? `${fmt.light(book.isbn13, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;isbn13", { ts: "xs" })}` : void 0,
+          book.asin ? `${fmt.light(book.asin, { ts: "sm" })}&nbsp;${fmt.medium("&nbsp;asin", { ts: "xs" })}` : void 0
+        ],
+        { indentation: "default", my: "tight" }
+      ),
       `</div>`
     ];
     const summary = fmt.blockquote("example", "Summary", {
-      content: fmt.wrap([
-        ...cover,
-        ...author,
-        ...publisher,
-        ...publicationDate,
-        ...pages,
-        ...book_ids
-      ], { my: "4px", px: "8px" }),
+      content: fmt.wrap(
+        [
+          ...cover,
+          ...author,
+          ...publisher,
+          ...publicationDate,
+          ...pages,
+          ...book_ids
+        ],
+        { my: "4px", px: "8px" }
+      ),
       style: {
         mr: "8px",
         ml: "8px"
@@ -107145,49 +107373,46 @@ const Book = createHandler("Book").scalar().options().handler(async (evt) => {
     const otherBooks = book.otherBooks ? [
       fmt.blockquote("info", `Books by ${book.authors[0]}`, {
         content: book.otherBooks.map((b) => {
-          return fmt.link(
-            b.title,
-            b.titleLink,
-            { iconUrl: b.imageLink }
-          );
+          return fmt.link(b.title, b.titleLink, {
+            iconUrl: b.imageLink
+          });
         }).join("\n") || "&nbsp;",
         icon: BOOK_ICON,
         fold: "-"
       })
     ] : [];
     const actions = fmt.blockquote("info", "Actions / Links", {
-      content: fmt.wrap([
-        book.asin ? fmt.link(
-          "Open in Kindle",
-          `kindle://book?action=open&asin=${book.asin}`,
-          { svgInline: KINDLE_ICON }
-        ) : void 0,
-        book.asin ? fmt.link(
-          "Amazon",
-          `https://www.amazon.com/dp/${book.asin}`,
-          { svgInline: AMAZON }
-        ) : void 0,
-        book.googleBookLink ? fmt.link(
-          "Google",
-          book.googleBookLink,
-          { svgInline: BOOK_ICON }
-        ) : void 0,
-        book.worldCatBookLink ? fmt.link(
-          "WorldCat",
-          book.worldCatBookLink,
-          { svgInline: BOOK_CATALOG }
-        ) : void 0,
-        fmt.link(
-          "Search",
-          `https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
-          { svgInline: SEARCH_BOOK }
-        )
-        // fmt.link(
-        // 	"Update Metadata", 
-        // 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
-        // 	{ svgInline: META_DATA}
-        // ),
-      ], { flex: true, direction: "row", ts: "sm", gap: "12px" }),
+      content: fmt.wrap(
+        [
+          book.asin ? fmt.link(
+            "Open in Kindle",
+            `kindle://book?action=open&asin=${book.asin}`,
+            { svgInline: KINDLE_ICON }
+          ) : void 0,
+          book.asin ? fmt.link(
+            "Amazon",
+            `https://www.amazon.com/dp/${book.asin}`,
+            { svgInline: AMAZON }
+          ) : void 0,
+          book.googleBookLink ? fmt.link("Google", book.googleBookLink, {
+            svgInline: BOOK_ICON
+          }) : void 0,
+          book.worldCatBookLink ? fmt.link("WorldCat", book.worldCatBookLink, {
+            svgInline: BOOK_CATALOG
+          }) : void 0,
+          fmt.link(
+            "Search",
+            `https://google.com/search?q=${book.title} by ${book.authors.join(", ")}`,
+            { svgInline: SEARCH_BOOK }
+          )
+          // fmt.link(
+          // 	"Update Metadata",
+          // 	`https://google.com/?q=${book.title} by ${book.authors.join(", ")}`,
+          // 	{ svgInline: META_DATA}
+          // ),
+        ],
+        { flex: true, direction: "row", ts: "sm", gap: "12px" }
+      ),
       fold: "+"
     });
     const reviews = fmt.blockquote("info", "Reviews", {
@@ -107195,18 +107420,23 @@ const Book = createHandler("Book").scalar().options().handler(async (evt) => {
       fold: "-",
       icon: TIP_ICON
     });
-    const details = fmt.wrap([
-      description,
-      reviews,
-      ...otherBooks,
-      actions,
-      fmt.empty_callout({ flex: true, grow: 1 })
-    ], { flex: true, direction: "column" });
+    const details = fmt.wrap(
+      [
+        description,
+        reviews,
+        ...otherBooks,
+        actions,
+        fmt.emptyCallout({ flex: true, grow: 1 })
+      ],
+      { flex: true, direction: "column" }
+    );
     const html = [
       `<div class="book-summary">`,
       ...book.subtitle ? [
         `<div class="book-subtitle" style="display:block; width: 100%">`,
-        fmt.blockquote("quote", book.subtitle, { style: { mb: "8px" } }),
+        fmt.blockquote("quote", book.subtitle, {
+          style: { mb: "8px" }
+        }),
         `</div>`
       ] : [],
       // column container
@@ -107247,9 +107477,7 @@ const Kind = createHandler("Kind").scalar(
   const p2 = evt.plugin;
   const page = evt.page;
   if (page) {
-    const {
-      table: table3
-    } = page;
+    const { table: table3 } = page;
     const fmt = p2.api.format;
     const {
       showCategories: showCategories2,
@@ -107283,7 +107511,10 @@ const Kind = createHandler("Kind").scalar(
       );
     } else {
       const msg2 = subcategory ? fmt.as_tag(`${kind}/${category}/${subcategory}`) : category ? fmt.as_tag(`${kind}/${category}`) : `${fmt.as_tag(kind)}`;
-      page.callout("note", `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`);
+      page.callout(
+        "note",
+        `none found currently<span style="font-weight: 150; position: absolute; right: 8px;">${msg2}</span>`
+      );
     }
   }
 });
@@ -107453,16 +107684,18 @@ function traverse(tree, cb) {
 }
 const find_links = (links, fm_links, page) => (t2) => {
   var _a2, _b2;
-  if (isObject(t2) && isUrl((_a2 = t2 == null ? void 0 : t2.attributes) == null ? void 0 : _a2.src)) [
-    links.push({
-      url: t2.attributes.src,
-      title: ((_b2 = t2.attributes) == null ? void 0 : _b2.alt) || page.file.name,
-      in_content: true,
-      in_frontmatter: fm_links.map((i) => i.url).includes(t2.attributes.src),
-      tagName: t2.name,
-      domain: isYouTubeCreatorUrl(t2.attributes.src) ? "youtube-creator" : isYouTubeVideoUrl(t2.attributes.src) ? "youtube-video" : isGithubRepoUrl(t2.attributes.src) ? "github-repo" : void 0
-    })
-  ];
+  if (isObject(t2) && isUrl((_a2 = t2 == null ? void 0 : t2.attributes) == null ? void 0 : _a2.src)) {
+    return [
+      links.push({
+        url: t2.attributes.src,
+        title: ((_b2 = t2.attributes) == null ? void 0 : _b2.alt) || page.file.name,
+        in_content: true,
+        in_frontmatter: fm_links.map((i) => i.url).includes(t2.attributes.src),
+        tagName: t2.name,
+        domain: isYouTubeCreatorUrl(t2.attributes.src) ? "youtube-creator" : isYouTubeVideoUrl(t2.attributes.src) ? "youtube-video" : isGithubRepoUrl(t2.attributes.src) ? "github-repo" : void 0
+      })
+    ];
+  }
   return links;
 };
 function linksInFrontmatter(fm) {
@@ -107491,7 +107724,9 @@ const pageContent = (p2) => async (ref) => {
   }
   const content2 = await p2.dv.io.load(path);
   if (!content2) {
-    p2.error(`the path passed to pageContent(${path}) was not a valid file in the vault`);
+    p2.error(
+      `the path passed to pageContent(${path}) was not a valid file in the vault`
+    );
     return void 0;
   }
   p2.debug({ [`content [${typeof content2}]`]: content2 });
@@ -107522,7 +107757,9 @@ const pageContent = (p2) => async (ref) => {
       return [links, fm_links];
     },
     internalLinks: () => {
-      return isDvPage(ref) ? Array.from(ref.file.outlinks) : Array.from(p2.dv.page(path).file.outlinks);
+      return isDvPage(ref) ? Array.from(ref.file.outlinks) : Array.from(
+        p2.dv.page(path).file.outlinks
+      );
     }
   };
 };
@@ -107549,12 +107786,12 @@ const VideoGallery = createHandler("VideoGallery").scalar().options({ size: "opt
   const grid_cols = size == "L" ? 2 : size == "M" ? 3 : size == "S" ? 4 : 5;
   const dom = [
     `<div class="video-gallery" style="display: grid; grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr)); gap: 8px;">`,
-    ...videos.map((v2) => {
-      const src = youtubeEmbed(v2.url);
+    ...videos.map((v) => {
+      const src = youtubeEmbed(v.url);
       const node2 = [
         `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
         `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
-        `<a data-tooltip-position="top" aria-label="${v2.filepath}" data-href="${v2.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v2.filepath}" style="">${v2.title}</a>`,
+        `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
         `</div>`
       ].join("\n");
       return node2;
@@ -107595,15 +107832,9 @@ const Page = createHandler("Page").scalar().options().handler(async (evt) => {
     subCats,
     metadata
   ].filter((i) => i);
-  page.render(fmt.twoColumnTable(
-    "",
-    "Value",
-    ...report
-  ));
+  page.render(fmt.twoColumnTable("", "Value", ...report));
 });
-const Subcategories = createHandler("Subcategories").scalar(
-  "category AS opt(string)"
-).options().handler(async (evt) => {
+const Subcategories = createHandler("Subcategories").scalar("category AS opt(string)").options().handler(async (evt) => {
   const { plugin: p2, page, scalar } = evt;
   const kind = page.kindTags[0];
   const categories = scalar.category && scalar.category.includes("/") ? [
@@ -107612,7 +107843,9 @@ const Subcategories = createHandler("Subcategories").scalar(
       "subcategory",
       scalar.category.split("/")[1]
     ].join("/")
-  ] : scalar.category && kind ? [`${ensureLeading(kind, "#")}/subcategory/${stripLeading(scalar.category, "#")}`] : page.categories.map((i) => {
+  ] : scalar.category && kind ? [
+    `${ensureLeading(kind, "#")}/subcategory/${stripLeading(scalar.category, "#")}`
+  ] : page.categories.map((i) => {
     const [k, c] = i.kindedTag.split("/");
     return `${ensureLeading(k, "#")}/subcategory/${c}`;
   });
@@ -107631,7 +107864,9 @@ const Subcategories = createHandler("Subcategories").scalar(
           ])
         );
       } else {
-        page.renderValue(`- _no subcategories for ${ensureLeading(cat.split("/")[2], "#")} category_`);
+        page.renderValue(
+          `- _no subcategories for ${ensureLeading(cat.split("/")[2], "#")} category_`
+        );
       }
     }
   }
@@ -107713,7 +107948,7 @@ const api = (plugin4) => ({
   getPageInfo: getPageInfo(plugin4)
 });
 const csv = (plugin4) => {
-  plugin4.registerMarkdownCodeBlockProcessor("csv", (source, el, ctx) => {
+  plugin4.registerMarkdownCodeBlockProcessor("csv", (source, el, _ctx) => {
     const rows = source.split("\n").filter((row) => row.length > 0);
     const table3 = el.createEl("table");
     const body = table3.createEl("tbody");
@@ -107975,13 +108210,19 @@ class TextInputModal extends Modal {
       }
     };
     contentEl.createEl("br");
-    const buttonContainer = contentEl.createDiv({ cls: "text-input-modal-buttons" });
-    const submitBtn = buttonContainer.createEl("button", { text: "Submit" });
+    const buttonContainer = contentEl.createDiv({
+      cls: "text-input-modal-buttons"
+    });
+    const submitBtn = buttonContainer.createEl("button", {
+      text: "Submit"
+    });
     submitBtn.addClass("mod-cta");
     submitBtn.onClickEvent(() => {
       this.submit(inputEl.value);
     });
-    const cancelBtn = buttonContainer.createEl("button", { text: "Cancel" });
+    const cancelBtn = buttonContainer.createEl("button", {
+      text: "Cancel"
+    });
     cancelBtn.onClickEvent(() => {
       this.close();
       this.resolve(null);
@@ -107998,8 +108239,8 @@ class TextInputModal extends Modal {
 }
 const create_new_kinded_page = (p2) => async (editor, view) => {
   let value2;
-  const modal = new TextInputModal(p2.app, "Filename", "", (v2) => {
-    value2 = v2;
+  const modal = new TextInputModal(p2.app, "Filename", "", (v) => {
+    value2 = v;
   });
   const fileName = await modal.open();
   console.log("value", value2, fileName);
@@ -108112,20 +108353,12 @@ const codeblockParser = (p2) => {
   let callback = async (source, el, ctx) => {
     el.style.overflowX = "auto";
     const event = { source, el, ctx };
-    getPageInfoBlock(p2)(event);
     const handlers = p2.api.queryHandlers(event);
-    p2.api.format;
     const outcomes = await Promise.all(handlers.map((i) => i()));
     p2.info(`code block processed`, outcomes);
-    if (!outcomes.some((i) => i)) {
-      handlers.map((i) => i.handlerName);
-      handlers.find((i) => isError(i));
-    }
+    if (!outcomes.some((i) => i)) ;
   };
-  let registration = p2.registerMarkdownCodeBlockProcessor(
-    "km",
-    callback
-  );
+  let registration = p2.registerMarkdownCodeBlockProcessor("km", callback);
   registration.sortOrder = -100;
 };
 const on_file_created = (plugin4) => {
@@ -108200,7 +108433,6 @@ class KindSuggest extends EditorSuggest {
     const lastWord = words.pop() || "";
     const lastWordLoc = currentLine.indexOf(lastWord);
     this.plugin.info(`lastWord: ${lastWord}`, isValidURL(lastWord));
-    ["https://", "http://"].some((i) => lastWord.startsWith(i));
     if (isValidURL(lastWord)) {
       return {
         start: {
@@ -108238,7 +108470,10 @@ class KindSuggest extends EditorSuggest {
   getSuggestions(ctx) {
     var _a2;
     let suggestions = [];
-    this.plugin.info("getting suggestions", { query: ctx.query, isUrl: isValidURL(ctx.query.trim()) });
+    this.plugin.info("getting suggestions", {
+      query: ctx.query,
+      isUrl: isValidURL(ctx.query.trim())
+    });
     if (ctx.query.length > 0 && commands.some((i) => i.startsWith(ctx.query))) {
       const suggestions2 = commands.filter((c) => c.startsWith(ctx.query));
       return suggestions2;
@@ -108259,7 +108494,9 @@ class KindSuggest extends EditorSuggest {
       const page = getPageInfo(this.plugin)(file);
       let isReallyImportant = false;
       const clipboardText = clipboard.readText();
-      const hasURLInClipboard = ["https://", "http://"].some((i) => clipboardText.startsWith(i));
+      const hasURLInClipboard = ["https://", "http://"].some(
+        (i) => clipboardText.startsWith(i)
+      );
       const allCommands = [
         ...page.isKindedPage || page.isCategoryPage || page.isSubcategoryPage || page.isKindDefnPage ? ["Update Kind Page 😊"] : []
       ];
@@ -108281,7 +108518,10 @@ class KindSuggest extends EditorSuggest {
           (cmd) => cmd === "Insert Date"
         );
         if (insertDateIndex > -1) {
-          const [insertDateCmd] = suggestions.splice(insertDateIndex, 1);
+          const [insertDateCmd] = suggestions.splice(
+            insertDateIndex,
+            1
+          );
           suggestions.unshift(insertDateCmd);
         }
       }
@@ -108291,18 +108531,13 @@ class KindSuggest extends EditorSuggest {
   renderSuggestion(suggestion, el) {
     el.createEl("div", { text: suggestion });
   }
-  selectSuggestion(suggestion, evt) {
+  selectSuggestion(suggestion, _evt) {
     if (this.context) {
       const { editor, start: start2, end: end2, file, query: query2 } = this.context;
       const selectedText = editor.getSelection();
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
       const page = getPageInfo(this.plugin)(file);
       if (page && view) {
-        ({
-          isKindedPage: isKindedPage(this.plugin)(page),
-          isCategoryPage: isCategoryPage(this.plugin)(page),
-          isSubcategoryPage: isSubcategoryPage(this.plugin)(page)
-        });
         this.plugin.info("Suggestion", suggestion);
         switch (suggestion) {
           case "Update":
@@ -108313,16 +108548,21 @@ class KindSuggest extends EditorSuggest {
               editor.replaceSelection(`**${selectedText}**`);
             } else {
               editor.replaceRange("****", start2, end2);
-              editor.setCursor({ line: start2.line, ch: start2.ch + 2 });
+              editor.setCursor({
+                line: start2.line,
+                ch: start2.ch + 2
+              });
             }
             break;
           case "Italic":
-            v;
             if (selectedText) {
               editor.replaceSelection(`*${selectedText}*`);
             } else {
               editor.replaceRange("**", start2, end2);
-              editor.setCursor({ line: start2.line, ch: start2.ch + 1 });
+              editor.setCursor({
+                line: start2.line,
+                ch: start2.ch + 1
+              });
             }
             break;
           case "Underline":
@@ -108330,7 +108570,10 @@ class KindSuggest extends EditorSuggest {
               editor.replaceSelection(`<u>${selectedText}</u>`);
             } else {
               editor.replaceRange("<u></u>", start2, end2);
-              editor.setCursor({ line: start2.line, ch: start2.ch + 3 });
+              editor.setCursor({
+                line: start2.line,
+                ch: start2.ch + 3
+              });
             }
             break;
           case "Insert Date":
@@ -108344,12 +108587,18 @@ class KindSuggest extends EditorSuggest {
             if (selectedText) {
               const url = prompt("Enter URL:");
               if (url) {
-                editor.replaceSelection(`[${selectedText}](${url})`);
+                editor.replaceSelection(
+                  `[${selectedText}](${url})`
+                );
               }
             } else {
               const text2 = prompt("Enter Link Text:") || "";
               const url = prompt("Enter URL:") || "";
-              editor.replaceRange(`[${text2}](${url})`, start2, end2);
+              editor.replaceRange(
+                `[${text2}](${url})`,
+                start2,
+                end2
+              );
             }
             break;
           case "Convert to a markdown link 🔗":
@@ -108363,10 +108612,18 @@ class KindSuggest extends EditorSuggest {
             break;
         }
       } else {
-        this.plugin.debug(`The selectSuggestion() method was triggered but couldn't create a PageInfo structure (or possibly a view for page)!`, file, view, page);
+        this.plugin.debug(
+          `The selectSuggestion() method was triggered but couldn't create a PageInfo structure (or possibly a view for page)!`,
+          file,
+          view,
+          page
+        );
       }
     } else {
-      this.plugin.debug(`The selectSuggestion() method was triggered but no context was provided on instantiated class!`, this);
+      this.plugin.debug(
+        `The selectSuggestion() method was triggered but no context was provided on instantiated class!`,
+        this
+      );
     }
   }
 }

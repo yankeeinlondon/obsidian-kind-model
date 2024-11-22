@@ -1,4 +1,5 @@
-import {  Iso8601 } from "inferred-types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Iso8601 } from "inferred-types";
 import { RequestUrlParam } from "obsidian";
 import { GetIconFromObsidian, ObsidianSvgElement } from "~/types";
 
@@ -7,10 +8,9 @@ export type CommonHeaders = {
 	"content-encoding"?: string;
 	"content-security-policy"?: string;
 	"content-type"?: string;
-	"date"?: Iso8601;
-	"server"?: string;
-	
-}
+	date?: Iso8601;
+	server?: string;
+};
 
 export type UrlResponse = {
 	url: string;
@@ -19,7 +19,7 @@ export type UrlResponse = {
 	arrayBuffer: ArrayBuffer;
 	json(): Promise<string>;
 	text: string;
-}
+};
 
 /**
  * Uses the method provided by Obsidian in the global namespace to make network
@@ -31,12 +31,12 @@ export const requestUrl = async (req: RequestUrlParam) => {
 	resp.url = req.url;
 
 	return resp as UrlResponse;
-}
+};
 
 /**
  * The `getIcon` method provided by **Obsidian** on the global object.
  */
-export const getIcon = (filePath: string): ObsidianSvgElement | null =>  {
-	const getICON =  (globalThis as any).getIcon as  GetIconFromObsidian;
+export const getIcon = (filePath: string): ObsidianSvgElement | null => {
+	const getICON = (globalThis as any).getIcon as GetIconFromObsidian;
 	return getICON(filePath) as ObsidianSvgElement | null;
-}
+};

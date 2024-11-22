@@ -23,9 +23,7 @@ import { isDvPage, isFileLink, isFrontmatter, isPageInfo } from "~/type-guards";
 import {
 	DvPage,
 	Classification,
-	PageBanners,
 	PageIcons,
-	PageSuggestion,
 	Tag,
 	PageReference,
 	PropertyType,
@@ -479,7 +477,7 @@ export const hasTypeTag =
 	};
 
 export const isCategoryDefnTag =
-	(p: KindModelPlugin) =>
+	(_p: KindModelPlugin) =>
 	(tag: string): boolean => {
 		const safeTag = stripLeading(tag, "#");
 		const parts = safeTag.split("/");
@@ -487,7 +485,7 @@ export const isCategoryDefnTag =
 	};
 
 export const isSubcategoryDefnTag =
-	(p: KindModelPlugin) =>
+	(_p: KindModelPlugin) =>
 	(tag: string): boolean => {
 		const safeTag = stripLeading(tag, "#");
 		const parts = safeTag.split("/");
@@ -515,7 +513,7 @@ export const isKindedWithSubcategoryTag =
 	};
 
 export const isTypeDefnTag =
-	(p: KindModelPlugin) =>
+	(_p: KindModelPlugin) =>
 	(tag: string): boolean => {
 		const safeTag = stripLeading(tag, "#");
 		return safeTag.startsWith("type/");
@@ -825,20 +823,6 @@ export const getPageIcons =
 		};
 	};
 
-export const getPageBanners =
-	(p: KindModelPlugin) =>
-	(pg: PageReference): PageBanners => {
-		return {
-			hasBanner: false,
-		};
-	};
-
-export const getSuggestedActions =
-	(p: KindModelPlugin) =>
-	(pg: PageReference): PageSuggestion[] => {
-		return [];
-	};
-
 /**
  * looks at the passed in page's "kind" property as well as the tag reference if available to and returns the _kinds_
  * this page is identified as.
@@ -860,7 +844,7 @@ export const getKindDefinitions =
 					.map((i) => getPage(p)(i.path))
 					.filter((i) => i) as DvPage[];
 			}
-			const tags = getKindTagsOfPage(p)(page);
+			// const tags = getKindTagsOfPage(p)(page);
 		}
 
 		return [];

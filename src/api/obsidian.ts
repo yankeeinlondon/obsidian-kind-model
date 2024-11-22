@@ -1,14 +1,12 @@
-import { FileManager } from "obsidian";
+// import { FileManager } from "obsidian";
 import KindModelPlugin from "~/main";
 import { ObsidianApp } from "~/types";
 
 type Global = {
-	app: ObsidianApp
-}
-
+	app: ObsidianApp;
+};
 
 export const obsidianApi = (p: KindModelPlugin) => {
-
 	return {
 		/**
 		 * the full Obsidian API surface exposed on global
@@ -28,7 +26,7 @@ export const obsidianApi = (p: KindModelPlugin) => {
 		 * @param options — write options.
 		 * @throws — YAMLParseError if the YAML parsing fails
 		 * @throws — any errors that your callback function throws
-		 * 
+		 *
 		 * ```ts
 		 * app.fileManager.processFrontMatter(file, (frontmatter) => {
 		 *     frontmatter['key1'] = value;
@@ -47,20 +45,22 @@ export const obsidianApi = (p: KindModelPlugin) => {
 		 * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
 		 * @returns Full path for where the attachment should be saved, according to the user's settings
 		 */
-		getAvailablePathForAttachment: p.app.fileManager.getAvailablePathForAttachment,
+		getAvailablePathForAttachment:
+			p.app.fileManager.getAvailablePathForAttachment,
 
 		/**
 		 * A dictionary of files:
-		 * 
+		 *
 		 * - _keys_ are the full file path
-		 * - _values_ are 
+		 * - _values_ are
 		 */
-		fileCache: (globalThis as unknown as Global).app.metadataCache.fileCache,
+		fileCache: (globalThis as unknown as Global).app.metadataCache
+			.fileCache,
 		/**
 		 * A dictionary which can be used to lookup metadata using
 		 * the `fileCache`'s hash value.
 		 */
-		metaData: (globalThis as unknown as Global).app.metadataCache.metadataCache,
-
-	}
-}
+		metaData: (globalThis as unknown as Global).app.metadataCache
+			.metadataCache,
+	};
+};

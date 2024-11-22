@@ -1,5 +1,5 @@
 import { isArray } from "inferred-types";
-import { FileLink } from "types";
+import { FileLink } from "~/types";
 import { isFileLink } from "./isFileLink";
 
 /**
@@ -7,5 +7,5 @@ import { isFileLink } from "./isFileLink";
  * `FileLink` in it.
  */
 export const hasFileLink = (val: unknown): val is (FileLink & unknown)[] => {
-	return isArray(val) && val.some(i => isFileLink(i));
-}
+	return isArray(val) && val.some((i) => isFileLink(i));
+};
