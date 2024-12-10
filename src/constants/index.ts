@@ -1,1 +1,1 @@
-export * from "./obsidian-constants"
+export * from "./obsidian-constants";

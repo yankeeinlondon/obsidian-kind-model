@@ -1,21 +1,18 @@
-import { Editor, MarkdownView } from "obsidian";
-import { FileSuggest, TextInputModal } from "~/helpers";
-import KindModelPlugin from "~/main";
+import type { Editor, MarkdownView } from "obsidian";
+import type KindModelPlugin from "~/main";
+import { TextInputModal } from "~/helpers";
 
+export function create_new_kinded_page(p: KindModelPlugin) {
+  return async (
+    editor: Editor,
+    view: MarkdownView,
+  ) => {
+    let value;
+    // return new Promise((resolve) => {
+    const modal = new TextInputModal(p.app, "Filename", "", (v) => { value = v; });
+    const fileName = await modal.open();
 
-export const create_new_kinded_page = (p: KindModelPlugin) => async (
-	editor: Editor, 
-	view: MarkdownView
-) => {
-
-	let value;
-	// return new Promise((resolve) => {
-		const modal = new TextInputModal(p.app, "Filename", "", v => { value = v });
-		const fileName = await modal.open()
-
-		console.log("value", value, fileName)
-	// })
-
-
-
+    console.log("value", value, fileName);
+    // })
+  };
 }

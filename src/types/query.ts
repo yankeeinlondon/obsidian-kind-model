@@ -1,3 +1,1 @@
-
-
-export const QUERY = "not implemented"
+export const QUERY = "not implemented";

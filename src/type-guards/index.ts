@@ -1,4 +1,5 @@
 export * from "./find_in";
+export * from "./hasFileLink";
 export * from "./isBasePageContext";
 export * from "./isDataviewFile";
 export * from "./isDataviewPage";
@@ -6,21 +7,20 @@ export * from "./isDateTime";
 export * from "./isDvPage";
 export * from "./isError";
 export * from "./isFileLink";
-export * from "./hasFileLink";
+export * from "./isFrontmatter";
+export * from "./isMarkdownPostProcessorContext";
 export * from "./isMarkdownView";
+export * from "./isMoment";
+export * from "./isObsidianComponent";
 export * from "./isPageContext";
 export * from "./isPageInfo";
+export * from "./isPageReference";
 export * from "./isStringPageRef";
 export * from "./isTAbstractFile";
-export * from "./isTFile";
 export * from "./isTag";
+
+export * from "./isTagKindDefinition";
+export * from "./isTFile";
+export * from "./isValidPath";
 export * from "./isValidReference";
 export * from "./isWikipediaUrl";
-export * from "./isValidPath";
-export * from "./isMoment";
-
-export * from "./isPageReference";
-export * from "./isFrontmatter";
-export * from "./isTagKindDefinition";
-export * from "./isObsidianComponent";
-export * from "./isMarkdownPostProcessorContext";

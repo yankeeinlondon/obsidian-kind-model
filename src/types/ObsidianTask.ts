@@ -1,5 +1,5 @@
-import { FileLink } from "./dataview_types";
-import { Position } from "./Position";
+import type { FileLink } from "./dataview_types";
+import type { Position } from "./Position";
 
 export interface ObsidianTask {
   annotated: boolean;

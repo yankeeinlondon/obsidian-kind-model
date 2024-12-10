@@ -7,6 +7,8 @@
 		"build": " vite build",
 		"test": "vitest",
 		"test:ci": "vitest run",
+		"lint": "eslint --flag unstable_ts_config src",
+		"lint:fix": "eslint --flag unstable_ts_config src --fix",
 		"push": "echo 'pushing new build to vault' && cp ./main.js \"/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model\" && cp ./manifest.json '/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model'",
 		"release": "bumpp"
 	},
@@ -19,6 +21,7 @@
 	"author": "Ken Snyder <ken@ken.net>",
 	"license": "MIT",
 	"devDependencies": {
+		"@antfu/eslint-config": "^3.11.2",
 		"@codemirror/autocomplete": "^6.18.3",
 		"@codemirror/commands": "^6.7.1",
 		"@codemirror/lang-javascript": "^6.2.2",
@@ -39,6 +42,8 @@
 		"builtin-modules": "^4.0.0",
 		"bumpp": "^9.9.0",
 		"esbuild": "^0.24.0",
+		"eslint": "^9.16.0",
+		"eslint-plugin-format": "^0.1.3",
 		"luxon": "^3.5.0",
 		"obsidian": "^1.7.2",
 		"obsidian-dataview": "^0.5.67",

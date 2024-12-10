@@ -1,32 +1,31 @@
 <script setup lang="ts">
-
 const props = defineProps(["title"]);
 const model = defineModel();
 
-const submit = () => {
-// 
+function submit() {
+//
 }
-const cancel = () => {
-// 
+function cancel() {
+//
 }
-
-
 </script>
 
 <template>
-<div class="text-input-component">
-	<h2>{{ title }}</h2>
-	<input
-		type="text"
-		v-model="model"
-		@keydown.enter.prevent="submit"
-		ref="inputField"
-	/>
-	<div class="buttons">
-		<button @click="submit" class="mod-cta">Submit</button>
-		<button @click="cancel">Cancel</button>
-	</div>
-</div>
-
+  <div class="text-input-component">
+    <h2>{{ title }}</h2>
+    <input
+      ref="inputField"
+      v-model="model"
+      type="text"
+      @keydown.enter.prevent="submit"
+    >
+    <div class="buttons">
+      <button class="mod-cta" @click="submit">
+        Submit
+      </button>
+      <button @click="cancel">
+        Cancel
+      </button>
+    </div>
+  </div>
 </template>
-

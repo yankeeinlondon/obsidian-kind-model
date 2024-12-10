@@ -1,5 +1,5 @@
-import {javascript} from "@codemirror/lang-javascript";
-import {LanguageSupport, syntaxTree} from "@codemirror/language";
+import { javascript } from "@codemirror/lang-javascript";
+import { LanguageSupport } from "@codemirror/language";
 import { km_autocomplete } from "utils/language/autocomplete";
 
 /**
@@ -7,6 +7,6 @@ import { km_autocomplete } from "utils/language/autocomplete";
  * but includes autocompletion support for query syntax.
  */
 export function km_lang() {
-	const js = javascript({jsx:false, typescript: true});
-	return new LanguageSupport(js.language, [km_autocomplete()]);
+  const js = javascript({ jsx: false, typescript: true });
+  return new LanguageSupport(js.language, [km_autocomplete()]);
 }

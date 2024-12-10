@@ -1,162 +1,158 @@
-
-import { Plugin } from 'obsidian';
+import type { KindCache, KindDefinition } from "./types";
+import type { DataViewApi } from "./types/dataview_types";
+import type { KindModelSettings } from "./types/settings_types";
+import type { Logger } from "./utils/logging";
+import { Plugin } from "obsidian";
 import { getAPI } from "obsidian-dataview";
-import { SettingsTab} from './config-ui/SettingsTab';
-import {  DataViewApi } from './types/dataview_types';
-import {  KindModelSettings } from './types/settings_types';
-import { DEFAULT_SETTINGS } from './utils/Constants'
-import { Logger, logger } from './utils/logging';
-// import App from "./App.vue";
-import { api } from './api/api';
-import { csv } from './events/on_load/csv';
-import { on_editor_change } from './events/on_editor_change';
-import { add_commands } from '~/commands/index';
 import xx from "xxhash-wasm";
+import { add_commands } from "~/commands/index";
+// import App from "./App.vue";
+import { api } from "./api/api";
+import { initializeKindCaches } from "./cache";
+import { SettingsTab } from "./config-ui/SettingsTab";
+import {
+  codeblockParser,
+  on_file_created,
+  on_file_deleted,
+  on_file_modified,
+  on_layout_change,
+  on_tab_change,
+} from "./events";
 
-import { 
-	codeblockParser,
-	on_tab_change,
-	on_layout_change,
-	on_file_modified,
-	on_file_created,
-	on_file_deleted,
-} from './events';
-import { KindCache, KindDefinition } from './types';
-import { initializeKindCaches } from './cache';
-import { KindSuggest } from './suggest';
+import { on_editor_change } from "./events/on_editor_change";
+import { csv } from "./events/on_load/csv";
+import { KindSuggest } from "./suggest";
+import { DEFAULT_SETTINGS } from "./utils/Constants";
+import { logger } from "./utils/logging";
 
 let hasher: null | ((input: string, seed?: number) => number) = null;
 
-
 export default class KindModelPlugin extends Plugin {
-	public settings: KindModelSettings;
-	/** the Dataview API surface */
-	public dv: DataViewApi = (globalThis as any)["DataviewAPI"] as DataViewApi;
-	public api: ReturnType<typeof api>;
+  public settings: KindModelSettings;
+  /** the Dataview API surface */
+  public dv: DataViewApi = (globalThis as any).DataviewAPI as DataViewApi;
+  public api: ReturnType<typeof api>;
 
-	public log: Logger;
-	public debug: Logger["debug"];
-	public info: Logger["info"];
-	public warn: Logger["warn"];
-	public error: Logger["error"];
+  public log: Logger;
+  public debug: Logger["debug"];
+  public info: Logger["info"];
+  public warn: Logger["warn"];
+  public error: Logger["error"];
 
-	public cache: KindCache = {
-		kindDefinitionsByPath:  new Map<string, KindDefinition<[ "path"]>>(),
-		kindDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
-		typeDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),
-		typeDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
-		kindTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
-		typeTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
-	};
-	public hasher: (input: string, seed?: number) => number
+  public cache: KindCache = {
+    kindDefinitionsByPath: new Map<string, KindDefinition<[ "path"]>>(),
+    kindDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
+    typeDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),
+    typeDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
+    kindTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
+    typeTagDuplicates: new Map<string, Set<KindDefinition<["tag"]>>>(),
+  };
 
-	private cache_ready: boolean = false;
+  public hasher: (input: string, seed?: number) => number;
 
-	/**
-	 * provides a boolean flag which indicates whether this plugin's 
-	 * cache is complete and therefore other operations which depend
-	 * on this can proceed.
-	 */
-	public get ready() {
-		return this.cache_ready;
-	}
-	public set ready(state: boolean) {
-		this.cache_ready = state;
-	}
+  private cache_ready: boolean = false;
 
-	/**
-	 * Setup this plugin on the "onload" event from Obsidian
-	 */
-	async onload() {
-		await this.loadSettings();
-		const log = logger(this.settings.log_level);
-		log.info("starting plugin");
-		const { debug, info, warn, error } = log;
-		/** allows you to pull directly from all log endpoints */
-		this.log = log;
-		this.debug = debug;
-		this.info = info;
-		this.warn = warn;
-		this.error = error;
+  /**
+   * provides a boolean flag which indicates whether this plugin's
+   * cache is complete and therefore other operations which depend
+   * on this can proceed.
+   */
+  public get ready() {
+    return this.cache_ready;
+  }
 
-		this.hasher = hasher
-			? hasher
-			: (await xx()).h32;
-		hasher = this.hasher;
+  public set ready(state: boolean) {
+    this.cache_ready = state;
+  }
 
-		this.registerEditorSuggest(new KindSuggest(this.app, this));
-		
-		// start the cache refresh process
-		// -------------------------------
-		// synchronous return happens at point that what was
-		// already in configuration JSON is loaded into memory
-		// async component runs queries to refresh any aspects
-		// which might be stale.
-		this.ready = false;
+  /**
+   * Setup this plugin on the "onload" event from Obsidian
+   */
+  async onload() {
+    await this.loadSettings();
+    const log = logger(this.settings.log_level);
+    log.info("starting plugin");
+    const { debug, info, warn, error } = log;
+    /** allows you to pull directly from all log endpoints */
+    this.log = log;
+    this.debug = debug;
+    this.info = info;
+    this.warn = warn;
+    this.error = error;
 
-		const caching = initializeKindCaches(this);
-		caching.then(() => {
-			this.ready = true;
-			this.info("Caching lookups complete");
-			this.saveSettings();
-		});
+    this.hasher = hasher || (await xx()).h32;
+    hasher = this.hasher;
 
-		// expose the Dataview API
-		this.dv = getAPI(this.app);
-		// expose Kind Model API
-		this.api = api(this);
-	
-		
-		csv(this);
-		on_editor_change(this);
-		add_commands(this);
-		// file events
-		on_file_deleted(this);
-		on_file_created(this);
-		on_file_modified(this);
-		on_layout_change(this);
-		on_tab_change(this);
+    this.registerEditorSuggest(new KindSuggest(this.app, this));
 
+    // start the cache refresh process
+    // -------------------------------
+    // synchronous return happens at point that what was
+    // already in configuration JSON is loaded into memory
+    // async component runs queries to refresh any aspects
+    // which might be stale.
+    this.ready = false;
 
-		// `km` code blocks
-		codeblockParser(this);
+    const caching = initializeKindCaches(this);
+    caching.then(() => {
+      this.ready = true;
+      this.info("Caching lookups complete");
+      this.saveSettings();
+    });
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Kind Models');
-		statusBarItemEl.addClass("clickable");
+    // expose the Dataview API
+    this.dv = getAPI(this.app);
+    // expose Kind Model API
+    this.api = api(this);
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SettingsTab(this.app, this));
+    csv(this);
+    on_editor_change(this);
+    add_commands(this);
+    // file events
+    on_file_deleted(this);
+    on_file_created(this);
+    on_file_modified(this);
+    on_layout_change(this);
+    on_tab_change(this);
 
-		log.info(`ready`);
-		
-		this.mount();
-	}
+    // `km` code blocks
+    codeblockParser(this);
 
-	mount() {
-		// Vue.createApp(App, {
-		// app: this.app
-		// }).mount(document.body.createDiv())
-	}
+    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
+    const statusBarItemEl = this.addStatusBarItem();
+    statusBarItemEl.setText("Kind Models");
+    statusBarItemEl.addClass("clickable");
 
-	onunload() {
-		// 
-	}
+    // This adds a settings tab so the user can configure various aspects of the plugin
+    this.addSettingTab(new SettingsTab(this.app, this));
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+    log.info(`ready`);
 
-	async saveSettings() {
-		const { info,  error } = logger(this.settings.log_level);
-		if(typeof this.saveData !== "function") {
-			error("the 'this' context appear to have been lost when trying to call saveSettings()", this)
-			return
-		}
-		
-		await this.saveData(this.settings);
-		info("saved user settings", this.settings);
-	}
+    this.mount();
+  }
+
+  mount() {
+    // Vue.createApp(App, {
+    // app: this.app
+    // }).mount(document.body.createDiv())
+  }
+
+  onunload() {
+    //
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    const { info, error } = logger(this.settings.log_level);
+    if (typeof this.saveData !== "function") {
+      error("the 'this' context appear to have been lost when trying to call saveSettings()", this);
+      return;
+    }
+
+    await this.saveData(this.settings);
+    info("saved user settings", this.settings);
+  }
 }
-
