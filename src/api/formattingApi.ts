@@ -4,8 +4,8 @@ import {
 	EscapeFunction,
 	isFunction,
 	TypedFunction,
+	CssColor,
 } from "inferred-types";
-import { CssColor } from "inferred-types/dist/types";
 import { listStyle, style } from "../api";
 import KindModelPlugin from "~/main";
 import {

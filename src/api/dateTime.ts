@@ -2,7 +2,10 @@ import {
 	isIsoExplicitDate,
 	Iso8601Date,
 	Iso8601DateTime,
-	isString,
+	isToday,
+	isTomorrow,
+	isYesterday,
+	isThisYear,
 	retainUntil,
 	stripAfter,
 	WHITESPACE_CHARS,
@@ -10,8 +13,7 @@ import {
 import KindModelPlugin from "~/main";
 import { getPageInfo } from "~/page";
 import { PageReference } from "~/types";
-import { Moment, moment } from "~/globals";
-import { isMoment } from "~/type-guards";
+import { moment } from "~/globals";
 
 /**
  * **getWhenDate**
@@ -110,12 +112,6 @@ export const getTomorrow = () => {
 	return stripAfter(dt, "T");
 };
 
-export const isThisYear = (date: Iso8601Date | Iso8601DateTime | Moment) => {
-	const year = isMoment(date) ? String(date.year()) : date.slice(0, 4);
-
-	return year === todaysYear();
-};
-
 export const getYear = (forDate: Iso8601Date | Iso8601DateTime) => {
 	const date = stripAfter(forDate, "T");
 	return isIsoExplicitDate(date) ? date.split("-")[0] : date.slice(0, 4);
@@ -129,48 +125,6 @@ export const getMonth = (forDate: Iso8601Date | Iso8601DateTime) => {
 export const getDate = (forDate: Iso8601Date | Iso8601DateTime) => {
 	const date = stripAfter(forDate, "T");
 	return isIsoExplicitDate(date) ? date.split("-")[2] : date.slice(6, 8);
-};
-
-export const isToday = (test: unknown): boolean => {
-	if (isString(test)) {
-		const justDate = stripAfter(test, "T");
-		return isIsoExplicitDate(justDate) && justDate === getToday();
-	} else if (isMoment(test)) {
-		return (
-			asExplicitIso8601Date(test.toISOString() as Iso8601DateTime) ===
-			getToday()
-		);
-	}
-
-	return false;
-};
-
-export const isYesterday = (test: unknown): boolean => {
-	if (isString(test)) {
-		const justDate = stripAfter(test, "T");
-		return isIsoExplicitDate(justDate) && justDate === getYesterday();
-	} else if (isMoment(test)) {
-		return (
-			asExplicitIso8601Date(test.toISOString() as Iso8601DateTime) ===
-			getYesterday()
-		);
-	}
-
-	return false;
-};
-
-export const isTomorrow = (test: unknown): boolean => {
-	if (isString(test)) {
-		const justDate = stripAfter(test, "T");
-		return isIsoExplicitDate(justDate) && justDate === getTomorrow();
-	} else if (isMoment(test)) {
-		return (
-			asExplicitIso8601Date(test.toISOString() as Iso8601DateTime) ===
-			getTomorrow()
-		);
-	}
-
-	return false;
 };
 
 export const priorDay = (

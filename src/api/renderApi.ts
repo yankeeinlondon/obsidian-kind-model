@@ -23,11 +23,12 @@ import {
 	ObsidianCalloutColors,
 	SListItem,
 } from "~/types";
-import { getClassification } from "./buildingBlocks";
+
 import { DateTime, Duration } from "luxon";
 import { blockquote } from "./formatting/blockquote";
 import { renderListItems, wrap_ol } from "./formattingApi";
 import { getPage } from "~/page";
+import { getClassification } from "./classificationApi";
 
 export const isKeyOf = <TContainer, TKey>(
 	container: TContainer,

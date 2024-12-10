@@ -5,9 +5,9 @@ import {
 	stripParenthesis,
 } from "inferred-types";
 import { PascalCase } from "inferred-types/dist/types";
-import { getPageInfoBlock } from "~/api";
 import { parseQueryParams } from "~/helpers/parseParams";
 import KindModelPlugin from "~/main";
+import { getPageInfoBlock } from "~/page";
 import { isError } from "~/type-guards";
 import {
 	Handler,

@@ -1,5 +1,24 @@
-import { createFileLink, createMarkdownLink, getProp, showAbout, showCategories, showClassifications, showCreatedDate, showDesc, showDueDate, showKind, showLinks, showMetrics, showModifiedDate, showPeers, showProp, showSlider, showSubcategories, showTags, showWhen } from "~/api"
-
+import {
+	createFileLink,
+	createMarkdownLink,
+	getProp,
+	showAbout,
+	showCategories,
+	showClassifications,
+	showCreatedDate,
+	showDesc,
+	showDueDate,
+	showKind,
+	showLinks,
+	showMetrics,
+	showModifiedDate,
+	showPeers,
+	showProp,
+	showSlider,
+	showSubcategories,
+	showTags,
+	showWhen,
+} from "~/api";
 
 export type ShowApi = {
 	showCreatedDate: typeof showCreatedDate;
@@ -29,7 +48,7 @@ export type ShowApi = {
 	showTags: ReturnType<typeof showTags>;
 	/**
 	 * Show all Frontmatter links which around found on a given page.
-	 * 
+	 *
 	 * - uses certain _property naming conventions_ along with _URL patterns_
 	 * to provide the best icon for these external pages
 	 */
@@ -46,18 +65,18 @@ export type ShowApi = {
 	showSlider: ReturnType<typeof showSlider>;
 
 	/**
-	 * creates a `FileLink` object which can be rendered by 
+	 * creates a `FileLink` object which can be rendered by
 	 * renderValue() provided by Dataview library.
 	 */
 	createFileLink: ReturnType<typeof createFileLink>;
 	/**
 	 * Creates a link to another page in the vault using Markdown syntax.
-	 * 
+	 *
 	 * - this has similar results as creating a `FileLink` with the `createFileLink` utility
 	 * function but has some additional benefits as allows for overriding not only the link text
 	 * but also adding HTML pre and post containers to the output.
-	 * - **note:** if you use this text output _inside_ an HTML block this will fail to 
+	 * - **note:** if you use this text output _inside_ an HTML block this will fail to
 	 * render properly because the markdown-to-html conversion will no longer take place.
 	 */
 	createMarkdownLink: ReturnType<typeof createMarkdownLink>;
-}
+};

@@ -1,6 +1,6 @@
 import { isString } from "inferred-types";
 import { Notice } from "obsidian";
-import { isKindedPage } from "~/api/buildingBlocks";
+import { isKindedPage } from "~/api";
 import { EventHandler } from "~/helpers/EventHandler";
 import KindModelPlugin from "~/main";
 
@@ -13,9 +13,8 @@ export const on_file_modified = (plugin: KindModelPlugin) => {
 			const kind_folder = plugin.settings.kind_folder;
 			const find = new RegExp(`^${kind_folder}`);
 			if (find.test(evt.path)) {
-				new Notice('Kind file modified');
+				new Notice("Kind file modified");
 			}
 		}
-	})
+	});
 };
-

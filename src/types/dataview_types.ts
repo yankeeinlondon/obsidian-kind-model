@@ -51,6 +51,8 @@ export interface SMarkdownPage {
 	[key: string]: any;
 }
 
+
+
 /** Comparison operators which yield true/false. */
 export type CompareOp = ">" | ">=" | "<=" | "<" | "=" | "!=";
 /** Arithmetic operators which yield numbers and other values. */

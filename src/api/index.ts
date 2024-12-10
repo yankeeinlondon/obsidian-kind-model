@@ -1,8 +1,6 @@
 export * from "./api";
-
-export * from "../page/createPageView";
 export * from "./style";
-export * from "../page/getPageBlock";
+export * from "./classificationApi";
 export * from "./iconApi";
 export * from "./renderApi";
 export * from "./formattingApi";
@@ -11,3 +9,5 @@ export * from "./fm";
 export * from "./showApi";
 export * from "./createVaultLink";
 export * from "./dateTime";
+export * from "./metadataApi";
+export * from "./obsidian";

@@ -1114,7 +1114,7 @@ function isInteger(o) {
 function isString$2(o) {
   return typeof o === "string";
 }
-function isDate(o) {
+function isDate$1(o) {
   return Object.prototype.toString.call(o) === "[object Date]";
 }
 function hasRelative() {
@@ -4348,7 +4348,7 @@ class DateTime {
    * @return {DateTime}
    */
   static fromJSDate(date, options2 = {}) {
-    const ts = isDate(date) ? date.valueOf() : NaN;
+    const ts = isDate$1(date) ? date.valueOf() : NaN;
     if (Number.isNaN(ts)) {
       return DateTime.invalid("invalid input");
     }
@@ -9737,6 +9737,57 @@ class SettingsTab extends PluginSettingTab {
     ).addDropdown(LOG_LEVELS);
   }
 }
+const obsidianApi = (p2) => {
+  return {
+    /**
+     * the full Obsidian API surface exposed on global
+     */
+    app: p2.app,
+    /**
+     * A dictionary of commands configured for the active vault
+     */
+    commands: globalThis.app.commands.commands,
+    /**
+     * Atomically read, modify, and save the frontmatter of a note. The frontmatter is passed in as a JS object, and should be mutated directly to achieve the desired result.
+     Remember to handle errors thrown by this method.
+     * @param file — the file to be modified. Must be a Markdown file.
+     * @param fn — a callback function which mutates the frontmatter object synchronously.
+     * @param options — write options.
+     * @throws — YAMLParseError if the YAML parsing fails
+     * @throws — any errors that your callback function throws
+     *
+     * ```ts
+     * app.fileManager.processFrontMatter(file, (frontmatter) => {
+     *     frontmatter['key1'] = value;
+     *     delete frontmatter['key2'];
+     * });
+     * ```
+     */
+    processFrontmatter: p2.app.fileManager.processFrontMatter,
+    /**
+     * Resolves a unique path for the attachment file being saved.
+     * Ensures that the parent directory exists and dedupes the
+     * filename if the destination filename already exists.
+     *
+     * @param filename Name of the attachment being saved
+     * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
+     * @returns Full path for where the attachment should be saved, according to the user's settings
+     */
+    getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
+    /**
+     * A dictionary of files:
+     *
+     * - _keys_ are the full file path
+     * - _values_ are
+     */
+    fileCache: globalThis.app.metadataCache.fileCache,
+    /**
+     * A dictionary which can be used to lookup metadata using
+     * the `fileCache`'s hash value.
+     */
+    metaData: globalThis.app.metadataCache.metadataCache
+  };
+};
 const FIREFOX_SAFARI_STACK_REGEXP = /(^|@)\S+:\d+/;
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
 const SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code\])?$/;
@@ -11186,10 +11237,6 @@ function isString$1(value2) {
 function isNumber$1(value2) {
   return typeof value2 === "number";
 }
-function keysOf(container) {
-  const keys = Array.isArray(container) ? Object.keys(container).map((i) => Number(i)) : isObject(container) ? isRef(container) ? ["value"] : Object.keys(container) : [];
-  return keys;
-}
 var identity = (...values) => values.length === 1 ? values[0] : values.length === 0 ? void 0 : values;
 function isDefined(value2) {
   return typeof value2 === "undefined" ? false : true;
@@ -11211,9 +11258,6 @@ function isArray(value2) {
 }
 function isContainer$1(value2) {
   return Array.isArray(value2) || isObject(value2) ? true : false;
-}
-function isRef(value2) {
-  return isObject(value2) && "value" in value2 && Array.from(Object.keys(value2)).includes("_value");
 }
 function split(str, sep = "") {
   return str.split(sep);
@@ -11558,11 +11602,8 @@ CHINESE_NEWS.flatMap((i) => i.baseUrls);
 var isNewsUrl = (val) => {
   return isAustralianNewsUrl(val) || isBelgiumNewsUrl(val) || isCanadianNewsUrl(val) || isDanishNewsUrl(val) || isDutchNewsUrl(val) || isFrenchNewsUrl(val) || isGermanNewsUrl(val) || isIndianNewsUrl(val) || isItalianNewsUrl(val) || isJapaneseNewsUrl(val) || isMexicanNewsUrl(val) || isNorwegianNewsUrl(val) || isSouthKoreanNewsUrl(val) || isSpanishNewsUrl(val) || isSwissNewsUrl(val) || isTurkishNewsUrl(val) || isUkNewsUrl(val) || isUsNewsUrl(val);
 };
-var isIsoDateTime = (val) => {
-  if (isString$1(val)) {
-    return val.includes(":") && val.includes("-") && val.split("-").length === 3 && val.split(":").length > 1 && (!val.includes("Z") || isNumberLike(val.slice(-1)) || val.endsWith("Z")) && (!val.includes("Z") || ["+", "-"].includes(stripUntil(val, "Z").slice(1, 2)) || val.endsWith("Z"));
-  }
-  return false;
+var isDate = (val) => {
+  return val instanceof Date;
 };
 var isIsoExplicitTime = (val) => {
   if (isString$1(val)) {
@@ -11607,6 +11648,76 @@ var isIsoDate = (val) => {
   } else {
     return false;
   }
+};
+var isLuxonDateTime = (val) => {
+  return isObject(val) && typeof val === "object" && val !== null && "isValid" in val && "invalidReason" in val && "invalidExplanation" in val && "toISO" in val && "toFormat" in val && "toMillis" in val && "year" in val && "month" in val && "day" in val && "hour" in val && "minute" in val && "second" in val && "millisecond" in val && typeof val.isValid === "boolean" && typeof val.toISO === "function";
+};
+var isMoment = (val) => {
+  if (val instanceof Date) {
+    return false;
+  }
+  return isObject(val) && // Check for essential Moment.js methods
+  typeof val.format === "function" && typeof val.year === "function" && typeof val.month === "function" && typeof val.date === "function" && // Check for Moment-specific properties
+  "_isAMomentObject" in val && "_isValid" in val && // Check for essential Moment.js manipulation methods
+  typeof val.add === "function" && typeof val.subtract === "function" && // Additional Moment.js specific methods
+  typeof val.toISOString === "function" && typeof val.isValid === "function";
+};
+var isToday = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getToday();
+  } else if (isMoment(test) || isDate(test)) {
+    return stripAfter(test.toISOString(), "T") === getToday();
+  } else if (isLuxonDateTime(test)) {
+    return stripAfter(test.toISO(), "T") === getToday();
+  }
+  return false;
+};
+var isTomorrow = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getTomorrow();
+  } else if (isMoment(test) || isDate(test)) {
+    return stripAfter(test.toISOString(), "T") === getTomorrow();
+  } else if (isLuxonDateTime(test)) {
+    return stripAfter(test.toISO(), "T") === getTomorrow();
+  }
+  return false;
+};
+var isYesterday = (test) => {
+  if (isString$1(test)) {
+    const justDate = stripAfter(test, "T");
+    return isIsoExplicitDate(justDate) && justDate === getYesterday();
+  } else if (isMoment(test) || isDate(test)) {
+    return stripAfter(test.toISOString(), "T") === getYesterday();
+  } else if (isLuxonDateTime(test)) {
+    return stripAfter(test.toISO(), "T") === getYesterday();
+  }
+  return false;
+};
+var isThisYear = (val) => {
+  const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
+  if (val instanceof Date) {
+    return val.getFullYear() === currentYear;
+  }
+  if (isMoment(val)) {
+    return val.year() === currentYear;
+  }
+  if (isLuxonDateTime(val)) {
+    return val.year === currentYear;
+  }
+  if (typeof val === "string") {
+    const isoDateRegex = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])(?:T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[-+][01]\d:[0-5]\d))?$/;
+    if (!isoDateRegex.test(val)) {
+      return false;
+    }
+    const yearMatch = val.match(/^(\d{4})/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1], 10);
+      return year === currentYear;
+    }
+  }
+  return false;
 };
 function stripTrailing(content2, ...strip) {
   let output = String(content2);
@@ -11785,6 +11896,20 @@ identity({
   any: "<<any>>",
   never: "<<never>>"
 });
+var getToday = () => {
+  const today = /* @__PURE__ */ new Date();
+  return today.toISOString().split("T")[0];
+};
+var getTomorrow = () => {
+  const tomorrow = /* @__PURE__ */ new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split("T")[0];
+};
+var getYesterday = () => {
+  const yesterday = /* @__PURE__ */ new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split("T")[0];
+};
 const find_in = (tg) => (...values) => {
   const found = values.find((v) => tg(v));
   return found;
@@ -11819,9 +11944,6 @@ const isWikipediaUrl = (val) => {
 const isValidPath = (val) => {
   return isString$1(val) && !val.startsWith("/") && !val.startsWith(".") && val.length > 2;
 };
-const isMoment = (val) => {
-  return isObject(val) && "toISOString" in val && "calendar" in val && "dayOfYear" in val;
-};
 const isPageReference = (v) => {
   return isDvPage(v) || isFileLink(v) || isPageInfo(v) || isTFile(v) || isTAbstractFile(v) || isString$1(v);
 };
@@ -11837,17 +11959,6 @@ const isKindDefinition = (val) => {
 const getPath = (pg) => {
   var _a2, _b2;
   return isTFile(pg) || isTAbstractFile(pg) || isLink(pg) ? pg.path : isDvPage(pg) ? pg.file.path : isString$1(pg) ? stripAfter(pg, "|") : isPageInfo(pg) ? (_b2 = (_a2 = pg.current) == null ? void 0 : _a2.file) == null ? void 0 : _b2.path : void 0;
-};
-const getPage = (p2) => (pg) => {
-  if (isDvPage(pg)) {
-    return pg;
-  }
-  if (isPageInfo(pg)) {
-    return pg.current;
-  }
-  const path = getPath(pg);
-  const page = path ? p2.dv.page(path) : void 0;
-  return page;
 };
 var __create = Object.create;
 var __defProp2 = Object.defineProperty;
@@ -20162,144 +20273,6 @@ Markdoc.validate = validate;
 Markdoc.createElement = createElement$1;
 Markdoc.truthy = truthy;
 Markdoc.format = format;
-const isTag = (v) => {
-  return typeof v === "object" ? true : false;
-};
-const getHeadingLevel = (file, content2, level, plugin4) => {
-  const root = transform2(parse3(content2 || ""));
-  let headings = [];
-  if (isTag(root)) {
-    const nodes = root.children;
-    headings = nodes.filter((n2) => isTag(n2) && n2.name === `h${level}`).map((h) => {
-      const content22 = h.children.join("\n");
-      const name2 = content22.replaceAll(/<(.+)>/gs, "").trim();
-      return {
-        level,
-        name: name2,
-        content: content22,
-        link: plugin4.dv.fileLink(`${file}#${content22}`, false, name2),
-        attributes: h.attributes
-      };
-    });
-    plugin4.debug(
-      `H${level} tags`,
-      () => `${nodes.length} total nodes, ${nodes.filter((i) => isTag(i)).length} are tags, the rest are scalar items.`,
-      `Of these tags, ${headings.length} are H${level} tags.`,
-      headings
-    );
-  } else {
-    plugin4.error(`The page content passed in did not result in a renderable tag node!`);
-  }
-  return headings;
-};
-const splitContent = (c) => {
-  const re = /^(---.*\n---\s*\n){0,1}(.*)$/s;
-  const result = c.trimStart().match(re);
-  if (!result) {
-    throw new Error(`Invalid Content passed to splitContent(${c})`);
-  }
-  const [_, yaml, body] = Array.from(result);
-  const [preH1, h1, postH1] = `
-${body}`.includes("\n# ") ? [
-    stripTrailing(stripAfter(`
-${body}`, "\n# "), "\n#"),
-    stripAfter(stripBefore(`
-${body}`, "\n#"), "\n").trim(),
-    stripBefore(stripBefore(`
-${body}`, "\n#"), "\n")
-  ] : [
-    void 0,
-    void 0,
-    body
-  ];
-  const blocks = (h1 ? postH1 : body).replace(/\n## (.*)\n/g, "\n## $1:::\n").slice(1).split(/\n## /).map((blk) => {
-    if (/.+:::/.test(blk)) {
-      let [name2, ...rest] = blk.split("\n");
-      name2 = name2.replace(/(.*):::/, "$1");
-      let content2 = rest.join("\n").replace(/^\n(.*)/, "$1").trim();
-      return { name: name2, content: content2 };
-    } else {
-      return { name: "anonymous", content: blk };
-    }
-  });
-  return { yaml, body, blocks, preH1, postH1, h1 };
-};
-const getContentStructure = (p2) => (content2, path) => {
-  const ast = Markdoc.parse(content2);
-  const renderableTree = Markdoc.transform(ast);
-  return {
-    ast,
-    renderableTree,
-    h2_tags: getHeadingLevel(path, content2, 2, p2),
-    ...splitContent(content2)
-  };
-};
-const getViewMeta = (p2) => (view, info2) => {
-  var _a2, _b2, _c2;
-  const content2 = view.getViewData();
-  return {
-    iconAssigned: view.icon,
-    mode: view.currentMode,
-    leaf: view.leaf,
-    leaf_height: (_a2 = view.leaf) == null ? void 0 : _a2.height,
-    leaf_width: (_b2 = view.leaf) == null ? void 0 : _b2.width,
-    leaf_id: ((_c2 = view.leaf) == null ? void 0 : _c2.id) || "",
-    popover: view.hoverPopover,
-    allowNoFile: view.allowNoFile,
-    previewMode: view.previewMode,
-    viewType: view.getViewType(),
-    navigation: view.navigation,
-    editor: view.editor,
-    requestSave: view.requestSave,
-    load: view.load,
-    onLoadFile: view.onLoadFile,
-    onUnloadFile: view.onUnloadFile,
-    onResize: view.onResize,
-    onRename: view.onRename,
-    onPaneMenu: view.onPaneMenu,
-    register: view.register,
-    registerDomEvent: view.registerDomEvent,
-    registerEvent: view.registerEvent,
-    registerInterval: view.registerInterval,
-    getEphemeralState: view.getEphemeralState,
-    getState: view.getState,
-    getViewData: view.getViewData,
-    getViewType: view.getViewType,
-    content: content2,
-    showBackLinks: view == null ? void 0 : view.showBackLinks,
-    contentStructure: getContentStructure(p2)(content2, info2.path)
-  };
-};
-const getDomMeta = (view, _info) => ({
-  container: view.containerEl,
-  content: view.contentEl,
-  icon: view == null ? void 0 : view.iconEl,
-  backButton: view == null ? void 0 : view.backButtonEl,
-  forwardButton: view == null ? void 0 : view.forwardButtonEl,
-  title: view == null ? void 0 : view.titleEl,
-  titleContainer: view == null ? void 0 : view.titleContainerEl,
-  titleParent: view == null ? void 0 : view.titleParentEl,
-  inlineTitle: view == null ? void 0 : view.inlineTitleEl,
-  actions: view == null ? void 0 : view.actionsEl,
-  modeButton: view == null ? void 0 : view.modeButtonEl,
-  backlinks: view == null ? void 0 : view.backlinksEl
-});
-const createPageView = (p2) => (view) => {
-  var _a2;
-  if ((_a2 = view == null ? void 0 : view.file) == null ? void 0 : _a2.path) {
-    const info2 = getPageInfo(p2)(view.file.path);
-    if (info2) {
-      const viewMeta = {
-        view: getViewMeta(p2)(view, info2),
-        dom: getDomMeta(view)
-      };
-      return {
-        ...info2,
-        ...viewMeta
-      };
-    }
-  }
-};
 const style$1 = (opts) => {
   let fmt = [];
   if (opts == null ? void 0 : opts.pb) {
@@ -20462,56 +20435,16 @@ const listStyle = (opts = {}) => {
   }
   return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
 };
-const defaultLinkIcons = {
-  documentation: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M8 13h8v-2H8Zm0 3h8v-2H8Zm0 3h5v-2H8Zm-2 3q-.825 0-1.412-.587Q4 20.825 4 20V4q0-.825.588-1.413Q5.175 2 6 2h8l6 6v12q0 .825-.587 1.413Q18.825 22 18 22Zm7-13h5l-5-5Z"/></svg>`,
-  repo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16"><path fill="#a3a3a3" d="M14 4a2 2 0 1 0-2.47 1.94V7a.48.48 0 0 1-.27.44L8.49 8.88l-2.76-1.4A.49.49 0 0 1 5.46 7V5.94a2 2 0 1 0-1 0V7a1.51 1.51 0 0 0 .82 1.34L8 9.74v1.32a2 2 0 1 0 1 0V9.74l2.7-1.36A1.49 1.49 0 0 0 12.52 7V5.92A2 2 0 0 0 14 4zM4 4a1 1 0 1 1 2 0a1 1 0 0 1-2 0zm5.47 9a1 1 0 1 1-2 0a1 1 0 0 1 2 0zM12 5a1 1 0 1 1 0-2a1 1 0 0 1 0 2z"/></svg>`,
-  review: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 14 14"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.87" cy="5" r="4.5"/><circle cx="6.87" cy="5" r="2"/><path d="m6 9.42l-.88 3.7a.51.51 0 0 1-.26.33a.54.54 0 0 1-.43 0L1.11 12a.51.51 0 0 1-.18-.78L3.5 8M8 9.37l.9 3.75a.5.5 0 0 0 .27.33a.51.51 0 0 0 .42 0l3.3-1.45a.5.5 0 0 0 .28-.35a.48.48 0 0 0-.1-.43l-2.68-3.41"/></g></svg>`,
-  company: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M11 15v-2h2v2h-2Zm-1-9h4V4h-4v2ZM4 21q-.825 0-1.413-.588T2 19v-4h7v1q0 .425.288.713T10 17h4q.425 0 .713-.288T15 16v-1h7v4q0 .825-.588 1.413T20 21H4Zm-2-8V8q0-.825.588-1.413T4 6h4V4q0-.825.588-1.413T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v5h-7v-1q0-.425-.288-.713T14 11h-4q-.425 0-.713.288T9 12v1H2Z"/></svg>`,
-  link: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`,
-  link_broken: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14 11.998C14 9.506 11.683 7 8.857 7H7.143C4.303 7 2 9.238 2 11.998c0 2.378 1.71 4.368 4 4.873a5.3 5.3 0 0 0 1.143.124M16.857 7c.393 0 .775.043 1.143.124c2.29.505 4 2.495 4 4.874a4.92 4.92 0 0 1-1.634 3.653"/><path d="M10 11.998c0 2.491 2.317 4.997 5.143 4.997M18 22.243l2.121-2.122m0 0L22.243 18m-2.122 2.121L18 18m2.121 2.121l2.122 2.122"/></g></svg>`,
-  api: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M13.26 10.5h2v1h-2z"/><path fill="#888888" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M8.4 15L8 13.77H6.06L5.62 15H4l2.2-6h1.62L10 15Zm8.36-3.5a1.47 1.47 0 0 1-1.5 1.5h-2v2h-1.5V9h3.5a1.47 1.47 0 0 1 1.5 1.5ZM20 15h-1.5V9H20Z"/><path fill="#888888" d="M6.43 12.77h1.16l-.58-1.59z"/></svg>`,
-  article: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#888888" d="M88 112a8 8 0 0 1 8-8h80a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h80a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m136-88v120a24 24 0 0 1-24 24H32a24 24 0 0 1-24-23.89V88a8 8 0 0 1 16 0v96a8 8 0 0 0 16 0V64a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16m-16 0H56v120a23.84 23.84 0 0 1-1.37 8H208a8 8 0 0 0 8-8Z"/></svg>`,
-  you_tube: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M0 0h24v24H0z"/><path fill="#888888" d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9"/></g></svg>`,
-  website: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="#a3a3a3"><path fill-rule="evenodd" d="M14 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-4Zm3 2h-2v6h2V9Z" clip-rule="evenodd"/><path d="M6 7a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2H6Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H6Zm-1 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/><path fill-rule="evenodd" d="M4 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4Zm16 2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></g></svg>`,
-  wikipedia: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="m14.97 18.95l-2.56-6.03c-1.02 1.99-2.14 4.08-3.1 6.03c-.01.01-.47 0-.47 0C7.37 15.5 5.85 12.1 4.37 8.68C4.03 7.84 2.83 6.5 2 6.5v-.45h5.06v.45c-.6 0-1.62.4-1.36 1.05c.72 1.54 3.24 7.51 3.93 9.03c.47-.94 1.8-3.42 2.37-4.47c-.45-.88-1.87-4.18-2.29-5c-.32-.54-1.13-.61-1.75-.61c0-.15.01-.25 0-.44l4.46.01v.4c-.61.03-1.18.24-.92.82c.6 1.24.95 2.13 1.5 3.28c.17-.34 1.07-2.19 1.5-3.16c.26-.65-.13-.91-1.21-.91c.01-.12.01-.33.01-.43c1.39-.01 3.48-.01 3.85-.02v.42c-.71.03-1.44.41-1.82.99L13.5 11.3c.18.51 1.96 4.46 2.15 4.9l3.85-8.83c-.3-.72-1.16-.87-1.5-.87v-.45l4 .03v.42c-.88 0-1.43.5-1.75 1.25c-.8 1.79-3.25 7.49-4.85 11.2z"/></svg>`,
-  playground: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 50 50"><path fill="#888888" d="M7.206 31.141c2.885 0 5.219-2.399 5.219-5.368c0-2.953-2.334-5.353-5.219-5.353C4.333 20.42 2 22.82 2 25.773c0 2.968 2.333 5.368 5.206 5.368m29.23 9.216a.53.53 0 0 1 .741.117l.965 1.372a.578.578 0 0 1-.116.766l-7.08 5.287a.536.536 0 0 1-.743-.118l-.962-1.372a.575.575 0 0 1 .116-.764zm-8.003-6.817l-2.808-5.063l-1.474 1.107l2.808 5.09zm-6.551-11.827L10.962 2l-2.089.014l11.522 20.82zm10.281 10.43C32.78 31.682 34.192 31 35 31h10c1.974 0 3 1.986 3 4.004C48 37.034 46.974 38 45 38h-9l-10.836 8.502c-3.808 2.819-6.116-.278-6.116-.278l-8.483-8.729c-1.423-1.753-1.115-5.089.591-6.566l11.739-8.597c1.166-1 2.897-.843 3.885.343c.976 1.2.822 2.994-.346 3.996l-7.515 5.657l5.399 5.484z"/></svg>`,
-  pin: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M12 20.556q-.235 0-.47-.077t-.432-.25q-1.067-.98-2.163-2.185q-1.097-1.204-1.992-2.493t-1.467-2.633t-.572-2.622q0-3.173 2.066-5.234T12 3t5.03 2.062t2.066 5.234q0 1.279-.572 2.613q-.572 1.333-1.458 2.632q-.885 1.3-1.981 2.494T12.92 20.21q-.191.173-.434.26t-.487.086m.003-8.825q.668 0 1.14-.476t.472-1.143t-.475-1.14t-1.143-.472t-1.14.476t-.472 1.143t.475 1.14t1.143.472"/></svg>`,
-  map: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M14.485 19.737L9 17.823l-3.902 1.509q-.21.083-.401.053t-.354-.132t-.252-.274Q4 18.806 4 18.583V6.41q0-.282.13-.499t.378-.303l3.957-1.345q.124-.05.257-.075T9 4.163t.278.025t.257.075L15 6.177l3.902-1.509q.21-.083.401-.053t.354.132t.252.274q.091.173.091.396v12.259q0 .284-.159.495t-.426.298l-3.9 1.287q-.13.05-.256.065q-.125.016-.26.016t-.26-.025t-.254-.075m.015-1.033v-11.7l-5-1.746v11.7zm1 0L19 17.55V5.7l-3.5 1.304zM5 18.3l3.5-1.342v-11.7L5 6.45zM15.5 7.004v11.7zm-7-1.746v11.7z"/></svg>`,
-  home: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M6 19h3v-5q0-.425.288-.712T10 13h4q.425 0 .713.288T15 14v5h3v-9l-6-4.5L6 10zm-2 0v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-4q-.425 0-.712-.288T13 20v-5h-2v5q0 .425-.288.713T10 21H6q-.825 0-1.412-.587T4 19m8-6.75"/></svg>`,
-  office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`
-};
-const iconApi = (p2) => {
-  const linkIcons = getPage(p2)("Link Icons") || defaultLinkIcons;
-  return {
-    /**
-     * The designated page for _link icons_ with a backup of core icons so
-     * even if `Link Icons` page is missing we'll have a decent selection.
-     */
-    linkIcons,
-    /**
-     * Returns the current icon associated with a page.
-     *
-     * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
-     */
-    currentIcon: (pg) => {
-      const page = getPage(p2)(pg);
-      if (page) {
-        const path = getPath(page);
-        return getIcon(path);
-      }
-      return "broken-link";
-    },
-    /**
-     * Returns all the properties which have inline SVG definitions
-     */
-    getIconProperties: (pg) => {
-      const page = getPage(p2)(pg);
-      if (page) {
-        return getMetadata(p2)(page)["svg_inline"];
-      }
-      return [];
-    }
-  };
+const getPage = (p2) => (pg) => {
+  if (isDvPage(pg)) {
+    return pg;
+  }
+  if (isPageInfo(pg)) {
+    return pg.current;
+  }
+  const path = getPath(pg);
+  const page = path ? p2.dv.page(path) : void 0;
+  return page;
 };
 const MARKDOWN_PAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h12A1.5 1.5 0 0 1 15 3.5v8a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 0 11.5zM10 5v3.293L8.854 7.146l-.708.708l2 2a.5.5 0 0 0 .708 0l2-2l-.707-.708L11 8.293V5zm-7.146.146A.5.5 0 0 0 2 5.5V10h1V6.707l1.5 1.5l1.5-1.5V10h1V5.5a.5.5 0 0 0-.854-.354L4.5 6.793z" clip-rule="evenodd"/></svg>`;
 const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
@@ -20747,6 +20680,9 @@ const formattingApi = (p2) => {
     }
   };
 };
+const isKeyOf = (container, key) => {
+  return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
+};
 function removePound(tag) {
   return typeof tag === "string" && (tag == null ? void 0 : tag.startsWith("#")) ? tag.slice(1) : tag;
 }
@@ -20954,73 +20890,21 @@ const renderApi = (p2) => (el, filePath) => {
     code: (code2) => p2.dv.renderValue(`<code>${code2}</code>`, el, p2, filePath, true)
   };
 };
-const removeFmKey = (p2) => (
-  /**
-   * A higher order function which interacts with **Obsidian** to remove
-   * a property from a page's frontmatter.
-   */
-  (path) => (
-    /**
-     *  Removes the specified `key` from the current page.
-     */
-    async (key) => {
-      const abstractFile = p2.app.vault.getAbstractFileByPath(path);
-      if (abstractFile instanceof TFile) {
-        const file = abstractFile;
-        try {
-          await p2.app.fileManager.processFrontMatter(
-            file,
-            (frontmatter) => {
-              delete frontmatter[key];
-            }
-          );
-          p2.debug(
-            `Frontmatter key '${key}' removed successfully from file: ${path}`
-          );
-        } catch (error2) {
-          p2.error("Error removing frontmatter key:", error2);
-        }
-      } else {
-        p2.error(`File "${path}" not found or is a folder.`);
-      }
-    }
-  )
-);
-const setFmKey = (p2) => (path) => (
-  /**
-   * Sets the value of the specified **key** in the _frontmatter_ properties.
-   */
-  async (key, value2) => {
-    const abstractFile = p2.app.vault.getAbstractFileByPath(path);
-    if (abstractFile instanceof TFile) {
-      const file = abstractFile;
-      try {
-        await p2.app.fileManager.processFrontMatter(
-          file,
-          (frontmatter) => {
-            frontmatter[key] = value2;
-          }
-        );
-        p2.debug(`Frontmatter updated successfully for file: ${path}`);
-      } catch (error2) {
-        p2.error(
-          `Error updating frontmatter [${key}] for file "${path}":`,
-          error2
-        );
-      }
-    } else {
-      console.error(`File "${path}" not found or is a folder.`);
-    }
+const getPageInfoBlock = (p2) => (evt) => {
+  const { source, el, ctx } = evt;
+  const filePath = ctx.sourcePath;
+  const page = getPageInfo(p2)(filePath);
+  if (page) {
+    const sectionInfo = ctx.getSectionInfo(el);
+    return {
+      ...page,
+      content: source,
+      container: el,
+      component: ctx,
+      sectionInfo,
+      ...renderApi(p2)(el, filePath)
+    };
   }
-);
-const fmApi = (p2, path) => path ? {
-  /** set **key** on current page's _frontmatter_. */
-  setFmKey: setFmKey(p2)(path),
-  /** remove **key** from current page's _frontmatter_. */
-  removeFmKey: removeFmKey(p2)(path)
-} : {
-  setFmKey: setFmKey(p2),
-  removeFmKey: removeFmKey(p2)
 };
 const createKindDefinition = (p2) => (ref) => {
   const pg = getPage(p2)(ref);
@@ -21041,11 +20925,15 @@ const createKindDefinition = (p2) => (ref) => {
       };
     } catch (e2) {
       const msg2 = (e2 == null ? void 0 : e2.msg) || (e2 == null ? void 0 : e2.message) || String(e2);
-      p2.error(`Problem calling createKindDefinition(${String(ref)}): ${msg2}`);
+      p2.error(
+        `Problem calling createKindDefinition(${String(ref)}): ${msg2}`
+      );
     }
   } else {
     if (!ref) {
-      p2.warn(`an empty reference was passed to createKindDefinition!`);
+      p2.warn(
+        `an empty reference was passed to createKindDefinition!`
+      );
     } else {
       p2.warn("can not create KindDefinition", { ref, pg });
     }
@@ -21123,6 +21011,68 @@ const updateTypeDefinitionInCache = (p2) => async (payload) => {
       }
     }
   }
+};
+const isTag = (v) => {
+  return typeof v === "object" ? true : false;
+};
+const getHeadingLevel = (file, content2, level, plugin4) => {
+  const root = transform2(parse3(content2 || ""));
+  let headings = [];
+  if (isTag(root)) {
+    const nodes = root.children;
+    headings = nodes.filter((n2) => isTag(n2) && n2.name === `h${level}`).map((h) => {
+      const content22 = h.children.join("\n");
+      const name2 = content22.replaceAll(/<(.+)>/gs, "").trim();
+      return {
+        level,
+        name: name2,
+        content: content22,
+        link: plugin4.dv.fileLink(`${file}#${content22}`, false, name2),
+        attributes: h.attributes
+      };
+    });
+    plugin4.debug(
+      `H${level} tags`,
+      () => `${nodes.length} total nodes, ${nodes.filter((i) => isTag(i)).length} are tags, the rest are scalar items.`,
+      `Of these tags, ${headings.length} are H${level} tags.`,
+      headings
+    );
+  } else {
+    plugin4.error(`The page content passed in did not result in a renderable tag node!`);
+  }
+  return headings;
+};
+const splitContent = (c) => {
+  const re = /^(---.*\n---\s*\n){0,1}(.*)$/s;
+  const result = c.trimStart().match(re);
+  if (!result) {
+    throw new Error(`Invalid Content passed to splitContent(${c})`);
+  }
+  const [_, yaml, body] = Array.from(result);
+  const [preH1, h1, postH1] = `
+${body}`.includes("\n# ") ? [
+    stripTrailing(stripAfter(`
+${body}`, "\n# "), "\n#"),
+    stripAfter(stripBefore(`
+${body}`, "\n#"), "\n").trim(),
+    stripBefore(stripBefore(`
+${body}`, "\n#"), "\n")
+  ] : [
+    void 0,
+    void 0,
+    body
+  ];
+  const blocks = (h1 ? postH1 : body).replace(/\n## (.*)\n/g, "\n## $1:::\n").slice(1).split(/\n## /).map((blk) => {
+    if (/.+:::/.test(blk)) {
+      let [name2, ...rest] = blk.split("\n");
+      name2 = name2.replace(/(.*):::/, "$1");
+      let content2 = rest.join("\n").replace(/^\n(.*)/, "$1").trim();
+      return { name: name2, content: content2 };
+    } else {
+      return { name: "anonymous", content: blk };
+    }
+  });
+  return { yaml, body, blocks, preH1, postH1, h1 };
 };
 const wait = (delay) => {
   return new Promise((resolve3) => {
@@ -21257,564 +21207,6 @@ const lookupKnownKindTags = (p2) => {
   const tags = Array.from(p2.cache.kindDefinitionsByTag.keys());
   return tags;
 };
-const moment = globalThis.moment;
-const getWhenDate = (p2) => (ref) => {
-  const page = getPageInfo(p2)(ref);
-  if (page) {
-    const { when, date } = page.current.file.frontmatter;
-    const prop = when || date;
-    if (prop && isIsoExplicitDate(prop)) {
-      return prop;
-    }
-    if (page.name.includes("-")) {
-      const pre = retainUntil(page.name, ...WHITESPACE_CHARS);
-      if (isIsoExplicitDate(pre)) {
-        return pre;
-      }
-    }
-  }
-  p2.info("when", { page, ref });
-  return void 0;
-};
-const todaysYear = () => String(moment(Date.now()).year());
-const todaysMonth = () => String(moment(Date.now()).month());
-const todaysDate = () => String(moment(Date.now()).date());
-const getToday = () => {
-  const dt = moment(Date.now()).toISOString(true);
-  return stripAfter(dt, "T");
-};
-const getYesterday = () => {
-  const dt = moment(Date.now()).subtract("1", "day").toISOString(true);
-  return stripAfter(dt, "T");
-};
-const getTomorrow = () => {
-  const dt = moment(Date.now()).add("1", "day").toISOString(true);
-  return stripAfter(dt, "T");
-};
-const isThisYear = (date) => {
-  const year = isMoment(date) ? String(date.year()) : date.slice(0, 4);
-  return year === todaysYear();
-};
-const getYear = (forDate) => {
-  const date = stripAfter(forDate, "T");
-  return isIsoExplicitDate(date) ? date.split("-")[0] : date.slice(0, 4);
-};
-const getMonth = (forDate) => {
-  const date = stripAfter(forDate, "T");
-  return isIsoExplicitDate(date) ? date.split("-")[1] : date.slice(4, 6);
-};
-const getDate = (forDate) => {
-  const date = stripAfter(forDate, "T");
-  return isIsoExplicitDate(date) ? date.split("-")[2] : date.slice(6, 8);
-};
-const isToday = (test) => {
-  if (isString$1(test)) {
-    const justDate = stripAfter(test, "T");
-    return isIsoExplicitDate(justDate) && justDate === getToday();
-  } else if (isMoment(test)) {
-    return asExplicitIso8601Date(test.toISOString()) === getToday();
-  }
-  return false;
-};
-const isYesterday = (test) => {
-  if (isString$1(test)) {
-    const justDate = stripAfter(test, "T");
-    return isIsoExplicitDate(justDate) && justDate === getYesterday();
-  } else if (isMoment(test)) {
-    return asExplicitIso8601Date(test.toISOString()) === getYesterday();
-  }
-  return false;
-};
-const isTomorrow = (test) => {
-  if (isString$1(test)) {
-    const justDate = stripAfter(test, "T");
-    return isIsoExplicitDate(justDate) && justDate === getTomorrow();
-  } else if (isMoment(test)) {
-    return asExplicitIso8601Date(test.toISOString()) === getTomorrow();
-  }
-  return false;
-};
-const priorDay = (date) => {
-  const prior = stripAfter(
-    moment(date).subtract("1", "day").toISOString(true),
-    "T"
-  );
-  return prior;
-};
-const nextDay = (date) => {
-  const next = stripAfter(
-    moment(date).add("1", "day").toISOString(true),
-    "T"
-  );
-  return next;
-};
-const journalFile = (format2, dayOf = void 0) => {
-  const [year, month, day] = dayOf ? [getYear(dayOf), getMonth(dayOf), getDate(dayOf)] : [todaysYear(), todaysMonth(), todaysDate()];
-  if (!format2.includes("YYYY") && !format2.includes("MM") && !format2.includes("DD")) {
-    throw new Error(
-      `a journal file was passed in with a static format string: ${format2}; must have at least one dynamic segment!`
-    );
-  }
-  const filepath = format2.replaceAll("YYYY", year).replaceAll("MM", month).replaceAll("DD", day);
-  return filepath;
-};
-const asExplicitIso8601Date = (date) => {
-  const d = stripAfter(date, "T");
-  return isIsoExplicitDate(d) ? d : `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-};
-const describeDate = (date, offset2 = 0, sameYear = "MMM Do", diffYear = "MMM Do, YYYY") => {
-  const d = moment(asExplicitIso8601Date(date)).add(offset2, "days");
-  console.log("describe", {
-    d,
-    offset: offset2,
-    isToday: isToday(d),
-    isYesterday: isYesterday(d)
-  });
-  return isToday(d) ? "today" : isYesterday(d) ? "yesterday" : isTomorrow(d) ? "tomorrow" : isThisYear(d) ? d.format(sameYear) : d.format(diffYear);
-};
-const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
-const showCreatedDate = (p2) => (pg, format2) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return format2 ? page.file.cday.toFormat(format2) : page.file.cday;
-  }
-  return "";
-};
-const showModifiedDate = (p2) => (pg, format2) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    return format2 ? page.file.mday.toFormat(format2) : page.file.mday;
-  }
-  return "";
-};
-const showDueDate = (p2) => (page, prop = "due", format2) => {
-  const pg = getPage(p2)(page);
-  if (pg && pg[prop] !== void 0) {
-    return typeof pg[prop] === "number" ? format2 ? DateTime$1.fromMillis(pg[prop]).toFormat(format2) : DateTime$1.fromMillis(pg[prop]) : typeof pg[prop] === "object" && pg[prop] instanceof DateTime$1 ? format2 ? pg[prop].toFormat(format2) : pg[prop] : typeof pg[prop] === "string" && DateTime$1.fromISO(pg[prop]) ? format2 ? DateTime$1.fromISO(pg[prop]).toFormat(format2) : DateTime$1.fromISO(pg[prop]) : "";
-  } else {
-    return "";
-  }
-};
-const showDesc = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const desc = showProp(p2)(page, "about", "desc", "description");
-    if (typeof desc == "string") {
-      return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
-    } else {
-      return "";
-    }
-  }
-  return "";
-};
-const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const created = page.file.cday;
-    const modified = page.file.mday;
-    const deltaCreated = Math.abs(created.diffNow("days").days);
-    const deltaModified = Math.abs(modified.diffNow("days").days);
-    if (deltaCreated < 14) {
-      const desc = created.toRelative();
-      return `<span style="cursor: default"><i style="font-weight: 150">created</i> ${desc}</span>`;
-    } else if (deltaModified < 14) {
-      const desc = modified.toRelative();
-      return `<span style="cursor: default"><i style="font-weight: 150">modified</i> ${desc}</span>`;
-    } else {
-      return `<span style="cursor: default">${modified.toFormat(format2)}</span>`;
-    }
-  } else {
-    return "";
-  }
-};
-const showTags = (p2) => (pg, ...exclude) => {
-  return pg.file.etags.filter(
-    (t2) => !exclude.some((i) => t2.startsWith(i) ? true : false)
-  ).map((t2) => `\`${t2}\``).join(", ") || "";
-};
-const showLinks = (p2) => (pg) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const [_, pageIcon] = getProp(p2)(
-      pg,
-      "icon",
-      "svg_icon",
-      "_icon",
-      "_svg_icon"
-    );
-    const link_props = {
-      website: "website",
-      wikipedia: "wikipedia",
-      company: "company",
-      retailer: "company",
-      docs: "documentation",
-      retail_urls: "retail",
-      retail: "retail",
-      url: "link",
-      repo: "repo",
-      review: "review",
-      reviews: "review",
-      blog: "blog",
-      api: "api",
-      map: "map",
-      place: "pin",
-      home: "home",
-      office: "office",
-      offices: "office",
-      work: "office",
-      employer: "office",
-      playground: "playground",
-      demo: "playground",
-      support: "support",
-      help: "support"
-    };
-    const create_lnk = (icon, url, prop) => {
-      icon = prop === "website" && isString$1(pageIcon) ? pageIcon : /youtube.com/.test(url) ? "you_tube" : icon;
-      p2.debug(prop, pageIcon);
-      return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
-    };
-    const links = [];
-    for (const prop of keysOf(pg)) {
-      if (prop in page && isString$1(page[prop])) {
-        if (Array.isArray(page[prop])) {
-          page[prop].forEach((p22) => {
-            if (isString$1(p22) && /^http/.test(p22)) {
-              links.push([prop, p22]);
-            }
-          });
-        } else if (isString$1(page[prop]) && !prop.startsWith("_") && /^http/.test(page[prop])) {
-          links.push([prop, page[prop]]);
-        }
-      }
-    }
-    const icons = p2.api.linkIcons;
-    const prettify = (tuple) => {
-      const [prop, url] = tuple;
-      if (prop in link_props) {
-        if (link_props[prop] in icons) {
-          return create_lnk(icons[link_props[prop]], url, prop);
-        } else {
-          return create_lnk(DEFAULT_LINK, url, prop);
-        }
-      } else {
-        return create_lnk(DEFAULT_LINK, url, prop);
-      }
-    };
-    return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
-  }
-  return "";
-};
-const showProp = (p2) => (pg, ...props) => {
-  var _a2;
-  const page = getPage(p2)(pg);
-  if (page) {
-    if (!((_a2 = page == null ? void 0 : page.file) == null ? void 0 : _a2.name)) {
-      throw new Error(
-        `Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`
-      );
-    }
-    const found = props.find(
-      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
-    );
-    if (!found) {
-      return "";
-    }
-    if (isKeyOf(page, found)) {
-      const value2 = page[found];
-      try {
-        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map(
-          (v) => isLink(v) ? v : isDvPage(v) ? v.file.link : ""
-        ).filter((i) => i).join(", ") : "";
-      } catch (e2) {
-        p2.error(
-          `Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`,
-          e2
-        );
-        return "";
-      }
-    }
-  }
-  return "";
-};
-const getProp = (p2) => (pg, ...props) => {
-  const page = getPage(p2)(pg);
-  if (page) {
-    const found = props.find(
-      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
-    );
-    if (!found) {
-      return [void 0, void 0];
-    } else {
-      const value2 = page[found];
-      return [
-        found,
-        isLink(value2) ? p2.api.getPage(value2) : Array.isArray(value2) ? value2.map((i) => isLink(i) ? p2.dv.page(i) : i) : value2
-      ];
-    }
-  }
-  p2.error(`Call to getProp(pg) passed in an invalid DvPage`, {
-    pg,
-    props
-  });
-  return [void 0, void 0];
-};
-const showAbout = (p2) => (pg) => {
-  return [];
-};
-const showPeers = (p2) => (pg) => {
-  return "";
-};
-const showKind = (p2) => (pg, withTag) => {
-  const page = p2.api.getPage(pg);
-  let links = [];
-  withTag = isUndefined(withTag) ? true : withTag;
-  if (page) {
-    const classy = getClassification(p2)(page);
-    for (const k of classy) {
-      const fmt = p2.api.format;
-      links.push(
-        withTag ? `${links}${createMarkdownLink(p2)(k.kind, { post: fmt.as_tag(k.kindTag) })}` : `${links}${createMarkdownLink(p2)(k.kind)}`
-      );
-    }
-  }
-  return links.join(", ");
-};
-const link = (name2, path, display) => {
-  return [
-    `<a data-href="${name2}" href="${path}" `,
-    `class="internal-link data-link-icon data-link-icon-after data-link-text" `,
-    `target="_blank" rel="noopener">`,
-    display,
-    `</a>`
-  ].join("");
-};
-const htmlLink = (p2) => (ref, opt) => {
-  const page = getPage(p2)(ref);
-  if (page) {
-    const name2 = page.file.name;
-    const path = stripTrailing(page.file.path, ".md");
-    const display = (opt == null ? void 0 : opt.display) || page.file.name || page.file.path;
-    return link(name2, path, display);
-  } else {
-    console.log(`invalid: ${ref}`);
-  }
-  if ((opt == null ? void 0 : opt.createPageWhereMissing) && isValidPath(ref)) {
-    const parts = ref.split("/");
-    const display = opt.display || parts.pop() || "";
-    return link(
-      stripTrailing(ref, ".md"),
-      ref,
-      isToday(display) ? "today" : isYesterday(display) ? "yesterday" : isTomorrow(display) ? "tomorrow" : display
-    );
-  }
-  return isValidPath(ref) ? `<!-- no link [${String(ref)}] -->` : `<!-- no link [invalid path: ${String(ref)}] -->`;
-};
-const showCategories = (p2) => (pg, opt) => {
-  const page = p2.api.getPage(pg);
-  let links = [];
-  isUndefined(opt == null ? void 0 : opt.withTag) ? true : opt.withTag;
-  const currentPage = (opt == null ? void 0 : opt.currentPage) ? getPage(p2)(opt.currentPage) : {};
-  if (page) {
-    const cats = getCategories(p2)(page);
-    const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
-    for (const cat of cats) {
-      p2.api.format;
-      ({
-        pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
-      });
-      links.push(
-        getPath(page) === getPath(currentPage) ? "(this)" : htmlLink(p2)(page, { display: cat.category })
-      );
-    }
-  }
-  return links.join(", ");
-};
-const showSubcategories = (p2) => (pg, opt) => {
-  const page = p2.api.getPage(pg);
-  let links = [];
-  isUndefined(opt == null ? void 0 : opt.withTag) ? true : opt.withTag;
-  if (page) {
-    const cats = getSubcategories(p2)(page);
-    const isMultiKind = new Set(cats.map((i) => i.kind)).size > 1;
-    for (const cat of cats) {
-      p2.api.format;
-      ({
-        pre: isMultiKind ? p2.api.format.light(cat.kind + "/") : ""
-      });
-      links.push(htmlLink(p2)(page, { display: cat.subcategory }));
-    }
-  }
-  return links.join(", ");
-};
-const showMetrics = (p2) => (pg) => {
-  return "";
-};
-const showSlider = (p2) => (pg) => {
-  return "";
-};
-const showClassifications = (p2) => (pg) => {
-  const classy = getClassification(p2)(pg);
-  const opt = (pg2) => {
-    const page = p2.api.getPage(pg2);
-    if (page) {
-      return {
-        display: page.name
-      };
-    }
-    return {};
-  };
-  const classification2 = classy.map(
-    (i) => {
-      var _a2;
-      return [
-        // KIND
-        htmlLink(p2)(i.kind),
-        // CATEGORY
-        i.categories.length === 0 ? "" : i.categories && i.categories.length === 1 ? htmlLink(p2)(
-          i.categories[0].category,
-          opt(
-            p2.api.format.as_tag(
-              i.categories[0].category
-            )
-          )
-        ) : `<span style="opacity: 0.8">[ </span>` + i.categories.map(
-          (ii) => htmlLink(p2)(
-            ii.category,
-            opt(p2.api.format.as_tag(ii.category))
-          )
-        ).join(",&nbsp;") + `<span style="opacity: 0.8"> ]</span>`,
-        // SUBCATEGORY
-        i.subcategory ? htmlLink(p2)((_a2 = i == null ? void 0 : i.subcategory) == null ? void 0 : _a2.subcategory) : ""
-      ].filter((i2) => i2 && i2 !== "").join(`<span style="opacity: 0.8"> &gt; </span>`);
-    }
-  );
-  return classification2.join("<br>");
-};
-function extractTitle(s2) {
-  return s2 && typeof s2 === "string" ? s2.replace(/\d{0,4}-\d{2}-\d{2}\s*/, "") : s2;
-}
-const createFileLink = (p2) => (pathLike, embed, display) => {
-  const page = p2.api.getPage(pathLike);
-  if (page) {
-    return p2.dv.fileLink(
-      page.file.name,
-      isUndefined(embed) ? false : embed,
-      extractTitle(page.file.name)
-    );
-  }
-  return "";
-};
-const createMarkdownLink = (p2) => (pathLike, opt) => {
-  const page = p2.api.getPage(pathLike);
-  if (page) {
-    return (opt == null ? void 0 : opt.display) ? `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${opt.display}]]${(opt == null ? void 0 : opt.post) || ""}` : `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${page.file.name}]]${(opt == null ? void 0 : opt.post) || ""}`;
-  }
-  return "";
-};
-const showApi = (p2) => ({
-  /** show the creation date */
-  showCreatedDate,
-  /** show last modified date */
-  showModifiedDate,
-  /** show _due_ date */
-  showDueDate: showDueDate(p2),
-  showWhen: showWhen(p2),
-  showDesc: showDesc(p2),
-  showTags: showTags(),
-  showLinks: showLinks(p2),
-  // showAbout: showAbout(p),
-  showProp: showProp(p2),
-  getProp: getProp(p2),
-  showAbout: showAbout(),
-  showPeers: showPeers(),
-  showKind: showKind(p2),
-  showCategories: showCategories(p2),
-  showSubcategories: showSubcategories(p2),
-  showClassifications: showClassifications(p2),
-  showMetrics: showMetrics(),
-  showSlider: showSlider(),
-  createFileLink: createFileLink(p2),
-  createMarkdownLink: createMarkdownLink(p2)
-});
-const createVaultLink = (p2) => (ref) => {
-  const page = getPage(p2)(ref);
-  if (page) {
-    const alias = page.file.name;
-    const path = page.file.path;
-    const link2 = `[[${path}|${alias}]]`;
-    return link2;
-  }
-  return void 0;
-};
-const getPageInfo = (p2) => (pg) => {
-  if (isPageInfo(pg)) {
-    return pg;
-  }
-  const path = getPath(pg);
-  const page = getPage(p2)(pg);
-  if (path && page) {
-    const meta = {
-      categories: getCategories(p2)(page),
-      subcategories: getSubcategories(p2)(page),
-      hasCategoryProp: hasCategoryProp(p2)(page),
-      hasCategoriesProp: hasCategoriesProp(p2)(page),
-      hasAnyCategoryProp: hasAnyCategoryProp(p2)(page),
-      hasSubcategoryProp: hasSubcategoryProp(p2)(page),
-      hasSubcategoriesProp: hasSubcategoriesProp(p2)(page),
-      hasAnySubcategoryProp: hasAnySubcategoryProp(p2)(page),
-      hasCategoryTag: hasCategoryTag(p2)(page),
-      hasSubcategoryTag: hasSubcategoryTag(p2)(page),
-      hasSubcategoryDefnTag: hasSubcategoryTagDefn(p2)(page),
-      hasKindProp: hasKindProp(p2)(page),
-      hasKindsProp: hasKindsProp(p2)(page),
-      hasAnyKindProp: hasAnyKindProp(p2)(page),
-      hasKindTag: hasKindTag(p2)(page),
-      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
-      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
-      isCategoryPage: isCategoryPage(p2)(page),
-      isSubcategoryPage: isSubcategoryPage(p2)(page),
-      isKindDefnPage: isKindDefnPage(p2)(page),
-      isTypeDefnPage: isTypeDefnPage(p2)(page),
-      isKindedPage: isKindedPage(p2)(page),
-      kindTags: getKindTagsOfPage(p2)(page),
-      typeTags: []
-    };
-    const info2 = {
-      current: page,
-      path,
-      name: page.file.name,
-      ext: page.file.ext,
-      classifications: getClassification(p2)(
-        page,
-        meta.categories,
-        meta.subcategories
-      ),
-      hasMultipleKinds: meta.kindTags.length > 1,
-      type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
-      fm: page.file.frontmatter,
-      ...fmApi(p2, path),
-      metadata: getMetadata(p2)(page),
-      ...meta
-    };
-    return info2;
-  }
-};
-const getPageInfoBlock = (p2) => (evt) => {
-  const { source, el, ctx } = evt;
-  const filePath = ctx.sourcePath;
-  const page = getPageInfo(p2)(filePath);
-  if (page) {
-    const sectionInfo = ctx.getSectionInfo(el);
-    return {
-      ...page,
-      content: source,
-      container: el,
-      component: ctx,
-      sectionInfo,
-      ...renderApi(p2)(el, filePath)
-    };
-  }
-};
 const getPropertyType = (p2) => (value2) => {
   if (isYouTubeUrl(value2)) {
     if (isYouTubeCreatorUrl(value2)) {
@@ -21915,9 +21307,6 @@ const getKnownKindTags = (p2) => (tag) => {
   return tag ? Array.from(((_b2 = (_a2 = p2.cache) == null ? void 0 : _a2.kindDefinitionsByTag) == null ? void 0 : _b2.keys()) || []).filter(
     (i) => i.includes(tag)
   ) : Array.from(((_d2 = (_c2 = p2.cache) == null ? void 0 : _c2.kindDefinitionsByTag) == null ? void 0 : _d2.keys()) || []);
-};
-const isKeyOf = (container, key) => {
-  return isContainer$1(container) && (isString$1(key) || isNumber$1(key)) && key in container ? true : false;
 };
 const isKindTag = (p2) => (tag) => {
   const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
@@ -22079,27 +21468,6 @@ const hasTypeProp = (p2) => (pg) => {
   }
   return false;
 };
-const getFrontmatter = (p2) => (from) => {
-  if (isDvPage(from)) {
-    return from.file.frontmatter;
-  }
-  if (isPageInfo(from)) {
-    return from.fm;
-  }
-  if (isFrontmatter(from)) {
-    return from;
-  }
-  const page = getPage(p2)(from);
-  if (page) {
-    return page.file.frontmatter;
-  } else {
-    p2.debug(
-      `call to getFrontmatter() was unable to load a valid page so returned an empty object.`,
-      { from }
-    );
-    return {};
-  }
-};
 const catTag = (kind, cat) => {
   return `${ensureLeading(kind, "#")}/${cat}`;
 };
@@ -22255,6 +21623,116 @@ const getKindPages = (p2) => (pg) => {
   }
   return [];
 };
+const getClassification = (p2) => (pg, cats, subCats) => {
+  const page = pg ? getPage(p2)(pg) : void 0;
+  const classification2 = [];
+  if (page) {
+    const pgCats = cats ? cats : getCategories(p2)(page);
+    const pgSubCats = subCats ? subCats : getSubcategories(p2)(page);
+    const kindTags = getKindTagsOfPage(p2)(page);
+    for (let tag of kindTags) {
+      tag = stripLeading(tag, "#");
+      p2.debug(`tag ${tag}`);
+      const kd = lookupKindByTag(p2)(tag);
+      const kp = kd ? getPage(p2)(kd.path) : void 0;
+      if (kd && kp) {
+        classification2.push({
+          kind: kp,
+          kindTag: tag,
+          categories: pgCats.filter(
+            (c) => c.kind === stripLeading(tag, "#")
+          ),
+          subcategory: pgSubCats.find(
+            (c) => c.kind === stripLeading(tag, "#")
+          )
+        });
+      } else {
+        const defn = p2.dv.pages(`#kind/${tag}`);
+        if (defn.length > 0) {
+          p2.debug(
+            `tag lookup of ${tag} failed but found kind definition with dataview query`
+          );
+          const kindPage = Array.from(defn)[0];
+          if (kindPage && kindPage.file.etags.some(
+            (i) => i.startsWith("#kind/")
+          )) {
+            classification2.push({
+              kind: kindPage,
+              kindTag: tag,
+              categories: pgCats.filter(
+                (c) => c.kind === stripLeading(tag, "#")
+              ),
+              subcategory: pgSubCats.find(
+                (c) => c.kind === stripLeading(tag, "#")
+              )
+            });
+            return classification2;
+          }
+        }
+        p2.warn(
+          `no 'kind' could be identified for the page ${page.file.path}`,
+          {
+            categories: pgCats,
+            subcategories: pgSubCats,
+            etags: Array.from(page.file.etags),
+            kindTags,
+            tag,
+            kd,
+            kp
+          }
+        );
+      }
+    }
+  }
+  p2.debug("classification", classification2);
+  return classification2;
+};
+const classificationApi = (plugin4) => ({
+  hasCategoryProp: hasCategoryProp(plugin4),
+  hasCategoriesProp: hasCategoriesProp(plugin4),
+  hasTypeDefinitionTag: hasTypeDefinitionTag(plugin4),
+  hasKindDefinitionTag: hasKindDefinitionTag(plugin4),
+  hasKindProp: hasKindProp(plugin4),
+  hasKindsProp: hasKindsProp(plugin4),
+  hasTypeProp: hasTypeProp(plugin4),
+  hasMultipleKinds: hasMultipleKinds(plugin4),
+  hasCategoryTagDefn: hasCategoryTagDefn(plugin4),
+  hasCategoryTag: hasCategoryTag(plugin4),
+  hasAnyCategoryProp: hasAnyCategoryProp(plugin4),
+  hasAnySubcategoryProp: hasAnySubcategoryProp(plugin4),
+  getCategories: getCategories(plugin4),
+  hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
+  isCategoryPage: isCategoryPage(plugin4),
+  isSubcategoryPage: isSubcategoryPage(plugin4),
+  isKindedPage: isKindedPage(plugin4),
+  isKindDefnPage: isKindDefnPage(plugin4),
+  getClassification: getClassification(plugin4),
+  getKnownKindTags: getKnownKindTags(plugin4),
+  getKindPages: getKindPages(plugin4),
+  getKindTagsOfPage: getKindTagsOfPage(plugin4),
+  isKindTag: isKindTag(plugin4)
+});
+const getFrontmatter = (p2) => (from) => {
+  if (isDvPage(from)) {
+    return from.file.frontmatter;
+  }
+  if (isPageInfo(from)) {
+    return from.fm;
+  }
+  if (isFrontmatter(from)) {
+    return from;
+  }
+  const page = getPage(p2)(from);
+  if (page) {
+    return page.file.frontmatter;
+  } else {
+    p2.debug(
+      `call to getFrontmatter() was unable to load a valid page so returned an empty object.`,
+      { from }
+    );
+    return {};
+  }
+};
 const getMetadata = (p2) => (pg) => {
   const fm = pg ? getFrontmatter(p2)(pg) : void 0;
   if (fm) {
@@ -22323,147 +21801,686 @@ const getMetadata = (p2) => (pg) => {
   }
   return {};
 };
-const getClassification = (p2) => (pg, cats, subCats) => {
-  const page = pg ? getPage(p2)(pg) : void 0;
-  const classification2 = [];
-  if (page) {
-    const pgCats = cats ? cats : getCategories(p2)(page);
-    const pgSubCats = subCats ? subCats : getSubcategories(p2)(page);
-    const kindTags = getKindTagsOfPage(p2)(page);
-    for (let tag of kindTags) {
-      tag = stripLeading(tag, "#");
-      p2.debug(`tag ${tag}`);
-      const kd = lookupKindByTag(p2)(tag);
-      const kp = kd ? getPage(p2)(kd.path) : void 0;
-      if (kd && kp) {
-        classification2.push({
-          kind: kp,
-          kindTag: tag,
-          categories: pgCats.filter(
-            (c) => c.kind === stripLeading(tag, "#")
-          ),
-          subcategory: pgSubCats.find(
-            (c) => c.kind === stripLeading(tag, "#")
-          )
-        });
-      } else {
-        const defn = p2.dv.pages(`#kind/${tag}`);
-        if (defn.length > 0) {
-          p2.debug(
-            `tag lookup of ${tag} failed but found kind definition with dataview query`
+const defaultLinkIcons = {
+  documentation: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M8 13h8v-2H8Zm0 3h8v-2H8Zm0 3h5v-2H8Zm-2 3q-.825 0-1.412-.587Q4 20.825 4 20V4q0-.825.588-1.413Q5.175 2 6 2h8l6 6v12q0 .825-.587 1.413Q18.825 22 18 22Zm7-13h5l-5-5Z"/></svg>`,
+  repo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16"><path fill="#a3a3a3" d="M14 4a2 2 0 1 0-2.47 1.94V7a.48.48 0 0 1-.27.44L8.49 8.88l-2.76-1.4A.49.49 0 0 1 5.46 7V5.94a2 2 0 1 0-1 0V7a1.51 1.51 0 0 0 .82 1.34L8 9.74v1.32a2 2 0 1 0 1 0V9.74l2.7-1.36A1.49 1.49 0 0 0 12.52 7V5.92A2 2 0 0 0 14 4zM4 4a1 1 0 1 1 2 0a1 1 0 0 1-2 0zm5.47 9a1 1 0 1 1-2 0a1 1 0 0 1 2 0zM12 5a1 1 0 1 1 0-2a1 1 0 0 1 0 2z"/></svg>`,
+  review: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 14 14"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.87" cy="5" r="4.5"/><circle cx="6.87" cy="5" r="2"/><path d="m6 9.42l-.88 3.7a.51.51 0 0 1-.26.33a.54.54 0 0 1-.43 0L1.11 12a.51.51 0 0 1-.18-.78L3.5 8M8 9.37l.9 3.75a.5.5 0 0 0 .27.33a.51.51 0 0 0 .42 0l3.3-1.45a.5.5 0 0 0 .28-.35a.48.48 0 0 0-.1-.43l-2.68-3.41"/></g></svg>`,
+  company: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M11 15v-2h2v2h-2Zm-1-9h4V4h-4v2ZM4 21q-.825 0-1.413-.588T2 19v-4h7v1q0 .425.288.713T10 17h4q.425 0 .713-.288T15 16v-1h7v4q0 .825-.588 1.413T20 21H4Zm-2-8V8q0-.825.588-1.413T4 6h4V4q0-.825.588-1.413T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v5h-7v-1q0-.425-.288-.713T14 11h-4q-.425 0-.713.288T9 12v1H2Z"/></svg>`,
+  link: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`,
+  link_broken: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#a3a3a3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14 11.998C14 9.506 11.683 7 8.857 7H7.143C4.303 7 2 9.238 2 11.998c0 2.378 1.71 4.368 4 4.873a5.3 5.3 0 0 0 1.143.124M16.857 7c.393 0 .775.043 1.143.124c2.29.505 4 2.495 4 4.874a4.92 4.92 0 0 1-1.634 3.653"/><path d="M10 11.998c0 2.491 2.317 4.997 5.143 4.997M18 22.243l2.121-2.122m0 0L22.243 18m-2.122 2.121L18 18m2.121 2.121l2.122 2.122"/></g></svg>`,
+  api: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M13.26 10.5h2v1h-2z"/><path fill="#888888" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M8.4 15L8 13.77H6.06L5.62 15H4l2.2-6h1.62L10 15Zm8.36-3.5a1.47 1.47 0 0 1-1.5 1.5h-2v2h-1.5V9h3.5a1.47 1.47 0 0 1 1.5 1.5ZM20 15h-1.5V9H20Z"/><path fill="#888888" d="M6.43 12.77h1.16l-.58-1.59z"/></svg>`,
+  article: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#888888" d="M88 112a8 8 0 0 1 8-8h80a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h80a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m136-88v120a24 24 0 0 1-24 24H32a24 24 0 0 1-24-23.89V88a8 8 0 0 1 16 0v96a8 8 0 0 0 16 0V64a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16m-16 0H56v120a23.84 23.84 0 0 1-1.37 8H208a8 8 0 0 0 8-8Z"/></svg>`,
+  you_tube: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M0 0h24v24H0z"/><path fill="#888888" d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9"/></g></svg>`,
+  website: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="#a3a3a3"><path fill-rule="evenodd" d="M14 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-4Zm3 2h-2v6h2V9Z" clip-rule="evenodd"/><path d="M6 7a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2H6Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H6Zm-1 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/><path fill-rule="evenodd" d="M4 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4Zm16 2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></g></svg>`,
+  wikipedia: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="m14.97 18.95l-2.56-6.03c-1.02 1.99-2.14 4.08-3.1 6.03c-.01.01-.47 0-.47 0C7.37 15.5 5.85 12.1 4.37 8.68C4.03 7.84 2.83 6.5 2 6.5v-.45h5.06v.45c-.6 0-1.62.4-1.36 1.05c.72 1.54 3.24 7.51 3.93 9.03c.47-.94 1.8-3.42 2.37-4.47c-.45-.88-1.87-4.18-2.29-5c-.32-.54-1.13-.61-1.75-.61c0-.15.01-.25 0-.44l4.46.01v.4c-.61.03-1.18.24-.92.82c.6 1.24.95 2.13 1.5 3.28c.17-.34 1.07-2.19 1.5-3.16c.26-.65-.13-.91-1.21-.91c.01-.12.01-.33.01-.43c1.39-.01 3.48-.01 3.85-.02v.42c-.71.03-1.44.41-1.82.99L13.5 11.3c.18.51 1.96 4.46 2.15 4.9l3.85-8.83c-.3-.72-1.16-.87-1.5-.87v-.45l4 .03v.42c-.88 0-1.43.5-1.75 1.25c-.8 1.79-3.25 7.49-4.85 11.2z"/></svg>`,
+  playground: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 50 50"><path fill="#888888" d="M7.206 31.141c2.885 0 5.219-2.399 5.219-5.368c0-2.953-2.334-5.353-5.219-5.353C4.333 20.42 2 22.82 2 25.773c0 2.968 2.333 5.368 5.206 5.368m29.23 9.216a.53.53 0 0 1 .741.117l.965 1.372a.578.578 0 0 1-.116.766l-7.08 5.287a.536.536 0 0 1-.743-.118l-.962-1.372a.575.575 0 0 1 .116-.764zm-8.003-6.817l-2.808-5.063l-1.474 1.107l2.808 5.09zm-6.551-11.827L10.962 2l-2.089.014l11.522 20.82zm10.281 10.43C32.78 31.682 34.192 31 35 31h10c1.974 0 3 1.986 3 4.004C48 37.034 46.974 38 45 38h-9l-10.836 8.502c-3.808 2.819-6.116-.278-6.116-.278l-8.483-8.729c-1.423-1.753-1.115-5.089.591-6.566l11.739-8.597c1.166-1 2.897-.843 3.885.343c.976 1.2.822 2.994-.346 3.996l-7.515 5.657l5.399 5.484z"/></svg>`,
+  pin: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M12 20.556q-.235 0-.47-.077t-.432-.25q-1.067-.98-2.163-2.185q-1.097-1.204-1.992-2.493t-1.467-2.633t-.572-2.622q0-3.173 2.066-5.234T12 3t5.03 2.062t2.066 5.234q0 1.279-.572 2.613q-.572 1.333-1.458 2.632q-.885 1.3-1.981 2.494T12.92 20.21q-.191.173-.434.26t-.487.086m.003-8.825q.668 0 1.14-.476t.472-1.143t-.475-1.14t-1.143-.472t-1.14.476t-.472 1.143t.475 1.14t1.143.472"/></svg>`,
+  map: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M14.485 19.737L9 17.823l-3.902 1.509q-.21.083-.401.053t-.354-.132t-.252-.274Q4 18.806 4 18.583V6.41q0-.282.13-.499t.378-.303l3.957-1.345q.124-.05.257-.075T9 4.163t.278.025t.257.075L15 6.177l3.902-1.509q.21-.083.401-.053t.354.132t.252.274q.091.173.091.396v12.259q0 .284-.159.495t-.426.298l-3.9 1.287q-.13.05-.256.065q-.125.016-.26.016t-.26-.025t-.254-.075m.015-1.033v-11.7l-5-1.746v11.7zm1 0L19 17.55V5.7l-3.5 1.304zM5 18.3l3.5-1.342v-11.7L5 6.45zM15.5 7.004v11.7zm-7-1.746v11.7z"/></svg>`,
+  home: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#888888" d="M6 19h3v-5q0-.425.288-.712T10 13h4q.425 0 .713.288T15 14v5h3v-9l-6-4.5L6 10zm-2 0v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-4q-.425 0-.712-.288T13 20v-5h-2v5q0 .425-.288.713T10 21H6q-.825 0-1.412-.587T4 19m8-6.75"/></svg>`,
+  office: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20"><path fill="#888888" fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75M4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm5.75-3a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" clip-rule="evenodd"/></svg>`
+};
+const iconApi = (p2) => {
+  const linkIcons = getPage(p2)("Link Icons") || defaultLinkIcons;
+  return {
+    /**
+     * The designated page for _link icons_ with a backup of core icons so
+     * even if `Link Icons` page is missing we'll have a decent selection.
+     */
+    linkIcons,
+    /**
+     * Returns the current icon associated with a page.
+     *
+     * - returns `broken-link` if the page is not resolvable by the `PageReference` passed in
+     */
+    currentIcon: (pg) => {
+      const page = getPage(p2)(pg);
+      if (page) {
+        const path = getPath(page);
+        return getIcon(path);
+      }
+      return "broken-link";
+    },
+    /**
+     * Returns all the properties which have inline SVG definitions
+     */
+    getIconProperties: (pg) => {
+      const page = getPage(p2)(pg);
+      if (page) {
+        return getMetadata(p2)(page)["svg_inline"];
+      }
+      return [];
+    }
+  };
+};
+const removeFmKey = (p2) => (
+  /**
+   * A higher order function which interacts with **Obsidian** to remove
+   * a property from a page's frontmatter.
+   */
+  (path) => (
+    /**
+     *  Removes the specified `key` from the current page.
+     */
+    async (key) => {
+      const abstractFile = p2.app.vault.getAbstractFileByPath(path);
+      if (abstractFile instanceof TFile) {
+        const file = abstractFile;
+        try {
+          await p2.app.fileManager.processFrontMatter(
+            file,
+            (frontmatter) => {
+              delete frontmatter[key];
+            }
           );
-          const kindPage = Array.from(defn)[0];
-          if (kindPage && kindPage.file.etags.some(
-            (i) => i.startsWith("#kind/")
-          )) {
-            classification2.push({
-              kind: kindPage,
-              kindTag: tag,
-              categories: pgCats.filter(
-                (c) => c.kind === stripLeading(tag, "#")
-              ),
-              subcategory: pgSubCats.find(
-                (c) => c.kind === stripLeading(tag, "#")
-              )
-            });
-            return classification2;
-          }
+          p2.debug(
+            `Frontmatter key '${key}' removed successfully from file: ${path}`
+          );
+        } catch (error2) {
+          p2.error("Error removing frontmatter key:", error2);
         }
-        p2.warn(
-          `no 'kind' could be identified for the page ${page.file.path}`,
-          {
-            categories: pgCats,
-            subcategories: pgSubCats,
-            etags: Array.from(page.file.etags),
-            kindTags,
-            tag,
-            kd,
-            kp
+      } else {
+        p2.error(`File "${path}" not found or is a folder.`);
+      }
+    }
+  )
+);
+const setFmKey = (p2) => (path) => (
+  /**
+   * Sets the value of the specified **key** in the _frontmatter_ properties.
+   */
+  async (key, value2) => {
+    const abstractFile = p2.app.vault.getAbstractFileByPath(path);
+    if (abstractFile instanceof TFile) {
+      const file = abstractFile;
+      try {
+        await p2.app.fileManager.processFrontMatter(
+          file,
+          (frontmatter) => {
+            frontmatter[key] = value2;
           }
         );
+        p2.debug(`Frontmatter updated successfully for file: ${path}`);
+      } catch (error2) {
+        p2.error(
+          `Error updating frontmatter [${key}] for file "${path}":`,
+          error2
+        );
+      }
+    } else {
+      console.error(`File "${path}" not found or is a folder.`);
+    }
+  }
+);
+const fmApi = (p2, path) => path ? {
+  /** set **key** on current page's _frontmatter_. */
+  setFmKey: setFmKey(p2)(path),
+  /** remove **key** from current page's _frontmatter_. */
+  removeFmKey: removeFmKey(p2)(path)
+} : {
+  setFmKey: setFmKey(p2),
+  removeFmKey: removeFmKey(p2)
+};
+const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
+const showCreatedDate = (p2) => (pg, format2) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return format2 ? page.file.cday.toFormat(format2) : page.file.cday;
+  }
+  return "";
+};
+const showModifiedDate = (p2) => (pg, format2) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    return format2 ? page.file.mday.toFormat(format2) : page.file.mday;
+  }
+  return "";
+};
+const showDueDate = (p2) => (page, prop = "due", format2) => {
+  const pg = getPage(p2)(page);
+  if (pg && pg[prop] !== void 0) {
+    return typeof pg[prop] === "number" ? format2 ? DateTime$1.fromMillis(pg[prop]).toFormat(format2) : DateTime$1.fromMillis(pg[prop]) : typeof pg[prop] === "object" && pg[prop] instanceof DateTime$1 ? format2 ? pg[prop].toFormat(format2) : pg[prop] : typeof pg[prop] === "string" && DateTime$1.fromISO(pg[prop]) ? format2 ? DateTime$1.fromISO(pg[prop]).toFormat(format2) : DateTime$1.fromISO(pg[prop]) : "";
+  } else {
+    return "";
+  }
+};
+const showDesc = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const desc = showProp(p2)(page, "about", "desc", "description");
+    if (typeof desc == "string") {
+      return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
+    } else {
+      return "";
+    }
+  }
+  return "";
+};
+const showWhen = (p2) => (pg, format2 = "LLL yyyy") => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const created = page.file.cday;
+    const modified = page.file.mday;
+    const deltaCreated = Math.abs(created.diffNow("days").days);
+    const deltaModified = Math.abs(modified.diffNow("days").days);
+    if (deltaCreated < 14) {
+      const desc = created.toRelative();
+      return `<span style="cursor: default"><i style="font-weight: 150">created</i> ${desc}</span>`;
+    } else if (deltaModified < 14) {
+      const desc = modified.toRelative();
+      return `<span style="cursor: default"><i style="font-weight: 150">modified</i> ${desc}</span>`;
+    } else {
+      return `<span style="cursor: default">${modified.toFormat(format2)}</span>`;
+    }
+  } else {
+    return "";
+  }
+};
+const showTags = (_p2) => (pg, ...exclude) => {
+  return pg.file.etags.filter(
+    (t2) => !exclude.some((i) => t2.startsWith(i) ? true : false)
+  ).map((t2) => `\`${t2}\``).join(", ") || "";
+};
+const showLinks = (p2) => (pg) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const [_, pageIcon] = getProp(p2)(
+      pg,
+      "icon",
+      "svg_icon",
+      "_icon",
+      "_svg_icon"
+    );
+    const link_props = {
+      website: "website",
+      wikipedia: "wikipedia",
+      company: "company",
+      retailer: "company",
+      docs: "documentation",
+      retail_urls: "retail",
+      retail: "retail",
+      url: "link",
+      repo: "repo",
+      review: "review",
+      reviews: "review",
+      blog: "blog",
+      api: "api",
+      map: "map",
+      place: "pin",
+      home: "home",
+      office: "office",
+      offices: "office",
+      work: "office",
+      employer: "office",
+      playground: "playground",
+      demo: "playground",
+      support: "support",
+      help: "support"
+    };
+    const create_lnk = (icon, url, prop) => {
+      icon = prop === "website" && isString$1(pageIcon) ? pageIcon : /youtube.com/.test(url) ? "you_tube" : icon;
+      p2.debug(prop, pageIcon);
+      return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+    };
+    const links = [];
+    for (const prop of Object.keys(pg || {})) {
+      if (prop in page && isString$1(page[prop])) {
+        if (Array.isArray(page[prop])) {
+          page[prop].forEach((p22) => {
+            if (isString$1(p22) && /^http/.test(p22)) {
+              links.push([prop, p22]);
+            }
+          });
+        } else if (isString$1(page[prop]) && !prop.startsWith("_") && /^http/.test(page[prop])) {
+          links.push([prop, page[prop]]);
+        }
+      }
+    }
+    const icons = p2.api.linkIcons;
+    const prettify = (tuple) => {
+      const [prop, url] = tuple;
+      if (prop in link_props) {
+        if (link_props[prop] in icons) {
+          return create_lnk(icons[link_props[prop]], url, prop);
+        } else {
+          return create_lnk(DEFAULT_LINK, url, prop);
+        }
+      } else {
+        return create_lnk(DEFAULT_LINK, url, prop);
+      }
+    };
+    return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
+  }
+  return "";
+};
+const showProp = (p2) => (pg, ...props) => {
+  var _a2;
+  const page = getPage(p2)(pg);
+  if (page) {
+    if (!((_a2 = page == null ? void 0 : page.file) == null ? void 0 : _a2.name)) {
+      throw new Error(
+        `Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`
+      );
+    }
+    const found = props.find(
+      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
+    );
+    if (!found) {
+      return "";
+    }
+    if (isKeyOf(page, found)) {
+      const value2 = page[found];
+      try {
+        return isString$1(value2) ? value2 : isLink(value2) ? value2 : isDvPage(value2) ? value2 == null ? void 0 : value2.file.link : isArray(value2) ? value2.map(
+          (v) => isLink(v) ? v : isDvPage(v) ? v.file.link : ""
+        ).filter((i) => i).join(", ") : "";
+      } catch (e2) {
+        p2.error(
+          `Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`,
+          e2
+        );
+        return "";
       }
     }
   }
-  p2.debug("classification", classification2);
-  return classification2;
+  return "";
 };
-const buildingBlocks = (plugin4) => ({
-  isKeyOf,
-  hasCategoryProp: hasCategoryProp(plugin4),
-  hasCategoriesProp: hasCategoriesProp(plugin4),
-  hasTypeDefinitionTag: hasTypeDefinitionTag(plugin4),
-  hasKindDefinitionTag: hasKindDefinitionTag(plugin4),
-  hasKindProp: hasKindProp(plugin4),
-  hasKindsProp: hasKindsProp(plugin4),
-  hasTypeProp: hasTypeProp(plugin4),
-  hasMultipleKinds: hasMultipleKinds(plugin4),
-  hasCategoryTagDefn: hasCategoryTagDefn(plugin4),
-  hasCategoryTag: hasCategoryTag(plugin4),
-  hasAnyCategoryProp: hasAnyCategoryProp(plugin4),
-  hasAnySubcategoryProp: hasAnySubcategoryProp(plugin4),
-  getCategories: getCategories(plugin4),
-  hasSubcategoryTagDefn: hasSubcategoryTagDefn(plugin4),
-  isCategoryPage: isCategoryPage(plugin4),
-  isSubcategoryPage: isSubcategoryPage(plugin4),
-  isKindedPage: isKindedPage(plugin4),
-  isKindDefnPage: isKindDefnPage(plugin4),
-  getClassification: getClassification(plugin4),
-  getKnownKindTags: getKnownKindTags(plugin4),
-  getKindPages: getKindPages(plugin4),
-  getMetadata: getMetadata(plugin4),
-  getKindTagsOfPage: getKindTagsOfPage(plugin4),
-  isKindTag: isKindTag(plugin4)
-});
-const obsidianApi = (p2) => {
-  return {
-    /**
-     * the full Obsidian API surface exposed on global
-     */
-    app: p2.app,
-    /**
-     * A dictionary of commands configured for the active vault
-     */
-    commands: globalThis.app.commands.commands,
-    /**
-     * Atomically read, modify, and save the frontmatter of a note. The frontmatter is passed in as a JS object, and should be mutated directly to achieve the desired result.
-     Remember to handle errors thrown by this method.
-     * @param file — the file to be modified. Must be a Markdown file.
-     * @param fn — a callback function which mutates the frontmatter object synchronously.
-     * @param options — write options.
-     * @throws — YAMLParseError if the YAML parsing fails
-     * @throws — any errors that your callback function throws
-     *
-     * ```ts
-     * app.fileManager.processFrontMatter(file, (frontmatter) => {
-     *     frontmatter['key1'] = value;
-     *     delete frontmatter['key2'];
-     * });
-     * ```
-     */
-    processFrontmatter: p2.app.fileManager.processFrontMatter,
-    /**
-     * Resolves a unique path for the attachment file being saved.
-     * Ensures that the parent directory exists and dedupes the
-     * filename if the destination filename already exists.
-     *
-     * @param filename Name of the attachment being saved
-     * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
-     * @returns Full path for where the attachment should be saved, according to the user's settings
-     */
-    getAvailablePathForAttachment: p2.app.fileManager.getAvailablePathForAttachment,
-    /**
-     * A dictionary of files:
-     *
-     * - _keys_ are the full file path
-     * - _values_ are
-     */
-    fileCache: globalThis.app.metadataCache.fileCache,
-    /**
-     * A dictionary which can be used to lookup metadata using
-     * the `fileCache`'s hash value.
-     */
-    metaData: globalThis.app.metadataCache.metadataCache
+const getProp = (p2) => (pg, ...props) => {
+  const page = getPage(p2)(pg);
+  if (page) {
+    const found = props.find(
+      (prop) => isKeyOf(page, prop) && page[prop] !== void 0
+    );
+    if (!found) {
+      return [void 0, void 0];
+    } else {
+      const value2 = page[found];
+      return [
+        found,
+        isLink(value2) ? p2.api.getPage(value2) : Array.isArray(value2) ? value2.map((i) => isLink(i) ? p2.dv.page(i) : i) : value2
+      ];
+    }
+  }
+  p2.error(`Call to getProp(pg) passed in an invalid DvPage`, {
+    pg,
+    props
+  });
+  return [void 0, void 0];
+};
+const showAbout = (_p2) => (_pg) => {
+  return [];
+};
+const showPeers = (_p2) => (_pg) => {
+  return "";
+};
+const showKind = (p2) => (pg, withTag) => {
+  const page = p2.api.getPage(pg);
+  let links = [];
+  withTag = isUndefined(withTag) ? true : withTag;
+  if (page) {
+    const classy = getClassification(p2)(page);
+    for (const k of classy) {
+      const fmt = p2.api.format;
+      links.push(
+        withTag ? `${links}${createMarkdownLink(p2)(k.kind, { post: fmt.as_tag(k.kindTag) })}` : `${links}${createMarkdownLink(p2)(k.kind)}`
+      );
+    }
+  }
+  return links.join(", ");
+};
+const link = (name2, path, display) => {
+  return [
+    `<a data-href="${name2}" href="${path}" `,
+    `class="internal-link data-link-icon data-link-icon-after data-link-text" `,
+    `target="_blank" rel="noopener">`,
+    display,
+    `</a>`
+  ].join("");
+};
+const htmlLink = (p2) => (ref, opt) => {
+  const page = getPage(p2)(ref);
+  if (page) {
+    const name2 = page.file.name;
+    const path = stripTrailing(page.file.path, ".md");
+    const display = (opt == null ? void 0 : opt.display) || page.file.name || page.file.path;
+    return link(name2, path, display);
+  } else {
+    console.log(`invalid: ${ref}`);
+  }
+  if ((opt == null ? void 0 : opt.createPageWhereMissing) && isValidPath(ref)) {
+    const parts = ref.split("/");
+    const display = opt.display || parts.pop() || "";
+    return link(
+      stripTrailing(ref, ".md"),
+      ref,
+      isToday(display) ? "today" : isYesterday(display) ? "yesterday" : isTomorrow(display) ? "tomorrow" : display
+    );
+  }
+  return isValidPath(ref) ? `<!-- no link [${String(ref)}] -->` : `<!-- no link [invalid path: ${String(ref)}] -->`;
+};
+const showCategories = (p2) => (pg, opt) => {
+  const page = p2.api.getPage(pg);
+  let links = [];
+  const currentPage = (opt == null ? void 0 : opt.currentPage) ? getPage(p2)(opt.currentPage) : {};
+  if (page) {
+    const cats = getCategories(p2)(page);
+    for (const cat of cats) {
+      links.push(
+        getPath(page) === getPath(currentPage) ? "(this)" : htmlLink(p2)(page, { display: cat.category })
+      );
+    }
+  }
+  return links.join(", ");
+};
+const showSubcategories = (p2) => (pg, opt) => {
+  const page = p2.api.getPage(pg);
+  let links = [];
+  if (page) {
+    const cats = getSubcategories(p2)(page);
+    for (const cat of cats) {
+      links.push(htmlLink(p2)(page, { display: cat.subcategory }));
+    }
+  }
+  return links.join(", ");
+};
+const showMetrics = (_p2) => (_pg) => {
+  return "";
+};
+const showSlider = (_p2) => (_pg) => {
+  return "";
+};
+const showClassifications = (p2) => (pg) => {
+  const classy = getClassification(p2)(pg);
+  const opt = (pg2) => {
+    const page = p2.api.getPage(pg2);
+    if (page) {
+      return {
+        display: page.name
+      };
+    }
+    return {};
   };
+  const classification2 = classy.map(
+    (i) => {
+      var _a2;
+      return [
+        // KIND
+        htmlLink(p2)(i.kind),
+        // CATEGORY
+        i.categories.length === 0 ? "" : i.categories && i.categories.length === 1 ? htmlLink(p2)(
+          i.categories[0].category,
+          opt(
+            p2.api.format.as_tag(
+              i.categories[0].category
+            )
+          )
+        ) : `<span style="opacity: 0.8">[ </span>` + i.categories.map(
+          (ii) => htmlLink(p2)(
+            ii.category,
+            opt(p2.api.format.as_tag(ii.category))
+          )
+        ).join(",&nbsp;") + `<span style="opacity: 0.8"> ]</span>`,
+        // SUBCATEGORY
+        i.subcategory ? htmlLink(p2)((_a2 = i == null ? void 0 : i.subcategory) == null ? void 0 : _a2.subcategory) : ""
+      ].filter((i2) => i2 && i2 !== "").join(`<span style="opacity: 0.8"> &gt; </span>`);
+    }
+  );
+  return classification2.join("<br>");
+};
+function extractTitle(s2) {
+  return s2 && typeof s2 === "string" ? s2.replace(/\d{0,4}-\d{2}-\d{2}\s*/, "") : s2;
+}
+const createFileLink = (p2) => (pathLike, embed, _display) => {
+  const page = p2.api.getPage(pathLike);
+  if (page) {
+    return p2.dv.fileLink(
+      page.file.name,
+      isUndefined(embed) ? false : embed,
+      extractTitle(page.file.name)
+    );
+  }
+  return "";
+};
+const createMarkdownLink = (p2) => (pathLike, opt) => {
+  const page = p2.api.getPage(pathLike);
+  if (page) {
+    return (opt == null ? void 0 : opt.display) ? `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${opt.display}]]${(opt == null ? void 0 : opt.post) || ""}` : `${(opt == null ? void 0 : opt.pre) || ""}[[${page.file.path}|${page.file.name}]]${(opt == null ? void 0 : opt.post) || ""}`;
+  }
+  return "";
+};
+const showApi = (p2) => ({
+  /** show the creation date */
+  showCreatedDate,
+  /** show last modified date */
+  showModifiedDate,
+  /** show _due_ date */
+  showDueDate: showDueDate(p2),
+  showWhen: showWhen(p2),
+  showDesc: showDesc(p2),
+  showTags: showTags(),
+  showLinks: showLinks(p2),
+  showProp: showProp(p2),
+  getProp: getProp(p2),
+  showAbout: showAbout(),
+  showPeers: showPeers(),
+  showKind: showKind(p2),
+  showCategories: showCategories(p2),
+  showSubcategories: showSubcategories(p2),
+  showClassifications: showClassifications(p2),
+  showMetrics: showMetrics(),
+  showSlider: showSlider(),
+  createFileLink: createFileLink(p2),
+  createMarkdownLink: createMarkdownLink(p2)
+});
+const createVaultLink = (p2) => (ref) => {
+  const page = getPage(p2)(ref);
+  if (page) {
+    const alias = page.file.name;
+    const path = page.file.path;
+    const link2 = `[[${path}|${alias}]]`;
+    return link2;
+  }
+  return void 0;
+};
+const moment = globalThis.moment;
+const getWhenDate = (p2) => (ref) => {
+  const page = getPageInfo(p2)(ref);
+  if (page) {
+    const { when, date } = page.current.file.frontmatter;
+    const prop = when || date;
+    if (prop && isIsoExplicitDate(prop)) {
+      return prop;
+    }
+    if (page.name.includes("-")) {
+      const pre = retainUntil(page.name, ...WHITESPACE_CHARS);
+      if (isIsoExplicitDate(pre)) {
+        return pre;
+      }
+    }
+  }
+  p2.info("when", { page, ref });
+  return void 0;
+};
+const todaysYear = () => String(moment(Date.now()).year());
+const todaysMonth = () => String(moment(Date.now()).month());
+const todaysDate = () => String(moment(Date.now()).date());
+const getYear = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[0] : date.slice(0, 4);
+};
+const getMonth = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[1] : date.slice(4, 6);
+};
+const getDate = (forDate) => {
+  const date = stripAfter(forDate, "T");
+  return isIsoExplicitDate(date) ? date.split("-")[2] : date.slice(6, 8);
+};
+const priorDay = (date) => {
+  const prior = stripAfter(
+    moment(date).subtract("1", "day").toISOString(true),
+    "T"
+  );
+  return prior;
+};
+const nextDay = (date) => {
+  const next = stripAfter(
+    moment(date).add("1", "day").toISOString(true),
+    "T"
+  );
+  return next;
+};
+const journalFile = (format2, dayOf = void 0) => {
+  const [year, month, day] = dayOf ? [getYear(dayOf), getMonth(dayOf), getDate(dayOf)] : [todaysYear(), todaysMonth(), todaysDate()];
+  if (!format2.includes("YYYY") && !format2.includes("MM") && !format2.includes("DD")) {
+    throw new Error(
+      `a journal file was passed in with a static format string: ${format2}; must have at least one dynamic segment!`
+    );
+  }
+  const filepath = format2.replaceAll("YYYY", year).replaceAll("MM", month).replaceAll("DD", day);
+  return filepath;
+};
+const asExplicitIso8601Date$1 = (date) => {
+  const d = stripAfter(date, "T");
+  return isIsoExplicitDate(d) ? d : `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+};
+const describeDate = (date, offset2 = 0, sameYear = "MMM Do", diffYear = "MMM Do, YYYY") => {
+  const d = moment(asExplicitIso8601Date$1(date)).add(offset2, "days");
+  console.log("describe", {
+    d,
+    offset: offset2,
+    isToday: isToday(d),
+    isYesterday: isYesterday(d)
+  });
+  return isToday(d) ? "today" : isYesterday(d) ? "yesterday" : isTomorrow(d) ? "tomorrow" : isThisYear(d) ? d.format(sameYear) : d.format(diffYear);
+};
+const getPageInfo = (p2) => (pg) => {
+  if (isPageInfo(pg)) {
+    return pg;
+  }
+  const path = getPath(pg);
+  const page = getPage(p2)(pg);
+  if (path && page) {
+    const meta = {
+      categories: getCategories(p2)(page),
+      subcategories: getSubcategories(p2)(page),
+      hasCategoryProp: hasCategoryProp(p2)(page),
+      hasCategoriesProp: hasCategoriesProp(p2)(page),
+      hasAnyCategoryProp: hasAnyCategoryProp(p2)(page),
+      hasSubcategoryProp: hasSubcategoryProp(p2)(page),
+      hasSubcategoriesProp: hasSubcategoriesProp(p2)(page),
+      hasAnySubcategoryProp: hasAnySubcategoryProp(p2)(page),
+      hasCategoryTag: hasCategoryTag(p2)(page),
+      hasSubcategoryTag: hasSubcategoryTag(p2)(page),
+      hasSubcategoryDefnTag: hasSubcategoryTagDefn(p2)(page),
+      hasKindProp: hasKindProp(p2)(page),
+      hasKindsProp: hasKindsProp(p2)(page),
+      hasAnyKindProp: hasAnyKindProp(p2)(page),
+      hasKindTag: hasKindTag(p2)(page),
+      hasKindDefinitionTag: hasKindDefinitionTag(p2)(page),
+      hasTypeDefinitionTag: hasTypeDefinitionTag(p2)(page),
+      isCategoryPage: isCategoryPage(p2)(page),
+      isSubcategoryPage: isSubcategoryPage(p2)(page),
+      isKindDefnPage: isKindDefnPage(p2)(page),
+      isTypeDefnPage: isTypeDefnPage(p2)(page),
+      isKindedPage: isKindedPage(p2)(page),
+      kindTags: getKindTagsOfPage(p2)(page),
+      typeTags: []
+    };
+    const info2 = {
+      current: page,
+      path,
+      name: page.file.name,
+      ext: page.file.ext,
+      classifications: getClassification(p2)(
+        page,
+        meta.categories,
+        meta.subcategories
+      ),
+      hasMultipleKinds: meta.kindTags.length > 1,
+      type: meta.isKindDefnPage ? "kind-defn" : meta.isTypeDefnPage ? "type-defn" : meta.isKindedPage && meta.isCategoryPage ? "kinded > category" : meta.isKindedPage && meta.isSubcategoryPage ? "kinded > subcategory" : meta.isKindedPage ? "kinded" : "none",
+      fm: page.file.frontmatter,
+      ...fmApi(p2, path),
+      metadata: getMetadata(p2)(page),
+      ...meta
+    };
+    return info2;
+  }
+};
+const getContentStructure = (p2) => (content2, path) => {
+  const ast = Markdoc.parse(content2);
+  const renderableTree = Markdoc.transform(ast);
+  return {
+    ast,
+    renderableTree,
+    h2_tags: getHeadingLevel(path, content2, 2, p2),
+    ...splitContent(content2)
+  };
+};
+const getViewMeta = (p2) => (view, info2) => {
+  var _a2, _b2, _c2;
+  const content2 = view.getViewData();
+  return {
+    iconAssigned: view.icon,
+    mode: view.currentMode,
+    leaf: view.leaf,
+    leaf_height: (_a2 = view.leaf) == null ? void 0 : _a2.height,
+    leaf_width: (_b2 = view.leaf) == null ? void 0 : _b2.width,
+    leaf_id: ((_c2 = view.leaf) == null ? void 0 : _c2.id) || "",
+    popover: view.hoverPopover,
+    allowNoFile: view.allowNoFile,
+    previewMode: view.previewMode,
+    viewType: view.getViewType(),
+    navigation: view.navigation,
+    editor: view.editor,
+    requestSave: view.requestSave,
+    load: view.load,
+    onLoadFile: view.onLoadFile,
+    onUnloadFile: view.onUnloadFile,
+    onResize: view.onResize,
+    onRename: view.onRename,
+    onPaneMenu: view.onPaneMenu,
+    register: view.register,
+    registerDomEvent: view.registerDomEvent,
+    registerEvent: view.registerEvent,
+    registerInterval: view.registerInterval,
+    getEphemeralState: view.getEphemeralState,
+    getState: view.getState,
+    getViewData: view.getViewData,
+    getViewType: view.getViewType,
+    content: content2,
+    showBackLinks: view == null ? void 0 : view.showBackLinks,
+    contentStructure: getContentStructure(p2)(content2, info2.path)
+  };
+};
+const getDomMeta = (view, _info) => ({
+  container: view.containerEl,
+  content: view.contentEl,
+  icon: view == null ? void 0 : view.iconEl,
+  backButton: view == null ? void 0 : view.backButtonEl,
+  forwardButton: view == null ? void 0 : view.forwardButtonEl,
+  title: view == null ? void 0 : view.titleEl,
+  titleContainer: view == null ? void 0 : view.titleContainerEl,
+  titleParent: view == null ? void 0 : view.titleParentEl,
+  inlineTitle: view == null ? void 0 : view.inlineTitleEl,
+  actions: view == null ? void 0 : view.actionsEl,
+  modeButton: view == null ? void 0 : view.modeButtonEl,
+  backlinks: view == null ? void 0 : view.backlinksEl
+});
+const createPageView = (p2) => (view) => {
+  var _a2;
+  if ((_a2 = view == null ? void 0 : view.file) == null ? void 0 : _a2.path) {
+    const info2 = getPageInfo(p2)(view.file.path);
+    if (info2) {
+      const viewMeta = {
+        view: getViewMeta(p2)(view, info2),
+        dom: getDomMeta(view)
+      };
+      return {
+        ...info2,
+        ...viewMeta
+      };
+    }
+  }
 };
 const parseQueryParams = (_p2) => (name2, raw, scalar, options2) => {
   const requiredScalar = scalar.filter((i) => !i.contains("opt(")).length;
@@ -107457,13 +107474,12 @@ const IconPage = createHandler("IconPage").scalar().options().handler(async (evt
   const meta = getMetadata(p2)(page);
   p2.info("Icon Props", { meta });
   page.render(`## **${page.current.file.name}** is an Icon Page`);
-  page.render(`> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`);
+  page.render(
+    `> _To define one of the icons here to be used as "icon" for another page you'll prefix the name with #icon/link._`
+  );
   page.table(
     ["name", "icon"],
-    (_a2 = meta["svg_inline"]) == null ? void 0 : _a2.map((i) => [
-      i,
-      icon(i)
-    ])
+    (_a2 = meta["svg_inline"]) == null ? void 0 : _a2.map((i) => [i, icon(i)])
   );
 });
 const Kind = createHandler("Kind").scalar(
@@ -107529,52 +107545,44 @@ const Journal = createHandler("Journal").scalar().options({
     let when = getWhenDate(p2)(page);
     if (when) {
       const format2 = evt.options.fileFormat || "journal/YYYY/YYYY-MM-DD";
-      const prev = htmlLink(p2)(
-        journalFile(format2, priorDay(when)),
-        {
-          createPageWhereMissing: true,
-          display: describeDate(when, -1)
-        }
-      );
-      const next = htmlLink(p2)(
-        journalFile(format2, nextDay(when)),
-        {
-          createPageWhereMissing: true,
-          display: describeDate(when, 1)
-        }
-      );
+      const prev = htmlLink(p2)(journalFile(format2, priorDay(when)), {
+        createPageWhereMissing: true,
+        display: describeDate(when, -1)
+      });
+      const next = htmlLink(p2)(journalFile(format2, nextDay(when)), {
+        createPageWhereMissing: true,
+        display: describeDate(when, 1)
+      });
       const holidays = p2.dv.pages(
         `#holiday/${getMonth(when)}-${getDate(when)} OR #day/${getMonth(when)}-${getDate(when)}`
       ).where((p22) => p22.file.tags.includes("#holiday"));
-      const holiday = holidays.values.map(
-        (h) => h.file.name
-      ).join(" / ");
+      const holiday = holidays.values.map((h) => h.file.name).join(" / ");
       p2.info("journal", holidays.length, holidays);
       p2.info("journal", holidays.length, holidays, holiday);
-      let events = Array.from(p2.dv.pages(
-        [
-          `#event/${getMonth(when)}-${getDate(when)} `,
-          `#event/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
-          `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
-          `#day/${getMonth(when)}-${getDate(when)}`
-        ].join(" OR ")
-      ).where((p22) => p22.file.tags.includes("#event")).map(
-        (e2) => {
+      let events = Array.from(
+        p2.dv.pages(
+          [
+            `#event/${getMonth(when)}-${getDate(when)} `,
+            `#event/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+            `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+            `#day/${getMonth(when)}-${getDate(when)}`
+          ].join(" OR ")
+        ).where((p22) => p22.file.tags.includes("#event")).map((e2) => {
           return `<li>${htmlLink(p2)(e2.file.path)}</li>`;
-        }
-      )).join("\n");
-      let meetings = Array.from(p2.dv.pages(
-        [
-          `#meeting/${getMonth(when)}-${getDate(when)} `,
-          `#meeting/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
-          `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
-          `#day/${getMonth(when)}-${getDate(when)}`
-        ].join(" OR ")
-      ).where((p22) => p22.file.tags.includes("#meeting")).map(
-        (e2) => {
+        })
+      ).join("\n");
+      let meetings = Array.from(
+        p2.dv.pages(
+          [
+            `#meeting/${getMonth(when)}-${getDate(when)} `,
+            `#meeting/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+            `#day/${getYear(when)}-${getMonth(when)}-${getDate(when)}`,
+            `#day/${getMonth(when)}-${getDate(when)}`
+          ].join(" OR ")
+        ).where((p22) => p22.file.tags.includes("#meeting")).map((e2) => {
           return `<li>${htmlLink(p2)(e2.file.path)}</li>`;
-        }
-      )).join("\n");
+        })
+      ).join("\n");
       const heading2 = [
         `<div id="journal-heading" style="width:100%">`,
         `<h1 id="day-and-date" style="margin-bottom: 4px">`,
@@ -107885,20 +107893,20 @@ const queryHandlers = (p2) => (ctx) => [
 const api = (plugin4) => ({
   /**
    * The **Query Handler** API surface.
-   * 
+   *
    * - `BackLinks`
    * - `VideoGallery`
    * - etc.
    */
   queryHandlers: queryHandlers(plugin4),
-  ...buildingBlocks(plugin4),
+  ...classificationApi(plugin4),
   ...showApi(plugin4),
   ...iconApi(plugin4),
   fm: fmApi(plugin4),
   obsidian: obsidianApi(plugin4),
   /**
    * **render**`(el, filePath) -> API`
-   * 
+   *
    * You can gain access to the **Render API** if you provide an HTMLElement and filePath.
    */
   render: renderApi(plugin4),
@@ -107909,7 +107917,7 @@ const api = (plugin4) => ({
   format: formattingApi(plugin4),
   /**
    * Returns a `DvPage` when given a valid path to a file in the vault.
-   * 
+   *
    * - also ensures that `DvPage` is added to the cache
    */
   getPage: getPage(plugin4),
@@ -107917,13 +107925,13 @@ const api = (plugin4) => ({
    * Returns the _file path_ to a page when any `PageReference` is passed in.
    */
   getPath,
-  /** 
+  /**
    * Converts a `MarkdownView` to a `PageView`.
-   * 
+   *
    * A `PageView` is a `PageInfo` on steroids. It provides
-   * things like _content_, _content structure_, and several 
+   * things like _content_, _content structure_, and several
    * DOM entry points.
-   * 
+   *
    * Note: from a caching standpoint, the `PageInfo` is cached
    * but the remaining props which separate a `PageView` from
    * `PageInfo` are all derived from the view that was passed in
@@ -107931,9 +107939,9 @@ const api = (plugin4) => ({
    */
   createPageView: createPageView(plugin4),
   /**
-   * Creates a `PageInfoBlock` type which builds on the `PageInfo` type but with the benefit of having the following core types of 
+   * Creates a `PageInfoBlock` type which builds on the `PageInfo` type but with the benefit of having the following core types of
    * information:
-   * 
+   *
    * - the source of the code block
    * - the code block's HTML container element
    * - Obsidian's `Component` (which we're probably not taking full advantage of yet)
@@ -107941,7 +107949,7 @@ const api = (plugin4) => ({
   getPageInfoBlock: getPageInfoBlock(plugin4),
   /**
    * Converts a `PageReference` into a `PageInfo` which has
-   * tons of extra meta properties and functions along with 
+   * tons of extra meta properties and functions along with
    * a `page` property which represents the `DvPage` API surface
    * for this page.
    */
