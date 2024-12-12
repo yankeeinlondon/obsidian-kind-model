@@ -25,7 +25,7 @@ The most common, least expensive, and first call you should understand is `getPa
 - `string` which is a "tag" reference
 - `string` which is a "name" of a file in the vault (note: because this is not fully qualified obsidian will just lookup the _first_ file with this name)
 - `DvPage` which is a page object returned by the [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/)
-- `TFile` an Obsidian representation of a file 
+- `TFile` an Obsidian representation of a file
 - `Link` is a format provided by the [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/) which provides simple metadata that allows for building a _link_ to another page in the vault
 - `Page`'s passed in will simply be proxied back
 
@@ -62,14 +62,12 @@ To understand the full delta's between `Page` and `PageInfo` it's always best to
 
 There isn't a ton of "cost" in producing the additional attributes that a `PageInfo` adds beyond a `Page` but there will be plenty of times where all you need is provided by `Page` so there's no need to add this incremental cost to your render or calculation.
 
-
 ### `getPageBlock(ref, view) → PageBlock`
 
-This method provides quite a bit more than `PageInfo` but it requires that an Obsidian `View` be passed in along with the page reference. 
+This method provides quite a bit more than `PageInfo` but it requires that an Obsidian `View` be passed in along with the page reference.
 
 ## Other Documentation
 
 - [Overview Docs](../README.md)
 - [Caching](./caching.md)
 - [Query Handlers](./handlers.md)
-

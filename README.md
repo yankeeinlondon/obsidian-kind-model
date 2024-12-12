@@ -1,7 +1,7 @@
 
 # Kind Model Plugin
 
-![banner image](./kind-model-banner-1024.png)
+![banner image](./images/kind-model-banner-1024.png)
 
 ## Overview
 
@@ -49,4 +49,3 @@ There are more details should you choose to accept your mission of creating a PR
 - [Caching](docs/caching.md)
 - [Page API](docs/page-api.md)
 - [Query Handlers](docs/handlers.md)
-

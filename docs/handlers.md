@@ -18,7 +18,7 @@ Query Handlers are higher order functions which render `km` code blocks. They in
 - `PageEntry`
 - `IconPage`
 
-Each handler is used in a manner that matches JS/TS conventions when calling a function. As an example, the following block inside a `km` block will render the 
+Each handler is used in a manner that matches JS/TS conventions when calling a function. As an example, the following block inside a `km` block will render the
 `Kind` handler which receives filter criteria of [_kind_, _category_, _subcategory_]:
 
 ```ts
