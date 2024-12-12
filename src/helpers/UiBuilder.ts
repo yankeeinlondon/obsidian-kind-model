@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ButtonComponent } from "obsidian";
 import type { LogLevel } from "../types/settings_types";
 import type {
@@ -12,38 +11,10 @@ import { Setting } from "obsidian";
 import { logger } from "../utils/logging";
 import { FolderSuggest } from "./FolderSuggest";
 
-// [Reference Docs](https://docs.obsidian.md/Plugins/User+interface/Settings)
-
-// type Methods = {
-//   TextComponent: {
-//     setDisabled(disabled: boolean): Methods["TextComponent"];
-//     /**
-//      * @public
-//      */
-//     getValue(): string;
-//     /**
-//      * @public
-//      */
-//     setValue(value: string): Methods["TextComponent"];
-//     /**
-//      * @public
-//      */
-//     setPlaceholder(placeholder: string): Methods["TextComponent"];
-//     /**
-//      * @public
-//      */
-//     onChanged(): void;
-//     /**
-//      * @public
-//      */
-//     onChange(callback: (value: string) => any): Methods["TextComponent"];
-//   }
-// }
-
 function isNotNull<
   T extends PropertyKey | null,
   B extends Record<PropertyKey, any>,
->(prop: T,	base: B): prop is Exclude<T, null> & keyof B & string {
+>(prop: T, base: B): prop is Exclude<T, null> & keyof B & string {
   return prop === null ? false : prop in base;
 }
 
@@ -57,7 +28,12 @@ function resolve<T extends MaybeLazy<any>>(val: T): string {
 function contextApi<
   TBase extends Record<string, any>,
   TGlobalOpt extends UiBuilderOptions,
->(el: HTMLElement,	base: TBase,	global_opt: TGlobalOpt,	log_level: LogLevel): UiBuilderContextApi<TBase, TGlobalOpt> {
+>(
+  el: HTMLElement,
+  base: TBase,
+  global_opt: TGlobalOpt,
+  log_level: LogLevel,
+): UiBuilderContextApi<TBase, TGlobalOpt> {
   return {
     sectionHeading: (heading, sub_text) => {
       const color = "rgba(15, 117, 224, .75) ";
@@ -114,7 +90,7 @@ function contextApi<
       fn.section = heading;
       return fn;
     },
-    iterateOver: (prop, _cb) => {
+    iterateOver: (_prop, _cb) => {
       const settings: Setting[] = [];
 
       // TODO
@@ -230,8 +206,7 @@ function componentApi<TBase extends Record<string, any>, TGlobalOpt extends UiBu
               if (isNotNull(prop, base)) {
                 s.setName(resolve(name));
                 s.setDesc(resolve(desc));
-                base[prop as NonNullable<TProp>]
-								= v as TBase[NonNullable<TProp>];
+                base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];
 
                 if (global_opt?.saveState && prop !== null) {
                   if (
@@ -279,8 +254,7 @@ function componentApi<TBase extends Record<string, any>, TGlobalOpt extends UiBu
             }
             t.onChange((v) => {
               if (isNotNull(prop, base)) {
-                base[prop as NonNullable<TProp>]
-								= v as TBase[NonNullable<TProp>];
+                base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];
               }
               else {
                 debug(
@@ -338,8 +312,7 @@ function componentApi<TBase extends Record<string, any>, TGlobalOpt extends UiBu
               s.setName(resolve(name));
               s.setDesc(resolve(desc));
               if (isNotNull(prop, base)) {
-                base[prop as NonNullable<TProp>]
-								= v as TBase[NonNullable<TProp>];
+                base[prop as NonNullable<TProp>] = v as TBase[NonNullable<TProp>];
 
                 if (global_opt?.saveState) {
                   if (
@@ -456,7 +429,12 @@ function inputRow<TBase extends Record<string, any>, TGlobalOpt extends UiBuilde
 export function UiBuilder<
   TBase extends Record<string, any>,
   TGlobalOpt extends UiBuilderOptions,
->(el: HTMLElement,	base: TBase,	log_level: LogLevel,	global_opt: UiBuilderOptions = {} as UiBuilderOptions): UiBuilderApi<TBase, TGlobalOpt> {
+>(
+  el: HTMLElement,
+  base: TBase,
+  log_level: LogLevel,
+  global_opt: UiBuilderOptions = {} as UiBuilderOptions,
+): UiBuilderApi<TBase, TGlobalOpt> {
   const { h1, style } = global_opt;
   const context = contextApi(el, base, global_opt, log_level);
   const settings: any = inputRow(el, base, global_opt, log_level);

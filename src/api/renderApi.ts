@@ -1,10 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  AsArray,
-  Container,
-  EscapeFunction,
-  TypedFunction,
-} from "inferred-types";
+import type { AsArray, Container, TypedFunction } from "inferred-types";
 import type { DateTime, Duration } from "luxon";
 import type KindModelPlugin from "~/main";
 import type {
@@ -16,6 +10,8 @@ import type {
   ListItemsCallback,
   ObsidianCalloutColors,
   SListItem,
+  UlApi,
+  UlCallback,
 } from "~/types";
 import {
   createFnWithProps,
@@ -32,19 +28,16 @@ import { getClassification } from "./classificationApi";
 import { blockquote } from "./formatting/blockquote";
 import { renderListItems, wrap_ol } from "./formattingApi";
 
-export function isKeyOf<TContainer, TKey>(container: TContainer,	key: TKey): key is TContainer extends Container ? TKey & keyof TContainer : TKey {
-  return !!(isContainer(container)
+export function isKeyOf<TContainer, TKey>(
+  container: TContainer,
+  key: TKey,
+): key is TContainer extends Container ? TKey & keyof TContainer : TKey {
+  return !!(
+    isContainer(container)
     && (isString(key) || isNumber(key))
-    && key in container);
+    && key in container
+  );
 }
-
-interface UlApi {
-  /** indent the unordered list a level */
-  indent: (...items: string[]) => string;
-  done: EscapeFunction;
-}
-
-type UlCallback = <T extends UlApi>(api: T) => unknown;
 
 function removePound(tag: string | undefined) {
   return typeof tag === "string" && tag?.startsWith("#") ? tag.slice(1) : tag;
@@ -142,13 +135,7 @@ export function renderApi(p: KindModelPlugin) {
         title: string,
         opts?: BlockQuoteOptions,
       ) =>
-        p.dv.renderValue(
-          blockquote(kind, title, opts),
-          el,
-          p,
-          filePath,
-          false,
-        ),
+        p.dv.renderValue(blockquote(kind, title, opts), el, p, filePath, false),
 
       /**
        * **page**`(path, [originFile])`
@@ -277,9 +264,7 @@ export function renderApi(p: KindModelPlugin) {
 
       async ul(...items: readonly (string | UlCallback)[]) {
         const wrap_ul = (items: string) => `<ul>${items}</ul>`;
-        const render_items = (
-          items: readonly (string | UlCallback)[],
-        ) =>
+        const render_items = (items: readonly (string | UlCallback)[]) =>
           items
             .map(
               i =>
@@ -293,8 +278,7 @@ export function renderApi(p: KindModelPlugin) {
             .join("\n") as string;
 
         const ul_api: UlApi = {
-          indent: (...items: string[]) =>
-            wrap_ul(render_items(items)),
+          indent: (...items: string[]) => wrap_ul(render_items(items)),
           done: createFnWithProps(() => "", { escape: true }),
         };
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 PLUGIN_DIR="${HOME}/obsidian/.obsidian/plugins"
-ESM_FILE="${PWD}/main.mjs"
 CJS_FILE="${PWD}/dist/main.cjs"
 STYLES="${PWD}/styles.css"
 MANIFEST_FILE="${PWD}/manifest.json"
@@ -35,50 +34,61 @@ function file_exists() {
 
 # has_command <cmd>
 #
-# checks whether a particular program passed in via $1 is installed 
+# checks whether a particular program passed in via $1 is installed
 # on the OS or not (at least within the $PATH)
 function has_command() {
     local -r cmd="${1:?cmd not passed into has_command}"
 
     if command -v "${cmd}" &> /dev/null; then
         return 0
-    else 
+    else
         return 1
     fi
 }
 
 function copy_files() {
-	if file_exists "${ESM_FILE}"; then
-		echo "Converting ESM output into CJS"
-		echo "------------------------------"
-		tsup main.mjs --format=cjs --external obsidian
+	if file_exists "${CJS_FILE}"; then
+		echo " - converting ESM to CJS using tsup"
+		if tsup; then
+			echo " - CJS file created locally in dist folder"
+		else
+			echo " - problem transpiling ESM to CJS!"
+			exit 1
+		fi
+
+		echo " - copying CJS file to plugin directory"
 		cp -f "${CJS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 
 		if file_exists "${MANIFEST_FILE}"; then
 			cp -f "${MANIFEST_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
+			echo " - manifest file copied to plugin directory"
+		else
+			echo " - no manifest file found"
 		fi
 		if file_exists "${STYLES}"; then
 		 cp -f "${STYLES}" "${PLUGIN_DIR}/obsidian-kind-model"
 		fi
-		echo "- updated files"
 		echo ""
-		
+
+		echo "File Comparison"
+		echo "---------------"
+
 		if has_command "exa"; then
 			exa -lagh --git "./dist/main.cjs"
 			echo ""
-			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js" 
+			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 			exa -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 		elif has_command "eza"; then
 			eza -lagh --git "./main.js"
 			echo ""
 			eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 			eza -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
-		else 
+		else
 			ls -la --color "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 		fi
 
 		echo ""
-		
+
 		touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 		touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
@@ -98,10 +108,10 @@ else
 	if dir_exists "${PLUGIN_DIR}"; then
 		mkdir "${PLUGIN_DIR}/obsidian-kind-model"
 		copy_files
-	else 
+	else
 		echo "- for the push functionality to work you must create an 'obsidian' directory"
 		echo "  (or symlink) off of your home directory which points to the base of the"
 		echo "  vault you'd like to test with"
 	fi
-	
+
 fi

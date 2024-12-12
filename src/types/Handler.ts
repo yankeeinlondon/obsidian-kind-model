@@ -101,19 +101,15 @@ export type FromTypeToken<T extends TypeToken> = T extends "string"
  * Type utility to transform a string definition of a Scalar property
  * to a key/value pair.
  */
-export type FromScalarDefn<T extends ScalarDefn> =
-	T extends `${infer Name} AS ${infer Type extends TypeToken}`
-	  ? Record<Name, FromTypeToken<Type>>
-	  : never;
+export type FromScalarDefn<T extends ScalarDefn> = T extends `${infer Name} AS ${infer Type extends TypeToken}`
+  ? Record<Name, FromTypeToken<Type>>
+  : never;
 
-export type OptionParams<T extends Record<string, TypeToken> | undefined> =
-	T extends undefined
-	  ? EmptyObject
-	  : T extends Record<string, TypeToken>
-	    ? {
-	        [K in keyof T]: FromTypeToken<T[K]>;
-	      }
-	    : never;
+export type OptionParams<T extends Record<string, TypeToken> | undefined> = T extends undefined
+  ? EmptyObject
+  : T extends Record<string, TypeToken>
+    ? { [K in keyof T]: FromTypeToken<T[K]>; }
+    : never;
 
 /**
  * **HandlerApi**

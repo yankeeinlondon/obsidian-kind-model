@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type KindModelPlugin from "~/main";
 import { TFile } from "obsidian";
 
@@ -8,21 +7,18 @@ import { TFile } from "obsidian";
  */
 export function removeFmKey(p: KindModelPlugin) {
   return (path: string) =>
-  /**
-   *  Removes the specified `key` from the current page.
-   */
+    /**
+     *  Removes the specified `key` from the current page.
+     */
     async (key: string) => {
       const abstractFile = p.app.vault.getAbstractFileByPath(path);
 
       if (abstractFile instanceof TFile) {
         const file = abstractFile as TFile;
         try {
-          await p.app.fileManager.processFrontMatter(
-            file,
-            (frontmatter) => {
-              delete frontmatter[key];
-            },
-          );
+          await p.app.fileManager.processFrontMatter(file, (frontmatter) => {
+            delete frontmatter[key];
+          });
 
           p.debug(
             `Frontmatter key '${key}' removed successfully from file: ${path}`,
@@ -44,9 +40,9 @@ export function removeFmKey(p: KindModelPlugin) {
  */
 export function setFmKey(p: KindModelPlugin) {
   return (path: string) =>
-  /**
-   * Sets the value of the specified **key** in the _frontmatter_ properties.
-   */
+    /**
+     * Sets the value of the specified **key** in the _frontmatter_ properties.
+     */
     async (key: string, value: any) => {
       const abstractFile = p.app.vault.getAbstractFileByPath(path);
 
@@ -54,12 +50,9 @@ export function setFmKey(p: KindModelPlugin) {
         const file = abstractFile as TFile;
 
         try {
-          await p.app.fileManager.processFrontMatter(
-            file,
-            (frontmatter) => {
-              frontmatter[key] = value;
-            },
-          );
+          await p.app.fileManager.processFrontMatter(file, (frontmatter) => {
+            frontmatter[key] = value;
+          });
 
           p.debug(`Frontmatter updated successfully for file: ${path}`);
         }
@@ -86,16 +79,21 @@ type FmReturns<T extends string | undefined> = T extends string
       removeFmKey: ReturnType<typeof removeFmKey>;
     };
 
-export function fmApi<TPath extends string | undefined>(p: KindModelPlugin,	path?: TPath): FmReturns<TPath> {
-  return (path
-    ? {
-        /** set **key** on current page's _frontmatter_. */
-        setFmKey: setFmKey(p)(path),
-        /** remove **key** from current page's _frontmatter_. */
-        removeFmKey: removeFmKey(p)(path),
-      }
-    : {
-        setFmKey: setFmKey(p),
-        removeFmKey: removeFmKey(p),
-      }) as FmReturns<TPath>;
+export function fmApi<TPath extends string | undefined>(
+  p: KindModelPlugin,
+  path?: TPath,
+): FmReturns<TPath> {
+  return (
+    path
+      ? {
+          /** set **key** on current page's _frontmatter_. */
+          setFmKey: setFmKey(p)(path),
+          /** remove **key** from current page's _frontmatter_. */
+          removeFmKey: removeFmKey(p)(path),
+        }
+      : {
+          setFmKey: setFmKey(p),
+          removeFmKey: removeFmKey(p),
+        }
+  ) as FmReturns<TPath>;
 }

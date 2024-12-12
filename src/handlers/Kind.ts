@@ -37,9 +37,6 @@ export const Kind = createHandler("Kind")
           ? page.pages(`#${kind}/${category}`)
           : page.pages(`#${kind}`);
 
-      // const tbl = createTable
-      // 	.basedOn("kind","category","subcategory");
-
       if (pages.length > 0) {
         table(
           [
@@ -52,9 +49,7 @@ export const Kind = createHandler("Kind")
           pages
             .sort(p => p.file.mday)
             .map((p) => {
-              const pg = isDvPage(p)
-                ? p
-                : (page.page(p) as DvPage);
+              const pg = isDvPage(p) ? p : (page.page(p) as DvPage);
 
               return [
                 createFileLink(pg),

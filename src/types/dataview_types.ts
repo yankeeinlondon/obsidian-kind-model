@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   ExpandDictionary,
   ExpandRecursively,
@@ -7,7 +6,7 @@ import type {
 } from "inferred-types";
 import type * as Luxon from "luxon";
 import type { Component, MarkdownPostProcessorContext, Pos } from "obsidian";
-import type { Link as DvLink, Literal, Query, Widget } from "obsidian-dataview";
+import type { Link as DvLink, Query, Widget } from "obsidian-dataview";
 import type { FmPropSuggestions, Frontmatter } from "./frontmatter";
 import type { Tag } from "./general";
 
@@ -403,7 +402,7 @@ export interface TemplateFile {
  * A representation of a "page" returned by
  */
 export type DvPage = ExpandDictionary<
-	{ file: DvFileProperties; _hash?: string } & FmPropSuggestions
+  { file: DvFileProperties; _hash?: string } & FmPropSuggestions
 >;
 
 export type DvPageWithArray = {
@@ -524,7 +523,9 @@ export interface QueryApiSettings {
 export type DataViewFilter = (f: { file: DvPage }) => boolean;
 
 /** Shorthand for a mapping from keys to values. */
-export interface DataObject { [key: string]: Literal }
+export interface DataObject {
+  [key: string]: Literal;
+}
 /** The literal types supported by the query engine. */
 export type LiteralType =
   | "boolean"
@@ -555,7 +556,10 @@ export type Literal =
   | Widget;
 
 /** A grouping on a type which supports recursively-nested groups. */
-export interface GroupElement<T> { key: Literal; rows: Grouping<T> }
+export interface GroupElement<T> {
+  key: Literal;
+  rows: Grouping<T>;
+}
 export type Grouping<T> = T[] | GroupElement<T>[];
 
 /** The meaning of the 'id' field for a data row - i.e., where it came from. */
@@ -577,7 +581,10 @@ export interface ListResult {
   primaryMeaning: IdentifierMeaning;
 }
 /** The result of executing a task query. */
-export interface TaskResult { type: "task"; values: Grouping<SListItem> }
+export interface TaskResult {
+  type: "task";
+  values: Grouping<SListItem>;
+}
 /** The result of executing a calendar query. */
 export interface CalendarResult {
   type: "calendar";
@@ -636,8 +643,10 @@ export class DvSuccess<T, E> {
 
 export class DvFailure<T, E> {
   public successful: false;
+  public error: E;
 
-  public constructor(public error: E) {
+  public constructor(error: E) {
+    this.error = error;
     this.successful = false;
   }
 

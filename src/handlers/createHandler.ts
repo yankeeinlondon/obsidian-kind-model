@@ -1,4 +1,5 @@
-import type { PascalCase } from "inferred-types/dist/types";
+/* eslint style/no-tabs: ["off"] */
+import type { PascalCase } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
   Handler,
@@ -9,9 +10,9 @@ import type {
   ScalarDefn,
   ScalarParams,
 } from "~/types";
+import { createKindError } from "@yankeeinlondon/kind-error";
 import {
   createFnWithProps,
-  kindError,
   stripParenthesis,
   toPascalCase,
 } from "inferred-types";
@@ -37,13 +38,9 @@ function clientHandler(p: KindModelPlugin) {
         const page = getPageInfoBlock(p)(evt);
         /** RegExp which tests whether this handler should try to handle or not */
         const re = new RegExp(`${handler}\((.*)\)`);
-        let _event: HandlerEvent<
-          THandler,
-          ScalarParams<S>,
-          OptionParams<O>
-        >;
+        let _event: HandlerEvent<THandler, ScalarParams<S>, OptionParams<O>>;
         /** error template */
-        const err = kindError(`InvalidQuery<${handler}>`, {
+        const err = createKindError(`InvalidQuery<${handler}>`, {
           evt,
           page,
         });
@@ -53,11 +50,7 @@ function clientHandler(p: KindModelPlugin) {
           if (re.test(evt.source)) {
             const raw = evt.source.match(re)
               ? stripParenthesis(
-                  Array.from(
-                    evt.source.match(
-                      re,
-                    ) as RegExpMatchArray,
-                  )[1],
+                  Array.from(evt.source.match(re) as RegExpMatchArray)[1],
                 )
               : "";
 
@@ -91,10 +84,11 @@ function clientHandler(p: KindModelPlugin) {
               };
 
               const _handled = await handlerFn(event);
-              p.debug(
-                `Code Block event processed by ${handler}.`,
-                { page, scalar, options },
-              );
+              p.debug(`Code Block event processed by ${handler}.`, {
+                page,
+                scalar,
+                options,
+              });
 
               return true;
             }
@@ -126,10 +120,10 @@ function addParams<THandler extends string>(handler: THandler) {
      *
      * ```ts
      * const Example = createHandler("Example")
-     * 		.scalar({
-     * 			"Foo as string",
-     * 			"Bar as opt(number)"
-     * 		});
+     *     .scalar({
+     * 		    "Foo as string",
+     * 		    "Bar as opt(number)"
+     *     });
      * ```
      */
     scalar: <S extends readonly ScalarDefn[]>(...scalarParams: S) => ({
@@ -142,25 +136,19 @@ function addParams<THandler extends string>(handler: THandler) {
          * the handler should be an async function.
          */
         handler:
-				<
-				  TEvent extends Handler<
-				    THandler,
-				    ScalarParams<S>,
-				    OptionParams<O>
-				  >,
-				>(
-				  handlerFn: TEvent,
-				) =>
-				  (p: KindModelPlugin) => {
-				    return (evt: ObsidianCodeblockEvent) =>
-				      clientHandler(p)(
-				        handler,
-				        handlerFn,
-				        scalarParams,
-				        optionParams,
-				        evt,
-				      );
-				  },
+          <TEvent extends Handler<THandler, ScalarParams<S>, OptionParams<O>>>(
+            handlerFn: TEvent,
+          ) =>
+            (p: KindModelPlugin) => {
+              return (evt: ObsidianCodeblockEvent) =>
+                clientHandler(p)(
+                  handler,
+                  handlerFn,
+                  scalarParams,
+                  optionParams,
+                  evt,
+                );
+            },
       }),
     }),
   };

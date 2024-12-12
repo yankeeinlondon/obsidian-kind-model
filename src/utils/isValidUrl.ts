@@ -6,7 +6,7 @@ export function isValidURL(str: string): boolean {
     new URL(str);
     return true;
   }
-  catch (_) {
+  catch {
     return false;
   }
 }

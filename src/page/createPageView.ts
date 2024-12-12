@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Node } from "@markdoc/markdoc";
 import type { MarkdownView } from "obsidian";
 import type KindModelPlugin from "../main";

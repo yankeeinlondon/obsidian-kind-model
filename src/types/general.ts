@@ -68,7 +68,7 @@ export type UlCallback = <T extends UlApi>(api: T) => unknown;
 
 export type Traversable<
   T extends RenderableTreeNode | Node = RenderableTreeNode | Node,
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 > = (T & { [key: string]: any; children?: T[]; parent?: Traversable }) | Scalar;
 
 type WrapperCallback = (items: string) => string;
@@ -79,4 +79,6 @@ export interface ListItemsApi<_W extends WrapperCallback> {
   done: EscapeFunction;
 }
 
-export type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(api: T) => unknown;
+export type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(
+  api: T,
+) => unknown;

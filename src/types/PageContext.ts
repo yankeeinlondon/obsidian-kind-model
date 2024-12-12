@@ -1,4 +1,3 @@
-// import { DataviewSettings } from "./dataview_types";
 import type { Node, RenderableTreeNode } from "@markdoc/markdoc";
 import type { MarkdownView } from "obsidian";
 import type { DateTime, Link } from "obsidian-dataview";
@@ -362,7 +361,6 @@ export interface UrlValidation {
 }
 
 export interface KindPageApi<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _K extends KindCategory,
   V extends boolean,
 > {

@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  Dictionary,
-  Iso8601Date,
-  Iso8601DateTime,
-} from "inferred-types";
+import type { Dictionary, Iso8601Date, Iso8601DateTime } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
   Frontmatter,
@@ -174,8 +169,7 @@ export function getMetadata(p: KindModelPlugin) {
         return links as string[];
       };
 
-      return meta as Record<Partial<PropertyType>, string[]> &
-        PageMetadata;
+      return meta as Record<Partial<PropertyType>, string[]> & PageMetadata;
     }
     else {
       p.debug(`no metadata found on page ${pg || "unknown"}`);

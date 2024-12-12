@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-export interface PdfRenderContext {
-
-}
+export interface PdfRenderContext {}
 
 export interface PdfPage {
   getViewport: (options?: Record<string, any>) => unknown;
@@ -11,7 +7,6 @@ export interface PdfPage {
 
 export interface PdfDoc {
   getPage: (page: number) => unknown;
-
 }
 
 /**

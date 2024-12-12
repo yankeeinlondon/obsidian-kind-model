@@ -1,6 +1,8 @@
 import type { LogLevel } from "~/types/settings_types";
 
-const msg = <T extends unknown[]>(list: T) => list.find(i => typeof i === "string") || "" as string | "";
+function msg<T extends unknown[]>(list: T) {
+  return list.find(i => typeof i === "string") || ("" as string | "");
+}
 
 function trunc(s: string | undefined) {
   return typeof s === "string"
@@ -22,7 +24,9 @@ function debug<TLevel extends LogLevel>(level: TLevel) {
         console.log(`fn → `, a());
       }
       else if (typeof a === "object" && a !== null) {
-        Object.keys(a).map(k => console.info({ [k]: a[k as keyof typeof a] }));
+        Object.keys(a).map(k =>
+          console.info({ [k]: a[k as keyof typeof a] }),
+        );
       }
       else {
         console.log(a);
@@ -70,10 +74,12 @@ function warn<TLevel extends LogLevel>(level: TLevel) {
     console.groupEnd();
   };
 }
-function error<TLevel extends LogLevel>(level: TLevel) {
+function error<TLevel extends LogLevel>(_level: TLevel) {
   return (...args: unknown[]) => {
     console.groupEnd();
-    new Notification(`KM(err): ${msg(args) || ""}`, { body: "see developer console for more details" });
+    new Notification(`KM(err): ${msg(args) || ""}`, {
+      body: "see developer console for more details",
+    });
 
     class KindModelError extends Error {
       kind: "KindModel Error";
@@ -83,7 +89,9 @@ function error<TLevel extends LogLevel>(level: TLevel) {
       }
     }
 
-    throw new KindModelError(args.map(i => String(i)).join(", ") || "Kind Model error");
+    throw new KindModelError(
+      args.map(i => String(i)).join(", ") || "Kind Model error",
+    );
   };
 }
 
@@ -114,8 +122,8 @@ export function logger<
   if (context) {
     for (const k of Object.keys(api)) {
       if (k !== "level" && Object.keys(context).includes(k)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (context as any)[k as keyof Omit<Logger<TLevel>, "level">] = api[k as keyof typeof api];
+        (context as any)[k as keyof Omit<Logger<TLevel>, "level">]
+          = api[k as keyof typeof api];
       }
     }
   }

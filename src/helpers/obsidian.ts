@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Iso8601 } from "inferred-types";
 import type { RequestUrlParam } from "obsidian";
 import type { GetIconFromObsidian, ObsidianSvgElement } from "~/types";
@@ -26,7 +25,6 @@ export interface UrlResponse {
  * requests without the CORS issues associated with `fetch`.
  */
 export async function requestUrl(req: RequestUrlParam) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const resp = await (globalThis as any).requestUrl(req);
   resp.url = req.url;
 

@@ -1,11 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type KindModelPlugin from "~/main";
 
-import type { DecomposedCategoryTag, DecomposedKindTag, DecomposedSubcategoryTag, DecomposedTag } from "~/types";
+import type {
+  DecomposedCategoryTag,
+  DecomposedKindTag,
+  DecomposedSubcategoryTag,
+  DecomposedTag,
+} from "~/types";
+import { stripLeading } from "inferred-types";
 import {
-  stripLeading,
-} from "inferred-types";
-import { isCategoryDefnTag, isKindedWithCategoryTag, isKindedWithSubcategoryTag, isKindTag, isSubcategoryDefnTag, isTypeDefnPage } from "./classificationApi";
+  isCategoryDefnTag,
+  isKindedWithCategoryTag,
+  isKindedWithSubcategoryTag,
+  isKindTag,
+  isSubcategoryDefnTag,
+  isTypeDefnPage,
+} from "./classificationApi";
 
 export function decomposeTag(p: KindModelPlugin) {
   return (tag: string): DecomposedTag => {

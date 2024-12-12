@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   App,
   Editor,
@@ -47,10 +46,6 @@ export class KindSuggest extends EditorSuggest<string> {
     const lastWordLoc = currentLine.indexOf(lastWord);
     this.plugin.info(`lastWord: ${lastWord}`, isValidURL(lastWord));
 
-    // const isUrl = ["https://", "http://"].some((i) =>
-    // 	lastWord.startsWith(i),
-    // );
-
     if (isValidURL(lastWord)) {
       return {
         start: {
@@ -62,10 +57,9 @@ export class KindSuggest extends EditorSuggest<string> {
       };
     }
 
-    const completeKindQuery
-			= priorLine.includes("km")
-			&& currentLine.length > 0
-			&& commands.some(c => c.startsWith(currentLine));
+    const completeKindQuery = priorLine.includes("km")
+      && currentLine.length > 0
+      && commands.some(c => c.startsWith(currentLine));
 
     if (completeKindQuery) {
       return {
@@ -149,8 +143,7 @@ export class KindSuggest extends EditorSuggest<string> {
       if (file) {
         const metadata = this.app.metadataCache.getFileCache(file);
         if (metadata && metadata.frontmatter) {
-          isReallyImportant
-						= metadata.frontmatter.isReallyImportant === true;
+          isReallyImportant = metadata.frontmatter.isReallyImportant === true;
         }
       }
 
@@ -197,12 +190,6 @@ export class KindSuggest extends EditorSuggest<string> {
       const page = getPageInfo(this.plugin)(file);
 
       if (page && view) {
-        // const ctx = {
-        // 	isKindedPage: isKindedPage(this.plugin)(page),
-        // 	isCategoryPage: isCategoryPage(this.plugin)(page),
-        // 	isSubcategoryPage: isSubcategoryPage(this.plugin)(page),
-        // };
-
         this.plugin.info("Suggestion", suggestion);
 
         switch (suggestion) {
@@ -257,9 +244,7 @@ export class KindSuggest extends EditorSuggest<string> {
             if (selectedText) {
               const url = prompt("Enter URL:");
               if (url) {
-                editor.replaceSelection(
-                  `[${selectedText}](${url})`,
-                );
+                editor.replaceSelection(`[${selectedText}](${url})`);
               }
             }
             else {

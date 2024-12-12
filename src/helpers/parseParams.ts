@@ -1,37 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  Dictionary,
-} from "inferred-types";
+import type { Dictionary } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import type { OptionParams, OptionsDefn, ScalarDefn, ScalarParams } from "~/types";
-import {
-  isObject,
-  isString,
-  kindError,
-  retainAfter,
-  retainUntil,
-} from "inferred-types";
+import type {
+  OptionParams,
+  OptionsDefn,
+  ScalarDefn,
+  ScalarParams,
+} from "~/types";
+import { createKindError } from "@yankeeinlondon/kind-error";
+import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
 
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
     name: string,
-  /** the raw string params */
+    /** the raw string params */
     raw: string,
-  /** the scalar property definitions */
+    /** the scalar property definitions */
     scalar: TScalar,
-  /** the options hash definition */
+    /** the options hash definition */
     options: TOpt,
   ): Error | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
     /** the quantity of scalars that MUST be in place */
     const requiredScalar = scalar.filter(i => !i.contains("opt(")).length;
 
-    const invalid = kindError(`InvalidQuery<${name}>`, {
+    const invalid = createKindError(`InvalidQuery<${name}>`, {
       raw,
       scalar,
       options,
       requiredScalar,
     });
-    const parsingErr = kindError(`ParsingError<${name}>`, {
+    const parsingErr = createKindError(`ParsingError<${name}>`, {
       raw,
       scalar,
       options,
@@ -67,15 +64,14 @@ export function parseQueryParams(_p: KindModelPlugin) {
        * is in the last position of parameters passed in.
        */
       const optionsInTerminalPosition
-				= optionsPosition === -1 ? true : optionsPosition === length - 1;
+        = optionsPosition === -1 ? true : optionsPosition === length - 1;
 
       const scalarParams
-				= optionsPosition === -1
-				  ? parsed
-				  : parsed.slice(0, optionsPosition);
+        = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
 
-      const notEnoughScalarParams
-				= !!(requiredScalar > 0 && scalarParams.length < requiredScalar);
+      const notEnoughScalarParams = !!(
+        requiredScalar > 0 && scalarParams.length < requiredScalar
+      );
 
       if (!optionsInTerminalPosition) {
         return invalid(
@@ -107,10 +103,7 @@ export function parseQueryParams(_p: KindModelPlugin) {
       const scalar: Record<string, any> = {};
       let idx = 0;
       for (const [key, typeOf] of scalarOrder) {
-        if (
-          typeOf.startsWith("string")
-          && !isString(scalarParams[idx])
-        ) {
+        if (typeOf.startsWith("string") && !isString(scalarParams[idx])) {
           return invalid(
             `the scalar property "${key}" is required and expected to be a string; type was ${typeof scalarParams[idx]}`,
           );
@@ -127,10 +120,9 @@ export function parseQueryParams(_p: KindModelPlugin) {
       ];
     }
     catch (e) {
-      return parsingErr(
-        `Problem parsing query parameters passed in: ${raw}!`,
-        { underlying: e },
-      );
+      return parsingErr(`Problem parsing query parameters passed in: ${raw}!`, {
+        underlying: e,
+      });
     }
   };
 }

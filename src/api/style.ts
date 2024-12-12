@@ -1,4 +1,4 @@
-import type { ListStyle, StyleOptions } from "types";
+import type { ListStyle, StyleOptions } from "src/types";
 
 /**
  * **style**`(opts)`
@@ -137,9 +137,7 @@ export function style<T extends StyleOptions<any>>(opts?: T) {
     fmt.push(`opacity: ${opts.opacity}`);
   }
 
-  return fmt.length === 0
-    ? `style=""`
-    : `style="${fmt.join("; ")}"`;
+  return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
 }
 
 export function listStyle(opts: ListStyle = {}) {
@@ -166,19 +164,25 @@ export function listStyle(opts: ListStyle = {}) {
   }
 
   if (opts?.mt && opts.mt !== "default") {
-    fmt.push(`margin-block-start: ${opts.mt === "tight" ? "2px" : opts.mt === "none" ? "0px" : opts.mt === "spaced" ? "1.5rem" : opts.mt}`);
+    fmt.push(
+      `margin-block-start: ${opts.mt === "tight" ? "2px" : opts.mt === "none" ? "0px" : opts.mt === "spaced" ? "1.5rem" : opts.mt}`,
+    );
   }
 
   if (opts?.mb && opts.mb !== "default") {
-    fmt.push(`margin-block-end: ${opts.mb === "tight" ? "2px" : opts.mb === "none" ? "0px" : opts.mb === "spaced" ? "1.5rem" : opts.mb}`);
+    fmt.push(
+      `margin-block-end: ${opts.mb === "tight" ? "2px" : opts.mb === "none" ? "0px" : opts.mb === "spaced" ? "1.5rem" : opts.mb}`,
+    );
   }
 
   if (opts?.my && opts.my !== "default") {
-    fmt.push(`margin-block-start: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
-    fmt.push(`margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`);
+    fmt.push(
+      `margin-block-start: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`,
+    );
+    fmt.push(
+      `margin-block-end: ${opts.my === "tight" ? "2px" : opts.my === "none" ? "0px" : opts.my === "spaced" ? "1.5rem" : opts.my}`,
+    );
   }
 
-  return fmt.length === 0
-    ? `style=""`
-    : `style="${fmt.join("; ")}"`;
+  return fmt.length === 0 ? `style=""` : `style="${fmt.join("; ")}"`;
 }

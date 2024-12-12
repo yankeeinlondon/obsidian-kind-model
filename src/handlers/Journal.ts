@@ -1,6 +1,13 @@
 import type { DvPage } from "~/types";
 
-import { isThisYear, isToday, isTomorrow, isYesterday, retainUntil, WHITESPACE_CHARS } from "inferred-types";
+import {
+  isThisYear,
+  isToday,
+  isTomorrow,
+  isYesterday,
+  retainUntil,
+  WHITESPACE_CHARS,
+} from "inferred-types";
 import {
   badge,
   bold,
@@ -36,8 +43,7 @@ export const Journal = createHandler("Journal")
       const when = getWhenDate(p)(page);
 
       if (when) {
-        const format
-					= evt.options.fileFormat || "journal/YYYY/YYYY-MM-DD";
+        const format = evt.options.fileFormat || "journal/YYYY/YYYY-MM-DD";
         /** previous day link */
         const prev = htmlLink(p)(journalFile(format, priorDay(when)), {
           createPageWhereMissing: true,
@@ -54,9 +60,7 @@ export const Journal = createHandler("Journal")
           )
           .where(p => p.file.tags.includes("#holiday"));
 
-        const holiday = holidays.values
-          .map(h => h.file.name)
-          .join(" / ");
+        const holiday = holidays.values.map(h => h.file.name).join(" / ");
 
         p.info("journal", holidays.length, holidays);
         p.info("journal", holidays.length, holidays, holiday);
@@ -107,15 +111,8 @@ export const Journal = createHandler("Journal")
           `<span class="relative-date" style="flex-grow: 1">${holiday ? `${holiday},` : ""}`,
           isToday(when) || isYesterday(when) || isTomorrow(when)
             ? badge(
-                retainUntil(
-                  moment(when).calendar(),
-                  ...WHITESPACE_CHARS,
-                ),
-                isToday(when)
-                  ? "green"
-                  : isYesterday(when)
-                    ? "gray"
-                    : "blue",
+                retainUntil(moment(when).calendar(), ...WHITESPACE_CHARS),
+                isToday(when) ? "green" : isYesterday(when) ? "gray" : "blue",
               )
             : light(italic(moment(when).fromNow())),
           `</span>`,

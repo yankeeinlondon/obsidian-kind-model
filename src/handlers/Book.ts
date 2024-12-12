@@ -158,9 +158,7 @@ export const Book = createHandler("Book")
         : current.author
           ? current.author.split(",").map(i => i.trim())
           : current["kindle-sync"]?.author
-            ? current["kindle-sync"]?.author
-              .split(",")
-              .map(i => i.trim())
+            ? current["kindle-sync"]?.author.split(",").map(i => i.trim())
             : [],
       bookCategory: current.category,
       publisher: current.publisher,
@@ -237,10 +235,10 @@ export const Book = createHandler("Book")
         ? [
             fmt.medium("Publication Date:"),
             isDateTime(book.publishDate)
-              ? fmt.ul(
-                  [book?.publishDate?.toFormat("LLL yyyy")],
-                  { indentation: "default", my: "tight" },
-                )
+              ? fmt.ul([book?.publishDate?.toFormat("LLL yyyy")], {
+                  indentation: "default",
+                  my: "tight",
+                })
               : "unknown format",
           ]
         : [];
@@ -258,15 +256,15 @@ export const Book = createHandler("Book")
         : [];
 
       const author
-				= book.authors.length > 0
-				  ? [
-				      fmt.medium("Written By:"),
-				      fmt.ul(book.authors, {
-				        indentation: "default",
-				        my: "tight",
-				      }),
-				    ]
-				  : [];
+        = book.authors.length > 0
+          ? [
+              fmt.medium("Written By:"),
+              fmt.ul(book.authors, {
+                indentation: "default",
+                my: "tight",
+              }),
+            ]
+          : [];
 
       const book_ids = [
         `<div class="book-ids">`,
@@ -315,13 +313,13 @@ export const Book = createHandler("Book")
         ? [
             fmt.blockquote("info", `Books by ${book.authors[0]}`, {
               content:
-								book.otherBooks
-								  .map((b) => {
-								    return fmt.link(b.title, b.titleLink, {
-								      iconUrl: b.imageLink,
-								    });
-								  })
-								  .join("\n") || "&nbsp;",
+                book.otherBooks
+                  .map((b) => {
+                    return fmt.link(b.title, b.titleLink, {
+                      iconUrl: b.imageLink,
+                    });
+                  })
+                  .join("\n") || "&nbsp;",
               icon: BOOK_ICON,
               fold: "-",
             }),
@@ -339,11 +337,9 @@ export const Book = createHandler("Book")
                 )
               : undefined,
             book.asin
-              ? fmt.link(
-                  "Amazon",
-                  `https://www.amazon.com/dp/${book.asin}`,
-                  { svgInline: AMAZON },
-                )
+              ? fmt.link("Amazon", `https://www.amazon.com/dp/${book.asin}`, {
+                  svgInline: AMAZON,
+                })
               : undefined,
             book.googleBookLink
               ? fmt.link("Google", book.googleBookLink, {

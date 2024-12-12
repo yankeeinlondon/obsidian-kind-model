@@ -25,7 +25,11 @@ import {
   WARN_ICON,
 } from "../constants/obsidian-constants";
 
-function obsidian_blockquote(kind: ObsidianCalloutColors,	title: string,	opts?: BlockQuoteOptions) {
+function obsidian_blockquote(
+  kind: ObsidianCalloutColors,
+  title: string,
+  opts?: BlockQuoteOptions,
+) {
   return [
     `<div data-callout-metadata="" data-callout-fold="${opts?.fold || ""}" data-callout="${kind}" class="callout" ${style(opts?.style || {})}>`,
     `<div class="callout-title" style="gap:15px; align-items: center">`,
@@ -81,7 +85,11 @@ function empty_callout(fmt?: StyleOptions) {
  *
  * Generates the HTML necessary to show a callout/blockquote in Obsidian.
  */
-function blockquote(kind: ObsidianCalloutColors,	title: string,	opts?: BlockQuoteOptions) {
+function blockquote(
+  kind: ObsidianCalloutColors,
+  title: string,
+  opts?: BlockQuoteOptions,
+) {
   const iconLookup: Record<ObsidianCalloutColors, string> = {
     warning: WARN_ICON,
     quote: QUOTE_ICON,

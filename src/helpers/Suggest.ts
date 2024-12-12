@@ -159,8 +159,10 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
     }
   }
 
-  open(container: HTMLElement, inputEl: HTMLElement): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  open(
+    container: HTMLElement,
+    inputEl: HTMLElement,
+  ): void {
     app.keymap.pushScope(this.scope);
 
     container.appendChild(this.suggestEl);

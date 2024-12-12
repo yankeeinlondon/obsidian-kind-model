@@ -21,7 +21,6 @@ import {
 
 import { on_editor_change } from "./events/on_editor_change";
 import { csv } from "./events/on_load/csv";
-import { KindSuggest } from "./suggest";
 import { DEFAULT_SETTINGS } from "./utils/Constants";
 import { logger } from "./utils/logging";
 
@@ -40,7 +39,7 @@ export default class KindModelPlugin extends Plugin {
   public error: Logger["error"];
 
   public cache: KindCache = {
-    kindDefinitionsByPath: new Map<string, KindDefinition<[ "path"]>>(),
+    kindDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),
     kindDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
     typeDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),
     typeDefinitionsByTag: new Map<string, KindDefinition<["tag"]>>(),
@@ -83,7 +82,7 @@ export default class KindModelPlugin extends Plugin {
     this.hasher = hasher || (await xx()).h32;
     hasher = this.hasher;
 
-    this.registerEditorSuggest(new KindSuggest(this.app, this));
+    // this.registerEditorSuggest(new KindSuggest(this.app, this));
 
     // start the cache refresh process
     // -------------------------------
@@ -148,7 +147,10 @@ export default class KindModelPlugin extends Plugin {
   async saveSettings() {
     const { info, error } = logger(this.settings.log_level);
     if (typeof this.saveData !== "function") {
-      error("the 'this' context appear to have been lost when trying to call saveSettings()", this);
+      error(
+        "the 'this' context appear to have been lost when trying to call saveSettings()",
+        this,
+      );
       return;
     }
 

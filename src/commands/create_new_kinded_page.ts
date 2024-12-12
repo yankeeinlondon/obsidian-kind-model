@@ -3,13 +3,12 @@ import type KindModelPlugin from "~/main";
 import { TextInputModal } from "~/helpers";
 
 export function create_new_kinded_page(p: KindModelPlugin) {
-  return async (
-    editor: Editor,
-    view: MarkdownView,
-  ) => {
+  return async (_editor: Editor, _view: MarkdownView) => {
     let value;
     // return new Promise((resolve) => {
-    const modal = new TextInputModal(p.app, "Filename", "", (v) => { value = v; });
+    const modal = new TextInputModal(p.app, "Filename", "", (v) => {
+      value = v;
+    });
     const fileName = await modal.open();
 
     console.log("value", value, fileName);

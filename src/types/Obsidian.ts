@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   AlphaChar,
   AlphaNumericChar,
@@ -10,7 +9,7 @@ import type {
   TypedFunction,
   UrlPath,
 } from "inferred-types";
-import type { FSWatcher } from "node:fs";
+
 import type { EventRef, Stat, Vault } from "obsidian";
 import type { Tag } from ".";
 
@@ -111,12 +110,14 @@ export interface ObsidianComponent {
     type: K,
     callback: (this: HTMLElement, ev: WindowEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) & (<K extends keyof DocumentEventMap>(
+  ) => void) &
+  (<K extends keyof DocumentEventMap>(
     el: Document,
     type: K,
     callback: (this: HTMLElement, ev: DocumentEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) & (<K extends keyof HTMLElementEventMap>(
+  ) => void) &
+  (<K extends keyof HTMLElementEventMap>(
     el: HTMLElement,
     type: K,
     callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
@@ -198,24 +199,20 @@ export interface ObsidianSvgElement
   unsuspendRedrawAll: () => void;
   addEventListener: (<K extends keyof SVGSVGElementEventMap>(
     type: K,
-    listener: (
-      this: ObsidianSvgElement,
-      ev: SVGSVGElementEventMap[K],
-    ) => any,
+    listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) & ((
+  ) => void) &
+  ((
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) => void);
   removeEventListener: (<K extends keyof SVGSVGElementEventMap>(
     type: K,
-    listener: (
-      this: ObsidianSvgElement,
-      ev: SVGSVGElementEventMap[K],
-    ) => any,
+    listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
-  ) => void) & ((
+  ) => void) &
+  ((
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
@@ -276,7 +273,7 @@ export interface ObsidianMappedFile {
 }
 
 export interface ObsidianWatcher {
-  watcher: FSWatcher;
+  watcher: any;
   resolvedPath: string;
 }
 

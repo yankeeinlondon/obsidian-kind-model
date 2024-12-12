@@ -1,7 +1,4 @@
-import type {
-  OptionalSpace,
-  StripLeading,
-} from "inferred-types";
+import type { OptionalSpace, StripLeading } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type { DvPage, FileLink, PageReference, ShowApi } from "~/types";
 import {
@@ -147,10 +144,7 @@ export function showTags(_p: KindModelPlugin) {
   return (pg: DvPage, ...exclude: string[]) => {
     return (
       pg.file.etags
-        .filter(
-          t =>
-            !exclude.some(i => (!!t.startsWith(i))),
-        )
+        .filter(t => !exclude.some(i => !!t.startsWith(i)))
         .map(t => `\`${t}\``)
         .join(", ") || ""
     );
@@ -233,7 +227,7 @@ export function showLinks(p: KindModelPlugin) {
         prop: string,
       ) => {
         icon
-					= prop === "website" && isString(pageIcon)
+          = prop === "website" && isString(pageIcon)
             ? pageIcon
             : /youtube.com/.test(url)
               ? "you_tube"
@@ -320,11 +314,7 @@ export function showProp(p: KindModelPlugin) {
                 : isArray(value)
                   ? value
                       .map(v =>
-                        isLink(v)
-                          ? v
-                          : isDvPage(v)
-                            ? v.file.link
-                            : "",
+                        isLink(v) ? v : isDvPage(v) ? v.file.link : "",
                       )
                       .filter(i => i)
                       .join(", ")
@@ -417,8 +407,7 @@ export function getKind(p: KindModelPlugin) {
         const kindTag = page.file.etags.find(
           i =>
             isKindTag(p)(i.split("/")[0])
-            && lookupKindByTag(p)(i.split("/")[0])?.path
-            === page.file.path,
+            && lookupKindByTag(p)(i.split("/")[0])?.path === page.file.path,
         );
 
         p.info("getKind", { kind, kindTag: kindTag || "unknown" });
@@ -560,7 +549,7 @@ export interface CategoryOptions {
 }
 
 export function showSubcategories(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, opt?: CategoryOptions): string => {
+  return (pg: PageReference | undefined, _opt?: CategoryOptions): string => {
     const page = p.api.getPage(pg);
     const links: string[] = [];
     // const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
@@ -621,22 +610,16 @@ export function showClassifications(p: KindModelPlugin) {
           : i.categories && i.categories.length === 1
             ? htmlLink(p)(
                 i.categories[0].category,
-                opt(
-                  p.api.format.as_tag(
-                    i.categories[0].category,
-                  ),
+                opt(p.api.format.as_tag(i.categories[0].category)),
+              )
+            : `<span style="opacity: 0.8">[ </span>${i.categories
+              .map(ii =>
+                htmlLink(p)(
+                  ii.category,
+                  opt(p.api.format.as_tag(ii.category)),
                 ),
               )
-            : `<span style="opacity: 0.8">[ </span>${
-              i.categories
-                .map(ii =>
-                  htmlLink(p)(
-                    ii.category,
-                    opt(p.api.format.as_tag(ii.category)),
-                  ),
-                )
-                .join(",&nbsp;")
-            }<span style="opacity: 0.8"> ]</span>`,
+              .join(",&nbsp;")}<span style="opacity: 0.8"> ]</span>`,
         // SUBCATEGORY
         i.subcategory ? htmlLink(p)(i?.subcategory?.subcategory) : "",
       ]
@@ -714,7 +697,10 @@ export interface MarkdownLinkOpt {
  * render properly because the markdown-to-html conversion will no longer take place.
  */
 export function createMarkdownLink(p: KindModelPlugin) {
-  return (pathLike: PageReference | undefined, opt?: MarkdownLinkOpt): string => {
+  return (
+    pathLike: PageReference | undefined,
+    opt?: MarkdownLinkOpt,
+  ): string => {
     const page = p.api.getPage(pathLike);
 
     if (page) {
@@ -731,7 +717,7 @@ export function createMarkdownLink(p: KindModelPlugin) {
  * The Show API surface is for presenting a column in a tabular report.
  */
 export function showApi(p: KindModelPlugin): ShowApi {
-  return ({
+  return {
     /** show the creation date */
     showCreatedDate,
     /** show last modified date */
@@ -759,5 +745,5 @@ export function showApi(p: KindModelPlugin): ShowApi {
 
     createFileLink: createFileLink(p),
     createMarkdownLink: createMarkdownLink(p),
-  }) as const;
+  } as const;
 }

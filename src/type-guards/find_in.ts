@@ -9,7 +9,6 @@ type TypeGuard<T> = (value: unknown) => value is T;
  * (or _undefined_ if not found)
  */
 export function find_in<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TG extends TypeGuard<any>,
 >(tg: TG) {
   return (...values: unknown[]) => {

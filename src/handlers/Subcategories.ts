@@ -13,22 +13,22 @@ export const Subcategories = createHandler("Subcategories")
     const kind = page.kindTags[0];
 
     const categories
-			= scalar.category && scalar.category.includes("/")
-			  ? [
-			      [
-			        ensureLeading(scalar.category.split("/")[0], "#"),
-			        "subcategory",
-			        scalar.category.split("/")[1],
-			      ].join("/"),
-			    ]
-			  : scalar.category && kind
-			    ? [
-			        `${ensureLeading(kind, "#")}/subcategory/${stripLeading(scalar.category, "#")}`,
-			      ]
-			    : page.categories.map((i) => {
-			        const [k, c] = i.kindedTag.split("/");
-			        return `${ensureLeading(k, "#")}/subcategory/${c}`;
-			      });
+      = scalar.category && scalar.category.includes("/")
+        ? [
+            [
+              ensureLeading(scalar.category.split("/")[0], "#"),
+              "subcategory",
+              scalar.category.split("/")[1],
+            ].join("/"),
+          ]
+        : scalar.category && kind
+          ? [
+              `${ensureLeading(kind, "#")}/subcategory/${stripLeading(scalar.category, "#")}`,
+            ]
+          : page.categories.map((i) => {
+              const [k, c] = i.kindedTag.split("/");
+              return `${ensureLeading(k, "#")}/subcategory/${c}`;
+            });
 
     if (categories.length === 0) {
       showQueryError(p)("Subcategories", page, `no subcategories`);

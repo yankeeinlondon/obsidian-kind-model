@@ -19,32 +19,6 @@ import {
 import { DateTime } from "luxon";
 import { requestUrl } from "./obsidian";
 
-/**
- * scrapes the API version from the site and then
- * caches this to the
- */
-async function _getWorldCatApiVersion(_p: KindModelPlugin) {
-  // const html = await loadRemoteDom("https://search.worldcat.org/search", 0, p);
-  // const scriptIdentifier = html.getElementsByTagName("script").find(el => el.getAttribute("src")?.includes("next/static/v"));
-  // if(!scriptIdentifier) {
-  // 	const scriptsWithSource = html
-  // 		.getElementsByTagName("script")
-  // 		.map(i => i.getAttribute("src"))
-  // 		.filter(i =>  i !== undefined);
-  // 	p.error(`Failed to find a script which indicates the API version for WorldCat's book search! The scripts which did have a src tag were as follows: `, {scriptsWithSource});
-  // 	return;
-  // }
-  // let searchWorldCat = stripAfter(
-  // 	stripBefore(
-  // 		scriptIdentifier.getAttribute("src"), "static/"
-  // 	),
-  // 	"/"
-  // );
-  // p.saveData({searchWorldCat});
-  // p.info(`Saved the WorldCat API version to settings for caching purposes`);
-  // return searchWorldCat;
-}
-
 export const WORLD_CAT_URL = `https://search.worldcat.org/search` as const;
 
 /**
@@ -82,8 +56,7 @@ export async function worldCatBookPage(p: KindModelPlugin, book: BookMeta) {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
       "Cache-Control": "no-cache",
-      "User-Agent":
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
       "Connection": "keep-alive",
     },
   });
@@ -95,7 +68,7 @@ export async function worldCatBookPage(p: KindModelPlugin, book: BookMeta) {
   return url;
 }
 
-export async function worldCatOtherBooks(p: KindModelPlugin,	book: BookMeta) {
+export async function worldCatOtherBooks(p: KindModelPlugin, book: BookMeta) {
   p.info("starting");
   if (book.authors.length === 0) {
     return;
@@ -108,8 +81,7 @@ export async function worldCatOtherBooks(p: KindModelPlugin,	book: BookMeta) {
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
       "Cache-Control": "no-cache",
-      "User-Agent":
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
       "Connection": "keep-alive",
     },
   }).then((r) => {
@@ -153,14 +125,14 @@ export async function worldCatOtherBooks(p: KindModelPlugin,	book: BookMeta) {
 /**
  * scrapes metadata on a Amazon page which is focused on a book
  */
-export async function AmazonBook(p: KindModelPlugin,	book: BookMeta): Promise<BookMeta> {
+export async function AmazonBook(
+  p: KindModelPlugin,
+  book: BookMeta,
+): Promise<BookMeta> {
   const url = `https://www.amazon.com/dp/${book.asin}`;
   p.debug(`Scraping ${url}`, book);
   let html: string;
 
-  // if(book!.asin) {
-  // 	return book;
-  // }
   try {
     const req = await requestUrl({
       url,
@@ -170,8 +142,7 @@ export async function AmazonBook(p: KindModelPlugin,	book: BookMeta): Promise<Bo
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "text/html",
         "Cache-Control": "no-cache",
-        "User-Agent":
-					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Connection": "keep-alive",
       },
     });
@@ -188,18 +159,14 @@ export async function AmazonBook(p: KindModelPlugin,	book: BookMeta): Promise<Bo
   const page = createDocument(html);
   p.debug("page created");
 
-  const amazonRating
-		= page && query(page, "span .a-icon-alt")?.textContent
-		  ? Number(
-		      stripAfter(
-		        query(page, "span .a-icon-alt")?.textContent || "",
-		        " ",
-		      ),
-		    )
-		  : undefined;
-  // let goodReadsRating = page
-  // 	? Number(query(page, ""))
-  // 	: undefined;
+  const amazonRating = page && query(page, "span .a-icon-alt")?.textContent
+    ? Number(
+        stripAfter(
+          query(page, "span .a-icon-alt")?.textContent || "",
+          " ",
+        ),
+      )
+    : undefined;
 
   /** number of reviewers */
   const reviewsAmazon = hasSelector(page, "span .arcCustomerReviewText")
@@ -259,10 +226,9 @@ export async function AmazonBook(p: KindModelPlugin,	book: BookMeta): Promise<Bo
     "Item Weight",
   )?.nextElementSibling?.textContent;
 
-  const kindleVariantAvailable
-		= isKindleBook === true
-		  ? true
-		  : query(page, "#tmm-grid-swatch-KINDLE", undefined) !== undefined;
+  const kindleVariantAvailable = isKindleBook === true
+    ? true
+    : query(page, "#tmm-grid-swatch-KINDLE", undefined) !== undefined;
 
   const numOfRatings = stripAfter(
     query(page, "#acrCustomerReviewText")?.textContent || "",

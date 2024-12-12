@@ -36,9 +36,7 @@ export const VideoGallery = createHandler("VideoGallery")
           .map(i => ({
             ...i,
             title:
-							i.title.toLowerCase() === "video"
-							  ? pg.page.file.name
-							  : i.title,
+              i.title.toLowerCase() === "video" ? pg.page.file.name : i.title,
             filepath: pg.filepath,
           })) as Video[]),
       ];
@@ -47,7 +45,7 @@ export const VideoGallery = createHandler("VideoGallery")
     const size = evt?.options?.size || "M";
 
     const grid_cols
-			= size == "L" ? 2 : size == "M" ? 3 : size == "S" ? 4 : 5;
+      = size === "L" ? 2 : size === "M" ? 3 : size === "S" ? 4 : 5;
     const dom = [
       `<div class="video-gallery" style="display: grid; grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr)); gap: 8px;">`,
       ...videos.map((v) => {

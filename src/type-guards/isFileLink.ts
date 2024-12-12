@@ -5,7 +5,6 @@ import { isObject, isString } from "inferred-types";
  * Type guard which checks whether the passed in value is a `DvPageRef` structure.
  */
 export function isFileLink(val: unknown): val is FileLink {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return isLink(val) && "type" in val && val.type === "file";
 }
 
