@@ -8,8 +8,8 @@ import type {
   Workspace,
 } from "obsidian";
 import type * as Electron from "electron";
-import { AsyncFunction } from "inferred-types";
-import { ObsidianApp, TFile, TFolder } from "./types";
+import { AsyncFunction, isDefined } from "inferred-types";
+import { ObsidianApp, ObsidianMetadataCache, TFile, TFolder } from "./types";
 
 /**
  * returns the **moment** library which Obsidian provides to the
@@ -33,9 +33,10 @@ export const Plugin = (window as any).Plugin as {
   prototype: PluginType;
 };
 
-/** a dictionary of all loaded plugins  */
-export const obsidianPlugins = (globalThis as any).app.plugins
-  .plugins as Record<string, PluginType>;
+/** a dictionary of all loaded community plugins  */
+export const communityPlugins = app().plugins.plugins;
+
+export const corePlugins = app().internalPlugins.plugins;
 
 /** a dictionary of commands and editor commands in **Obsidian** */
 export const obsidianCommands = {
@@ -138,3 +139,93 @@ export const electron = (globalThis as any).electron as {
     systemPreferences: Electron.SystemPreferences;
   };
 };
+
+/**
+ * An API surface providing many of the commonly used
+ * runtime API endpoints from **Obsidian**.
+ */
+export const obApp = {
+	commands: obsidianCommands,
+	vault,
+	hotKeyManager,
+	fileMap,
+	workspace,
+	plugins: {
+		/** core **Obsidian** plugins */
+		core: corePlugins,
+		/** community plugins */
+		community: communityPlugins
+	},
+	views: app().viewRegistry,
+
+	openVaultChooser: app().openVaultChooser,
+	isMobile: app().isMobile,
+
+	metadataTypeManager: app().metadataTypeManager,
+	
+	embedByExtension: app().embedRegistry.embedByExtension,
+
+	/** 
+	 * returns a key/value store where _keys_ are the **tags** and the 
+	 * values are a count of how many times this tag is being used.
+	 */
+	getTags() {
+		return app().metadataCache.getTags()
+	},
+
+	/**
+	 * Provides a list of _in-vault_ links which are "resolved" (
+	 * aka, the pages they point to already exist)
+	 */
+	resolvedLinksFor(filepath: string) {
+		return filepath in app().metadataCache.resolvedLinks
+			? Object.keys(app().metadataCache.resolvedLinks[filepath])
+			: [];
+	},
+
+	/**
+	 * Provides a list of _in-vault_ links which are "unresolved" (
+	 * aka, the pages they point to don't yet exist)
+	 */
+	unresolvedLinksFor(filepath: string): Path[] {
+		return filepath in app().metadataCache.unresolvedLinks
+			? Object.keys(app().metadataCache.unresolvedLinks[filepath])
+			: [];
+	},
+
+	uniqueFileLookup(filename: string): TFile[] {
+		const results = app().metadataCache.uniqueFileLookup.data.get(filename);
+
+		return isDefined(results)
+			? results.map(r => r.value)
+			: []
+	},
+
+	/**
+	 * A key/value lookup where the _keys_ are fully qualified file paths
+	 * and the values are an `ObsidianFileCache` entry which contains:
+	 * 
+	 * - a modified time
+	 * - a size
+	 * - a hash code
+	 */
+	fileCache: app().metadataCache.fileCache,
+
+	/**
+	 * Provided a fully qualified file path, this function will 
+	 * return a `ObsidianMetadataCache` entry for the file.
+	 */
+	getFileCache(file: Path): ObsidianMetadataCache | undefined {
+		const fileCache = app().metadataCache.fileCache;
+		const metaCache = app().metadataCache.metadataCache;
+		if(file in fileCache) {
+			const lookup = fileCache[file];
+			if(lookup.hash in metaCache) {
+				return metaCache[lookup.hash];
+			}
+		}
+
+		return undefined;
+	}
+
+} 

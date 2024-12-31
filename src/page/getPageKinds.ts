@@ -43,7 +43,7 @@ export function getPageKindTags(p: KindModelPlugin) {
 
 			default: 
 				return [undefined];
-		}		
+		}		 
 	}
 }
 

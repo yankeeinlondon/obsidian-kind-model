@@ -12,7 +12,7 @@ export const Kind = createHandler("Kind")
     hide: "array(string)",
   })
   .handler(async (evt) => {
-    const { createTable, page, plugin, debug, warn, getPageFromKindTag } = evt;
+    const { createTable, page, render, getPageFromKindTag, dv } = evt;
 
     const tbl = createTable("Page", "Classification", "Description", "Links")(
       r => [
@@ -34,20 +34,20 @@ export const Kind = createHandler("Kind")
       if (kindTags.length > 1) {
         const kindPage = getPageFromKindTag(kind);
         if (kindPage) {
-          page.renderValue(`### ${kindPage.file.name} kind`);
+          render.renderValue(`### ${kindPage.file.name} kind`);
         }
         else {
-          page.renderValue(`### ${asDisplayTag(kind)} kind`);
+          render.renderValue(`### ${asDisplayTag(kind)} kind`);
         }
       }
 
       /** query results */
       const pages = subcategory
-        ? page.pages(`#${kind}/${category}/${subcategory}`)
+        ? dv.pages(`#${kind}/${category}/${subcategory}`)
             .sort(c => [c.category, c.subcategory])
         : category
-          ? page.pages(`#${kind}/${category}`).sort(c => c.category)
-          : page.pages(`#${kind}`).sort(c => c.file.name);
+          ? dv.pages(`#${kind}/${category}`).sort(c => c.category)
+          : dv.pages(`#${kind}`).sort(c => c.file.name);
 
       tbl(pages);
     }

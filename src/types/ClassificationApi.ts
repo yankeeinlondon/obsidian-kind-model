@@ -4,7 +4,6 @@ import type {
   getClassification,
   getKindPages,
   getKindTagsOfPage,
-  getKnownKindTags,
   hasAnyCategoryProp,
   // getMetadata,
   hasCategoriesProp,
@@ -159,14 +158,6 @@ export interface ClassificationApi {
    */
   getClassification: ReturnType<typeof getClassification>;
 
-  /**
-   * Return the valid kind tags in the vault. If you pass in a value
-   * for the `tag` property then the tags will be reduced to only those which
-   * include this tag string.
-   *
-   * Note: _the tags do not have the leading `#` symbol_
-   */
-  getKnownKindTags: ReturnType<typeof getKnownKindTags>;
 
   /**
    * Take a page reference and all the **kind** _tags_ this page has.

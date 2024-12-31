@@ -14,6 +14,7 @@ import {
 } from "obsidian";
 import { getPageInfo } from "~/page";
 import { isValidURL } from "~/utils";
+import { app } from "~/globals";
 
 const electron = (window as any).require("electron");
 const { clipboard } = electron;
@@ -141,7 +142,7 @@ export class KindSuggest extends EditorSuggest<string> {
       const query = ctx.query.toLowerCase();
 
       if (file) {
-        const metadata = this.app.metadataCache.getFileCache(file);
+        const metadata = app().metadataCache.getFileCache(file);
         if (metadata && metadata.frontmatter) {
           isReallyImportant = metadata.frontmatter.isReallyImportant === true;
         }

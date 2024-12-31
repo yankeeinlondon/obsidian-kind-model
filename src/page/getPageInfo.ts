@@ -5,12 +5,14 @@ import {
   getCategories,
   getClassification,
   getKindTagsOfPage,
-  getMetadata,
+  getFrontmatterMetadata,
   getPageType,
   getSubcategories,
   getTypeTag,
   hasProps,
   isProps,
+  metadataApi,
+  pageMetadataApi,
 } from "~/api";
 import { isPageInfo } from "~/type-guards";
 import { getPath } from "../api/getPath";
@@ -67,7 +69,7 @@ export function getPageInfo(p: KindModelPlugin) {
 		// getTypeOfPage(p)(page, true) as DvPage | undefined;
 	  const types = undefined;
 		// getTypeOfPage(p)(page, false);
-	  const metadata = getMetadata(p)(page);
+	  const fmApi = pageMetadataApi(p, page);
 	  const categories = getCategories(p)(page);
 	  const subcategories = getSubcategories(p)(page);
 	  const classifications = getClassification(p)(
@@ -98,18 +100,18 @@ export function getPageInfo(p: KindModelPlugin) {
 		kinds,
 		type: t,
         types,
-		hasMultipleKinds: kindTags.length > 1,
-		metadata,
-
+		
+		...fmApi,
+		
         categories,
         subcategories,
 		classifications,
-
+		
         ...hasApi,
+		hasMultipleKinds: kindTags.length > 1,
         ...isApi,
 
 		...frontmatterApi(p, path)
-
 	  };
 
 

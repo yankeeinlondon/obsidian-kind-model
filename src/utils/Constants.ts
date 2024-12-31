@@ -1,4 +1,5 @@
-import type { Kind, KindModelSettings } from "types/settings_types";
+import { KindModelSettings } from "~/types";
+
 
 export const CLASSIFICATION = [
   "category",
@@ -25,15 +26,10 @@ export const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec"];
 
 export const DEFAULT_SETTINGS: KindModelSettings = {
-  kinds: {},
-  types: {},
   kind_folder: "kind",
-  cache: null,
   handle_tags: "Do not Change",
   default_classification: "category and subcategory",
   page_blocks: [],
-  url_patterns: [],
-  url_props: [],
   log_level: "warn",
 };
 

@@ -7,8 +7,9 @@ import type { DvPage, Link } from "./dataview_types";
 import type { Frontmatter, HeadingTag } from "./frontmatter";
 
 import type { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
-import type { removeFmKey, RenderApi, setFmKey } from "~/api";
+import { pageMetadataApi, type removeFmKey, type RenderApi, type setFmKey } from "~/api";
 import type { PageBlock, PropertyType, Tag } from "~/types";
+import { PageMetadataApi } from "./MetadataApi";
 
 export type PageType =
   | "kinded"
@@ -26,7 +27,7 @@ type IsSingular<T extends PageType> = Contains<
 	"kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn"
 >;
 
-export interface PageInfo<T extends PageType = PageType> {
+export type PageInfo<T extends PageType = PageType> = {
   /**
    * a string `PageType` name which defines what type of page this is
    */
@@ -210,13 +211,6 @@ export interface PageInfo<T extends PageType = PageType> {
    */
   typeTag: string | undefined;
 
-  /**
-   * Reports on the current page's frontmatter property organized by
-   * `PropertyType` (aka, "link", "list::link", "inline-svg")
-   */
-  metadata: Record<Partial<PropertyType>, string[]>;
-
-
   /** 
    * The `DvPage` of the current page's `Kind` type.
    * 
@@ -262,10 +256,9 @@ export interface PageInfo<T extends PageType = PageType> {
    * the Types associated due to it's multiple kinds
    */
   types: DvPage[] | undefined;
-}
+} & PageMetadataApi;
 
-export type PageInfoBlock = PageInfo &
-  RenderApi & {
+export type PageInfoBlock = PageInfo & {
     /** the content of the code block */
     content: string;
     /** the Obsidian Component instance */
@@ -273,6 +266,8 @@ export type PageInfoBlock = PageInfo &
 
     /** the HTML Element of the code block */
     container: HTMLElement;
+
+	render: RenderApi;
   };
 
 /**

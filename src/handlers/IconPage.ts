@@ -1,4 +1,4 @@
-import { getMetadata } from "~/api";
+import { getFrontmatterMetadata } from "~/api";
 import { createHandler } from "./createHandler";
 
 export const IconPage = createHandler("IconPage")
@@ -10,7 +10,7 @@ export const IconPage = createHandler("IconPage")
     const icon = (i: string & keyof typeof page.current) =>
       `<span class="icon" style="display: flex; max-width: 32px; max-height: 32px;">${page.current[i]}</span>`;
 
-    const meta = getMetadata(p)(page);
+    const meta = getFrontmatterMetadata(p)(page);
 
     p.info("Icon Props", { meta });
 

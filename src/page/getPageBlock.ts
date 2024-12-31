@@ -26,7 +26,7 @@ export function getPageInfoBlock(p: KindModelPlugin) {
         container: el,
         component: ctx,
         sectionInfo,
-        ...renderApi(p)(el, filePath),
+        render: renderApi(p)(el, filePath),
       } as PageInfoBlock;
     }
   };

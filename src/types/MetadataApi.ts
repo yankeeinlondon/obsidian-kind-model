@@ -1,18 +1,107 @@
-import type { getFrontmatter, getMetadata } from "~/api";
+import type { frontmatterHasLinks, getFrontmatter, getFrontmatterMetadata, getLinksFromFrontmatter, getFirstDateFromFrontmatterProps, frontmatterHasGeoInfo, getYouTubeVideoLinks } from "~/api";
+import { PageReference } from "./Page";
+import { TypedFunction } from "inferred-types";
 
 export interface MetadataApi {
-  /**
-   * Provides the _type_ (e.g., `PageType`) of data contained in each property of the page reference passed in.
-   */
-  getMetadata: ReturnType<typeof getMetadata>;
+	/**
+	 * A key/value where:
+	 * 
+	 * - the _keys_ are a `PropertyType`
+	 * - the _values_ are the list of properties which have this type
+	 */
+	getFrontmatterTypes: ReturnType<typeof getFrontmatterMetadata>;
 
-  /**
-   * higher order function which after passed the plugin, will take a
-   * _page reference_ or an object representing a frontmatter key/value
-   * object.
-   *
-   * This function utility is to ensure regardless of the input type that
-   * a valid Frontmatter type is returned.
-   */
-  getFrontmatter: ReturnType<typeof getFrontmatter>;
+	/**
+	 * a function to get the frontmatter from a given page
+	 */
+	getFrontmatter: ReturnType<typeof getFrontmatter>;
+
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have Links in them.
+	 */
+	frontmatterHasLinks: ReturnType<typeof frontmatterHasLinks>;
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have URL's in them.
+	 */
+	frontmatterHasUrls: ReturnType<typeof frontmatterHasLinks>;
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have Geo information in them.
+	 */
+	frontmatterHasGeoInfo: ReturnType<typeof frontmatterHasGeoInfo>;
+
+
+	/**
+	 * Provides a list of all links found across the Frontmatter
+	 * properties.
+	 */
+	getLinksFromFrontmatter: ReturnType<typeof getLinksFromFrontmatter>;
+
+	/**
+	 * provides the first date from a set of Frontmatter properties.
+	 */
+	getFirstDateFromFrontmatterProps: ReturnType<typeof getFirstDateFromFrontmatterProps>;
+
+
+	/**
+	 * returns all links found across the Frontmatter properties which
+	 * point to YouTube video.
+	 */
+	getYouTubeVideoLinks: ReturnType<typeof getYouTubeVideoLinks>
+
+}
+
+
+
+export type PageMetadataApi = {
+	/**
+	 * A key/value where:
+	 * 
+	 * - the _keys_ are a `PropertyType`
+	 * - the _values_ are the list of properties which have this type
+	 */
+	frontmatterTypes: ReturnType<ReturnType<typeof getFrontmatterMetadata>>;
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have Links in them.
+	 */
+	frontmatterHasLinks: ReturnType<ReturnType<typeof frontmatterHasLinks>>;
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have URL's in them.
+	 */
+	frontmatterHasUrls: ReturnType<ReturnType<typeof frontmatterHasLinks>>;
+
+	/**
+	 * Boolean check on whether any of the frontmatter properties
+	 * have Geo information in them.
+	 */
+	frontmatterHasGeoInfo: ReturnType<ReturnType<typeof frontmatterHasGeoInfo>>;
+
+
+	/**
+	 * Provides a list of all links found across the Frontmatter
+	 * properties.
+	 */
+	linksFromFrontmatter: ReturnType<ReturnType<typeof getLinksFromFrontmatter>>;
+
+	/**
+	 * provides the first date from a set of Frontmatter properties.
+	 */
+	getFirstDateFromFrontmatterProps: ReturnType<ReturnType<typeof getFirstDateFromFrontmatterProps>>;
+
+
+	/**
+	 * returns all links found across the Frontmatter properties which
+	 * point to YouTube video.
+	 */
+	youTubeVideoLinks: ReturnType<ReturnType<typeof getYouTubeVideoLinks>>;
+
 }

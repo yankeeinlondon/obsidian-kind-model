@@ -16,6 +16,7 @@ import type {
 
 import type { App, EventRef, Plugin, PluginManifest, Stat, Vault, Workspace } from "obsidian";
 import type { Tag } from ".";
+import { Path } from "~/globals";
 
 export interface TFile extends TAbstractFile {
   /** file `Stat` metadata */
@@ -437,7 +438,7 @@ export interface ObsidianHeading {
   };
 }
 
-export interface ObsidianMetadataCache {
+export type ObsidianMetadataCache = {
   frontmatter: Record<string, ObsidianFrontmatterValue>;
   frontmatterLinks: ObsidianFrontmatterLink[];
   frontmatterPosition: {
@@ -834,7 +835,11 @@ export type ObsidianApp = {
       db: any;
       didFinish: TypedFunction;
       fileCache: Record<string, ObsidianFileCache>;
-      getTags: SyncFunction;
+	  /** 
+	   * returns a key/value store where _keys_ are the **tags** and the 
+	   * values are a count of how many times this tag is being used.
+	   */
+      getTags: SyncFunction<[],Record<string, number>>;
       inProgressTaskCount: number;
       initialized: boolean;
       linkResolverQueue: any;
@@ -859,18 +864,50 @@ export type ObsidianApp = {
     };
     db: any;
     didFinish: TypedFunction;
+	/**
+	 * A key/value where the _keys_ are fully qualified file paths
+	 * and the values are an `ObsidianFileCache` entry which contains:
+	 * 
+	 * - a modified time
+	 * - a size
+	 * - a hash code
+	 */
     fileCache: Record<string, ObsidianFileCache>;
-    getTags: TypedFunction;
+	/** 
+	 * returns a key/value store where _keys_ are the **tags** and the 
+	 * values are a count of how many times this tag is being used.
+	 */
+    getTags: SyncFunction<[],Record<string, number>>;
     inProgressTaskCount: number;
     initialized: boolean;
     linkResolverQueue: any;
     /**
-     * I believe this keyed off of the hash value from `fileCache`
+     * A key/value store who's _keys_ are the hash value found in 
+	 * `fileCache`; the values are a `ObsidianMetadataCache` entry
+	 * that includes:
+	 * 
+	 * - frontmatter
+	 * - frontmatterLinks
+	 * - tags
+	 * 
+	 * and more.
      */
     metadataCache: Record<string, ObsidianMetadataCache>;
     onCleanCacheCallbacks: unknown[];
-    resolvedLinks: any;
-    uniqueFileLookup: any;
+	/**
+	 * A dictionary who's _keys_ are a path to a file in the vault.
+	 * The value is another key/value store:
+	 * 
+	 * - 
+	 */
+    resolvedLinks: Record<Path,Record<Path, number>>;
+	/**
+	 * provides a means to lookup a filename like `foobar.md` and 
+	 * get back the file paths which resolve to that filename.
+	 */
+    uniqueFileLookup: {
+		data: Map<string, {key: string; value: TFile}[]>
+	};
     unresolvedLinks: any;
     userIgnoreFilterCache: any;
     userIgnoreFilters: any;

@@ -1,4 +1,3 @@
-import { isFunction } from "inferred-types";
 import { htmlLink } from "~/api";
 import { asDisplayTag } from "~/helpers";
 import { createHandler } from "./createHandler";
@@ -7,13 +6,13 @@ export const Page = createHandler("Page")
   .scalar()
   .options()
   .handler(async (evt) => {
-    const p = evt.plugin;
-    const page = evt.page;
+	const { page, render, plugin: p} = evt; 
+
     const fmt = p.api.format;
 
     p.info(`Page Details`, page);
 
-    page.render(fmt.bold("Page Information<br/>"));
+    render.render(fmt.bold("Page Information<br/>"));
 
     const kindOfPage = [
       fmt.bold("Kind of Page"), //
@@ -52,12 +51,11 @@ export const Page = createHandler("Page")
         : undefined;
 
     const metadata
-      = Object.keys(page.metadata).length > 0
+      = Object.keys(page.frontmatterTypes).length > 0
         ? [
             fmt.bold("Frontmatter"),
-            Object.keys(page.metadata)
-              .filter(k => !isFunction(page.metadata[k as any]))
-              .map(k => `${k}(${page.metadata[k as any].join(", ")})`)
+            Object.keys(page.frontmatterTypes)
+              .map(k => `${k}: [ ${page.frontmatterTypes[k as any].join(", ")} ]`)
               .join("<br/>"),
           ]
         : undefined;
@@ -77,5 +75,6 @@ export const Page = createHandler("Page")
       i => i,
     ) as [left: string, right: string][];
 
-    page.render(fmt.twoColumnTable("", "Value", ...report));
+    render.render(fmt.twoColumnTable("", "Value", ...report));
+	return true;
   });

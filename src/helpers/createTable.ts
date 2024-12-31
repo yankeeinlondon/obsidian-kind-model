@@ -109,8 +109,8 @@ export function createTable<
   pg: PageInfoBlock,
   baseOpt?: TBaseOpt,
 ) {
-  const { table } = pg;
   const partial = showApi(plugin);
+  const { render } = pg;
   const api = <P extends PageInfo>(page: P) => keysOf(partial).reduce(
     (acc, key) => NO_PLUGIN.includes(key as any)
       ? ({
@@ -147,19 +147,19 @@ export function createTable<
       ...(optCallback || {}),
     };
 
-    return async <T extends DataArray<{ file: DvFileProperties }>>(
+    return async <T extends DataArray<any>>(
       records: T,
     ) => {
       const recArr = Array.from(records) as PageReference[];
       if (recArr.length === 0) {
         plugin.debug(`empty table`);
         if (opt?.renderWhenNoRecords) {
-          pg.renderValue(opt.renderWhenNoRecords);
+          render.renderValue(opt.renderWhenNoRecords);
           return true;
         }
         else {
           const predicate = opt.predicate || "records";
-          pg.renderValue(
+          render.renderValue(
             opt?.handler
               ? isDefined(opt?.handlerParams)
                 ? `- the <b>${opt.handler}(${opt.handlerParams})</b> handler found no ${predicate}.`
@@ -179,7 +179,7 @@ export function createTable<
       });
       plugin.debug(`rendering table`, cols, results);
 
-      await table(
+      await render.table(
         [...cols],
         results,
       );

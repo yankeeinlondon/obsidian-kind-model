@@ -12,6 +12,8 @@ import type { createTable } from "src/helpers";
 import type { PageInfoBlock } from "./Page";
 import type KindModelPlugin from "~/main";
 import type { getPageFromKindTag } from "~/page/getPageFromTag";
+import { RenderApi } from "~/api";
+import { DataViewApi } from "./dataview_types";
 
 /**
  * A handler's query parameters definition.
@@ -158,6 +160,11 @@ export interface HandlerEvent<
 
   getPageFromKindTag: ReturnType<typeof getPageFromKindTag>;
 
+  /** 
+   * The Render API surface
+   */
+  render: RenderApi;
+
   /** KindModelPlugin for logging and API access */
   plugin: KindModelPlugin;
   /**
@@ -165,6 +172,10 @@ export interface HandlerEvent<
    * being evaluated
    */
   page: PageInfoBlock;
+
+  /** the DataView API surface */
+  dv: DataViewApi;
+
   /**
    * Context about the Markdown
    */

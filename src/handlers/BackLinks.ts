@@ -57,11 +57,10 @@ export const BackLinks = createHandler("BackLinks")
   .scalar()
   .options()
   .handler(async (evt) => {
-    const { plugin: p, page } = evt;
+    const { plugin: p, page, createTable  } = evt;
 
     const current = page.current;
 
-    const { table, renderValue } = page;
 
     /**
      * all in-bound links for the page with the exception of self-references
@@ -70,29 +69,18 @@ export const BackLinks = createHandler("BackLinks")
       .sort(p => p?.path)
       .where(p => p.path !== current.file.path);
 
-    p.info(
-      "backlinks",
-      links.map(i => [
-        createFileLink(p)(i),
-        showClassifications(p)(i),
-        showDesc(p)(i),
-        showLinks(p)(i),
-      ]),
-    );
 
-    if (links.length > 0) {
-      table(
-        ["Backlink", "Classification(s)", "Desc", "Links"],
-        links.map(i => [
-          createFileLink(p)(i),
-          showClassifications(p)(i),
-          showDesc(p)(i),
-          showLinks(p)(i),
-        ]),
-      );
-    }
+	await createTable("Backlink", "Classification(s)", "Desc", "Links")(
+		i => [
+			i.createFileLink(),
+			i.showClassifications(),
+			i.showDesc(),
+			i.showLinks(),
+		],
+		{
+			renderWhenNoRecords: () => `- no back links found to this page`
+		}
+	)(links);
 
-    if (links.length === 0) {
-      renderValue(`- no back links found to this page`);
-    }
+    return true
   });

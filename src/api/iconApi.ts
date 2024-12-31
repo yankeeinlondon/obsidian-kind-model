@@ -4,7 +4,7 @@ import type { PageReference } from "~/types";
 import { getIcon } from "obsidian";
 import { getPage } from "~/page";
 import { getPath } from "./getPath";
-import { getMetadata } from "./metadataApi";
+import { getFrontmatterMetadata } from "./metadataApi";
 
 const defaultLinkIcons = {
   documentation: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#a3a3a3" d="M8 13h8v-2H8Zm0 3h8v-2H8Zm0 3h5v-2H8Zm-2 3q-.825 0-1.412-.587Q4 20.825 4 20V4q0-.825.588-1.413Q5.175 2 6 2h8l6 6v12q0 .825-.587 1.413Q18.825 22 18 22Zm7-13h5l-5-5Z"/></svg>`,
@@ -64,7 +64,7 @@ export function iconApi(p: KindModelPlugin) {
       const page = getPage(p)(pg);
 
       if (page) {
-        return getMetadata(p)(page).svg_inline;
+        return getFrontmatterMetadata(p)(page).svg_inline;
       }
 
       return [];

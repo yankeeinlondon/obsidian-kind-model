@@ -4,6 +4,7 @@ import {
   isArray,
   isBoolean,
   isEmail,
+  isEmpty,
   isInlineSvg,
   isIso3166CountryCode,
   isIso3166CountryName,
@@ -17,7 +18,6 @@ import {
   isRetailUrl,
   isSocialMediaUrl,
   isString,
-  isUndefined,
   isUrl,
   isYouTubeCreatorUrl,
   isYouTubeFeedUrl,
@@ -146,7 +146,7 @@ export function getPropertyType(p: KindModelPlugin) {
       return "boolean";
     }
 
-    if (isUndefined(value)) {
+    if (isEmpty(value)) {
       return "empty";
     }
 
