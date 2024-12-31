@@ -1,23 +1,21 @@
 import type KindModelPlugin from "~/main";
-import type { Classification, DvPage, Link, PageInfo, PageReference, Tag } from "~/types";
+import type {  DvPage, Link, PageInfo, PageReference, Tag } from "~/types";
 import {
   frontmatterApi,
   getCategories,
   getClassification,
   getKindTagsOfPage,
-  getFrontmatterMetadata,
   getPageType,
   getSubcategories,
   getTypeTag,
   hasProps,
   isProps,
-  metadataApi,
   pageMetadataApi,
 } from "~/api";
 import { isPageInfo } from "~/type-guards";
 import { getPath } from "../api/getPath";
 import { getPage } from "./getPage";
-import { getTypeOfPage } from "./getType";
+import { getTypeForPage } from "./getType";
 import { getPageKinds } from "./getPageKinds";
 
 type Returns<T extends PageReference> = T extends PageInfo
@@ -65,20 +63,16 @@ export function getPageInfo(p: KindModelPlugin) {
 	  const pageType = getPageType(p)(page, isApi);
       const typeTag = getTypeTag(p)(page);
 	  const kindTags =  getKindTagsOfPage(p)(page);
-	  const t = undefined;
-		// getTypeOfPage(p)(page, true) as DvPage | undefined;
-	  const types = undefined;
-		// getTypeOfPage(p)(page, false);
 	  const fmApi = pageMetadataApi(p, page);
 	  const categories = getCategories(p)(page);
 	  const subcategories = getSubcategories(p)(page);
 	  const classifications = getClassification(p)(
 			page, categories, subcategories
 		);
-	  const kind = getPageKinds(p)(page).pop() as DvPage | undefined;
+	  const kind = getPageKinds(p)(page)[0] as DvPage | undefined;
 	  const kinds = getPageKinds(p)(page) as DvPage[] | undefined;
 
-      const info: PageInfo = {
+      const info: Partial<PageInfo> = {
 		name: page.file.name,
         ext: page.file.ext,
 		tags: Array.from(page.file.tags) as Tag[],
@@ -98,8 +92,6 @@ export function getPageInfo(p: KindModelPlugin) {
         path,
 		kind,
 		kinds,
-		type: t,
-        types,
 		
 		...fmApi,
 		
@@ -113,6 +105,21 @@ export function getPageInfo(p: KindModelPlugin) {
 
 		...frontmatterApi(p, path)
 	  };
+
+	  if(info.hasMultipleKinds) {
+		info.types = getTypeForPage(p)(page);
+		info.kinds = getPageKinds(p)(page);
+		delete info.kind;
+		delete info.type;
+	  } else {
+		const t = getTypeForPage(p)(page);
+		info.type = t
+			? t[0]
+			: undefined;
+		info.kind = getPageKinds(p)(page)[0];
+		delete info.kinds;
+		delete info.types;
+	  }
 
 
       return info as unknown as Returns<T>;

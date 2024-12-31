@@ -69,7 +69,7 @@ export function getKindPageByTag(p: KindModelPlugin) {
  * **Related:** `getPageKindTags()`
  */
 export function getPageKinds(p: KindModelPlugin) {
-	return (pg: DvPage): [DvPage, ...DvPage[]] | [ undefined ] => {
+	return (pg: DvPage): DvPage[] => {
 		const isApi = isProps(p)(pg);
 		const pgType = getPageType(p)(pg, isApi);
 
@@ -78,21 +78,22 @@ export function getPageKinds(p: KindModelPlugin) {
 			case "kinded > category":
 			case "kinded > subcategory":
 				if(
-					pg.file.frontmatter.kind && isPageReference(pg.file.frontmatter.kind)
+					pg.kind && isPageReference(pg.kind)
 				) {
-					return [ getPage(p)(pg.file.frontmatter.kind) as DvPage ]
+					return [ getPage(p)(pg.kind) as DvPage ]
 				} else {
 					const kindTag = getPageKindTags(p)(pg).pop();
 					if(kindTag) {
-						return [ getKindPageByTag(p)(kindTag) ];
+						const kindPage = getKindPageByTag(p)(kindTag);
+						return kindPage ? [ kindPage ] : [];
 					} else {
-						return [ undefined ];
+						return [  ];
 					}
 				}
 			case "kind-defn":
-				return p?.kindDefn ? [ p.kindDefn]  : [ undefined ];
+				return p?.kindDefn ? [ p.kindDefn]  : [  ];
 			case "type-defn":
-				return p?.typeDefn ? [ p.typeDefn]  : [ undefined ];
+				return p?.typeDefn ? [ p.typeDefn]  : [  ];
 			case "multi-kinded":
 			case "multi-kinded > category":
 			case "multi-kinded > subcategory":
@@ -103,10 +104,15 @@ export function getPageKinds(p: KindModelPlugin) {
 					return kinds.map(i => isPageReference(i) ? getPage(p)(i) : undefined).filter(i => i) as [DvPage, ...DvPage[]]
 				} else {
 					const kindTags = getPageKindTags(p)(pg);
-					return kindTags.map(t => isString(t) ? getKindPageByTag(p)(t) : undefined).filter(i => i) as [DvPage, ...DvPage[]]
+					const kindPages = kindTags.map(
+						t => isString(t) ? getKindPageByTag(p)(t) : undefined
+					).filter(i => i);
+					return kindPages.length > 0 
+						? kindPages as [DvPage, ...DvPage[]]
+						: []
 				}
 			case "none":
-				return [ undefined ]
+				return [  ]
 		}
 	}
 }

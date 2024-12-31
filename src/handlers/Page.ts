@@ -10,9 +10,11 @@ export const Page = createHandler("Page")
 
     const fmt = p.api.format;
 
-    p.info(`Page Details`, page);
+    p.info(`Page Details (${page.pageType})`, page);
 
-    render.render(fmt.bold("Page Information<br/>"));
+    render.render(fmt.bold(`Page Information<br/>`));
+
+	const pl = page.hasMultipleKinds ? `s` : "";
 
     const kindOfPage = [
       fmt.bold("Kind of Page"), //
@@ -20,7 +22,7 @@ export const Page = createHandler("Page")
     ];
     const types
       = [
-        fmt.bold("Types(s)"), //
+        fmt.bold(`Type${pl}`), //
         page.type
           ? htmlLink(p)(page.type)
           : Array.isArray(page.types)
@@ -31,14 +33,14 @@ export const Page = createHandler("Page")
       ];
     const kinds
       = page.kindTags?.length > 0
-        ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")]
+        ? [fmt.bold(`Kind${pl}`), page.kindTags.join(", ")]
         : undefined;
 
     const cats
       = page.categories?.length > 0
         ? [
-            fmt.bold("Category(s)"),
-            page.categories.map(i => i.category).join(", "),
+            fmt.bold(`Category(s)`),
+            page.categories.map(i => `${i.page.file.name} ${asDisplayTag(i.category)}`).join(", "),
           ]
         : undefined;
 
@@ -46,7 +48,7 @@ export const Page = createHandler("Page")
       = page.subcategories?.length > 0
         ? [
             fmt.bold("Subcategories(s)"),
-            page.subcategories.map(i => i.subcategory).join(", "),
+            page.subcategories.map(i => `${i.page.file.name} ${asDisplayTag(i.subcategory)}`).join(", "),
           ]
         : undefined;
 

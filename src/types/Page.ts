@@ -241,7 +241,7 @@ export type PageInfo<T extends PageType = PageType> = {
    * 	- if there is a single "kind" then it will look for a type definition on that Kind Defiinition page.
    * 	- if there are more than one "kind" this will always be undefined
    */
-  type: DvPage | undefined;
+  type: If<IsSingular<T>, DvPage | undefined, never>;
 
   /**
    * A set of **Type** pages related to the current page.
@@ -255,7 +255,7 @@ export type PageInfo<T extends PageType = PageType> = {
    * 	- if there are more than one "kind" this will will resolve to all
    * the Types associated due to it's multiple kinds
    */
-  types: DvPage[] | undefined;
+  types: If<IsSingular<T>, never,  DvPage[]>;
 } & PageMetadataApi;
 
 export type PageInfoBlock = PageInfo & {

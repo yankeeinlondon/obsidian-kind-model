@@ -13,6 +13,7 @@ import {
   ensureLeading,
   isArray,
   isDefined,
+  isEmpty,
   stripLeading,
 } from "inferred-types";
 import { asDisplayTag } from "~/helpers";
@@ -564,7 +565,7 @@ export function getCategories(p: KindModelPlugin) {
     if (page && pageType) {
 		const catTags = (Array.from(page.file.tags) as string[])
 			.filter(
-				i => i.split("/")[1] === "category"
+				i => i.split("/")[1] === "category" && !isEmpty(i.split("/")[2])
 			)
 			.map(
 				i => {
