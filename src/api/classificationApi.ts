@@ -16,11 +16,11 @@ import {
   isEmpty,
   stripLeading,
 } from "inferred-types";
-import { asDisplayTag } from "~/helpers";
-import { getPage } from "~/page";
+import { asDisplayTag, futurePage } from "~/helpers";
+import { getPage, getPagesFromTag } from "~/page";
+import { getKindPageByTag } from "~/page/getPageKinds";
 import { isFileLink } from "~/type-guards";
 import { getPropertyType } from "./getPropertyType";
-import { getKindPageByTag } from "~/page/getPageKinds";
 
 /**
  * Boolean test whether the passed in tag is a known `kind` tag
@@ -29,7 +29,7 @@ export function isKindTag(p: KindModelPlugin) {
   return (tag: string): boolean => {
     const safeTag = stripLeading(stripLeading(tag, "#"), "kind/");
 
-    return p.kindTags.includes(safeTag);;
+    return p.kindTags.includes(safeTag); ;
   };
 }
 
@@ -342,19 +342,19 @@ export function getPageType(p: KindModelPlugin) {
 
     return api.isKindDefnPage
       ? "kind-defn"
-        : api.isKindedPage && api.isCategoryPage && multi
-          ? "multi-kinded > category"
-          : api.isKindedPage && api.isCategoryPage && !multi
-            ? "kinded > category"
-            : api.isKindedPage && api.isSubcategoryPage && multi
-              ? "multi-kinded > subcategory"
-              : api.isKindedPage && api.isSubcategoryPage && !multi
-                ? "kinded > subcategory"
-                : api.isKindedPage
-                  ? multi ? "multi-kinded" : "kinded"
-				  : api.isTypeDefnPage
-				  	? "type-defn"
-					: "none";
+      : api.isKindedPage && api.isCategoryPage && multi
+        ? "multi-kinded > category"
+        : api.isKindedPage && api.isCategoryPage && !multi
+          ? "kinded > category"
+          : api.isKindedPage && api.isSubcategoryPage && multi
+            ? "multi-kinded > subcategory"
+            : api.isKindedPage && api.isSubcategoryPage && !multi
+              ? "kinded > subcategory"
+              : api.isKindedPage
+                ? multi ? "multi-kinded" : "kinded"
+                : api.isTypeDefnPage
+                  ? "type-defn"
+                  : "none";
   };
 }
 
@@ -365,23 +365,24 @@ export function getPageType(p: KindModelPlugin) {
  * - no tags starting in `#type/` returns _undefined_
  */
 export function getTypeTag(p: KindModelPlugin) {
-	return (pg: PageReference): string | undefined => {
-	const page = getPage(p)(pg);
-	if (page) {
-		const typeTags = page.file.tags.filter(t => t.startsWith(`#type/`));
-		if (typeTags.length > 1) {
-			p.warn(
-				`Too many Type tags!`, `The page "${page.file.name}" has ${typeTags.length} tags which start with ${asDisplayTag("type/")}`
-			);
-		}
-		const typeTag = typeTags.length > 0
-		? stripLeading(typeTags[0] as string, "#type/")
-		: undefined;
-		return typeTag;
-	}
+  return (pg: PageReference): string | undefined => {
+    const page = getPage(p)(pg);
+    if (page) {
+      const typeTags = page.file.tags.filter(t => t.startsWith(`#type/`));
+      if (typeTags.length > 1) {
+        p.warn(
+          `Too many Type tags!`,
+          `The page "${page.file.name}" has ${typeTags.length} tags which start with ${asDisplayTag("type/")}`,
+        );
+      }
+      const typeTag = typeTags.length > 0
+        ? stripLeading(typeTags[0] as string, "#type/")
+        : undefined;
+      return typeTag;
+    }
 
-	return undefined;
-	};
+    return undefined;
+  };
 }
 
 /**
@@ -550,7 +551,6 @@ export function isTypeDefnTag(_p: KindModelPlugin) {
   };
 }
 
-
 /**
  * gets all "categories" associated with page:
  *
@@ -560,94 +560,99 @@ export function isTypeDefnTag(_p: KindModelPlugin) {
 export function getCategories(p: KindModelPlugin) {
   return (pg: PageReference): PageCategory[] => {
     const page = getPage(p)(pg);
-	const pageType = getPageType(p)(pg);
+    const pageType = getPageType(p)(pg);
 
     if (page && pageType) {
-		const catTags = (Array.from(page.file.tags) as string[])
-			.filter(
-				i => i.split("/")[1] === "category" && !isEmpty(i.split("/")[2])
-			)
-			.map(
-				i => {
-					const [kind, _, category] = i.split("/");
-					return {
-						kind: stripLeading(kind, "#"),
-						page,
-						category,
-						kindedTag: `${ensureLeading(kind, "#")}/${category}`,
-						defnTag: `${ensureLeading(kind, "#")}/category/${category}`
-					} as PageCategory
-				}
-			);
-		const subcatTags = (Array.from(page.file.tags) as string[])
-			.filter(
-				i => i.split("/")[1] === "subcategory"
-			)
-			.map(
-				i => {
-					const [kind, _, category] = i.split("/");
-					return {
-						kind: stripLeading(kind, "#"),
-						page,
-						category,
-						kindedTag: `${ensureLeading(kind, "#")}/${category}`,
-						defnTag: `${ensureLeading(kind, "#")}/category/${category}`
-					} as PageCategory
-				}
-			);	
-		const kindedTags = (Array.from(page.file.tags) as string[])
-			.filter(
-				i => [2,3].includes(i.split("/").length) && !["category","subcategory"].includes(i.split("/")[1])
-			)
-			.map(
-				i => {
-					const [kind, category] = i.split("/");
-					return {
-						kind: stripLeading(kind, "#"),
-						page,
-						category,
-						kindedTag: `${ensureLeading(kind, "#")}/${category}`,
-						defnTag: `${ensureLeading(kind, "#")}/category/${category}`
-					} as PageCategory
-				}
-			);			
+      const catTags = (Array.from(page.file.tags) as string[])
+        .filter(
+          i => i.split("/")[1] === "category" && !isEmpty(i.split("/")[2]),
+        )
+        .map(
+          (i) => {
+            const [kind, _, category] = i.split("/");
+            return {
+              kind: stripLeading(kind, "#"),
+              page,
+              category,
+              kindedTag: `${ensureLeading(kind, "#")}/${category}`,
+              defnTag: `${ensureLeading(kind, "#")}/category/${category}`,
+            } as PageCategory;
+          },
+        );
+      const subcatTags = (Array.from(page.file.tags) as string[])
+        .filter(
+          i => i.split("/")[1] === "subcategory",
+        )
+        .map(
+          (i) => {
+            const [kind, _, category] = i.split("/");
+            return {
+              kind: stripLeading(kind, "#"),
+              page,
+              category,
+              kindedTag: `${ensureLeading(kind, "#")}/${category}`,
+              defnTag: `${ensureLeading(kind, "#")}/category/${category}`,
+            } as PageCategory;
+          },
+        );
+      const kindedTags = (Array.from(page.file.tags) as string[])
+        .filter(
+          i => [2, 3].includes(i.split("/").length) && !["category", "subcategory"].includes(i.split("/")[1]),
+        )
+        .map(
+          (i) => {
+            const [kind, category] = i.split("/");
+            const catPage = getPagesFromTag(p)(`${ensureLeading(kind, "#")}/category/${category}`);
+            if (catPage.length > 0) {
+              const cat = catPage[0];
 
+              return {
+                kind: stripLeading(kind, "#"),
+                page: cat,
+                category,
+                kindedTag: `${ensureLeading(kind, "#")}/${category}`,
+                defnTag: `${ensureLeading(kind, "#")}/category/${category}`,
+              } as PageCategory;
+            }
+          },
+        )
+        .filter(i => i) as PageCategory[];
 
-		switch(pageType) {
-			case "kind-defn":
-			case "type-defn":
-				return [];
-			case "kinded > category":
-				return catTags.length > 0
-					? [catTags[0]] as PageCategory[]
-					: [] as PageCategory[];
-			case "kinded > subcategory":
-				return subcatTags.length > 0
-					? [subcatTags[0]] as PageCategory[]
-					: [] as PageCategory[];
-			case "kinded":
-				return kindedTags.length > 0
-					? [kindedTags[0]]
-					: [] as PageCategory[];
-			case "multi-kinded > category":
-				return catTags.length > 0
-					? catTags as PageCategory[]
-					: [] as PageCategory[];
-			case "multi-kinded > subcategory":
-				return subcatTags.length > 0
-					? subcatTags as PageCategory[]
-					: [] as PageCategory[];
-			case "multi-kinded":
-				return kindedTags.length > 0
-					? kindedTags as PageCategory[]
-					: [] as PageCategory[];
-			case "none":
-				return [] as PageCategory[];
-		}
-	}
-	return [];
-  }
-} 
+      switch (pageType) {
+        case "kind-defn":
+        case "type-defn":
+          return [];
+        case "kinded > category":
+          return catTags.length > 0
+            ? [catTags[0]] as PageCategory[]
+            : [] as PageCategory[];
+        case "kinded > subcategory":
+          return subcatTags.length > 0
+            ? [subcatTags[0]] as PageCategory[]
+            : [] as PageCategory[];
+        case "kinded":
+          return kindedTags.length > 0
+            ? [kindedTags[0]]
+            : [] as PageCategory[];
+        case "multi-kinded > category":
+          return catTags.length > 0
+            ? catTags as PageCategory[]
+            : [] as PageCategory[];
+        case "multi-kinded > subcategory":
+          return subcatTags.length > 0
+            ? subcatTags as PageCategory[]
+            : [] as PageCategory[];
+        case "multi-kinded":
+          return kindedTags.length > 0
+            ? kindedTags as PageCategory[]
+            : [] as PageCategory[];
+        case "none":
+          return [] as PageCategory[];
+      }
+    }
+    return [];
+  };
+}
 
 /**
  * gets all subcategories on a page whether defined via tag or prop
@@ -655,60 +660,65 @@ export function getCategories(p: KindModelPlugin) {
 export function getSubcategories(p: KindModelPlugin) {
   return (pg: PageReference): PageSubcategory[] => {
     const page = getPage(p)(pg);
-	const pageType = getPageType(p)(pg);
+    const pageType = getPageType(p)(pg);
 
     if (page && pageType) {
-		const possibleKinded = (Array.from(page.file.tags) as string[]).filter(
-			i => i.split("/").length === 3 
-				&& !["category", "subcategory"].includes(i.split("/")[1])
-				&& isKindTag(p)(i.split("/")[0])
-		).map(i => {
-			const [kind, category, subcategory] = i.split("/");
-			return {
-				kind: stripLeading(kind, "#"),
-				page,
-				category,
-				subcategory,
-				kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
-				defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`
+      const possibleKinded = (Array.from(page.file.tags) as string[]).filter(
+        i => i.split("/").length === 3
+          && !["category", "subcategory"].includes(i.split("/")[1])
+          && isKindTag(p)(i.split("/")[0]),
+      ).map((i) => {
+        const [kind, category, subcategory] = i.split("/");
+        const subcat = getPagesFromTag(p)(`${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`);
+        return {
+          kind: stripLeading(kind, "#"),
+          page: subcat.length > 0
+            ? subcat[0]
+            : futurePage(p)(
+                "kinded > subcategory",
+                `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
+              ),
+          category,
+          subcategory,
+          kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
+          defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
 
-			} as PageSubcategory;
-		});
+        } as PageSubcategory;
+      });
 
-		switch(pageType) {
-			case "kind-defn": 
-			case "type-defn":
-			case "kinded > category":
-				return [];
-			case "kinded > subcategory":
-				const tag = page.file.tags.find(i => i.split("/")[1] === "subcategory") as string;
-				const [kind,_,category,subcategory] = tag.split("/");
-				return [{
-					kind: stripLeading(kind, "#"),
-					page,
-					category,
-					subcategory,
-					kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
-					defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`
-				} as PageSubcategory]
-			case "kinded":
-				return possibleKinded.length > 0 
-					? [possibleKinded[0]]
-					: [] as PageSubcategory[]
-			case "multi-kinded > category":
-			case "multi-kinded > subcategory":
-				return [];
-			case "multi-kinded":
-				return possibleKinded;
-			case "none":
-				return [];
-		}
-	}
+      switch (pageType) {
+        case "kind-defn":
+        case "type-defn":
+        case "kinded > category":
+          return [];
+        case "kinded > subcategory":
+          const tag = page.file.tags.find(i => i.split("/")[1] === "subcategory") as string;
+          const [kind, _, category, subcategory] = tag.split("/");
+          return [{
+            kind: stripLeading(kind, "#"),
+            page,
+            category,
+            subcategory,
+            kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
+            defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
+          } as PageSubcategory];
+        case "kinded":
+          return possibleKinded.length > 0
+            ? [possibleKinded[0]]
+            : [] as PageSubcategory[];
+        case "multi-kinded > category":
+        case "multi-kinded > subcategory":
+          return [];
+        case "multi-kinded":
+          return possibleKinded;
+        case "none":
+          return [];
+      }
+    }
 
-	return [];
+    return [];
   };
 }
-
 
 /**
  * A page is a kinded page if:
@@ -747,14 +757,14 @@ export function isTypeDefnPage(p: KindModelPlugin) {
     const page = getPage(p)(ref);
 
     return !!(
-		page && 
-		page.file.tags.some(i => i.startsWith("#type/")) &&
-		!page.file.tags.some(i => i.startsWith("#kind/")) &&
-		!page.file.tags.some(
-			i => [2,3].includes(i.split("/").length) && 
-				isKindTag(p)(i.split("/")[0])
-		)
-	);
+      page
+      && page.file.tags.some(i => i.startsWith("#type/"))
+      && !page.file.tags.some(i => i.startsWith("#kind/"))
+      && !page.file.tags.some(
+        i => [2, 3].includes(i.split("/").length)
+          && isKindTag(p)(i.split("/")[0]),
+      )
+    );
   };
 }
 
@@ -845,10 +855,10 @@ export function getClassification(p: KindModelPlugin) {
 
       const kindTags: string[] = getKindTagsOfPage(p)(page);
 
-      for (let tag of kindTags) {
+      for (const tag of kindTags) {
         const kp = getKindPageByTag(p)(tag);
 
-        if ( kp) {
+        if (kp) {
           classification.push({
             kind: kp,
             kindTag: tag,
@@ -906,7 +916,7 @@ export function getClassification(p: KindModelPlugin) {
     p.debug("classification", classification);
 
     return classification;
-  }
+  };
 }
 
 /**
@@ -932,7 +942,7 @@ export function classificationApi(plugin: KindModelPlugin): ClassificationApi {
     isSubcategoryPage: isSubcategoryPage(plugin),
     isKindedPage: isKindedPage(plugin),
     isKindDefnPage: isKindDefnPage(plugin),
-	isTypeDefnPage: isTypeDefnPage(plugin),
+    isTypeDefnPage: isTypeDefnPage(plugin),
     getClassification: getClassification(plugin),
     getKindPages: getKindPages(plugin),
 

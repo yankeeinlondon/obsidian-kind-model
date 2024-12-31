@@ -1,6 +1,6 @@
 import type KindModelPlugin from "~/main";
-import type { DvPage } from "~/types";
-import { ensureLeading, stripLeading } from "inferred-types";
+import type { DvPage, Tag } from "~/types";
+import { ensureLeading, isUndefined, stripLeading } from "inferred-types";
 
 /**
  * returns a `DvPage` representation of a page from a kind tag.
@@ -45,5 +45,18 @@ export function getCategoryPageFromTags(p: KindModelPlugin) {
     else {
       return undefined;
     }
+  };
+}
+
+export function getPagesFromTag(p: KindModelPlugin) {
+  return <T extends string | undefined>(tag: T): T extends string ? DvPage[] : undefined => {
+    if (isUndefined(tag)) {
+      return undefined as T extends string ? DvPage[] : undefined;
+    }
+
+    const safeTag = ensureLeading(tag, "#") as Tag;
+    const pages = Array.from(p.dv.pages(safeTag).sort(p => p.file.name)) as DvPage[];
+
+    return pages as T extends string ? DvPage[] : undefined;
   };
 }

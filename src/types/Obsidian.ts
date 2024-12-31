@@ -16,7 +16,7 @@ import type {
 
 import type { App, EventRef, Plugin, PluginManifest, Stat, Vault, Workspace } from "obsidian";
 import type { Tag } from ".";
-import { Path } from "~/globals";
+import type { Path } from "~/globals";
 
 export interface TFile extends TAbstractFile {
   /** file `Stat` metadata */
@@ -438,7 +438,7 @@ export interface ObsidianHeading {
   };
 }
 
-export type ObsidianMetadataCache = {
+export interface ObsidianMetadataCache {
   frontmatter: Record<string, ObsidianFrontmatterValue>;
   frontmatterLinks: ObsidianFrontmatterLink[];
   frontmatterPosition: {
@@ -583,7 +583,7 @@ options: Dictionary,
   getAbstractFileByPath: (path: string) => TAbstractFile | null;
 } & Vault;
 
-export type ObsidianScope = {
+export interface ObsidianScope {
   keys: ObsidianCommandKey[];
   parent?: unknown;
   tabFocusContainer?: HtmlElement;
@@ -628,28 +628,28 @@ export type SuggestedFileType = Suggest<
 >;
 
 export type ExampleObsidianViews = Suggest<
-  | "audio" 
-  | "advanced-tables-toolbar" 
-  | "backlink" 
+  | "audio"
+  | "advanced-tables-toolbar"
+  | "backlink"
   | "bookmarks"
-  | "calendar" 
-  | "canvas" 
-  | "cm-changelog-view" 
-  | "copilot-chat-view" 
-  | "excalidraw" 
-  | "file-explorer" 
-  | "markdown" 
-  | "graph" 
-  | "image" 
-  | "kanban" 
-  | "localgraph" 
-  | "map" 
-  | "mindmapview" 
-  | "playground-view" 
-  | "pdf" 
+  | "calendar"
+  | "canvas"
+  | "cm-changelog-view"
+  | "copilot-chat-view"
+  | "excalidraw"
+  | "file-explorer"
+  | "markdown"
+  | "graph"
+  | "image"
+  | "kanban"
+  | "localgraph"
+  | "map"
+  | "mindmapview"
+  | "playground-view"
+  | "pdf"
   | "search"
-  | "tag" 
-  | "tool-view" 
+  | "tag"
+  | "tool-view"
   | "video"
 >;
 
@@ -659,7 +659,7 @@ export interface ObsidianViewRegistry {
    */
   typeByExtension: Record<SuggestedExtension, SuggestedFileType>;
   /**
-   * A lookup which has view types as the keys, and a construtor 
+   * A lookup which has view types as the keys, and a construtor
    * as a value.
    */
   viewByType: Record<ExampleObsidianViews, TypedFunction>;
@@ -835,11 +835,11 @@ export type ObsidianApp = {
       db: any;
       didFinish: TypedFunction;
       fileCache: Record<string, ObsidianFileCache>;
-	  /** 
-	   * returns a key/value store where _keys_ are the **tags** and the 
-	   * values are a count of how many times this tag is being used.
-	   */
-      getTags: SyncFunction<[],Record<string, number>>;
+      /**
+       * returns a key/value store where _keys_ are the **tags** and the
+       * values are a count of how many times this tag is being used.
+       */
+      getTags: SyncFunction<[], Record<string, number>>;
       inProgressTaskCount: number;
       initialized: boolean;
       linkResolverQueue: any;
@@ -864,50 +864,50 @@ export type ObsidianApp = {
     };
     db: any;
     didFinish: TypedFunction;
-	/**
-	 * A key/value where the _keys_ are fully qualified file paths
-	 * and the values are an `ObsidianFileCache` entry which contains:
-	 * 
-	 * - a modified time
-	 * - a size
-	 * - a hash code
-	 */
+    /**
+     * A key/value where the _keys_ are fully qualified file paths
+     * and the values are an `ObsidianFileCache` entry which contains:
+     *
+     * - a modified time
+     * - a size
+     * - a hash code
+     */
     fileCache: Record<string, ObsidianFileCache>;
-	/** 
-	 * returns a key/value store where _keys_ are the **tags** and the 
-	 * values are a count of how many times this tag is being used.
-	 */
-    getTags: SyncFunction<[],Record<string, number>>;
+    /**
+     * returns a key/value store where _keys_ are the **tags** and the
+     * values are a count of how many times this tag is being used.
+     */
+    getTags: SyncFunction<[], Record<string, number>>;
     inProgressTaskCount: number;
     initialized: boolean;
     linkResolverQueue: any;
     /**
-     * A key/value store who's _keys_ are the hash value found in 
-	 * `fileCache`; the values are a `ObsidianMetadataCache` entry
-	 * that includes:
-	 * 
-	 * - frontmatter
-	 * - frontmatterLinks
-	 * - tags
-	 * 
-	 * and more.
+     * A key/value store who's _keys_ are the hash value found in
+     * `fileCache`; the values are a `ObsidianMetadataCache` entry
+     * that includes:
+     *
+     * - frontmatter
+     * - frontmatterLinks
+     * - tags
+     *
+     * and more.
      */
     metadataCache: Record<string, ObsidianMetadataCache>;
     onCleanCacheCallbacks: unknown[];
-	/**
-	 * A dictionary who's _keys_ are a path to a file in the vault.
-	 * The value is another key/value store:
-	 * 
-	 * - 
-	 */
-    resolvedLinks: Record<Path,Record<Path, number>>;
-	/**
-	 * provides a means to lookup a filename like `foobar.md` and 
-	 * get back the file paths which resolve to that filename.
-	 */
+    /**
+     * A dictionary who's _keys_ are a path to a file in the vault.
+     * The value is another key/value store:
+     *
+     * -
+     */
+    resolvedLinks: Record<Path, Record<Path, number>>;
+    /**
+     * provides a means to lookup a filename like `foobar.md` and
+     * get back the file paths which resolve to that filename.
+     */
     uniqueFileLookup: {
-		data: Map<string, {key: string; value: TFile}[]>
-	};
+      data: Map<string, { key: string; value: TFile }[]>;
+    };
     unresolvedLinks: any;
     userIgnoreFilterCache: any;
     userIgnoreFilters: any;

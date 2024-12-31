@@ -6,10 +6,10 @@ import type { Classification } from "./Classification";
 import type { DvPage, Link } from "./dataview_types";
 import type { Frontmatter, HeadingTag } from "./frontmatter";
 
+import type { PageMetadataApi } from "./MetadataApi";
 import type { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
-import { pageMetadataApi, type removeFmKey, type RenderApi, type setFmKey } from "~/api";
-import type { PageBlock, PropertyType, Tag } from "~/types";
-import { PageMetadataApi } from "./MetadataApi";
+import type { removeFmKey, RenderApi, setFmKey } from "~/api";
+import type { FuturePage, PageBlock, Tag } from "~/types";
 
 export type PageType =
   | "kinded"
@@ -23,7 +23,7 @@ export type PageType =
   | "none";
 
 type IsSingular<T extends PageType> = Contains<
-	T, 
+  T,
 	"kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn"
 >;
 
@@ -47,23 +47,23 @@ export type PageInfo<T extends PageType = PageType> = {
   ext: string;
 
   /**
-   * A list of all unique tags in the note. Subtags are broken 
-   * down by each level, so `#Tag/1/A` will be stored in the list 
+   * A list of all unique tags in the note. Subtags are broken
+   * down by each level, so `#Tag/1/A` will be stored in the list
    * as `[#Tag, #Tag/1, #Tag/1/A]`.
    */
   tags: Tag[];
   /**
-   * A list of all explicit tags in the note; unlike file.tags, does not 
+   * A list of all explicit tags in the note; unlike file.tags, does not
    * break subtags down, i.e. [#Tag/1/A]
    */
   etags: Tag[];
   /**
-   * A list of all incoming links to this file, meaning all files that 
+   * A list of all incoming links to this file, meaning all files that
    * contain a link to this file.
    */
   inlinks: Link[];
   /**
-   * A list of all outgoing links from this file, meaning all links the 
+   * A list of all outgoing links from this file, meaning all links the
    * file contains.
    */
   outlinks: Link[];
@@ -78,7 +78,7 @@ export type PageInfo<T extends PageType = PageType> = {
   tasks: unknown[];
 
   /**
-   * A list of all list elements in the file (including tasks); these elements 
+   * A list of all list elements in the file (including tasks); these elements
    * are effectively tasks and can be rendered in task views.
    */
   lists: unknown[];
@@ -211,19 +211,19 @@ export type PageInfo<T extends PageType = PageType> = {
    */
   typeTag: string | undefined;
 
-  /** 
+  /**
    * The `DvPage` of the current page's `Kind` type.
-   * 
+   *
    * Note: if a page has multiple _kinds_ then this property will
    * always be undefined.
    */
   kind: If<
-  		IsSingular<T>, 	
-		T extends "type-defn"
-			? undefined
-			: DvPage, 
-		undefined
-	>;
+    IsSingular<T>,
+    T extends "type-defn"
+      ? undefined
+      : DvPage,
+    undefined
+  >;
 
   /**
    * An array of `DvPage`'s which represent the Kind's this page
@@ -255,20 +255,20 @@ export type PageInfo<T extends PageType = PageType> = {
    * 	- if there are more than one "kind" this will will resolve to all
    * the Types associated due to it's multiple kinds
    */
-  types: If<IsSingular<T>, never,  DvPage[]>;
+  types: If<IsSingular<T>, never, DvPage[]>;
 } & PageMetadataApi;
 
 export type PageInfoBlock = PageInfo & {
-    /** the content of the code block */
-    content: string;
-    /** the Obsidian Component instance */
-    component: ObsidianComponent;
+  /** the content of the code block */
+  content: string;
+  /** the Obsidian Component instance */
+  component: ObsidianComponent;
 
-    /** the HTML Element of the code block */
-    container: HTMLElement;
+  /** the HTML Element of the code block */
+  container: HTMLElement;
 
-	render: RenderApi;
-  };
+  render: RenderApi;
+};
 
 /**
  * references to DOM elements found on a Markdown View derived page
@@ -514,7 +514,7 @@ export interface PageSubcategory {
   /** the kind name of the subcategory */
   kind: string;
   /** the `DvPage` for the category page */
-  page: DvPage;
+  page: DvPage | FuturePage;
   /** the category name */
   category: string;
   /** the subcategory name */

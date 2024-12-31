@@ -8,6 +8,7 @@ export * from "./isDvPage";
 export * from "./isError";
 export * from "./isFileLink";
 export * from "./isFrontmatter";
+export * from "./isFuturePage";
 export * from "./isMarkdownPostProcessorContext";
 export * from "./isMarkdownView";
 export * from "./isMoment";
@@ -17,8 +18,8 @@ export * from "./isPageInfo";
 export * from "./isPageReference";
 export * from "./isStringPageRef";
 export * from "./isTAbstractFile";
-export * from "./isTag";
 
+export * from "./isTag";
 export * from "./isTagKindDefinition";
 export * from "./isTFile";
 export * from "./isValidPath";

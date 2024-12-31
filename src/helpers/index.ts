@@ -3,6 +3,7 @@ export * from "./createTable";
 export * from "./EventHandler";
 export * from "./FileSuggest";
 export * from "./FolderSuggest";
+export * from "./futurePage";
 export * from "./pageContent";
 export * from "./parseParams";
 export * from "./TextInputModal";

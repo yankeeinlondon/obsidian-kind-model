@@ -158,7 +158,6 @@ export interface ClassificationApi {
    */
   getClassification: ReturnType<typeof getClassification>;
 
-
   /**
    * Take a page reference and all the **kind** _tags_ this page has.
    */

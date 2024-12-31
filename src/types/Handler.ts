@@ -9,11 +9,11 @@ import type {
 } from "inferred-types";
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import type { createTable } from "src/helpers";
+import type { DataViewApi } from "./dataview_types";
 import type { PageInfoBlock } from "./Page";
+import type { RenderApi } from "~/api";
 import type KindModelPlugin from "~/main";
 import type { getPageFromKindTag } from "~/page/getPageFromTag";
-import { RenderApi } from "~/api";
-import { DataViewApi } from "./dataview_types";
 
 /**
  * A handler's query parameters definition.
@@ -160,7 +160,7 @@ export interface HandlerEvent<
 
   getPageFromKindTag: ReturnType<typeof getPageFromKindTag>;
 
-  /** 
+  /**
    * The Render API surface
    */
   render: RenderApi;

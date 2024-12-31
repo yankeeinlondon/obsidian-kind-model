@@ -16,11 +16,11 @@ import {
   stripParenthesis,
   toPascalCase,
 } from "inferred-types";
+import { renderApi } from "~/api";
 import { createTable, parseQueryParams } from "~/helpers";
 import { getPageInfoBlock } from "~/page";
 import { getPageFromKindTag } from "~/page/getPageFromTag";
 import { isError } from "~/type-guards";
-import { renderApi } from "~/api";
 
 function clientHandler(p: KindModelPlugin) {
   return <
@@ -86,11 +86,13 @@ function clientHandler(p: KindModelPlugin) {
                 re,
                 raw,
                 createTable: createTable(
-					p, page, { handler, handlerParams: raw || "" }
-				),
+                  p,
+                  page,
+                  { handler, handlerParams: raw || "" },
+                ),
 
-				dv: p.dv,
-				render: renderApi(p)(evt.el, evt.ctx.sourcePath),
+                dv: p.dv,
+                render: renderApi(p)(evt.el, evt.ctx.sourcePath),
 
                 scalar,
                 options,

@@ -6,7 +6,7 @@ import type {
   TypedFunction,
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import type { DataArray, DvFileProperties, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
+import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 import {
   isDefined,
   keysOf,

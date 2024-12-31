@@ -4,6 +4,7 @@ import type { PageView } from "~/types";
 import { isEmpty, or } from "inferred-types";
 import { Notice } from "obsidian";
 import { createVaultLink } from "~/api";
+import { getTypeDefinitionPageFromTag } from "~/page/getType";
 
 async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> {
   const {
@@ -12,20 +13,40 @@ async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> 
     isCategoryPage,
     isKindDefnPage,
     hasMultipleKinds,
+    type,
+    types,
   } = page;
+
+  p.info("checking type");
 
   if (
     isEmpty(current.type)
     && !hasMultipleKinds
-    && typeTag
-    && (isKindDefnPage || isCategoryPage)
+    && (typeTag || type)
   ) {
-    // await page.setFmKey(
-    // 	"type",
-    // 	createVaultLink(p)(page.type),
-    // );
+    if (type) {
+      p.info("type found", type);
 
-    return true;
+      await page.setFmKey(
+        "type",
+        createVaultLink(p)(type),
+      );
+
+      return true;
+    }
+    else if (typeTag && (isKindDefnPage || isCategoryPage)) {
+      const typePage = getTypeDefinitionPageFromTag(p)(typeTag);
+      if (typePage) {
+        p.info("type found", typePage);
+
+        await page.setFmKey(
+          "type",
+          createVaultLink(p)(typePage),
+        );
+
+        return true;
+      }
+    }
   }
 
   return false;

@@ -12,9 +12,9 @@ import {
   EditorSuggest,
   MarkdownView,
 } from "obsidian";
+import { app } from "~/globals";
 import { getPageInfo } from "~/page";
 import { isValidURL } from "~/utils";
-import { app } from "~/globals";
 
 const electron = (window as any).require("electron");
 const { clipboard } = electron;

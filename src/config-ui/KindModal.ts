@@ -1,5 +1,6 @@
-import { App, Modal } from "obsidian";
+import type { App } from "obsidian";
 import type { Kind, LogLevel } from "~/types";
+import { Modal } from "obsidian";
 import { UiBuilder } from "../helpers/UiBuilder";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "../utils/Constants";
 import { classification } from "./SettingsTab";

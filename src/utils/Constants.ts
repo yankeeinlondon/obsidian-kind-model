@@ -1,5 +1,4 @@
-import { KindModelSettings } from "~/types";
-
+import type { KindModelSettings } from "~/types";
 
 export const CLASSIFICATION = [
   "category",

@@ -1,12 +1,13 @@
 import { htmlLink } from "~/api";
 import { asDisplayTag } from "~/helpers";
+import { isDvPage, isFuturePage } from "~/type-guards";
 import { createHandler } from "./createHandler";
 
 export const Page = createHandler("Page")
   .scalar()
   .options()
   .handler(async (evt) => {
-	const { page, render, plugin: p} = evt; 
+    const { page, render, plugin: p } = evt;
 
     const fmt = p.api.format;
 
@@ -14,7 +15,7 @@ export const Page = createHandler("Page")
 
     render.render(fmt.bold(`Page Information<br/>`));
 
-	const pl = page.hasMultipleKinds ? `s` : "";
+    const pl = page.hasMultipleKinds ? `s` : "";
 
     const kindOfPage = [
       fmt.bold("Kind of Page"), //
@@ -31,10 +32,16 @@ export const Page = createHandler("Page")
               ? `none (but has _type tag_ of ${asDisplayTag(page.typeTag)})`
               : "none",
       ];
-    const kinds
-      = page.kindTags?.length > 0
-        ? [fmt.bold(`Kind${pl}`), page.kindTags.join(", ")]
-        : undefined;
+    const kinds = page.kindTags?.length > 0
+      ? [
+          fmt.bold(`Kind${pl}`),
+          page.hasMultipleKinds
+            ? page.kindTags.join(", ")
+            : page.kind
+              ? `${page.kind.file.name} ${asDisplayTag(page.kindTags[0])}`
+              : page.kindTags[0] || "",
+        ]
+      : undefined;
 
     const cats
       = page.categories?.length > 0
@@ -48,7 +55,12 @@ export const Page = createHandler("Page")
       = page.subcategories?.length > 0
         ? [
             fmt.bold("Subcategories(s)"),
-            page.subcategories.map(i => `${i.page.file.name} ${asDisplayTag(i.subcategory)}`).join(", "),
+            page.subcategories.map(i => isDvPage(i.page)
+              ? `${i.page.file.name} ${asDisplayTag(i.subcategory)}`
+              : isFuturePage(i.page)
+                ? `Future( ${i.page.pageType}, ${asDisplayTag(i.page.tag)} )`
+                : null as never,
+            ).join(", "),
           ]
         : undefined;
 
@@ -78,5 +90,5 @@ export const Page = createHandler("Page")
     ) as [left: string, right: string][];
 
     render.render(fmt.twoColumnTable("", "Value", ...report));
-	return true;
+    return true;
   });

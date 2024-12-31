@@ -1,11 +1,6 @@
 import type { TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
-import {
-  createFileLink,
-  showClassifications,
-  showDesc,
-  showLinks,
-} from "~/api";
+
 import { createHandler } from "./createHandler";
 
 export const COLUMN_CHOICES = [
@@ -57,10 +52,9 @@ export const BackLinks = createHandler("BackLinks")
   .scalar()
   .options()
   .handler(async (evt) => {
-    const { plugin: p, page, createTable  } = evt;
+    const { plugin: p, page, createTable } = evt;
 
     const current = page.current;
-
 
     /**
      * all in-bound links for the page with the exception of self-references
@@ -69,18 +63,17 @@ export const BackLinks = createHandler("BackLinks")
       .sort(p => p?.path)
       .where(p => p.path !== current.file.path);
 
+    await createTable("Backlink", "Classification(s)", "Desc", "Links")(
+      i => [
+        i.createFileLink(),
+        i.showClassifications(),
+        i.showDesc(),
+        i.showLinks(),
+      ],
+      {
+        renderWhenNoRecords: () => `- no back links found to this page`,
+      },
+    )(links);
 
-	await createTable("Backlink", "Classification(s)", "Desc", "Links")(
-		i => [
-			i.createFileLink(),
-			i.showClassifications(),
-			i.showDesc(),
-			i.showLinks(),
-		],
-		{
-			renderWhenNoRecords: () => `- no back links found to this page`
-		}
-	)(links);
-
-    return true
+    return true;
   });
