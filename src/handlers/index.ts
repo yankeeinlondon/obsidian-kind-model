@@ -9,7 +9,6 @@ import { Journal } from "./Journal";
 import { Kind } from "./Kind";
 import { Page } from "./Page";
 import { PageEntry } from "./PageEntry";
-import { Subcategories } from "./Subcategories";
 import { VideoGallery } from "./VideoGallery";
 
 export * from "./createHandler";
@@ -44,7 +43,6 @@ export function queryHandlers(p: KindModelPlugin) {
     Page(p)(ctx),
     Journal(p)(ctx),
     VideoGallery(p)(ctx),
-    Subcategories(p)(ctx),
   ]);
 }
 

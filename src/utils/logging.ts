@@ -1,38 +1,38 @@
+import { isString } from "inferred-types";
 import type { LogLevel } from "~/types/settings_types";
 
 function msg<T extends unknown[]>(list: T) {
   return list.find(i => typeof i === "string") || ("" as string | "");
 }
 
-function trunc(s: string | undefined) {
-  return typeof s === "string"
-    ? s.length > 12
-      ? `${s.slice(0, 12).trim()}...`
-      : `${s}`
-    : "";
-}
+
 
 function debug<TLevel extends LogLevel>(level: TLevel) {
   return (...args: unknown[]) => {
     if (level !== "debug") {
       return;
     }
+	if (args.length === 1 && isString(args[0])) {
+		console.log(`KM: ${args[0]}`)
+	} else {
 
-    console.groupCollapsed(`KM(dbg): ${trunc(msg(args))}`);
-    args.forEach((a) => {
-      if (typeof a === "function") {
-        console.log(`fn → `, a());
-      }
-      else if (typeof a === "object" && a !== null) {
-        Object.keys(a).map(k =>
-          console.info({ [k]: a[k as keyof typeof a] }),
-        );
-      }
-      else {
-        console.log(a);
-      }
-    });
-    console.groupEnd();
+		console.groupCollapsed(`KM(dbg): ${msg(args)}`);
+		args.forEach((a) => {
+		  if (typeof a === "function") {
+			console.log(`fn → `, a());
+		  }
+		  else if (typeof a === "object" && a !== null) {
+			Object.keys(a).map(k =>
+			  console.log({ [k]: a[k as keyof typeof a] }),
+			);
+		  }
+		  else {
+			console.log(a);
+		  }
+		});
+		console.groupEnd();
+	}
+
   };
 }
 
@@ -41,19 +41,23 @@ function info<TLevel extends LogLevel>(level: TLevel) {
     if (["debug"].includes(level)) {
       return;
     }
-    console.groupCollapsed(`KM(i): ${trunc(msg(args))}`);
-    args.forEach((a) => {
-      if (typeof a === "function") {
-        console.log(`fn → `, String(a));
-      }
-      else if (typeof a === "object" && a !== null) {
-        Object.keys(a).map(k => console.log({ [k]: a[k as keyof typeof a] }));
-      }
-      else {
-        console.log(a);
-      }
-    });
-    console.groupEnd();
+	if (args.length === 1 && isString(args[0])) {
+		console.info(`KM: ${args[0]}`)
+	} else {
+		console.groupCollapsed(`KM: ${msg(args)}`);
+		args.forEach((a) => {
+		  if (typeof a === "function") {
+			console.info(`fn → `, String(a));
+		  }
+		  else if (typeof a === "object" && a !== null) {
+			Object.keys(a).map(k => console.info({ [k]: a[k as keyof typeof a] }));
+		  }
+		  else {
+			console.info(a);
+		  }
+		});
+		console.groupEnd();
+	}
   };
 }
 
@@ -67,11 +71,15 @@ function warn<TLevel extends LogLevel>(level: TLevel) {
     if (["error"].includes(level)) {
       return;
     }
-    console.group("KM(warn)");
-    args.forEach((a) => {
-      console.warn(a);
-    });
-    console.groupEnd();
+	if (args.length === 1 && isString(args[0])) {
+		console.warn(`KM: ${args[0]}`);
+	} else {
+		console.group("KM(warn)");
+		args.forEach((a) => {
+		  console.warn(a);
+		});
+		console.groupEnd();
+	}
   };
 }
 function error<TLevel extends LogLevel>(_level: TLevel) {
@@ -100,9 +108,9 @@ export interface Logger<TLevel extends LogLevel = LogLevel> {
   /** **debug** logger */
   debug: ReturnType<typeof debug>;
   /** **info** logger */
-  info: ReturnType<typeof debug>;
+  info: ReturnType<typeof info>;
   /** **warn** logger */
-  warn: ReturnType<typeof debug>;
+  warn: ReturnType<typeof warn>;
   /** **error** logger */
   error: ReturnType<typeof error>;
 }

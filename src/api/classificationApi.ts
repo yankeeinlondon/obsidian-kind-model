@@ -338,17 +338,17 @@ export function getPageType(p: KindModelPlugin) {
     isApi?: ReturnType<ReturnType<typeof isProps>>,
   ): PageType => {
     const api = isApi || isProps(p)(page);
-    const multi = !hasMultipleKinds(p)(page);
+    const multi = hasMultipleKinds(p)(page);
 
     return api.isKindDefnPage
       ? "kind-defn"
       : api.isKindedPage && api.isCategoryPage && multi
         ? "multi-kinded > category"
-        : api.isKindedPage && api.isCategoryPage && !multi
+        : api.isKindedPage && api.isCategoryPage && multi
           ? "kinded > category"
           : api.isKindedPage && api.isSubcategoryPage && multi
             ? "multi-kinded > subcategory"
-            : api.isKindedPage && api.isSubcategoryPage && !multi
+            : api.isKindedPage && api.isSubcategoryPage && multi
               ? "kinded > subcategory"
               : api.isKindedPage
                 ? multi ? "multi-kinded" : "kinded"

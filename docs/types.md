@@ -76,8 +76,17 @@ Overall I don't use **Type**'s a ton because `Kind` provides me enough flexibili
 
 - I have a **Type** who's tag is `ai`
 - And for kind's I have:
-  - `#kind/ai-model #type/ai` - a kind to hold all model types
+  - `#kind/ai-family #type/ai` - a kind to hold all model types
   - `#concept/ai #type/ai` - I have Kind called `concept` but I only want the concepts related to AI to be a part of the type
   - `#standard/ai #type/ai` - the same idea applies to standards
   - `#software/ai #type/ai` - and again to software
 
+When I run the `Children()` handler on my AI Type page by putting this block on the page:
+
+```km
+Children()
+```
+
+It returns this:
+
+![type classification](../images/type-classification.png)

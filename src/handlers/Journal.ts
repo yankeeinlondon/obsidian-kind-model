@@ -36,8 +36,8 @@ export const Journal = createHandler("Journal")
     fileFormat: "string",
   })
   .handler(async (evt) => {
-    const p = evt.plugin;
-    const page = evt.page;
+	const { page, plugin: p, render} = evt;
+
 
     if (page) {
       const when = getWhenDate(p)(page);
@@ -143,10 +143,10 @@ export const Journal = createHandler("Journal")
             : `<!-- no events -->`,
         ].join("\n");
 
-        page.render(heading);
+        render.render(heading);
       }
       else {
-        page.render(
+        render.render(
           blockquote("error", "Invalid Date", {
             content: `The ${bold("Journal")} kind query expects the "when" or "date" frontmatter property to be set with a valid ISO 8601 date string; or as a fallback that the title/name of the page lead with an ISO 8601 date.`,
           }),

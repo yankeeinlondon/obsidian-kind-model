@@ -132,7 +132,7 @@ export function EventHandler(plugin: KindModelPlugin) {
           cb({ ...file });
         }),
       );
-      plugin.info("registered event", cb);
+      plugin.debug("registered event", cb);
     },
     /**
      * Provide a callback to handle each time a new file is **created**.

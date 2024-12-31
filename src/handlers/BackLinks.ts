@@ -53,8 +53,7 @@ export const BackLinks = createHandler("BackLinks")
   .options()
   .handler(async (evt) => {
     const { plugin: p, page, createTable } = evt;
-
-    const current = page.current;
+	const { current } = page;
 
     /**
      * all in-bound links for the page with the exception of self-references

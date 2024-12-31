@@ -12,7 +12,7 @@ export const VideoGallery = createHandler("VideoGallery")
   .scalar()
   .options({ size: "opt(enum(S,M,L))" })
   .handler(async (evt) => {
-    const { plugin: p, page } = evt;
+    const { plugin: p, page, render } = evt;
 
     interface Video {
       url: YouTubeVideoUrl;
@@ -22,7 +22,7 @@ export const VideoGallery = createHandler("VideoGallery")
     // all the videos found on pages which link to current page
     let videos: Video[] = [];
 
-    const backLinks = page.as_array(page.current?.file?.inlinks || []);
+    const backLinks = page.inlinks;
     const backPages: PageContent[] = await Promise.all(
       backLinks.map(i => pageContent(p)(i)),
     ).then(pgs => pgs.filter(i => i) as PageContent[]);
@@ -62,5 +62,7 @@ export const VideoGallery = createHandler("VideoGallery")
       "</div>",
     ].join("\n");
 
-    page.render(dom);
+    render.render(dom);
+
+	return true;
   });

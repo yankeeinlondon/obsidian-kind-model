@@ -64,7 +64,7 @@ export interface TableOpt<
    * an override which can be a string or any other value (it will be
    * rendered with **Dataview**'s `renderValue()`).
    */
-  renderWhenNoRecords?: (render: Scalar | AnyObject | Tuple) => Scalar | AnyObject | Tuple;
+  renderWhenNoRecords?: () => Scalar | AnyObject | Tuple;
 
   /**
    * You can specify the name of the handler to get some better defaults
@@ -154,7 +154,7 @@ export function createTable<
       if (recArr.length === 0) {
         plugin.debug(`empty table`);
         if (opt?.renderWhenNoRecords) {
-          render.renderValue(opt.renderWhenNoRecords);
+          render.renderValue(opt.renderWhenNoRecords());
           return true;
         }
         else {

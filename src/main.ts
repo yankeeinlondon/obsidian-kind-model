@@ -1,7 +1,6 @@
 import type { DataViewApi, DvPage } from "./types/dataview_types";
 import type { KindModelSettings } from "./types/settings_types";
 import type { Logger } from "./utils/logging";
-import { stripLeading } from "inferred-types";
 import { Plugin } from "obsidian";
 import { getAPI } from "obsidian-dataview";
 import { add_commands } from "~/commands/index";
@@ -19,9 +18,10 @@ import {
 } from "./events";
 import { on_editor_change } from "./events/on_editor_change";
 import { csv } from "./events/on_load/csv";
-import { obApp } from "./globals";
 import { DEFAULT_SETTINGS } from "./utils/Constants";
 import { logger } from "./utils/logging";
+import { getDefnPages, getTagLists } from "./startup";
+import { runAfterDataviewReady } from "./startup/runAfterDataviewReady";
 
 export default class KindModelPlugin extends Plugin {
   public settings: KindModelSettings;
@@ -40,28 +40,22 @@ export default class KindModelPlugin extends Plugin {
   /** the master Type definition (aka, `#type/type`) */
   public typeDefn: DvPage | undefined;
 
+  /**
+   * The status of the Dataview plugin's index/readiness
+   */
+  public dvStatus: "initializing" | "ready" = "initializing"
+
   /** all the valid kind tags known in the vault */
   public kindTags: string[];
 
   /** all the valid type tags known in the vault */
   public typeTags: string[];
 
-  public hasher: (input: string, seed?: number) => number;
-
-  private cache_ready: boolean = false;
-
   /**
-   * provides a boolean flag which indicates whether this plugin's
-   * cache is complete and therefore other operations which depend
-   * on this can proceed.
+   * allows a Task to be run with a guarentee that the Dataview
+   * index is ready for the query.
    */
-  public get ready() {
-    return this.cache_ready;
-  }
-
-  public set ready(state: boolean) {
-    this.cache_ready = state;
-  }
+  public deferQueryUntilReady: ReturnType<typeof runAfterDataviewReady>;
 
   /**
    * Setup this plugin on the "onload" event from Obsidian
@@ -69,29 +63,21 @@ export default class KindModelPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    const tags = obApp.getTags();
-    this.kindTags = Object.keys(tags).filter(i => i.startsWith(`#kind/`)).map(i => stripLeading(i, "#kind/"));
-    this.typeTags = Object.keys(tags).filter(i => i.startsWith(`#type/`)).map(i => stripLeading(i, "#type/"));
-
     const log = logger(this.settings.log_level);
     log.info("starting plugin");
     const { debug, info, warn, error } = log;
-    /** allows you to pull directly from all log endpoints */
     this.log = log;
     this.debug = debug;
     this.info = info;
     this.warn = warn;
     this.error = error;
 
+	this.deferQueryUntilReady = runAfterDataviewReady(this);
+	getTagLists(this);
+	getDefnPages(this);
+
     // this.registerEditorSuggest(new KindSuggest(this.app, this));
 
-    // start the cache refresh process
-    // -------------------------------
-    // synchronous return happens at point that what was
-    // already in configuration JSON is loaded into memory
-    // async component runs queries to refresh any aspects
-    // which might be stale.
-    this.ready = false;
 
     // expose the Dataview API
     this.dv = getAPI(this.app);
@@ -112,16 +98,24 @@ export default class KindModelPlugin extends Plugin {
     codeblockParser(this);
 
     // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-    const statusBarItemEl = this.addStatusBarItem();
-    statusBarItemEl.setText("Kind Models");
-    statusBarItemEl.addClass("clickable");
+    const kindEl = this.addStatusBarItem();
+    kindEl.setText(`${this.kindTags.length} Kinds`);
+    kindEl.addClass("clickable");
+
+	const typeEl = this.addStatusBarItem();
+    typeEl.setText(`${this.typeTags.length} Types`);
+    typeEl.addClass("clickable");
+
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SettingsTab(this.app, this));
 
-    log.info(`ready`);
+    log.info(`loaded plugin, dataview is ${this.dvStatus}`);
 
     this.mount();
+	if(this.dvStatus !== "ready") {
+		this.deferQueryUntilReady(() => log.info("Dataview completed indexing"))
+	}
   }
 
   mount() {

@@ -227,6 +227,16 @@ export function getFrontmatterMetadata(p: KindModelPlugin) {
   };
 }
 
+/** provides a list of tasks which have embedded file links */
+export function tasksWithPageLink(p: KindModelPlugin) {
+	return (
+		pg: PageReference
+	) => {
+		const page = getPage(p)(pg);
+		
+	}
+}
+
 /**
  * An API surface for interrogating Frontmatter data
  */
