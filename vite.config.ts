@@ -7,10 +7,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "~/": `${path.resolve(__dirname, "src")}/`,
+	  "test/": `${path.resolve(__dirname, "test")}/`,
     },
   },
   plugins: [
-    vuePlugin(),
+    vuePlugin(), 
     {
       // pushes new JS files to vault so they can be viewed
       // in real time.

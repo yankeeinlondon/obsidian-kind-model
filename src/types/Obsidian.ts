@@ -1,16 +1,20 @@
 import type {
   AlphaChar,
   AlphaNumericChar,
+  Callback,
   Dictionary,
+  HtmlElement,
   NonZeroNumericChar,
   SemanticVersion,
   SpecialChar,
   StringDelimiter,
+  Suggest,
+  SyncFunction,
   TypedFunction,
   UrlPath,
 } from "inferred-types";
 
-import type { EventRef, Stat, Vault } from "obsidian";
+import type { App, EventRef, Plugin, PluginManifest, Stat, Vault, Workspace } from "obsidian";
 import type { Tag } from ".";
 
 export interface TFile extends TAbstractFile {
@@ -229,9 +233,29 @@ export type ObsidianKey =
   | AlphaNumericChar;
 
 export type GetIconFromObsidian = (iconId: string) => ObsidianSvgElement | null;
+
+/**
+ * A `key` and `modifiers` properties which together represent
+ * a fully configured "hot key"
+ */
 export interface ObsidianHotKey {
   key: ObsidianKey;
   modifiers: ObsidianModifier[];
+}
+
+/**
+ * The **Obsidian** `HotKeyManager` is found directly off the `App`
+ * exposed in globals.
+ */
+export interface ObsidianHotKeyManager {
+  baked: boolean;
+  /** the array of hot keys (note: always same number of `bakedIds`) */
+  bakedHotKeys: ObsidianHotKey[];
+  /**
+   * the array of **commands** which are associated to the `bakedHotKeys`
+   * array found in the manager.
+   */
+  bakedIds: string[];
 }
 
 /**
@@ -427,7 +451,255 @@ export interface ObsidianMetadataCache {
   tags: ObsidianTagMeta[];
 }
 
-export interface ObsidianApp {
+export interface ObsidianCommandRepresentation {
+  id: string;
+  icon: string;
+  name: string;
+  checkCallback: SyncFunction;
+}
+
+export interface ObsidianPluginInstance {
+  description: string;
+  extension: string;
+  id: string;
+  name: string;
+  plugin: Plugin;
+  [key: string]: unknown;
+}
+
+export type ObsidianInternalPlugins = "audio-recorder"
+  | "backlink"
+  | "bookmarks"
+  | "canvas"
+  | "command-pallette"
+  | "daily-notes"
+  | "editor-status"
+  | "file-explorer"
+  | "file-recovery"
+  | "global-search"
+  | "graph"
+  | "markdown-importer"
+  | "note-composer"
+  | "outgoing-link"
+  | "outline"
+  | "page-preview"
+  | "properties"
+  | "publish"
+  | "random-note"
+  | "slash-command"
+  | "slides"
+  | "switcher"
+  | "sync"
+  | "tag-pane"
+  | "templates"
+  | "word-count"
+  | "workspaces"
+  | "zk-prefixer";
+
+export type SuggestedCommunityPlugins = Suggest<"calendar"
+  | "canvas-mindmap"
+  | "cmdr"
+  | "excalibrain"
+  | "hot-reload"
+  | "image-converter"
+  | "obsidian-advanced-uri"
+  | "obsidian-kanban"
+  | "obsidian-kind-model"
+  | "dataview"
+  | "quickadd"
+>;
+
+/**
+ * A representation of a **Obsidian** `plugin` which is exposed
+ * by the runtime on the `App` global.
+ */
+export interface ObsidianPluginRepresentation {
+  commands: ObsidianCommandRepresentation[];
+  addedButtonEls: HtmlElement[];
+  enabled: boolean;
+  hasStatusBarItem: boolean;
+  ribbonItems: any[];
+  statusBarEl: HtmlElement | null;
+  views: Dictionary;
+  instance: ObsidianPluginInstance;
+}
+
+export interface ObsidianPlugins {
+  enabledPlugins: Set<string>;
+  loadingPluginId: null | string;
+  manifests: Record<SuggestedCommunityPlugins, PluginManifest>;
+  plugins: Record<SuggestedCommunityPlugins, ObsidianPluginRepresentation>;
+  requestSaveConfig: SyncFunction<[], void>;
+  updates: Dictionary;
+}
+
+export type ObsidianVault = {
+  reloadConfig: () => Promise<void>;
+  requestSaveConfig: () => Promise<void>;
+  config: Record<string, any>;
+  adapter: {
+    /** the fully qualified path to the root of the Vault */
+    basePath: string;
+    btime: {
+      btime: SyncFunction<[path: string, btime: unknown]>;
+    };
+    files: Record<string, TFile>;
+    fs: {
+      access: SyncFunction<[path: string, mode: unknown, callback: Callback]>;
+      accessSync: SyncFunction<[path: string, mode: unknown]>;
+      chmod: SyncFunction;
+      chmodSync: SyncFunction;
+      close: SyncFunction;
+      closeSync: SyncFunction;
+      copyFile: SyncFunction;
+      copyFileSync: SyncFunction;
+      watch: SyncFunction<[
+				filename: string,
+options: Dictionary,
+listener: Callback,
+      ]>;
+      watchFile: SyncFunction<[
+				path: string,
+data: unknown,
+options: Dictionary,
+      ]>;
+      write: SyncFunction;
+      writeFile: SyncFunction;
+      writeFileSync: SyncFunction;
+      [key: string]: unknown;
+    };
+    fsPromises: any;
+    handler: any;
+    insensitive: boolean;
+    path: Record<string, any>;
+    url: Record<string, any>;
+  };
+  /**
+   * Retrieves a file or folder in the vault by its path.
+   * @param path - The path to the file or folder, relative to the vault root.
+   * @returns A TAbstractFile if found, or null if not found.
+   */
+  getAbstractFileByPath: (path: string) => TAbstractFile | null;
+} & Vault;
+
+export type ObsidianScope = {
+  keys: ObsidianCommandKey[];
+  parent?: unknown;
+  tabFocusContainer?: HtmlElement;
+}
+
+export type TypeWidget = "aliases" | "checkbox" | "date" | "datetime" | "multitext" | "number" | "tags" | "text";
+
+export type SuggestedTypeWidgets = Suggest<
+  TypeWidget
+>;
+
+/**
+ * appears to be the types for Frontmatter properties
+ */
+export interface ObsidianTypeWidget<TCore extends boolean = true> {
+  default: SyncFunction;
+  icon: string;
+  /** Proxy function */
+  name: TCore extends true
+    ? SyncFunction<[n: unknown, r: unknown], string>
+    : string;
+  render: TCore extends true
+    ? SyncFunction<[e: unknown, t: unknown, n: unknown]>
+    : never;
+  reservedKeys: TCore extends true
+    ? string[]
+    : never;
+  type: SuggestedTypeWidgets;
+  validate: TCore extends true
+    ? SyncFunction
+    : never;
+}
+
+export type SuggestedExtension = Suggest<
+  "3gp" | "avif" | "bmp" | "canvas" | "excalidraw" | "flac" | "gif" | "jpeg"
+  | "jpg" | "m4a" | "md" | "mkv" | "mov" | "mp3" | "mp4" | "oga" | "ogg" | "ogv"
+  | "opus" | "pdf" | "png" | "svg" | "wav" | "webm" | "webp"
+>;
+
+export type SuggestedFileType = Suggest<
+	"audio" | "video" | "markdown" | "pdf" | "excalidraw"
+>;
+
+export type ExampleObsidianViews = Suggest<
+  | "audio" 
+  | "advanced-tables-toolbar" 
+  | "backlink" 
+  | "bookmarks"
+  | "calendar" 
+  | "canvas" 
+  | "cm-changelog-view" 
+  | "copilot-chat-view" 
+  | "excalidraw" 
+  | "file-explorer" 
+  | "markdown" 
+  | "graph" 
+  | "image" 
+  | "kanban" 
+  | "localgraph" 
+  | "map" 
+  | "mindmapview" 
+  | "playground-view" 
+  | "pdf" 
+  | "search"
+  | "tag" 
+  | "tool-view" 
+  | "video"
+>;
+
+export interface ObsidianViewRegistry {
+  /**
+   * A lookup which helps map a file extension to a content type
+   */
+  typeByExtension: Record<SuggestedExtension, SuggestedFileType>;
+  /**
+   * A lookup which has view types as the keys, and a construtor 
+   * as a value.
+   */
+  viewByType: Record<ExampleObsidianViews, TypedFunction>;
+}
+
+export interface ObsidianPropertyCount {
+  /** name of the frontmatter property */
+  name: string;
+  /** the number of times this property is used in the vault */
+  count: number;
+  type: SuggestedTypeWidgets;
+}
+
+export interface ObsidianMetadataTypeManager {
+  onConfigFileChange: SyncFunction;
+  /**
+   * A dictionary lookup:
+   *
+   * - the _keys_ are the properties which have been used
+   * in the vault as **frontmatter** properties
+   * - the _values_ are `ObsidianPropertyCount` (aka, name, count, and type)
+   */
+  properties: Record<string, ObsidianPropertyCount>;
+  /**
+   * The core registered types which Obsidian gives to frontmatter properties
+   */
+  registeredTypeWidgets: Record<SuggestedTypeWidgets, ObsidianTypeWidget>;
+  /**
+   * the _learned_ types which a vault has established from the user's
+   * guidance on the type of a given frontmatter property.
+   */
+  types: Record<string, ObsidianTypeWidget<false>>;
+
+}
+
+/**
+ * A _richer_ representation of the **Obsidian** `App` type which
+ * is exposed at runtime on the global object.
+ */
+export type ObsidianApp = {
+  /** a unique identifier */
   appId: string;
   appMenuBarManager: any;
   commands: {
@@ -436,6 +708,9 @@ export interface ObsidianApp {
     editorCommands: Record<ObsidianCommandKey, ObsidianCommandProps>;
     executeCommand: TypedFunction;
   };
+
+  changeTheme: SyncFunction;
+
   customCss: {
     boundRaw: () => unknown;
     /**
@@ -503,11 +778,14 @@ export interface ObsidianApp {
       "wav": TypedFunction;
       "webm": TypedFunction;
       "webp": TypedFunction;
+      [key: string]: TypedFunction;
     };
   };
 
+  /** appears to restart **Obsidian** ... I guess in "debug mode"? */
+  debugMode: SyncFunction;
+
   fileManager: {
-    app: any;
     fileParentCreatorByType: {
       canvas: TypedFunction;
       md: TypedFunction;
@@ -536,21 +814,27 @@ export interface ObsidianApp {
     };
   };
   foldManager: any;
-  hotKeyManager: any;
+  hotKeyManager: ObsidianHotKeyManager;
   internalPlugins: {
-    plugins: Record<string, any>;
+    plugins: Record<Suggest<ObsidianInternalPlugins>, ObsidianPluginRepresentation>;
     isMobile: boolean;
-    keyMap: any;
+    keyMap: {
+      modifiers: string;
+      prevScopes: any;
+      rootScope: any;
+      scope: any;
+    };
     lastEvent: null | unknown;
     metadataCache: {
       app: any;
       blockCache: {
         cache: Dictionary;
       };
+      /** Proxy to the IndexDB database */
       db: any;
       didFinish: TypedFunction;
       fileCache: Record<string, ObsidianFileCache>;
-      getTags: TypedFunction;
+      getTags: SyncFunction;
       inProgressTaskCount: number;
       initialized: boolean;
       linkResolverQueue: any;
@@ -561,7 +845,12 @@ export interface ObsidianApp {
     };
   };
   isMobile: boolean;
-  keymap: any;
+  keymap: {
+    modifiers: string;
+    prevScopes: ObsidianScope[];
+    rootScope: ObsidianScope;
+    scope: ObsidianScope;
+  };
   lastEvent: any;
   metadataCache: {
     app: any;
@@ -589,60 +878,56 @@ export interface ObsidianApp {
     vault: any;
   };
 
-  metadataTypeManager: any;
+  metadataTypeManager: ObsidianMetadataTypeManager;
   mobileNavbar: null | unknown;
   mobileToolbar: null | unknown;
   nextFrameEvents: unknown[];
   nextFrameTimer: null | unknown;
-  plugins: any;
-  scope: any;
-  setting: any;
+  plugins: ObsidianPlugins;
+
+  registerQuitHook: SyncFunction;
+
+  scope: ObsidianScope;
+  /**
+   * appears to be settings largely for the Modal dialog
+   */
+  setting: {
+    activeTab: null | unknown;
+    activeTabCloseable: null | unknown;
+    dimBackground: boolean;
+    /** modal background */
+    bgEl: HTMLDivElement;
+    bgOpacity: `${number}`;
+    communityPluginTabContainer: HTMLDivElement;
+    communityPluginTabHeaderGroup: HTMLDivElement;
+    /** the tabs container */
+    containerEl: HTMLDivElement;
+    /**  the Modal header element */
+    headerEl: HTMLDivElement;
+
+    lastTabId: string;
+    modalEl: HTMLDivElement;
+
+    shouldAnimate: boolean;
+    shouldRestoreSelection: boolean;
+
+    /** the Modal title element */
+    titleEl: HTMLDivElement;
+
+    scope: ObsidianScope;
+  };
   shareReceiver: any;
-  statusBar: any;
+  statusBar: {
+    containerEl: HtmlElement;
+    [key: string]: unknown;
+  };
+  /** Opens **Obsidian**'s Vault Chooser dialog */
+  openVaultChooser: SyncFunction<[], void>;
+
+  /** the title of Obsidian, something like `obsidian - Obsidian v1.x.y` */
   title: string;
 
-  vault: {
-    adaptor: ObsidianAdaptor;
-    fileMap: Record<string, ObsidianMappedFile>;
-    /**
-     * Retrieves a file or folder in the vault by its path.
-     * @param path - The path to the file or folder, relative to the vault root.
-     * @returns A TAbstractFile if found, or null if not found.
-     */
-    getAbstractFileByPath: (path: string) => TAbstractFile | null;
-  };
-  viewRegistry: any;
-  workspace: {
-    activeEditor: any;
-    activeLeaf: any;
-    activeTabGroup: any;
-    app: any;
-    backlinkInDocument: any;
-    containerEl: HTMLElement;
-    editorExtensions: any[];
-    editorSuggest: any;
-    floatingSplit: any;
-    hoverLinkSources: any;
-    lastActiveFile: any;
-    lastTabGroupStacked: boolean;
-    layoutItemQueue: any[];
-    layoutReady: boolean;
-    leftRibbon: any;
-    leftSidebarToggleButtonEl: HTMLElement;
-    leftSplit: any;
-    mobileFileInfos: any[];
-    onLayoutReadCallbacks: any;
-    protocolHandlers: Map<string, TypedFunction>;
-    recentFileTracker: any;
-    requestActiveLeafEvents: TypedFunction;
-    requestResize: TypedFunction;
-    requestSaveLayout: TypedFunction;
-    requestUpdateLayout: TypedFunction;
-    rightRibbon: any;
-    rightSidebarToggleButtonEl: HTMLElement;
-    rightSplit: any;
-    scope: any;
-    setActiveLeaf: TypedFunction;
-    undoHistory: any[];
-  };
-}
+  vault: ObsidianVault;
+  viewRegistry: ObsidianViewRegistry;
+  workspace: Workspace;
+} & App;

@@ -28,10 +28,18 @@ export function codeblockParser(p: KindModelPlugin) {
     const event: ObsidianCodeblockEvent = { source, el, ctx };
     const handlers = p.api.queryHandlers(event);
 
-    const outcomes = await Promise.all(handlers.map(i => i()));
-    p.info(`code block processed`, outcomes);
+    const outcomes = await Promise.all(
+      handlers.map(i => i().then(r => [i.handlerName, r])),
+    );
+    p.info(`code block processed`, outcomes.reduce(
+      (acc, i) => ({
+        ...acc,
+        [i[0] as string]: i[1],
+      }),
+      {},
+    ));
 
-    if (!outcomes.some(i => i)) {
+    if (!outcomes.some(i => i[1] === true)) {
       // no handlers attempted to handle the event payload
       // const handlerNames = handlers.map((i) => i.handlerName);
       // const withError = handlers.find((i) => isError(i));

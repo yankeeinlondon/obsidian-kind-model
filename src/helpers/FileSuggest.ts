@@ -1,10 +1,14 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
-import type { TAbstractFile } from "obsidian";
+import type { TAbstractFile, TFile } from "obsidian";
 import type KindModelPlugin from "~/main";
-import { TFile } from "obsidian";
-import { get_tfiles_from_folder } from "~/utils/Utils";
+import { vault } from "~/globals";
+import { isTFile } from "~/type-guards";
 import { TextInputSuggest } from "./Suggest";
+
+function getFilesByPath(folder: string) {
+  return vault.getMarkdownFiles().filter(f => f.path.startsWith(folder));
+}
 
 export enum FileSuggestMode {
   TemplateFiles,
@@ -16,7 +20,6 @@ export class FileSuggest extends TextInputSuggest<TFile> {
     public inputEl: HTMLInputElement,
     public plugin: KindModelPlugin,
     private folders: string[],
-
   ) {
     super(inputEl);
   }
@@ -41,15 +44,20 @@ export class FileSuggest extends TextInputSuggest<TFile> {
 
   getSuggestions(input_str: string): TFile[] {
     const all_files = [
-      ...this.folders.map((f) => {
-        try {
-          return get_tfiles_from_folder(f);
-        }
-        catch {
-          this.plugin.warn(`Folder missing!`, `the folder "${f}" was request from the FileSuggest class but this file does not exist!`);
-          return [];
-        }
-      }).flat(),
+      ...this.folders
+        .map((f) => {
+          try {
+            return getFilesByPath(f);
+          }
+          catch {
+            this.plugin.warn(
+              `Folder missing!`,
+              `the folder "${f}" was request from the FileSuggest class but this file does not exist!`,
+            );
+            return [];
+          }
+        })
+        .flat(),
     ];
 
     const files: TFile[] = [];
@@ -57,7 +65,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
 
     all_files.forEach((file: TAbstractFile) => {
       if (
-        file instanceof TFile
+        isTFile(file)
         && file.extension === "md"
         && file.path.toLowerCase().contains(lower_input_str)
       ) {

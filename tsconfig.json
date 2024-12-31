@@ -12,13 +12,36 @@
 		"importHelpers": true,
 		"isolatedModules": true,
 		"strictNullChecks": true,
-		"types": ["obsidian"],
-		"typeRoots": ["node_modules/@types", "node_modules/obsidian"],
+		"types": [
+			"obsidian"
+		],
+		"typeRoots": [
+			"node_modules/@types",
+			"node_modules/obsidian"
+		],
 		"paths": {
-			"~/*": ["src/*"]
+			"~/*": [
+				"src/*"
+			],
+			"test/*": [
+				"test/*"
+			]
 		},
-		"lib": ["DOM", "ES5", "ES6", "ES7", "ES2022"]
+		"lib": [
+			"DOM",
+			"ES5",
+			"ES6",
+			"ES7",
+			"ES2022"
+		]
 	},
-	"include": ["src"],
-	"exclude": ["node_modules", "dist", "*.mjs"]
+	"include": [
+		"src",
+		"test"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"*.mjs"
+	]
 }

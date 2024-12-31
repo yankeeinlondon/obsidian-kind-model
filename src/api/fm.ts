@@ -79,7 +79,11 @@ type FmReturns<T extends string | undefined> = T extends string
       removeFmKey: ReturnType<typeof removeFmKey>;
     };
 
-export function fmApi<TPath extends string | undefined>(
+/**
+ * Provides an API surface to modify Frontmatter properties
+ * on a page.
+ */
+export function frontmatterApi<TPath extends string | undefined>(
   p: KindModelPlugin,
   path?: TPath,
 ): FmReturns<TPath> {

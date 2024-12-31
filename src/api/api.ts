@@ -5,7 +5,7 @@ import { createPageView } from "../page/createPageView";
 import { getPageInfoBlock } from "../page/getPageBlock";
 import { getPageInfo } from "../page/getPageInfo";
 import { classificationApi } from "./classificationApi";
-import { fmApi } from "./fm";
+import { frontmatterApi } from "./fm";
 import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { iconApi } from "./iconApi";
@@ -27,7 +27,7 @@ export function api(plugin: KindModelPlugin) {
     ...classificationApi(plugin),
     ...showApi(plugin),
     ...iconApi(plugin),
-    fm: fmApi(plugin),
+    fm: frontmatterApi(plugin),
     obsidian: obsidianApi(plugin),
 
     /**

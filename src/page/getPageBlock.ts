@@ -15,8 +15,8 @@ export function getPageInfoBlock(p: KindModelPlugin) {
   return (evt: ObsidianCodeblockEvent): PageInfoBlock | undefined => {
     const { source, el, ctx } = evt;
     const filePath = ctx.sourcePath;
-
     const page = getPageInfo(p)(filePath);
+
     if (page) {
       const sectionInfo = ctx.getSectionInfo(el);
 

@@ -1,4 +1,6 @@
 import { isFunction } from "inferred-types";
+import { htmlLink } from "~/api";
+import { asDisplayTag } from "~/helpers";
 import { createHandler } from "./createHandler";
 
 export const Page = createHandler("Page")
@@ -13,11 +15,21 @@ export const Page = createHandler("Page")
 
     page.render(fmt.bold("Page Information<br/>"));
 
-    const kindOfPage = [fmt.bold("Kind of Page"), page.type];
+    const kindOfPage = [
+      fmt.bold("Kind of Page"), //
+      `${page.pageType} [multi: ${page.hasMultipleKinds}]`,
+    ];
     const types
-      = page.typeTags?.length > 0
-        ? [fmt.bold("Types(s)"), page.kindTags.join(", ")]
-        : undefined;
+      = [
+        fmt.bold("Types(s)"), //
+        page.type
+          ? htmlLink(p)(page.type)
+          : Array.isArray(page.types)
+            ? page.types.map(i => htmlLink(p)(i)).join(", ")
+            : page.typeTag
+              ? `none (but has _type tag_ of ${asDisplayTag(page.typeTag)})`
+              : "none",
+      ];
     const kinds
       = page.kindTags?.length > 0
         ? [fmt.bold("Kind(s)"), page.kindTags.join(", ")]
@@ -50,7 +62,18 @@ export const Page = createHandler("Page")
           ]
         : undefined;
 
-    const report = [kindOfPage, types, kinds, cats, subCats, metadata].filter(
+    const classy = [
+      fmt.bold("Classification"),
+      JSON.stringify(
+        page.classifications.map(c => ({
+          kind: c.kindTag,
+          categories: c.categories.map(cc => cc.category),
+          subcategories: c.subcategory?.subcategory,
+        })),
+      ),
+    ];
+
+    const report = [kindOfPage, types, kinds, cats, subCats, metadata, classy].filter(
       i => i,
     ) as [left: string, right: string][];
 

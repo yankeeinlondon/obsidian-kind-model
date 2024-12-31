@@ -1,7 +1,6 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
-import type { TAbstractFile } from "obsidian";
-import { TFolder } from "obsidian";
+import type { TAbstractFile, TFolder } from "obsidian";
 import { TextInputSuggest } from "./Suggest";
 
 export class FolderSuggest extends TextInputSuggest<TFolder> {
@@ -12,8 +11,7 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
 
     abstractFiles.forEach((folder: TAbstractFile) => {
       if (
-        folder instanceof TFolder
-        && folder.path.toLowerCase().contains(lowerCaseInputStr)
+        folder.path.toLowerCase().contains(lowerCaseInputStr)
       ) {
         folders.push(folder);
       }

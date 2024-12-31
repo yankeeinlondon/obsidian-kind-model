@@ -1,5 +1,6 @@
 import type {
   createFileLink,
+  createLinksFromTag,
   createMarkdownLink,
   getProp,
   showAbout,
@@ -79,4 +80,9 @@ export interface ShowApi {
    * render properly because the markdown-to-html conversion will no longer take place.
    */
   createMarkdownLink: ReturnType<typeof createMarkdownLink>;
+
+  /**
+   * return an array of links from a specified tag
+   */
+  createLinksFromTag: ReturnType<typeof createLinksFromTag>;
 }

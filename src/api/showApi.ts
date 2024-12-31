@@ -1,7 +1,9 @@
 import type { OptionalSpace, StripLeading } from "inferred-types";
+import type { FormattingApi } from "./formattingApi";
 import type KindModelPlugin from "~/main";
 import type { DvPage, FileLink, PageReference, ShowApi } from "~/types";
 import {
+  ensureLeading,
   isArray,
   isString,
   isToday,
@@ -26,6 +28,8 @@ import {
   getSubcategories,
   isKindTag,
 } from "./classificationApi";
+import { createVaultLink } from "./createVaultLink";
+import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { isKeyOf } from "./renderApi";
 
@@ -473,7 +477,10 @@ function link(name: string, path: string, display: string) {
 }
 
 export function htmlLink(p: KindModelPlugin) {
-  return (ref: PageReference | undefined, opt?: MarkdownLinkOpt): string => {
+  return (
+    ref: PageReference | undefined,
+    opt?: MarkdownLinkOpt,
+  ): string => {
     const page = getPage(p)(ref);
 
     if (page) {
@@ -652,20 +659,46 @@ function extractTitle<T extends unknown | undefined>(s: T) {
 export function createFileLink(p: KindModelPlugin) {
   return (
     pathLike: PageReference | undefined,
-    embed?: boolean,
-    _display?: string,
+    opt?: {
+      display?: string;
+      after?: string;
+      before?: string;
+    },
   ) => {
     const page = p.api.getPage(pathLike);
 
     if (page) {
-      return p.dv.fileLink(
-        page.file.name,
-        isUndefined(embed) ? false : embed,
-        extractTitle(page.file.name),
-      );
+      return createVaultLink(p)(page, opt);
     }
 
     return "";
+  };
+}
+
+export function createLinksFromTag(p: KindModelPlugin) {
+  return <T extends string>(
+    tag: T,
+    opt?: {
+      /** filter the links returned */
+      filter?: <P extends DvPage>(page: P) => boolean;
+      /** override the output when there is no result */
+      noResult?: (cb: FormattingApi) => string;
+    },
+  ) => {
+    if (tag === "") {
+      p.warn(`invalid-tag`, `A call to createLinksFromTag() passed an empty string which would result in an invalid search!`);
+
+      return "";
+    }
+
+    const t = ensureLeading(tag, "#");
+    const pages = Array.from(p.dv.pages(`${t}`).sort(p => p.file.name)) as DvPage[];
+
+    return pages.length > 0
+      ? pages.map(i => createVaultLink(p)(i)).join(", ")
+      : opt?.noResult
+        ? opt.noResult(formattingApi(p))
+        : p.api.format.italics("none");
   };
 }
 
@@ -745,5 +778,6 @@ export function showApi(p: KindModelPlugin): ShowApi {
 
     createFileLink: createFileLink(p),
     createMarkdownLink: createMarkdownLink(p),
+    createLinksFromTag: createLinksFromTag(p),
   } as const;
 }

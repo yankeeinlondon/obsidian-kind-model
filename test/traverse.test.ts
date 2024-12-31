@@ -1,11 +1,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import tree from "./data/markdoc-tree.json";
-import {default as page} from "./data/dv-page.json";
+import tree from "test/data/markdoc-tree.json";
+import page from "test/data/dv-page.json";
 import {traverse, find_links} from "../src/helpers/pageContent"
 import { ExternalLink } from "../src/types/general";
-import { isDvPage } from "../src/utils/type_guards/isDvPage";
+import { isDvPage } from "../src/type-guards";
 
 
 // Note: while type tests clearly fail visible inspection, they pass from Vitest

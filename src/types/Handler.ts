@@ -8,8 +8,10 @@ import type {
   First,
 } from "inferred-types";
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { createTable } from "src/helpers";
 import type { PageInfoBlock } from "./Page";
 import type KindModelPlugin from "~/main";
+import type { getPageFromKindTag } from "~/page/getPageFromTag";
 
 /**
  * A handler's query parameters definition.
@@ -149,6 +151,13 @@ export interface HandlerEvent<
   TScalar extends Dictionary,
   TOpt extends Dictionary,
 > {
+  debug: KindModelPlugin["debug"];
+  info: KindModelPlugin["info"];
+  warn: KindModelPlugin["warn"];
+  error: KindModelPlugin["error"];
+
+  getPageFromKindTag: ReturnType<typeof getPageFromKindTag>;
+
   /** KindModelPlugin for logging and API access */
   plugin: KindModelPlugin;
   /**
@@ -160,6 +169,23 @@ export interface HandlerEvent<
    * Context about the Markdown
    */
   ctx: Component & MarkdownPostProcessorContext;
+
+  /**
+   * **createTable**`(...startingCols)` -> `(handler, opt)` -> `(data)` -> void
+   *
+   * Helper for `km` handlers which builds a table and renders it using
+   * `Dataview`'s table renderer.
+   *
+   * - Step one is to provide the "default columns" you will define with the
+   * callback handler
+   * - Step two is to provide a callback function which will map a column
+   * to it's render value; the callback function is given a `PageInfo` for
+   * the given record.
+   * - Step three -- the final step -- is to pass it a `DataArray` of results
+   * to render, at this point you can also express a set of options into an
+   * options hash to handle certain conditions.
+   */
+  createTable: ReturnType<typeof createTable>;
 
   /**
    * The string content found in the code block
@@ -185,8 +211,15 @@ export interface HandlerEvent<
   options: TOpt;
 }
 
+/**
+ * A handler function which returns:
+ *
+ * - `true` if handled successfully
+ * - `false` if not handled
+ * - `Error` if problem occurred during the handling process.
+ */
 export type Handler<
   THandler extends string,
   TScalar extends Dictionary,
   TOpt extends Dictionary,
-> = (event: HandlerEvent<THandler, TScalar, TOpt>) => Promise<void>;
+> = (event: HandlerEvent<THandler, TScalar, TOpt>) => Promise<boolean | Error>;

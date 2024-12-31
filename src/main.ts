@@ -1,8 +1,8 @@
-import type { KindCache, KindDefinition } from "./types";
-import type { DataViewApi } from "./types/dataview_types";
+import { Plugin } from "obsidian";
+import type { KindCache, KindDefinition, PageInfo } from "./types";
+import type { DataViewApi, DvPage } from "./types/dataview_types";
 import type { KindModelSettings } from "./types/settings_types";
 import type { Logger } from "./utils/logging";
-import { Plugin } from "obsidian";
 import { getAPI } from "obsidian-dataview";
 import xx from "xxhash-wasm";
 import { add_commands } from "~/commands/index";
@@ -37,6 +37,11 @@ export default class KindModelPlugin extends Plugin {
   public info: Logger["info"];
   public warn: Logger["warn"];
   public error: Logger["error"];
+
+  /** the master Kind definition (aka, `#kind/kind`) */
+  public kindDefn: DvPage | undefined;
+  /** the master Type definition (aka, `#type/type`) */
+  public typeDefn: DvPage | undefined;
 
   public cache: KindCache = {
     kindDefinitionsByPath: new Map<string, KindDefinition<["path"]>>(),

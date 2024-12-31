@@ -1,6 +1,5 @@
-import type { App } from "obsidian";
+import { App, Modal } from "obsidian";
 import type { Kind, LogLevel } from "~/types";
-import { Modal } from "obsidian";
 import { UiBuilder } from "../helpers/UiBuilder";
 import { CLASSIFICATION, FOLDER_DEFAULT, UOM_TYPES } from "../utils/Constants";
 import { classification } from "./SettingsTab";
@@ -8,7 +7,6 @@ import { classification } from "./SettingsTab";
 export class KindModal extends Modal {
   private kind: Kind;
   private log_level: LogLevel;
-  public contentEl: HTMLElement;
 
   constructor(app: App, kind: Kind, log_level: LogLevel) {
     super(app);

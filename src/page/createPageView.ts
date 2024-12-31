@@ -87,10 +87,11 @@ function getDomMeta(view: MarkdownView, _info: PageInfo) {
 }
 
 /**
- * Converts a `MarkdownView` to a `PageView`
+ * Converts a `MarkdownView` to a `PageView` which
+ * is a superset of a `PageInfo`
  */
 export function createPageView(p: KindModelPlugin) {
-  return (view: MarkdownView) => {
+  return (view: MarkdownView): PageView | undefined => {
     if (view?.file?.path) {
       const info = getPageInfo(p)(view.file.path);
       if (info) {

@@ -11,6 +11,11 @@ type ReturnLink<T extends PageReference> = T extends DvPage
 export function createVaultLink(p: KindModelPlugin) {
   return <T extends PageReference>(
     ref: T,
+    opt?: {
+      display?: string;
+      after?: string;
+      before?: string;
+    },
   ): T extends DvPage
     ? string
     : T extends PageInfo
@@ -21,7 +26,7 @@ export function createVaultLink(p: KindModelPlugin) {
     if (page) {
       const alias = page.file.name;
       const path = page.file.path;
-      const link = `[[${path}|${alias}]]`;
+      const link = `${opt?.before || ""}[[${path}|${alias}]]${opt?.after || ""}`;
 
       return link as ReturnLink<T>;
     }

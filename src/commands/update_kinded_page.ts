@@ -1,18 +1,48 @@
 import type { Editor, MarkdownView } from "obsidian";
 import type KindModelPlugin from "../main";
 import type { PageView } from "~/types";
+import { isEmpty, or } from "inferred-types";
 import { Notice } from "obsidian";
 import { createVaultLink } from "~/api";
+
+async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> {
+  const {
+    current,
+    typeTag,
+    isCategoryPage,
+    isKindDefnPage,
+    hasMultipleKinds,
+  } = page;
+
+  if (
+    isEmpty(current.type)
+    && !hasMultipleKinds
+    && typeTag
+    && (isKindDefnPage || isCategoryPage)
+  ) {
+    // await page.setFmKey(
+    // 	"type",
+    // 	createVaultLink(p)(page.type),
+    // );
+
+    return true;
+  }
+
+  return false;
+}
 
 export function update_kinded_page(p: KindModelPlugin) {
   return async (
     editor: Editor,
     view: MarkdownView,
   ) => {
-    const page = p.api.createPageView(view) as PageView;
-    if (page.type !== "none") {
+    const page = p.api.createPageView(view);
+    if (page && page.pageType !== "none") {
       p.info("update-kinded-page", page);
       let changes = false;
+      // types
+      changes = or(changes, await updateType(p, page));
+      // kinds
 
       if (
         page.hasKindTag

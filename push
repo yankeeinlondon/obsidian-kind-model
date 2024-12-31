@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 PLUGIN_DIR="${HOME}/obsidian/.obsidian/plugins"
-CJS_FILE="${PWD}/dist/main.cjs"
+MJS_FILE="${PWD}/dist/main.mjs"
+CJS_FILE="${PWD}/dist/main.js"
 STYLES="${PWD}/styles.css"
 MANIFEST_FILE="${PWD}/manifest.json"
 
@@ -47,7 +48,7 @@ function has_command() {
 }
 
 function copy_files() {
-	if file_exists "${CJS_FILE}"; then
+	if file_exists "${MJS_FILE}"; then
 		echo " - converting ESM to CJS using tsup"
 		if tsup; then
 			echo " - CJS file created locally in dist folder"
@@ -56,44 +57,50 @@ function copy_files() {
 			exit 1
 		fi
 
-		echo " - copying CJS file to plugin directory"
-		cp -f "${CJS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+		if file_exists "${CJS_FILE}"; then
 
-		if file_exists "${MANIFEST_FILE}"; then
-			cp -f "${MANIFEST_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
-			echo " - manifest file copied to plugin directory"
-		else
-			echo " - no manifest file found"
-		fi
-		if file_exists "${STYLES}"; then
-		 cp -f "${STYLES}" "${PLUGIN_DIR}/obsidian-kind-model"
-		fi
-		echo ""
+			echo " - copying CJS file to plugin directory"
+			cp -f "${CJS_FILE}" "${PLUGIN_DIR}/obsidian-kind-model/main.js"
 
-		echo "File Comparison"
-		echo "---------------"
-
-		if has_command "exa"; then
-			exa -lagh --git "./dist/main.cjs"
+			if file_exists "${MANIFEST_FILE}"; then
+				cp -f "${MANIFEST_FILE}" "${PLUGIN_DIR}/obsidian-kind-model"
+				echo " - manifest file copied to plugin directory"
+			else
+				echo " - no manifest file found"
+			fi
+			if file_exists "${STYLES}"; then
+			cp -f "${STYLES}" "${PLUGIN_DIR}/obsidian-kind-model"
+			fi
 			echo ""
-			exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
-			exa -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
-		elif has_command "eza"; then
-			eza -lagh --git "./main.js"
+
+			echo "File Comparison"
+			echo "---------------"
+
+			if has_command "exa"; then
+				exa -lagh --git "${CJS_FILE}"
+				echo ""
+				exa -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+				exa -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+			elif has_command "eza"; then
+				eza -lagh --git "./main.js"
+				echo ""
+				eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+				eza -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+			else
+				ls -la --color "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+			fi
+
 			echo ""
-			eza -lagh --git "${PLUGIN_DIR}/obsidian-kind-model/main.js"
-			eza -lag --git "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+
+			touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+			touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
+			touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
 		else
-			ls -la --color "${PLUGIN_DIR}/obsidian-kind-model/main.js"
+			echo "- no CJS file found!"
+			exit 1;
 		fi
-
-		echo ""
-
-		touch "${PLUGIN_DIR}/obsidian-kind-model/main.js"
-		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
-		touch "${PLUGIN_DIR}/obsidian-kind-model/manifest.json"
 	else
-		echo "- no JS source file found!"
+		echo "- no MJS source file found from Vite build!"
 		touch "${PLUGIN_DIR}/obsidian-kind-model/.hotreload"
 	fi
 }

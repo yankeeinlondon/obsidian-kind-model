@@ -1,116 +1,122 @@
 import type KindModelPlugin from "~/main";
-import type { PageInfo, PageReference } from "~/types";
+import type { Classification, DvPage, Link, PageInfo, PageReference, Tag } from "~/types";
 import {
-  fmApi,
+  frontmatterApi,
   getCategories,
   getClassification,
   getKindTagsOfPage,
   getMetadata,
+  getPageType,
   getSubcategories,
-  hasAnyCategoryProp,
-  hasAnyKindProp,
-  hasAnySubcategoryProp,
-  hasCategoriesProp,
-  hasCategoryProp,
-  hasCategoryTag,
-  hasKindDefinitionTag,
-  hasKindProp,
-  hasKindsProp,
-  hasKindTag,
-  hasSubcategoriesProp,
-  hasSubcategoryProp,
-  hasSubcategoryTag,
-  hasSubcategoryTagDefn,
-  hasTypeDefinitionTag,
-  isCategoryPage,
-  isKindDefnPage,
-  isKindedPage,
-  isSubcategoryPage,
-  isTypeDefnPage,
+  getTypeTag,
+  hasProps,
+  isProps,
 } from "~/api";
 import { isPageInfo } from "~/type-guards";
 import { getPath } from "../api/getPath";
 import { getPage } from "./getPage";
+import { getTypeOfPage } from "./getType";
+import { getPageKinds } from "./getPageKinds";
+
+type Returns<T extends PageReference> = T extends PageInfo
+  ? PageInfo
+  : T extends DvPage
+    ? PageInfo
+    : PageInfo | undefined;
 
 /**
- * Creates an entry in PAGE_INFO_CACHE for a page in the vault.
- *
- * - if `DvPage` for this page was in PAGE_CACHE it will be removed
- * - the `page` property on `PageInfo` is now the reference to the `DvPage`
- * API surface
+ * Converts any `PageReference` to a `PageInfo` type.
+ * 
+ * This type contains:
+ * 
+ * - a `current` property which is the `DvPage` for the page
+ * - constains meta information such as:
+ * 
+ * 		- pageType, typeTag, hasMultipleKinds
+ * 		- isKindedPage, isKindDefnPage, ...
+ * 
+ * - has a `classifiications` breakdown
+ * - all **Frontmatter** properties around found on `fm` prop
+ * - the `metadata` property provides a lookup where the keys
+ * are _types_ of information and the keys are the Frontmatter
+ * properties of this type.
+ * - the `kind` and `kinds` properties indicate the `Kind` 
+ * of the current page.
+ * - the `type` and `types` properties look for a **Type** for
+ * the current page based on both current page and inheritance
+ * characteristics.
  */
 export function getPageInfo(p: KindModelPlugin) {
-  return (pg: PageReference): PageInfo | undefined => {
+  return <T extends PageReference>(
+    pg: T,
+  ): Returns<T> => {
     if (isPageInfo(pg)) {
-      return pg;
+      return pg as unknown as Returns<T>;
     }
 
     const path = getPath(pg);
     const page = getPage(p)(pg);
 
     if (path && page) {
-      const meta = {
-        categories: getCategories(p)(page),
-        subcategories: getSubcategories(p)(page),
-
-        hasCategoryProp: hasCategoryProp(p)(page),
-        hasCategoriesProp: hasCategoriesProp(p)(page),
-        hasAnyCategoryProp: hasAnyCategoryProp(p)(page),
-        hasSubcategoryProp: hasSubcategoryProp(p)(page),
-        hasSubcategoriesProp: hasSubcategoriesProp(p)(page),
-        hasAnySubcategoryProp: hasAnySubcategoryProp(p)(page),
-
-        hasCategoryTag: hasCategoryTag(p)(page),
-        hasSubcategoryTag: hasSubcategoryTag(p)(page),
-        hasSubcategoryDefnTag: hasSubcategoryTagDefn(p)(page),
-
-        hasKindProp: hasKindProp(p)(page),
-        hasKindsProp: hasKindsProp(p)(page),
-        hasAnyKindProp: hasAnyKindProp(p)(page),
-
-        hasKindTag: hasKindTag(p)(page),
-        hasKindDefinitionTag: hasKindDefinitionTag(p)(page),
-        hasTypeDefinitionTag: hasTypeDefinitionTag(p)(page),
-
-        isCategoryPage: isCategoryPage(p)(page),
-        isSubcategoryPage: isSubcategoryPage(p)(page),
-        isKindDefnPage: isKindDefnPage(p)(page),
-        isTypeDefnPage: isTypeDefnPage(p)(page),
-        isKindedPage: isKindedPage(p)(page),
-
-        kindTags: getKindTagsOfPage(p)(page),
-        typeTags: [],
-      };
+      const hasApi = hasProps(p)(page);
+      const isApi = isProps(p)(page);
+	  const pageType = getPageType(p)(page, isApi);
+      const typeTag = getTypeTag(p)(page);
+	  const kindTags =  getKindTagsOfPage(p)(page);
+	  const t = undefined;
+		// getTypeOfPage(p)(page, true) as DvPage | undefined;
+	  const types = undefined;
+		// getTypeOfPage(p)(page, false);
+	  const metadata = getMetadata(p)(page);
+	  const categories = getCategories(p)(page);
+	  const subcategories = getSubcategories(p)(page);
+	  const classifications = getClassification(p)(
+			page, categories, subcategories
+		);
+	  const kind = getPageKinds(p)(page).pop() as DvPage | undefined;
+	  const kinds = getPageKinds(p)(page) as DvPage[] | undefined;
 
       const info: PageInfo = {
-        current: page,
-        path,
-        name: page.file.name,
+		name: page.file.name,
         ext: page.file.ext,
-        classifications: getClassification(p)(
-          page,
-          meta.categories,
-          meta.subcategories,
-        ),
-        hasMultipleKinds: meta.kindTags.length > 1,
-        type: meta.isKindDefnPage
-          ? "kind-defn"
-          : meta.isTypeDefnPage
-            ? "type-defn"
-            : meta.isKindedPage && meta.isCategoryPage
-              ? "kinded > category"
-              : meta.isKindedPage && meta.isSubcategoryPage
-                ? "kinded > subcategory"
-                : meta.isKindedPage
-                  ? "kinded"
-                  : "none",
-        fm: page.file.frontmatter,
-        ...fmApi(p, path),
-        metadata: getMetadata(p)(page),
-        ...meta,
-      };
+		tags: Array.from(page.file.tags) as Tag[],
+		etags: Array.from(page.file.etags) as Tag[],
+		inlinks: Array.from(page.file.inlinks) as Link[],
+		outlinks: Array.from(page.file.outlinks) as Link[],
+		aliases: Array.from(page.file.aliases) as string[],
+		tasks: Array.from(page.file.tasks) as unknown[],
+		lists: Array.from(page.file.lists) as unknown[],
 
-      return info;
+		fm: page.file.frontmatter,
+
+		typeTag,
+		pageType,
+        kindTags,
+		current: page,
+        path,
+		kind,
+		kinds,
+		type: t,
+        types,
+		hasMultipleKinds: kindTags.length > 1,
+		metadata,
+
+        categories,
+        subcategories,
+		classifications,
+
+        ...hasApi,
+        ...isApi,
+
+		...frontmatterApi(p, path)
+
+	  };
+
+
+      return info as unknown as Returns<T>;
+    }
+    else {
+      return undefined as unknown as Returns<T>;
     }
   };
 }

@@ -4,22 +4,23 @@ import { getPath } from "~/api/getPath";
 import { isDvPage, isPageInfo } from "~/type-guards";
 
 /**
- * returns a `DvPage` from the page cache _or_ the page info cache (when available); otherwise
- * will run a query to get it and ensure that's placed in the page cache.
+ * returns a `DvPage` representation of a page.
  */
 export function getPage(p: KindModelPlugin) {
-  return (pg: PageReference | undefined): DvPage | undefined => {
+  return <T extends PageReference | undefined>(
+    pg: T,
+  ): T extends undefined ? undefined : DvPage => {
     if (isDvPage(pg)) {
-      return pg;
+      return pg as unknown as T extends undefined ? undefined : DvPage;
     }
 
     if (isPageInfo(pg)) {
-      return pg.current;
+      return pg.current as unknown as T extends undefined ? undefined : DvPage;
     }
 
     const path = getPath(pg);
     const page = path ? p.dv.page(path) : undefined;
 
-    return page;
+    return page as unknown as T extends undefined ? undefined : DvPage;
   };
 }

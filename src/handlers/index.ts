@@ -3,6 +3,7 @@ import type KindModelPlugin from "~/main";
 import type { ObsidianCodeblockEvent } from "~/types";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
+import { Children } from "./Children";
 import { IconPage } from "./IconPage";
 import { Journal } from "./Journal";
 import { Kind } from "./Kind";
@@ -35,6 +36,7 @@ export type QueryHandlerContext = [
 export function queryHandlers(p: KindModelPlugin) {
   return (ctx: ObsidianCodeblockEvent) => ([
     IconPage(p)(ctx),
+    Children(p)(ctx),
     BackLinks(p)(ctx),
     Book(p)(ctx),
     Kind(p)(ctx),
@@ -49,6 +51,7 @@ export function queryHandlers(p: KindModelPlugin) {
 export {
   BackLinks,
   Book,
+  Children,
   IconPage,
   Journal,
   Kind,

@@ -16,8 +16,9 @@ import {
   stripParenthesis,
   toPascalCase,
 } from "inferred-types";
-import { parseQueryParams } from "~/helpers/parseParams";
+import { createTable, parseQueryParams } from "~/helpers";
 import { getPageInfoBlock } from "~/page";
+import { getPageFromKindTag } from "~/page/getPageFromTag";
 import { isError } from "~/type-guards";
 
 function clientHandler(p: KindModelPlugin) {
@@ -72,12 +73,18 @@ function clientHandler(p: KindModelPlugin) {
                 ScalarParams<S>,
                 OptionParams<O>
               > = {
+                debug: p.debug,
+                info: p.info,
+                warn: p.warn,
+                error: p.error,
+                getPageFromKindTag: getPageFromKindTag(p),
                 plugin: p,
                 page,
                 source: evt.source,
                 ctx: evt.ctx,
                 re,
                 raw,
+                createTable: createTable(p, page, { handler, handlerParams: raw || "" }),
 
                 scalar,
                 options,

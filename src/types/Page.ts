@@ -1,5 +1,5 @@
 import type { Node, RenderableTreeNode } from "@markdoc/markdoc";
-import type { TypedFunction } from "inferred-types";
+import type { Contains, If, TypedFunction } from "inferred-types";
 import type { DateTime } from "luxon";
 import type { Component, MarkdownView } from "obsidian";
 import type { Classification } from "./Classification";
@@ -14,15 +14,23 @@ export type PageType =
   | "kinded"
   | "kinded > category"
   | "kinded > subcategory"
+  | "multi-kinded"
+  | "multi-kinded > category"
+  | "multi-kinded > subcategory"
   | "kind-defn"
   | "type-defn"
   | "none";
 
-export interface PageInfo {
+type IsSingular<T extends PageType> = Contains<
+	T, 
+	"kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn"
+>;
+
+export interface PageInfo<T extends PageType = PageType> {
   /**
-   * whether page is _kinded_, a _kind definition_, a _type definition_, or none of the above.
+   * a string `PageType` name which defines what type of page this is
    */
-  type: PageType;
+  pageType: T;
 
   /**
    * The obsidian hash value for this file/page
@@ -36,6 +44,43 @@ export interface PageInfo {
   name: string;
   /** the file extension */
   ext: string;
+
+  /**
+   * A list of all unique tags in the note. Subtags are broken 
+   * down by each level, so `#Tag/1/A` will be stored in the list 
+   * as `[#Tag, #Tag/1, #Tag/1/A]`.
+   */
+  tags: Tag[];
+  /**
+   * A list of all explicit tags in the note; unlike file.tags, does not 
+   * break subtags down, i.e. [#Tag/1/A]
+   */
+  etags: Tag[];
+  /**
+   * A list of all incoming links to this file, meaning all files that 
+   * contain a link to this file.
+   */
+  inlinks: Link[];
+  /**
+   * A list of all outgoing links from this file, meaning all links the 
+   * file contains.
+   */
+  outlinks: Link[];
+  /**
+   * A list of all aliases for the note as defined via the YAML frontmatter.
+   */
+  aliases: string[];
+
+  /**
+   * A list of all **tasks** (I.e., `- [ ] some task`) in this file.
+   */
+  tasks: unknown[];
+
+  /**
+   * A list of all list elements in the file (including tasks); these elements 
+   * are effectively tasks and can be rendered in task views.
+   */
+  lists: unknown[];
 
   /**
    * the frontmatter dictionary on the current page
@@ -157,16 +202,66 @@ export interface PageInfo {
   kindTags: string[];
 
   /**
-   * The _type_ tag or tags associated with the current page. A _type_
-   * is inherited by the _kind(s)_ which the page associated with.
+   * A tag of the type `#type/foo` on a page will result in this
+   * property being `foo`; otherwise it is undefined.
+   *
+   * Note: a page should _never_ have more than one tag starting
+   * with `#type/...` so we will drop any other's found after the first.
    */
-  typeTags: string[];
+  typeTag: string | undefined;
 
   /**
    * Reports on the current page's frontmatter property organized by
    * `PropertyType` (aka, "link", "list::link", "inline-svg")
    */
   metadata: Record<Partial<PropertyType>, string[]>;
+
+
+  /** 
+   * The `DvPage` of the current page's `Kind` type.
+   * 
+   * Note: if a page has multiple _kinds_ then this property will
+   * always be undefined.
+   */
+  kind: If<
+  		IsSingular<T>, 	
+		T extends "type-defn"
+			? undefined
+			: DvPage, 
+		undefined
+	>;
+
+  /**
+   * An array of `DvPage`'s which represent the Kind's this page
+   * can be.
+   */
+  kinds: If<IsSingular<T>, undefined, DvPage[] | undefined>;
+
+  /**
+   * A `DvPage` of the parent **Type** of this page.
+   *
+   * - if a kind definition page has:
+   * 	- a `#[TYPE]` type tag indicating it's part of a broader type
+   * 	- or has a link to a type defined in the `type` frontmatter property then it will
+   * - on a kinded page, a category page, or a subcategory page:
+   * 	- if there is a single "kind" then it will look for a type definition on that Kind Defiinition page.
+   * 	- if there are more than one "kind" this will always be undefined
+   */
+  type: DvPage | undefined;
+
+  /**
+   * A set of **Type** pages related to the current page.
+   *
+   * - if a type definition page:
+   * 	- always return undefined as a type can not have another type
+   * - if a kind definition page:
+   * 	- always undefined as a "kind" can only have one "type" it belongs to
+   * - on a kinded page, a category page, or a subcategory page:
+   * 	- if there is a single "kind" then it will be undefined
+   * 	- if there are more than one "kind" this will will resolve to all
+   * the Types associated due to it's multiple kinds
+   */
+  types: DvPage[] | undefined;
 }
 
 export type PageInfoBlock = PageInfo &
@@ -345,9 +440,8 @@ export interface MarkdownViewMeta {
 /**
  * **PageView**
  *
- * Is provided by the createPageView() utility when a `MarkdownView` is available.
- * It provides all the properties of the `PageInfo` data structure along with additional
- * endpoints which can only be provided when a "view" is underlying the
+ * An extension of the `PageInfo` definition. It includes all the `PageInfo`
+ * properties at the root and adds in `dom`, `component`, and `view` props.
  */
 export type PageView = PageInfo & {
   dom: PageDomElements;

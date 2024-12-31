@@ -5,6 +5,7 @@ import type {
   PageCategory,
   PageReference,
   PageSubcategory,
+  PageType,
   Tag,
 } from "~/types";
 import type { ClassificationApi } from "~/types/ClassificationApi";
@@ -15,6 +16,7 @@ import {
   stripLeading,
 } from "inferred-types";
 import { lookupKindByTag, lookupKnownKindTags } from "~/cache";
+import { asDisplayTag } from "~/helpers";
 import { getPage } from "~/page";
 import { isFileLink } from "~/type-guards";
 import { getPropertyType } from "./getPropertyType";
@@ -245,6 +247,32 @@ export function hasAnyCategoryProp(p: KindModelPlugin) {
 }
 
 /**
+ * provides all the `hasXXX` API surface for Classification API.
+ */
+export function hasProps(p: KindModelPlugin) {
+  return (page: PageReference) => ({
+    hasCategoryProp: hasCategoryProp(p)(page),
+    hasCategoriesProp: hasCategoriesProp(p)(page),
+    hasAnyCategoryProp: hasAnyCategoryProp(p)(page),
+    hasSubcategoryProp: hasSubcategoryProp(p)(page),
+    hasSubcategoriesProp: hasSubcategoriesProp(p)(page),
+    hasAnySubcategoryProp: hasAnySubcategoryProp(p)(page),
+
+    hasCategoryTag: hasCategoryTag(p)(page),
+    hasSubcategoryTag: hasSubcategoryTag(p)(page),
+    hasSubcategoryDefnTag: hasSubcategoryTagDefn(p)(page),
+
+    hasKindProp: hasKindProp(p)(page),
+    hasKindsProp: hasKindsProp(p)(page),
+    hasAnyKindProp: hasAnyKindProp(p)(page),
+
+    hasKindTag: hasKindTag(p)(page),
+    hasKindDefinitionTag: hasKindDefinitionTag(p)(page),
+    hasTypeDefinitionTag: hasTypeDefinitionTag(p)(page),
+  });
+}
+
+/**
  * tests whether a page is a "category page" which is ascertained by:
  *
  * 1. is there a tag definition for the category (e.g., `#software/category/foo`)
@@ -301,6 +329,73 @@ export function hasMultipleKinds(p: KindModelPlugin) {
 
     return false;
   };
+}
+
+/**
+ * returns all the `isXXX` properties of the classification API
+ */
+export function isProps(p: KindModelPlugin) {
+  return (page: PageReference) => ({
+    isCategoryPage: isCategoryPage(p)(page),
+    isSubcategoryPage: isSubcategoryPage(p)(page),
+    isKindDefnPage: isKindDefnPage(p)(page),
+    isTypeDefnPage: isTypeDefnPage(p)(page),
+    isKindedPage: isKindedPage(p)(page),
+  });
+}
+/**
+ * Gets the `PageType` for the given page.
+ */
+export function getPageType(p: KindModelPlugin) {
+  return (
+    page: PageReference,
+    isApi?: ReturnType<ReturnType<typeof isProps>>,
+  ): PageType => {
+    const api = isApi || isProps(p)(page);
+    const multi = !hasMultipleKinds(p)(page);
+
+    return api.isKindDefnPage
+      ? "kind-defn"
+        : api.isKindedPage && api.isCategoryPage && multi
+          ? "multi-kinded > category"
+          : api.isKindedPage && api.isCategoryPage && !multi
+            ? "kinded > category"
+            : api.isKindedPage && api.isSubcategoryPage && multi
+              ? "multi-kinded > subcategory"
+              : api.isKindedPage && api.isSubcategoryPage && !multi
+                ? "kinded > subcategory"
+                : api.isKindedPage
+                  ? multi ? "multi-kinded" : "kinded"
+				  : api.isTypeDefnPage
+				  	? "type-defn"
+					: "none";
+  };
+}
+
+/**
+ * Get's the type tag on the page if it exists:
+ *
+ * - `#type/ai` found on page, returns `ai`
+ * - no tags starting in `#type/` returns _undefined_
+ */
+export function getTypeTag(p: KindModelPlugin) {
+	return (pg: PageReference): string | undefined => {
+	const page = getPage(p)(pg);
+	if (page) {
+		const typeTags = page.file.tags.filter(t => t.startsWith(`#type/`));
+		if (typeTags.length > 1) {
+			p.warn(
+				`Too many Type tags!`, `The page "${page.file.name}" has ${typeTags.length} tags which start with ${asDisplayTag("type/")}`
+			);
+		}
+		const typeTag = typeTags.length > 0
+		? stripLeading(typeTags[0] as string, "#type/")
+		: undefined;
+		return typeTag;
+	}
+
+	return undefined;
+	};
 }
 
 /**
@@ -485,6 +580,12 @@ export function getCategories(p: KindModelPlugin) {
     const categories: PageCategory[] = [];
 
     if (page) {
+      if (isKindDefnPage(p)(page)) {
+        // Kind Definition Pages may well have categories
+        // but they are not defined in the Frontmatter
+        return [];
+      }
+
       const kindedCat = page.file.etags
         .filter(
           t =>
@@ -517,22 +618,24 @@ export function getCategories(p: KindModelPlugin) {
         ...kindedSubcat,
       ]);
       const missing: string[] = [];
-      const pages = Array.from<string>(tags)
-        .map((t) => {
-          const [kind, cat] = t.split("/");
-          const pgs = p.dv.pages(`${kind}/category/${cat}`);
-          if (pgs.length > 0) {
-            return [t, pgs[0] as DvPage] as [string, DvPage];
-          }
-          else {
-            missing.push(`${t} on page "${page.file.path}"`);
-            return undefined;
-          }
-        })
-        .filter(i => i) as [string, DvPage][];
+      p.info("tags");
+      //   const pages = Array.from<string>(tags)
+      //     .map((t) => {
+      //       const [kind, cat] = t.split("/");
+      //       const pgs = p.dv.pages(`${kind}/category/${cat}`);
+      //       if (pgs.length > 0) {
+      //         return [t, pgs[0] as DvPage] as [string, DvPage];
+      //       }
+      //       else {
+      //         missing.push(`${t} on page "${page.file.path}"`);
+      //         return undefined;
+      //       }
+      //     })
+      //     .filter(i => i) as [string, DvPage][];
+      const pages = [];
 
       if (missing.length > 0) {
-        p.warn("Some category tags didn't not map to a page", missing);
+        p.info(`Some category tags didn't not map to a page [${missing.length}]`, missing);
       }
 
       return pages.map(([t, pg]) => {
@@ -726,6 +829,13 @@ export function getKindTagsOfPage(p: KindModelPlugin) {
   return (pg: PageReference | undefined): string[] => {
     const page = getPage(p)(pg);
     if (page) {
+      if (isKindDefnPage(p)(page)) {
+        const kind = page.file.tags.find(i => i.startsWith(`#kind/`));
+        return kind
+          ? [kind.split("/")[1]]
+          : [];
+      }
+
       const kindedCat = page.file.etags
         .filter(
           t =>
@@ -747,15 +857,11 @@ export function getKindTagsOfPage(p: KindModelPlugin) {
             && !["category", "subcategory"].includes(t.split("/")[1]),
         )
         .map(i => i.split("/")[0]);
-      const kindDefn = page.file.etags
-        .filter(t => t.startsWith("#kind/"))
-        .map(i => i.split("/")[1]);
 
       const tags = new Set<string>([
         ...kinded,
         ...kindedCat,
         ...kindedSubcat,
-        ...kindDefn,
       ]);
 
       return Array.from<string>(tags).map(i => stripLeading(i, "#"));
