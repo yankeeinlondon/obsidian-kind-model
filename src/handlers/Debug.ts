@@ -3,7 +3,7 @@ import { asDisplayTag } from "~/helpers";
 import { isDvPage, isFuturePage } from "~/type-guards";
 import { createHandler } from "./createHandler";
 
-export const Page = createHandler("Page")
+export const Debug = createHandler("Debug")
   .scalar()
   .options()
   .handler(async (evt) => {

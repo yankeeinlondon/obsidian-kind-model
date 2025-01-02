@@ -4,7 +4,6 @@ import type KindModelPlugin from "~/main";
 import type { DvPage, FileLink, PageReference, ShowApi } from "~/types";
 import {
   ensureLeading,
-  isArray,
   isNumber,
   isString,
   isToday,
@@ -662,7 +661,6 @@ export function createFileLink(p: KindModelPlugin) {
     },
   ) => {
     const page = getPage(p)(pathLike);
-	p.info(`file link`, {pathLike, page, isPageInfo: isPageInfo(pathLike)})
 
     if (page) {
     //   return createVaultLink(p)(page, opt);

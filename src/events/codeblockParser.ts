@@ -4,9 +4,13 @@ import type { ObsidianCodeblockEvent } from "~/types";
 import type { Link } from "~/types/dataview_types";
 
 import { isObject } from "inferred-types";
+import { isError } from "~/type-guards";
+import { createPageView } from "~/page/createPageView";
+import { renderApi } from "~/api";
+import { ERROR_ICON } from "~/constants";
 
 export function isPageLink(v: unknown): v is Link {
-  return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
+	return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
 }
 
 /**
@@ -18,44 +22,66 @@ export function isPageLink(v: unknown): v is Link {
  * - if no handler is found, an error is raised in the UI
  */
 export function codeblockParser(p: KindModelPlugin) {
-  const callback = async (
-    source: string,
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext & Component,
-  ) => {
-    el.style.overflowX = "auto";
+	const callback = async (
+		source: string,
+		el: HTMLElement,
+		ctx: MarkdownPostProcessorContext & Component,
+	) => {
+		el.style.overflowX = "auto";
 
-    const event: ObsidianCodeblockEvent = { source, el, ctx };
-    const handlers = p.api.queryHandlers(event);
+		const event: ObsidianCodeblockEvent = { source, el, ctx };
+		const handlers = await p.api.queryHandlers(event);
 
-    const outcomes = await Promise.all(
-      handlers.map(i => i().then(r => [i.handlerName, r])),
-    );
-    p.info(`code block processed`, outcomes.reduce(
-      (acc, i) => ({
-        ...acc,
-        [i[0] as string]: i[1],
-      }),
-      {},
-    ));
+		type Outcome = [handler: string, status: boolean | Error];
 
-    if (!outcomes.some(i => i[1] === true)) {
-      // no handlers attempted to handle the event payload
-      // const handlerNames = handlers.map((i) => i.handlerName);
-      // const withError = handlers.find((i) => isError(i));
-      // page.callout(
-      // 	"error",
-      // 	`<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`, {
-      // content: [
-      // 	`Problems parsing parameters passed into the&nbsp;${fmt.bold(`${query}()`)}&nbsp;${fmt.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
-      // 	`<span><b>Error:</b> ${err?.message || String(err)}</span>`,
-      // 	desc
-      // ],
-      // icon: ERROR_ICON,
-      // toRight: fmt.inline_codeblock(` ${query}(${params_str?.trim() || ""}) `)
-    }
-  };
+		const outcomes: Outcome[] = await Promise.all(
+			handlers.map(i => i().then(r => [i.handlerName, r] as Outcome)),
+		);
 
-  const registration = p.registerMarkdownCodeBlockProcessor("km", callback);
-  registration.sortOrder = -100;
+		p.info(`code block processed`, outcomes.reduce(
+			(acc, i) => ({
+				...acc,
+				[i[0] as string]: i[1],
+			}),
+			{},
+		));
+
+		if (!outcomes.some(i => i[1] === true)) {
+			// no handlers attempted to handle the event payload
+			const handlerNames = outcomes.map((i) => i[0]);
+			const err = outcomes.find((i) => isError(i[1])) as Error | undefined;
+
+			const render = renderApi(p)(el, ctx.sourcePath);
+			const { format } = p.api
+
+			if (err) {
+				render.callout(
+					"error",
+					`<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`,
+					{
+						content: [
+							`Problems parsing parameters passed into the&nbsp;${format.bold(`${source}()`)}&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
+							`<span><b>Error:</b> ${err?.message || String(err)}</span>`
+						],
+						icon: ERROR_ICON,
+						toRight: format.inline_codeblock(`${source?.trim() || ""}) `)
+					}
+				);
+			} else {
+
+				render.callout(
+					"error",
+					`The KM query "${source}" is not recognized!`
+				)
+			}
+
+		}
+	}
+	// register callback
+	const registration = p.registerMarkdownCodeBlockProcessor(
+		"km", 
+		callback
+	);
+	registration.sortOrder = -100;
+
 }

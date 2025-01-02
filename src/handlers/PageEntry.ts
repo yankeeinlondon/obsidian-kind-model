@@ -10,6 +10,7 @@ import {
 import { MARKDOWN_PAGE_ICON } from "~/constants";
 import { find_in, isWikipediaUrl } from "~/type-guards";
 import { createHandler } from "./createHandler";
+import { getInternalLinks } from "~/api";
 
 /**
  * Renders the entry or beginning of a page (right under H1)
@@ -22,7 +23,7 @@ export const PageEntry = createHandler("PageEntry")
 
     const fmt = p.api.format;
     const api = p.api;
-    const current = page.current;
+    const {current, render} = page;
     // const {fmt, current} = dv;
 
     const banner_img = isUrl(page.current._banner)
@@ -41,25 +42,25 @@ export const PageEntry = createHandler("PageEntry")
     const hasDesc = isString(desc);
 
     const type = current.type
-      ? fmt.internalLink(page.page(current.type) as DvPage)
+      ? fmt.internalLink(render.page(current.type) as DvPage)
       : undefined;
 
     const kind = current.kind
-      ? fmt.internalLink(page.page(current.kind) as DvPage)
+      ? fmt.internalLink(render.page(current.kind) as DvPage)
       : undefined;
 
     const category = current.category
-      ? fmt.internalLink(page.page(current.category) as DvPage)
+      ? fmt.internalLink(render.page(current.category) as DvPage)
       : undefined;
 
     const categories = current.categories
       ? current.categories
-          .map(c => fmt.internalLink(page.page(c) as DvPage))
+          .map(c => fmt.internalLink(render.page(c) as DvPage))
           .join(fmt.light(" | ", { opacity: 0.5 }))
       : undefined;
 
     const subcategory = current.subcategory
-      ? fmt.internalLink(page.page(current.subcategory) as DvPage)
+      ? fmt.internalLink(render.page(current.subcategory) as DvPage)
       : undefined;
 
     const wiki = isWikipediaUrl(current.wiki)
@@ -68,9 +69,9 @@ export const PageEntry = createHandler("PageEntry")
         ? fmt.link("Wikipedia", current.wikipedia)
         : undefined;
 
-    const siblings = page.get_internal_links(page.current, "about", "related", "competitors", "partners").map(i => fmt.internalLink(i));
-    const parents = page.get_internal_links(page.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map(i => fmt.internalLink(i));
-    const children = page.get_internal_links(page.current, "child", "children", "son", "daughter").map(i => fmt.internalLink(i));
+    const siblings = getInternalLinks(p)(page.current, "about", "related", "competitors", "partners").map(i => fmt.internalLink(i));
+    const parents = getInternalLinks(p)(page.current, "parent", "parents", "father", "mother", "belongs_to", "member_of", "child_of").map(i => fmt.internalLink(i));
+    const children = getInternalLinks(p)(page.current, "child", "children", "son", "daughter").map(i => fmt.internalLink(i));
 
     /** page **does** have siblings but no parents or children */
     const siblingsNoOthers = siblings.length > 0 && parents.length === 0 && children.length === 0;
@@ -108,7 +109,7 @@ export const PageEntry = createHandler("PageEntry")
           : breadcrumbs
         : fmt.light("<i>no classification</i>");
 
-      await page.callout("example", title, {
+      await render.callout("example", title, {
         style: {
           mt: "0.55rem",
           mb: "1rem",
@@ -121,6 +122,8 @@ export const PageEntry = createHandler("PageEntry")
     }
 
     if (hasBanner) {
-      page.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
+      render.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
     }
+
+	return true;
   });
