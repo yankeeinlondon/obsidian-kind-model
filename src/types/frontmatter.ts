@@ -1,11 +1,11 @@
 import type { Tag } from "@markdoc/markdoc";
-import type { Date, Iso8601 } from "inferred-types";
+import type { Date, ExpandDictionary, Iso8601, Narrowable } from "inferred-types";
 import type { HEADING_LEVELS } from "../utils/Constants";
 import type { TupleToUnion } from "../utils/type-utils";
 import type { DataArray, Link } from "./dataview_types";
 import type { Relationship } from "./settings_types";
 
-export interface FmPropSuggestions {
+export type FmPropSuggestions = {
   "kind"?: Link | string | null;
   "kinds"?: (Link | string)[];
   "type"?: Link | string | null;
@@ -20,9 +20,11 @@ export interface FmPropSuggestions {
   "publish"?: boolean;
   "author"?: string;
   "title"?: string;
+  "desc"?: string;
+  "description"?: string;
   "exclude-from-search"?: boolean;
 
-  [key: string]: unknown;
+  [key: string]: Narrowable;
 }
 
 /**
@@ -44,10 +46,12 @@ export interface FmPropMetaSuggestions {
   _optional_props?: string[];
 }
 
-export type Frontmatter = {
-  [key: string]: unknown;
+export type Frontmatter = ExpandDictionary<
+{
+  [key: string]: Narrowable;
 } & FmPropSuggestions &
-FmPropMetaSuggestions;
+FmPropMetaSuggestions
+>;
 
 export interface CommonAttrs {
   /** found on code blocks */

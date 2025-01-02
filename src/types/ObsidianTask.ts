@@ -1,4 +1,4 @@
-import type { FileLink } from "./dataview_types";
+import type { DvPage, FileLink } from "./dataview_types";
 import type { Position } from "./Position";
 
 export interface ObsidianTask {
@@ -24,4 +24,8 @@ export interface ObsidianTask {
   tags: string[];
   task: boolean;
   text: string;
+}
+
+export interface ObsidianTaskWithLink extends ObsidianTask {
+	withLinks: DvPage[];
 }

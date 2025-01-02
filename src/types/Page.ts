@@ -8,8 +8,8 @@ import type { Frontmatter, HeadingTag } from "./frontmatter";
 
 import type { PageMetadataApi } from "./MetadataApi";
 import type { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
-import type { removeFmKey, RenderApi, setFmKey } from "~/api";
-import type { FuturePage, PageBlock, Tag } from "~/types";
+import type { FrontmatterApi, removeFmKey, RenderApi, setFmKey } from "~/api";
+import type { FuturePage, ObsidianTask, ObsidianTaskWithLink, PageBlock, Tag } from "~/types";
 
 export type PageType =
   | "kinded"
@@ -27,236 +27,250 @@ type IsSingular<T extends PageType> = Contains<
 	"kinded" | "kinded > category" | "kinded > subcategory" | "kind-defn" | "type-defn"
 >;
 
-export type PageInfo<T extends PageType = PageType> = {
-  /**
-   * a string `PageType` name which defines what type of page this is
-   */
-  pageType: T;
+export type PageInfo<
+	TType extends PageType = PageType,
+	TPath extends string = string
+> = {
+	__kind: "PageInfo";
+	/**
+	 * a string `PageType` name which defines what type of page this is
+	 */
+	pageType: TType;
 
-  /**
-   * The obsidian hash value for this file/page
-   */
-  _hash?: string;
+	/**
+	 * The obsidian hash value for this file/page
+	 */
+	_hash?: string;
 
-  /** the full path to the page */
-  path: string;
+	/** the full path to the page */
+	path: TPath;
 
-  /** the file's name */
-  name: string;
-  /** the file extension */
-  ext: string;
+	/** the file's name */
+	name: string;
+	/** the file extension */
+	ext: string;
 
-  /**
-   * A list of all unique tags in the note. Subtags are broken
-   * down by each level, so `#Tag/1/A` will be stored in the list
-   * as `[#Tag, #Tag/1, #Tag/1/A]`.
-   */
-  tags: Tag[];
-  /**
-   * A list of all explicit tags in the note; unlike file.tags, does not
-   * break subtags down, i.e. [#Tag/1/A]
-   */
-  etags: Tag[];
-  /**
-   * A list of all incoming links to this file, meaning all files that
-   * contain a link to this file.
-   */
-  inlinks: Link[];
-  /**
-   * A list of all outgoing links from this file, meaning all links the
-   * file contains.
-   */
-  outlinks: Link[];
-  /**
-   * A list of all aliases for the note as defined via the YAML frontmatter.
-   */
-  aliases: string[];
+	/**
+	 * A list of all unique tags in the note. Subtags are broken
+	 * down by each level, so `#Tag/1/A` will be stored in the list
+	 * as `[#Tag, #Tag/1, #Tag/1/A]`.
+	 */
+	tags: Tag[];
+	/**
+	 * A list of all explicit tags in the note; unlike file.tags, does not
+	 * break subtags down, i.e. [#Tag/1/A]
+	 */
+	etags: Tag[];
+	/**
+	 * A list of all incoming links to this file, meaning all files that
+	 * contain a link to this file.
+	 */
+	inlinks: Link[];
 
-  /**
-   * A list of all **tasks** (I.e., `- [ ] some task`) in this file.
-   */
-  tasks: unknown[];
+	/**
+	 * Inlinks which were received from Dataview but on inspection these
+	 * inlinks were part of a Task.
+	 */
+	inlinkTasks: ObsidianTask[];
 
-  /**
-   * A list of all list elements in the file (including tasks); these elements
-   * are effectively tasks and can be rendered in task views.
-   */
-  lists: unknown[];
+	/**
+	 * A list of all outgoing links from this file, meaning all links the
+	 * file contains.
+	 */
+	outlinks: Link[];
 
-  /**
-   * the frontmatter dictionary on the current page
-   *
-   * **Note:** this is just an alias to `.page.file.frontmatter` property.
-   */
-  fm: Frontmatter;
+	/**
+	 * A list of outgoing links from this file, excluding those links 
+	 * which are part of a Task.
+	 */
+	outlinksExcludingTasks: Link[];
+	/**
+	 * A list of all aliases for the note as defined via the YAML frontmatter.
+	 */
+	aliases: string[];
 
-  /**
-   * _set_ a key/value pair in the frontmatter of the current page
-   */
-  setFmKey: ReturnType<ReturnType<typeof setFmKey>>;
-  /**
-   * _remove_ a key/value pair in the frontmatter of the current page
-   */
-  removeFmKey: ReturnType<ReturnType<typeof removeFmKey>>;
+	/**
+	 * A list of all **tasks** (I.e., `- [ ] some task`) in this file.
+	 */
+	tasks: ObsidianTask[];
 
-  /**
-   * All of the categories which the current page belongs to.
-   *
-   * - this is drawn from both `category` and `categories` props as well
-   * - as any category tags found on the page
-   * - the `PageCategory` return type organizes the categories by the "kind" property
-   * which the category is a part of.
-   */
-  categories: PageCategory[];
+	/**
+	 * A list of tasks which include a markdown link to another page in
+	 * the vault.
+	 */
+	tasksWithLinks: ObsidianTaskWithLink[];
 
-  /**
-   * All of the subcategories which the current page belongs to.
-   */
-  subcategories: PageSubcategory[];
+	/**
+	 * A list of all list elements in the file (including tasks); these elements
+	 * are effectively tasks and can be rendered in task views.
+	 */
+	lists: unknown[];
 
-  /** boolean flag indicating whether page is a **category** page for a `kind` */
-  isCategoryPage: boolean;
+	/**
+	 * the frontmatter dictionary on the current page
+	 *
+	 * **Note:** this is just an alias to `.page.file.frontmatter` property.
+	 */
+	fm: Frontmatter;
 
-  isKindDefnPage: boolean;
-  isTypeDefnPage: boolean;
-  isKindedPage: boolean;
+	/**
+	 * All of the categories which the current page belongs to.
+	 *
+	 * - this is drawn from both `category` and `categories` props as well
+	 * - as any category tags found on the page
+	 * - the `PageCategory` return type organizes the categories by the "kind" property
+	 * which the category is a part of.
+	 */
+	categories: PageCategory[];
 
-  hasCategoryTag: boolean;
-  hasCategoryProp: boolean;
-  hasCategoriesProp: boolean;
+	/**
+	 * All of the subcategories which the current page belongs to.
+	 */
+	subcategories: PageSubcategory[];
 
-  /**
-   * **hasAnyCategoryProp**
-   *
-   * Boolean flag which indicates if _either_ the `category` or `categories`
-   * property is set.
-   *
-   * **Notes:**
-   * - a `categories` property which is empty or missing any vault links is not
-   * considered valid and ignored in check
-   * - a `category` which is not a vault link is also ignored
-   */
-  hasAnyCategoryProp: boolean;
+	/** boolean flag indicating whether page is a **category** page for a `kind` */
+	isCategoryPage: boolean;
 
-  /** Checks whether a _kinded page_ has a **subcategory** tag defined. */
-  hasSubcategoryTag: boolean;
+	isKindDefnPage: boolean;
+	isTypeDefnPage: boolean;
+	isKindedPage: boolean;
 
-  hasSubcategoryProp: boolean;
+	hasCategoryTag: boolean;
+	hasCategoryProp: boolean;
+	hasCategoriesProp: boolean;
 
-  /** boolean flag indicating whether page is a **subcategory** page for a `kind` */
-  isSubcategoryPage: boolean;
-  /**
-   * whether a kinded page has _multiple_ kinds in claims membership to
-   */
-  hasMultipleKinds: boolean;
+	/**
+	 * **hasAnyCategoryProp**
+	 *
+	 * Boolean flag which indicates if _either_ the `category` or `categories`
+	 * property is set.
+	 *
+	 * **Notes:**
+	 * - a `categories` property which is empty or missing any vault links is not
+	 * considered valid and ignored in check
+	 * - a `category` which is not a vault link is also ignored
+	 */
+	hasAnyCategoryProp: boolean;
 
-  /**
-   * whether the page has a tag which indicates the page's "kind"
-   * but is _not_ a Kind Definition tag.
-   */
-  hasKindTag: boolean;
+	/** Checks whether a _kinded page_ has a **subcategory** tag defined. */
+	hasSubcategoryTag: boolean;
 
-  hasKindDefinitionTag: boolean;
-  hasTypeDefinitionTag: boolean;
+	hasSubcategoryProp: boolean;
 
-  /**
-   * whether the page has a "kind" property which indicates the page's "kind";
-   * this is **any** "kind" property which links to another page inside
-   * the vault (aka, it should be a kind definition but for this flag it doesn't
-   * have to be).
-   *
-   * The one exception, is when the kind property points directly to the `kind` Kind definition
-   * as this indicates it is a
-   */
-  hasKindProp: boolean;
+	/** boolean flag indicating whether page is a **subcategory** page for a `kind` */
+	isSubcategoryPage: boolean;
+	/**
+	 * whether a kinded page has _multiple_ kinds in claims membership to
+	 */
+	hasMultipleKinds: boolean;
 
-  /**
-   * the Classifications of the page
-   */
-  classifications: Classification[];
+	/**
+	 * whether the page has a tag which indicates the page's "kind"
+	 * but is _not_ a Kind Definition tag.
+	 */
+	hasKindTag: boolean;
 
-  /**
-   * whether the page has a "kinds" property which indicates the page's "kind"
-   * (or multiple kinds); this looks for a list where at least one item in the
-   * list is a link to another page in the vault.
-   */
-  hasKindsProp: boolean;
+	hasKindDefinitionTag: boolean;
+	hasTypeDefinitionTag: boolean;
 
-  /**
-   * whether the page has either a `kind` _or_ `kinds` property of the appropriate
-   * type
-   */
-  hasAnyKindProp: boolean;
+	/**
+	 * whether the page has a "kind" property which indicates the page's "kind";
+	 * this is **any** "kind" property which links to another page inside
+	 * the vault (aka, it should be a kind definition but for this flag it doesn't
+	 * have to be).
+	 *
+	 * The one exception, is when the kind property points directly to the `kind` Kind definition
+	 * as this indicates it is a
+	 */
+	hasKindProp: boolean;
 
-  /**
-   * The `DvPage` API surface for the given page
-   */
-  current: DvPage;
+	/**
+	 * the Classifications of the page
+	 */
+	classifications: Classification[];
 
-  /**
-   * The _kind_ tag or tags associated with the current page:
-   *
-   * - `#kind/foobar` resolves to `[ "foobar" ]`
-   * - `#foobar/foo/bar` resolves to `[ "foobar" ]`
-   * - `#foobar/foo #product` resolves to `[ "foobar", "product" ]`
-   */
-  kindTags: string[];
+	/**
+	 * whether the page has a "kinds" property which indicates the page's "kind"
+	 * (or multiple kinds); this looks for a list where at least one item in the
+	 * list is a link to another page in the vault.
+	 */
+	hasKindsProp: boolean;
 
-  /**
-   * A tag of the type `#type/foo` on a page will result in this
-   * property being `foo`; otherwise it is undefined.
-   *
-   * Note: a page should _never_ have more than one tag starting
-   * with `#type/...` so we will drop any other's found after the first.
-   */
-  typeTag: string | undefined;
+	/**
+	 * whether the page has either a `kind` _or_ `kinds` property of the appropriate
+	 * type
+	 */
+	hasAnyKindProp: boolean;
 
-  /**
-   * The `DvPage` of the current page's `Kind` type.
-   *
-   * Note: if a page has multiple _kinds_ then this property will
-   * always be undefined.
-   */
-  kind: If<
-    IsSingular<T>,
-    T extends "type-defn"
-      ? undefined
-      : DvPage,
-    undefined
-  >;
+	/**
+	 * The `DvPage` API surface for the given page
+	 */
+	current: DvPage;
 
-  /**
-   * An array of `DvPage`'s which represent the Kind's this page
-   * can be.
-   */
-  kinds: If<IsSingular<T>, undefined, DvPage[] | undefined>;
+	/**
+	 * The _kind_ tag or tags associated with the current page:
+	 *
+	 * - `#kind/foobar` resolves to `[ "foobar" ]`
+	 * - `#foobar/foo/bar` resolves to `[ "foobar" ]`
+	 * - `#foobar/foo #product` resolves to `[ "foobar", "product" ]`
+	 */
+	kindTags: string[];
 
-  /**
-   * A `DvPage` of the parent **Type** of this page.
-   *
-   * - if a kind definition page has:
-   * 	- a `#[TYPE]` type tag indicating it's part of a broader type
-   * 	- or has a link to a type defined in the `type` frontmatter property then it will
-   * - on a kinded page, a category page, or a subcategory page:
-   * 	- if there is a single "kind" then it will look for a type definition on that Kind Defiinition page.
-   * 	- if there are more than one "kind" this will always be undefined
-   */
-  type: If<IsSingular<T>, DvPage | undefined, never>;
+	/**
+	 * A tag of the type `#type/foo` on a page will result in this
+	 * property being `foo`; otherwise it is undefined.
+	 *
+	 * Note: a page should _never_ have more than one tag starting
+	 * with `#type/...` so we will drop any other's found after the first.
+	 */
+	typeTag: string | undefined;
 
-  /**
-   * A set of **Type** pages related to the current page.
-   *
-   * - if a type definition page:
-   * 	- always return undefined as a type can not have another type
-   * - if a kind definition page:
-   * 	- always undefined as a "kind" can only have one "type" it belongs to
-   * - on a kinded page, a category page, or a subcategory page:
-   * 	- if there is a single "kind" then it will be undefined
-   * 	- if there are more than one "kind" this will will resolve to all
-   * the Types associated due to it's multiple kinds
-   */
-  types: If<IsSingular<T>, never, DvPage[]>;
-} & PageMetadataApi;
+	/**
+	 * The `DvPage` of the current page's `Kind` type.
+	 *
+	 * Note: if a page has multiple _kinds_ then this property will
+	 * always be undefined.
+	 */
+	kind: If<
+		IsSingular<TType>,
+		TType extends "type-defn"
+		? undefined
+		: DvPage,
+		undefined
+	>;
+
+	/**
+	 * An array of `DvPage`'s which represent the Kind's this page
+	 * can be.
+	 */
+	kinds: If<IsSingular<TType>, undefined, DvPage[] | undefined>;
+
+	/**
+	 * A `DvPage` of the parent **Type** of this page.
+	 *
+	 * - if a kind definition page has:
+	 * 	- a `#[TYPE]` type tag indicating it's part of a broader type
+	 * 	- or has a link to a type defined in the `type` frontmatter property then it will
+	 * - on a kinded page, a category page, or a subcategory page:
+	 * 	- if there is a single "kind" then it will look for a type definition on that Kind Defiinition page.
+	 * 	- if there are more than one "kind" this will always be undefined
+	 */
+	type: If<IsSingular<TType>, DvPage | undefined, never>;
+
+	/**
+	 * A set of **Type** pages related to the current page.
+	 *
+	 * - if a type definition page:
+	 * 	- always return undefined as a type can not have another type
+	 * - if a kind definition page:
+	 * 	- always undefined as a "kind" can only have one "type" it belongs to
+	 * - on a kinded page, a category page, or a subcategory page:
+	 * 	- if there is a single "kind" then it will be undefined
+	 * 	- if there are more than one "kind" this will will resolve to all
+	 * the Types associated due to it's multiple kinds
+	 */
+	types: If<IsSingular<TType>, never, DvPage[]>;
+} & PageMetadataApi & FrontmatterApi<TPath>;
 
 export type PageInfoBlock = PageInfo & {
   /** the content of the code block */

@@ -3,6 +3,9 @@ import type KindModelPlugin from "~/main";
 import type {
   DvPage,
   Frontmatter,
+  Link,
+  ObsidianTask,
+  ObsidianTaskWithLink,
   PageReference,
   PropertyType,
 } from "~/types";
@@ -30,7 +33,9 @@ import { getPropertyType } from "./getPropertyType";
 export function getFrontmatter(p: KindModelPlugin) {
   return (from: PageReference | Frontmatter): Frontmatter => {
     if (isDvPage(from)) {
-      return from.file.frontmatter;
+		let fm = { ...from } as Frontmatter;
+		delete fm.file;
+      return fm
     }
 
     if (isPageInfo(from)) {
@@ -233,7 +238,85 @@ export function tasksWithPageLink(p: KindModelPlugin) {
 		pg: PageReference
 	) => {
 		const page = getPage(p)(pg);
-		
+		const tasks = Array.from(page.file.tasks) as ObsidianTask[];
+		const tasksWithLink = tasks
+			.filter(i => i.text.includes("[[") && i.text.includes("]]"))
+			.map( t => {
+				const re = /\[\[(.+?)\]\]/g;
+				const links = Array.from(t.text.matchAll(re)).map(i => i[1]);
+				const pages = links.map(i => getPage(p)(i));
+				return {
+					...t,
+					withLinks: pages
+				} as ObsidianTaskWithLink
+			});
+		return tasksWithLink;
+	}
+}
+
+export function outlinksExcludingTasks(k: KindModelPlugin) {
+	return (
+		outlinks: Link[],
+		taskLinkPaths: string[]
+	) => {
+		const paths = new Map<string,number>();
+		for (const p of taskLinkPaths) {
+			if(paths.has(p)) {
+				paths.set(p, (paths.get(p) as number) + 1);
+			} else {
+				paths.set(p, 1);
+			}
+		}
+		const overlap = new Map<string, number>();
+		for (const link of outlinks.filter(i => paths.has(i.path))) {
+			if(overlap.has(link.path)) {
+				paths.set(link.path, (paths.get(link.path) as number) + 1);
+			} else {
+				paths.set(link.path, 1);
+			}
+		}
+		const links: Link[] = [];
+
+		for (const [path, quantity] of overlap) {
+			if(quantity > (paths.get(path) as number)) {
+				links.push(outlinks.find(i => i.path === path) as Link)
+			}
+		}
+
+		return [...links, ...outlinks.filter(i => !paths.has(i.path))];
+	}
+}
+
+export function splitInlinksFromTaskReferences(k: KindModelPlugin) {
+	return (
+		page: DvPage,
+		inlinks: Link[]
+	) => {
+		const path = page.file.path;
+		let validInlinks: Link[] = inlinks;
+		let validTasks: ObsidianTask[] = [];
+
+		const upstream = Array.from(
+			new Set(inlinks.map(i => i.path))
+		).map(
+			i => getPage(k)(i)
+		).filter(i => i) as DvPage[];
+
+		for (const pg of upstream) {
+			/** the tasks pointing to page */
+			const tasks = tasksWithPageLink(k)(pg).filter(
+				t => t.withLinks.some(l => l.file.path === path)
+			);
+			const outlinks = (Array.from(pg.file.outlinks) as Link[]).filter(l => l.path === path);
+
+			validTasks = [...validTasks,...tasks];
+
+			if(outlinks.length <= tasks.length) {
+				validInlinks = validInlinks.filter(i => i.path !== pg.file.path);
+			}
+		}
+
+		return [validTasks, validInlinks] as [ObsidianTask[], Link[]]
 	}
 }
 

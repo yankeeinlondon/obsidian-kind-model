@@ -18,7 +18,7 @@ export function on_file_modified(plugin: KindModelPlugin) {
 			switch(page.pageType) {
 				case "kind-defn":
 					if(
-						page.hasKindDefinitionTag && 
+						page.hasKindDefinitionTag && page.kindTags[0] &&
 						!plugin.kindTags.includes(page.kindTags[0])
 					) {
 						refreshTagLists(plugin);

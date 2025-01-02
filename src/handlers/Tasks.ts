@@ -2,8 +2,7 @@ import type { TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
 
 import { createHandler } from "./createHandler";
-import { dvApi } from "~/globals";
-import { DataArray, Link } from "~/types";
+import { DataArray, Link, ObsidianTask } from "~/types";
 
 export const COLUMN_CHOICES = [
   "when",
@@ -48,9 +47,9 @@ export interface BackLinkOptions {
 }
 
 /**
- * Renders back links for any obsidian page
+ * Renders any tasks on other pages which refernce the given page
  */
-export const BackLinks = createHandler("BackLinks")
+export const Tasks = createHandler("Tasks")
   .scalar()
   .options()
   .handler(async (evt) => {
@@ -59,21 +58,18 @@ export const BackLinks = createHandler("BackLinks")
     /**
      * all in-bound links for the page with the exception of self-references
      */
-    const links = (dv.array(page.inlinks) as DataArray<Link>)
-      .sort(p => p?.path)
-      .where(p => p.path !== page.path);
+    const tasks = (dv.array(page.inlinkTasks) as DataArray<ObsidianTask>)
+      .sort(p => p?.completed);
 
-    await createTable("Backlink", "Classification(s)", "Desc", "Links")(
+    await createTable("Desc", "Source Page")(
       i => [
-        i.createFileLink() || i.page.name,
-        i.showClassifications(),
-        i.showDesc(),
-        i.showLinks(),
+        i.showProp("text"),
+        i.showProp("link"),
       ],
       {
         renderWhenNoRecords: () => `- no back links found to this page`,
       },
-    )(links);
+    )(tasks);
 
     return true;
   });

@@ -1,6 +1,5 @@
 import type { PageInfo } from "~/types";
 import { isObject } from "inferred-types";
-import { isDvPage } from "./isDvPage";
 
 /**
  * Type guard which validates that the passed in `val` is of
@@ -9,7 +8,6 @@ import { isDvPage } from "./isDvPage";
 export function isPageInfo(val: unknown): val is PageInfo {
   return isObject(val)
     && "current" in val
-    && "categories" in val
-    && "type" in val
-    && isDvPage(val.current);
+    && "__kind" in val
+	&& val.__kind === "PageInfo"
 }

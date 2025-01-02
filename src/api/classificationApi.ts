@@ -307,9 +307,7 @@ export function hasMultipleKinds(p: KindModelPlugin) {
 
     if (page) {
       const tags = page.file.tags;
-      const kindTags = tags.filter(t =>
-        isKindTag(p)(stripLeading(t.split("/")[0], "#")),
-      );
+      const kindTags = getKindTagsOfPage(p)(page);
       return kindTags.length > 1;
     }
 
@@ -331,14 +329,21 @@ export function isProps(p: KindModelPlugin) {
 }
 /**
  * Gets the `PageType` for the given page.
+ * 
+ * - Note: the `isApi` and `kindTags` are for when you 
+ * already have this data and give this function a small
+ * performance advantage but are not required.
  */
 export function getPageType(p: KindModelPlugin) {
   return (
     page: PageReference,
     isApi?: ReturnType<ReturnType<typeof isProps>>,
+	kindTags?: string[]
   ): PageType => {
     const api = isApi || isProps(p)(page);
-    const multi = hasMultipleKinds(p)(page);
+    const multi = kindTags
+		? kindTags.length > 1
+		: hasMultipleKinds(p)(page);
 
     return api.isKindDefnPage
       ? "kind-defn"
@@ -350,8 +355,10 @@ export function getPageType(p: KindModelPlugin) {
             ? "multi-kinded > subcategory"
             : api.isKindedPage && api.isSubcategoryPage && multi
               ? "kinded > subcategory"
-              : api.isKindedPage
-                ? multi ? "multi-kinded" : "kinded"
+              : api.isKindedPage && multi
+                ? "multi-kinded" 
+				: api.isKindedPage
+				? "kinded"
                 : api.isTypeDefnPage
                   ? "type-defn"
                   : "none";

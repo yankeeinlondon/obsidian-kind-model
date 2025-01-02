@@ -7,6 +7,7 @@ import { Children } from "./Children";
 import { IconPage } from "./IconPage";
 import { Journal } from "./Journal";
 import { Kind } from "./Kind";
+import { Tasks } from "./Tasks";
 import { Page } from "./Page";
 import { PageEntry } from "./PageEntry";
 import { VideoGallery } from "./VideoGallery";
@@ -41,6 +42,7 @@ export function queryHandlers(p: KindModelPlugin) {
     Kind(p)(ctx),
     PageEntry(p)(ctx),
     Page(p)(ctx),
+	Tasks(p)(ctx),
     Journal(p)(ctx),
     VideoGallery(p)(ctx),
   ]);
@@ -49,6 +51,7 @@ export function queryHandlers(p: KindModelPlugin) {
 export {
   BackLinks,
   Book,
+  Tasks,
   Children,
   IconPage,
   Journal,

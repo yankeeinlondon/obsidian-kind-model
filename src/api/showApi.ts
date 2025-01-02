@@ -5,6 +5,7 @@ import type { DvPage, FileLink, PageReference, ShowApi } from "~/types";
 import {
   ensureLeading,
   isArray,
+  isNumber,
   isString,
   isToday,
   isTomorrow,
@@ -20,6 +21,8 @@ import {
   isDvPage,
   isFileLink,
   isLink,
+  isPageInfo,
+  isPageReference,
   isValidPath,
 } from "~/type-guards";
 import {
@@ -290,7 +293,9 @@ export function showLinks(p: KindModelPlugin) {
  * - the output is displayed in the column based on the _type_ of content found
  */
 export function showProp(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, ...props: [string, ...string[]]) => {
+  return <
+	T extends [string, ...string[]]
+  >(pg: PageReference | undefined, ...props: T): string => {
     const page = getPage(p)(pg);
 
     if (page) {
@@ -309,20 +314,11 @@ export function showProp(p: KindModelPlugin) {
       if (isKeyOf(page, found)) {
         const value = page[found];
         try {
-          return isString(value)
-            ? value
-            : isLink(value)
-              ? value
-              : isDvPage(value)
-                ? value?.file.link
-                : isArray(value)
-                  ? value
-                      .map(v =>
-                        isLink(v) ? v : isDvPage(v) ? v.file.link : "",
-                      )
-                      .filter(i => i)
-                      .join(", ")
-                  : "";
+          return isString(value) || isNumber(value)
+            ? String(value)
+            : isPageReference(value)
+				? createVaultLink(p)(value)
+                : "";
         }
         catch (e) {
           p.error(
@@ -665,10 +661,12 @@ export function createFileLink(p: KindModelPlugin) {
       before?: string;
     },
   ) => {
-    const page = p.api.getPage(pathLike);
+    const page = getPage(p)(pathLike);
+	p.info(`file link`, {pathLike, page, isPageInfo: isPageInfo(pathLike)})
 
     if (page) {
-      return createVaultLink(p)(page, opt);
+    //   return createVaultLink(p)(page, opt);
+		return htmlLink(p)(page,opt)
     }
 
     return "";

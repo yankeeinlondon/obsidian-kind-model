@@ -1,10 +1,14 @@
 import type { Editor, MarkdownView } from "obsidian";
 import type KindModelPlugin from "../main";
-import type { PageView } from "~/types";
+import type { DvPage, PageView } from "~/types";
 import { isEmpty, or } from "inferred-types";
 import { Notice } from "obsidian";
-import { createVaultLink } from "~/api";
+import { createVaultLink, getPath } from "~/api";
 import { getTypeDefinitionPageFromTag } from "~/page/getType";
+import { getKindPageByTag } from "~/page/getPageKinds";
+import { asMdLink } from "~/utils";
+import { isLink, isPageReference } from "~/type-guards";
+import { getPageFromKindTag } from "~/page";
 
 async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> {
   const {
@@ -29,7 +33,7 @@ async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> 
 
       await page.setFmKey(
         "type",
-        createVaultLink(p)(type),
+        type,
       );
 
       return true;
@@ -41,7 +45,7 @@ async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> 
 
         await page.setFmKey(
           "type",
-          createVaultLink(p)(typePage),
+          typePage,
         );
 
         return true;
@@ -50,6 +54,77 @@ async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> 
   }
 
   return false;
+}
+
+async function updateKind(p: KindModelPlugin, page: PageView): Promise<boolean> {
+	const {
+		current,
+		isKindDefnPage,
+		pageType,
+		kindTags
+	} = page;
+	let changed = false;
+
+	switch(pageType) {
+		case "multi-kinded":
+			const kinds = page.kinds && Array.isArray(page.kinds)
+				? page.kinds
+				: kindTags.map(i => getKindPageByTag(p)(i)) as DvPage[];
+			if( 
+				kinds.length > 0 && (!page.fm.kinds || page.fm.kinds?.length !== kinds.length)
+			) {
+				await page.setFmKey("kinds", asMdLink(p)(kinds));
+				new Notice(`Added "kinds" property"`)
+				changed = true;
+			}
+			if(page.fm.kind) {
+				await page.removeFmKey("kind")
+				new Notice(`Removed "kind" property"`);
+				changed = true;
+			}
+			break;
+		case "kinded":
+			const kind = page.kind && isPageReference(page.kind)
+				? page.kind
+				: kindTags.length > 0 
+					? getPageFromKindTag(p)(kindTags[0])
+					: undefined;
+			if (
+				kind && (
+					!page.fm.kind || (
+						isPageReference(page.fm.path) && 
+						kind.file.path !== getPath(page.fm.path)
+					)
+				)
+			) {
+				await page.setFmKey("kind", kind);
+				new Notice(`"kind" property set`);
+				changed = true;
+			}
+			break;
+		case "kind-defn": 
+			if (
+				p.kindDefn && page.kind && (!page.fm.kind || (
+					isLink(page.fm.kind) && page.fm.kind.path !== p.kindDefn.file.path
+				))
+			) {
+				await page.setFmKey("kind", p.kindDefn);
+				new Notice(`"kind" property set`);
+			}
+			break;
+		case "multi-kinded > category":
+			if(
+				page.kinds && (!page.fm.kinds || page.fm.kinds?.length !== page.kinds.length)
+			) {
+				await page.setFmKey("kinds", page.kinds);
+				new Notice(`"kinds" property set`);
+			}
+			if(page.fm.kind) {
+				await page.removeFmKey("kind");
+				new Notice (`"kind" property removed`);
+			}
+	}
+	return changed
 }
 
 export function update_kinded_page(p: KindModelPlugin) {
@@ -64,41 +139,42 @@ export function update_kinded_page(p: KindModelPlugin) {
       // types
       changes = or(changes, await updateType(p, page));
       // kinds
+	  changes = or(changes, await updateKind(p, page));
 
-      if (
-        page.hasKindTag
-        && page.kindTags.length === 1
-        && !page.hasKindProp
-      ) {
-        changes = true;
-        await page.setFmKey(
-          "kind",
-          createVaultLink(p)(page.classifications[0]?.kind),
-        );
-        new Notice("Set 'kind' property", 5000);
-        if (page.hasKindsProp) {
-          page.removeFmKey("kinds");
-          new Notice("Removed 'kinds' property'", 5000);
-        }
-      }
+    //   if (
+    //     page.hasKindTag
+    //     && page.kindTags.length === 1
+    //     && !page.hasKindProp
+    //   ) {
+    //     changes = true;
+    //     await page.setFmKey(
+    //       "kind",
+    //       createVaultLink(p)(page.classifications[0]?.kind),
+    //     );
+    //     new Notice("Set 'kind' property", 5000);
+    //     if (page.hasKindsProp) {
+    //       page.removeFmKey("kinds");
+    //       new Notice("Removed 'kinds' property'", 5000);
+    //     }
+    //   }
 
-      if (
-        page.hasKindTag
-        && page.kindTags.length > 1
-        && !page.hasKindsProp
-      ) {
-        changes = true;
-        await page.setFmKey(
-          "kinds",
-          page.classifications.map(c => createVaultLink(p)(c.kind),
-          ),
-        );
-        new Notice("Set 'kinds' property", 5000);
-        if (page.hasKindProp) {
-          page.removeFmKey("kind");
-          new Notice("Removed 'kind' property'", 5000);
-        }
-      }
+    //   if (
+    //     page.hasKindTag
+    //     && page.kindTags.length > 1
+    //     && !page.hasKindsProp
+    //   ) {
+    //     changes = true;
+    //     await page.setFmKey(
+    //       "kinds",
+    //       page.classifications.map(c => createVaultLink(p)(c.kind),
+    //       ),
+    //     );
+    //     new Notice("Set 'kinds' property", 5000);
+    //     if (page.hasKindProp) {
+    //       page.removeFmKey("kind");
+    //       new Notice("Removed 'kind' property'", 5000);
+    //     }
+    //   }
 
       if (
         page.hasCategoryTag
@@ -145,6 +221,7 @@ export function update_kinded_page(p: KindModelPlugin) {
         new Notice("No changes necessary for Update command", 4000);
       }
       else {
+        await page.sortFmKeys();
         new Notice("Updates completed");
       }
     }
