@@ -24,3 +24,4 @@ export * from "./style";
 export * from "./tags";
 export * from "./ui-builder_types";
 export * from "./video-types";
+export * from "./MdLink";

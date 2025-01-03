@@ -5,12 +5,14 @@ import { isFileLink } from "./isFileLink";
 import { isPageInfo } from "./isPageInfo";
 import { isTAbstractFile } from "./isTAbstractFile";
 import { isTFile } from "./isTFile";
+import { isFuturePage } from "./isFuturePage";
 
 export function isPageReference(v: unknown): v is PageReference {
   return (
     isDvPage(v)
     || isFileLink(v)
     || isPageInfo(v)
+	|| isFuturePage(v)
     || isTFile(v)
     || isTAbstractFile(v)
     || isString(v)

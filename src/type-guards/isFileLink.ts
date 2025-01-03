@@ -9,5 +9,9 @@ export function isFileLink(val: unknown): val is FileLink {
 }
 
 export function isLink<V>(val: V): val is V & Link {
-  return isObject(val) && "path" in val && isString(val.path) && "embed" in val && typeof val.embed === "boolean";
+  return isObject(val) && 
+  	"path" in val && 
+	isString(val.path) && 
+	"embed" in val && 
+	typeof val.embed === "boolean";
 }

@@ -2,9 +2,7 @@ import type KindModelPlugin from "~/main";
 import { TFile } from "obsidian";
 import { isPageReference } from "~/type-guards";
 import { asMdLink } from "~/utils";
-import { getFrontmatter } from "./metadataApi";
-import { fromKeyValue, toKeyValue } from "inferred-types";
-import { Frontmatter } from "~/types";
+import { toKeyValue } from "inferred-types";
 
 /**
  * higher order function which interacts with **Obsidian** to remove

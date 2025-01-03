@@ -25,3 +25,4 @@ export * from "./isTFile";
 export * from "./isValidPath";
 export * from "./isValidReference";
 export * from "./isWikipediaUrl";
+export * from "./isMdLink";

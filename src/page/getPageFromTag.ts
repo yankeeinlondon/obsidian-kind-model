@@ -1,6 +1,8 @@
 import type KindModelPlugin from "~/main";
-import type { DvPage, Tag } from "~/types";
+import type { DvPage, FuturePage, Tag } from "~/types";
 import { ensureLeading, isUndefined, stripLeading } from "inferred-types";
+import { obApp } from "~/globals";
+import { futurePage } from "~/helpers";
 
 /**
  * returns a `DvPage` representation of a page from a kind tag.
@@ -59,4 +61,20 @@ export function getPagesFromTag(p: KindModelPlugin) {
 
     return pages as T extends string ? DvPage[] : undefined;
   };
+}
+
+export function getPageFromTagOrFuturePage(p: KindModelPlugin) {
+	return <
+		T extends string | undefined
+	>(
+		tag: T,
+		name: string
+	): DvPage | FuturePage => {
+		const page = getPagesFromTag(p)(tag);
+		if (page && page.length > 0) {
+			return page[0] as DvPage;
+		}
+
+		return futurePage(p)(name);
+	}
 }

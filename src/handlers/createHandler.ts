@@ -42,7 +42,7 @@ function clientHandler(p: KindModelPlugin) {
 				const re = new RegExp(`${handler}\((.*)\)`);
 				let _event: HandlerEvent<THandler, ScalarParams<S>, OptionParams<O>>;
 				/** error template */
-				const err = createKindError(`InvalidQuery<${handler}>`, {
+				const err = createKindError(`Problem in Handler::${handler}`, {
 					evt,
 					page,
 				});
@@ -52,7 +52,6 @@ function clientHandler(p: KindModelPlugin) {
 					if (re.test(evt.source)) {
 						// we'll handle this event
 						try {
-
 
 							const raw = evt.source.match(re)
 								? stripParenthesis(
@@ -67,8 +66,9 @@ function clientHandler(p: KindModelPlugin) {
 								optionParams,
 							);
 							if (isError(result)) {
+								p.error(result)
 								// handle output
-								return result;
+								return err(`Problem parsing the parameters provided: ${handler}(${raw})! ${result.message}`);
 							}
 							else {
 								const [scalar, options] = result;

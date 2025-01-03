@@ -497,6 +497,7 @@ export type PageReference =
   | DvPage
   | TFile
   | TAbstractFile
+  | FuturePage
   | Link
   | string;
 
@@ -508,7 +509,7 @@ export interface PageCategory {
   /** the kind name of the category */
   kind: string;
   /** the `DvPage` for the category page */
-  page: DvPage;
+  page: DvPage | FuturePage;
   /** the **tag** to identify the category */
   category: string;
   /** the **tag**: `#[kind]/[cat]` */
@@ -540,4 +541,16 @@ export interface PageSubcategory {
    * `#[kind]/category/[cat]/[subcat]`
    */
   defnTag: `${Tag}/subcategory/${string}/${string}`;
+}
+
+
+
+export type KindClassification = {
+	kind: DvPage | FuturePage;
+	/** the kind tag without the leading `#` */
+	kindTag: string;
+	/** the fully qualified tag for defining this kind */
+	kindDefnTag: `#kind/${string}`;
+
+	categories: KindClassifiedCategory[];
 }

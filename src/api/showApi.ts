@@ -1,7 +1,7 @@
 import type { OptionalSpace, StripLeading } from "inferred-types";
 import type { FormattingApi } from "./formattingApi";
 import type KindModelPlugin from "~/main";
-import type { DvPage, FileLink, PageReference, ShowApi } from "~/types";
+import type { DvPage, FileLink, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import {
   ensureLeading,
   isNumber,
@@ -27,6 +27,7 @@ import {
 import {
   getCategories,
   getClassification,
+  getPageType,
   getSubcategories,
   isKindTag,
 } from "./classificationApi";
@@ -587,22 +588,64 @@ export function showSlider(_p: KindModelPlugin) {
   };
 }
 
+type ShowClassificationOptions = {
+	/**
+	 * Show the elements of the classification as
+	 * the tag name. This is set to `true` by default
+	 * to conserve space but you can change to `false`
+	 * to get the page name.
+	 * 
+	 * @default true
+	 */
+	asTag?: boolean;
+
+	/**
+	 * When this is set to `true` the full hierarchy is
+	 * shown for each call regardless if a `source` page
+	 * was included. Of course, if there is no source page
+	 * then fully qualified is always shown
+	 * 
+	 * @default false
+	 */
+	fullyQualified?: boolean;
+
+	/**
+	 * the _source page_ which is running the page, when this is
+	 * provided the classification chain starts there rather than
+	 * being fully qualified.
+	 */
+	source?: DvPage | PageInfo;
+}
+
+/**
+ * provide a hierarchical view as HTML links of the page's
+ * classification(s)
+ */
 export function showClassifications(p: KindModelPlugin) {
-  return (pg: PageReference): string => {
-    const classy = getClassification(p)(pg);
-    // const link = internalLink(p);
+  return (
+	pg: PageReference,
+	opt?: ShowClassificationOptions | undefined
+): string => {
+	/** classifications */
+    const classifications = isPageInfo(pg) 
+		? pg.classifications
+		: getClassification(p)(pg);
 
-    const opt = (pg: PageReference | undefined) => {
-      const page = p.api.getPage(pg);
-      if (page) {
-        return {
-          display: page.name,
-        } as MarkdownLinkOpt;
-      }
-      return {} as MarkdownLinkOpt;
-    };
+	/** path to source page */
+	const sourcePath = isDvPage(opt?.source) 
+		? opt.source.file.path 
+		: isPageInfo(opt?.source) ? opt.source.path : "";
+	/** page type of source, "none" if no source */
+	const sourceType: PageType =  isDvPage(opt?.source) 
+		? getPageType(p)(opt.source)
+		: isPageInfo(opt?.source)
+			? opt.source.pageType
+			: "none"
 
-    const classification = classy.map(i =>
+
+
+
+    const show = classifications.map(i =>
       [
         // KIND
         htmlLink(p)(i.kind),
@@ -629,7 +672,7 @@ export function showClassifications(p: KindModelPlugin) {
         .join(`<span style="opacity: 0.8"> &gt; </span>`),
     );
 
-    return classification.join("<br>");
+    return show.join("<br>");
   };
 }
 

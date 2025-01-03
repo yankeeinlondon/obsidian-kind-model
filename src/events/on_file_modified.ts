@@ -31,19 +31,19 @@ export function on_file_modified(plugin: KindModelPlugin) {
 					}
 					break;
 				case "type-defn":
-					new Notice(`type definition page modified`);
+					// new Notice(`type definition page modified`);
 					break;
 				case "kinded > category":
 				case "multi-kinded > category":
-					new Notice(`category page modified`);
+					// new Notice(`category page modified`);
 					break;
 				case "kinded > subcategory":
 				case "multi-kinded > subcategory":
-					new Notice(`subcategory page modified`);
+					// new Notice(`subcategory page modified`);
 					break;
 				case "kinded":
 				case "multi-kinded":
-					new Notice(`kinded page modified`)
+					// new Notice(`kinded page modified`)
 					break;
 			}
 

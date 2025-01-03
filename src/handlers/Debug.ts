@@ -47,7 +47,12 @@ export const Debug = createHandler("Debug")
       = page.categories?.length > 0
         ? [
             fmt.bold(`Category(s)`),
-            page.categories.map(i => `${i.page.file.name} ${asDisplayTag(i.category)}`).join(", "),
+            page.categories.map(i => i.page 
+				? isFuturePage(i.page)
+					? `Future( ${i.page.file.name} )`
+					: `${i.page.file.name} ${asDisplayTag(i.category)}`
+				: `page for ${asDisplayTag(i.category)} missing`
+			).join(", "),
           ]
         : undefined;
 
@@ -58,12 +63,12 @@ export const Debug = createHandler("Debug")
             page.subcategories.map(i => isDvPage(i.page)
               ? `${i.page.file.name} ${asDisplayTag(i.subcategory)}`
               : isFuturePage(i.page)
-                ? `Future( ${i.page.pageType}, ${asDisplayTag(i.page.tag)} )`
+                ? `Future( ${i.page.file.name} )`
                 : null as never,
             ).join(", "),
           ]
         : undefined;
-
+		
     const metadata
       = Object.keys(page.frontmatterTypes).length > 0
         ? [

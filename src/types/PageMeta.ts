@@ -2,6 +2,8 @@ import type { Replace, YouTubePageType } from "inferred-types";
 
 export type PageTypeUnits =
   | "string"
+  | "string_numeric"
+  | "string_creditCard"
   | "geo"
   | "geo_country"
   | "geo_zip"
@@ -15,8 +17,10 @@ export type PageTypeUnits =
   | "svg_inline"
   | "svg_url"
   | "link"
+  | "link_noAlias"
   | "link_image"
   | "link_md"
+  | "link_canvas"
   | "link_drawing"
   | "link_vector"
   | "link_undefined"

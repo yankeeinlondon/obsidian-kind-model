@@ -1,7 +1,9 @@
 import type { PageType } from "./Page";
 
 export interface FuturePage {
-  kind: "FuturePage";
-  pageType: PageType;
-  tag: string;
+  __kind: "FuturePage";
+  file: {
+	name: string;
+	path: undefined;
+  }
 }
