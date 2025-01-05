@@ -151,7 +151,7 @@ export function createTable<
 				records: T,
 			) => {
 				const recArr = Array.from(records) as PageReference[];
-				if (recArr.length === 0) {
+				if (recArr?.length === 0) {
 					plugin.debug(`empty table`);
 					if (opt?.renderWhenNoRecords) {
 						render.renderValue(opt.renderWhenNoRecords());

@@ -1,5 +1,5 @@
 import type { Node, RenderableTreeNode } from "@markdoc/markdoc";
-import type { Contains, If, TypedFunction } from "inferred-types";
+import type { As, Contains, If, IsGreaterThan, IsNumericLiteral, IsStringLiteral, IsUnion, StartsWith, TypedFunction } from "inferred-types";
 import type { DateTime } from "luxon";
 import type { Component, MarkdownView } from "obsidian";
 import type { Classification } from "./Classification";
@@ -28,14 +28,15 @@ type IsSingular<T extends PageType> = Contains<
 >;
 
 export type PageInfo<
-	TType extends PageType = PageType,
+	TKinds extends string[] = string[],
+	TPageType extends PageType = PageType,
 	TPath extends string = string
 > = {
 	__kind: "PageInfo";
 	/**
 	 * a string `PageType` name which defines what type of page this is
 	 */
-	pageType: TType;
+	pageType: TPageType;
 
 	/**
 	 * The obsidian hash value for this file/page
@@ -128,6 +129,11 @@ export type PageInfo<
 	 */
 	subcategories: PageSubcategory[];
 
+	/**
+	 * the Classifications of the page
+	 */
+	classifications: KindClassification[];
+
 	/** boolean flag indicating whether page is a **category** page for a `kind` */
 	isCategoryPage: boolean;
 
@@ -184,10 +190,7 @@ export type PageInfo<
 	 */
 	hasKindProp: boolean;
 
-	/**
-	 * the Classifications of the page
-	 */
-	classifications: Classification[];
+
 
 	/**
 	 * whether the page has a "kinds" property which indicates the page's "kind"
@@ -214,7 +217,7 @@ export type PageInfo<
 	 * - `#foobar/foo/bar` resolves to `[ "foobar" ]`
 	 * - `#foobar/foo #product` resolves to `[ "foobar", "product" ]`
 	 */
-	kindTags: string[];
+	kindTags: TKinds;
 
 	/**
 	 * A tag of the type `#type/foo` on a page will result in this
@@ -232,8 +235,8 @@ export type PageInfo<
 	 * always be undefined.
 	 */
 	kind: If<
-		IsSingular<TType>,
-		TType extends "type-defn"
+		IsSingular<TPageType>,
+		TPageType extends "type-defn"
 		? undefined
 		: DvPage,
 		undefined
@@ -243,7 +246,7 @@ export type PageInfo<
 	 * An array of `DvPage`'s which represent the Kind's this page
 	 * can be.
 	 */
-	kinds: If<IsSingular<TType>, undefined, DvPage[] | undefined>;
+	kinds: If<IsSingular<TPageType>, undefined, DvPage[] | undefined>;
 
 	/**
 	 * A `DvPage` of the parent **Type** of this page.
@@ -255,7 +258,7 @@ export type PageInfo<
 	 * 	- if there is a single "kind" then it will look for a type definition on that Kind Defiinition page.
 	 * 	- if there are more than one "kind" this will always be undefined
 	 */
-	type: If<IsSingular<TType>, DvPage | undefined, never>;
+	type: If<IsSingular<TPageType>, DvPage | undefined, never>;
 
 	/**
 	 * A set of **Type** pages related to the current page.
@@ -269,7 +272,7 @@ export type PageInfo<
 	 * 	- if there are more than one "kind" this will will resolve to all
 	 * the Types associated due to it's multiple kinds
 	 */
-	types: If<IsSingular<TType>, never, DvPage[]>;
+	types: If<IsSingular<TPageType>, never, DvPage[]>;
 } & PageMetadataApi & FrontmatterApi<TPath>;
 
 export type PageInfoBlock = PageInfo & {
@@ -543,14 +546,132 @@ export interface PageSubcategory {
   defnTag: `${Tag}/subcategory/${string}/${string}`;
 }
 
+export type KindClassifiedSubcategory<
+	TKind extends string = string,
+	TCat extends string = string,
+	TSubcat extends string = string,
+> = {
+	page: DvPage | FuturePage;
+	/** the subcategory tag without the leading `#` */
+	tag: string;
+	/** the fully qualified tag for _defining_ this subcategory */
+	defnTag: `#${TKind}/subcategory/${TCat}/${TSubcat}`;
+	/** the fully qualified tag for a kinded page who is a member */
+	kindedTag: `#${TKind}/${TCat}/${TSubcat}`;
+}
+
+export type KindClassifiedCategory<
+	TKind extends string = string,
+	TCat extends [string, string[]] = [string, [] | [string] | [string,string,...string[]]]
+> = {
+	/** the categories **Type** if defined at category level */
+	type?: DvPage | FuturePage | undefined;
+
+	/** the page (`DvPage` or `FuturePage`) representing the category */
+	page: DvPage | FuturePage;
+	/** the category tag without the leading `#` */
+	tag: TCat[0];
+	/** the fully qualifed tag for _defining_ this category */
+	defnTag: `#${TKind}/category/${TCat[0]}`;
+	/** the fully qualified tag for a kinded page who is a member */
+	kindedTag: `#${TKind}/${TCat[0]}`;
+
+  	/** 
+	 * the **subcategory** specification of this _category_
+	 */
+	subcategory: IsUnion<TCat[1]> extends true
+	? KindClassifiedSubcategory<TKind,TCat[0],As<TCat[1][0], string>> | undefined
+	: TCat[1]["length"] extends 1
+	? KindClassifiedSubcategory<TKind,TCat[0],As<TCat[1][0], string>>
+	: never;
 
 
-export type KindClassification = {
+	/** 
+	 * the **subcategories** specifications of this _category_
+	 */
+	subcategories: IsUnion<TCat> extends true
+		? {
+			[K in keyof TCat[1]]: KindClassifiedSubcategory<TKind,TCat[0],string>
+		}[] 
+		: TCat[1]["length"] extends 0
+			? never
+			: TCat[1]["length"] extends 1
+			? never
+			: IsStringLiteral<TCat[1]["length"]> extends true
+				? {
+					[K in keyof TCat[1]]: KindClassifiedSubcategory<TKind,TCat[0],string>
+				} extends KindClassifiedCategory<TKind, [TCat[0], [string, string, ...string[]]]>
+					? {
+						[K in keyof TCat[1]]: KindClassifiedSubcategory<TKind,TCat[0],string>
+					}
+					: never
+				: never;
+}
+
+export type CatSubcatTuple = [cat: string, subcats: string[]];
+
+export type CatNoSubcat = [cat: string, subcats: []];
+export type CatWithSubcat = [cat: string, subcats: [string]];
+export type CatWithMultiSubcat = [cat: string, subcats: [string, string, ...string[]]];
+
+export type UnionUnderlying = []
+| [(CatNoSubcat | CatWithSubcat | CatWithMultiSubcat)]
+| [
+	(CatNoSubcat | CatWithSubcat | CatWithMultiSubcat), 
+	(CatNoSubcat | CatWithSubcat | CatWithMultiSubcat), 
+	...(CatNoSubcat | CatWithSubcat | CatWithMultiSubcat)[]
+];
+
+/**
+ * The `classifications` property of a **PageInfo** or anyone calling 
+ * the `getClassifications()` utility will be returned an array of 
+ * these `KindClassification` structures for each **kind** that the page
+ * is representing. 
+ * 
+ * **Note:** based on on the cardinality of `categories` and/or `subcatetories`
+ * the properties on the interface will adjust to clarify the `1:1`, `1:0` or
+ * `1:M` relationship.
+ */
+export type KindClassification<
+	TKind extends string = string,
+	TUnderlying extends CatSubcatTuple[] = UnionUnderlying
+> = {
+	/**
+	 * The kind's **Type** (if defined)
+	 */
+	type: DvPage | FuturePage | undefined;
+
 	kind: DvPage | FuturePage;
 	/** the kind tag without the leading `#` */
-	kindTag: string;
+	kindTag: TKind;
 	/** the fully qualified tag for defining this kind */
-	kindDefnTag: `#kind/${string}`;
+	kindDefnTag: `#kind/${TKind}`;
 
-	categories: KindClassifiedCategory[];
+	underlying: TUnderlying;
+
+	/** 
+	 * The page's **category** specification
+	 */
+	category: TUnderlying["length"] extends 1
+		? KindClassifiedCategory<TKind, TUnderlying[0]>
+		: IsUnion<TUnderlying> extends true
+			? KindClassifiedCategory<TKind, TUnderlying[0]> | undefined
+			: never;
+
+	/**
+	 * the page's **categories** specifications
+	 */
+	categories: IsUnion<TUnderlying> extends true
+		? {
+			[K in keyof TUnderlying]: KindClassifiedCategory<TKind, TUnderlying[K]>[]
+		}[number] | undefined
+		: TUnderlying["length"] extends 0
+		? never
+		: TUnderlying["length"] extends 1
+		? never
+		: {
+			[K in keyof TUnderlying]: KindClassifiedCategory<TKind, TUnderlying[K]>[]
+		};
 }
+
+

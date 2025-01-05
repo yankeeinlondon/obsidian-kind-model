@@ -1,7 +1,7 @@
 import type KindModelPlugin from "~/main";
 import type { DvPage, FuturePage, PageReference } from "~/types";
 import { getPath } from "~/api/getPath";
-import { isDvPage, isFuturePage, isPageInfo } from "~/type-guards";
+import { isDvPage, isFuturePage, isPageInfo, isPageReference } from "~/type-guards";
 
 /**
  * returns a `DvPage` representation of a page.
@@ -27,4 +27,12 @@ export function getPage(p: KindModelPlugin) {
 
     return page as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage 
   };
+}
+
+/**
+ * Takes an array of items and returns those elements inside which were a PageReference
+ * into a `DvPage`.
+ */
+export function getPages(p: KindModelPlugin) {
+	return <T extends unknown[]>(arr: T) => arr.map(i => isPageReference(i) ? getPage(p)(i) : undefined).filter(i => i) as DvPage[]
 }

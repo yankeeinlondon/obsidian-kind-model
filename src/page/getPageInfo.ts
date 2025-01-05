@@ -6,6 +6,7 @@ import type {
   ObsidianTaskWithLink,
   PageInfo,
   PageReference,
+  PageType,
   Tag,
 } from "~/types";
 import {
@@ -29,11 +30,18 @@ import { getPage } from "./getPage";
 import { getPageKinds } from "./getPageKinds";
 import { getTypeForPage } from "./getType";
 
-type Returns<T extends PageReference> = T extends PageInfo
-  ? PageInfo
+type Returns<
+	T extends PageReference,
+	TKindTags extends string[], 
+	TPageType extends PageType, 
+	TPagePath extends string | undefined
+> = TPagePath extends string
+? T extends PageInfo<TKindTags,TPageType,TPagePath>
+  ? PageInfo<TKindTags,TPageType,TPagePath>
   : T extends DvPage
-    ? PageInfo
-    : PageInfo | undefined;
+    ? PageInfo<TKindTags,TPageType,TPagePath>
+    : PageInfo<TKindTags,TPageType,TPagePath> | undefined
+: undefined;
 
 /**
  * Converts any `PageReference` to a `PageInfo` type.
@@ -58,9 +66,9 @@ type Returns<T extends PageReference> = T extends PageInfo
  * characteristics.
  */
 export function getPageInfo(p: KindModelPlugin) {
-  return <T extends PageReference>(pg: T): Returns<T> => {
+  return <T extends PageReference>(pg: T) => {
     if (isPageInfo(pg)) {
-      return pg as unknown as Returns<T>;
+      return pg as unknown as Returns<T, typeof pg.kindTags, typeof pg.pageType, typeof pg.path>;
     }
 
     const path = getPath(pg);
@@ -96,7 +104,11 @@ export function getPageInfo(p: KindModelPlugin) {
       const pageType = getPageType(p)(page, isApi, kindTags);
       const hasMultipleKinds = kindTags.length > 1;
 
-      const info: Partial<PageInfo> = {
+	  type TKindTags = typeof kindTags;
+	  type TPageType = typeof pageType;
+	  type TPagePath = typeof page.file.path;
+
+      const info: Partial<PageInfo<TKindTags, TPageType, TPagePath>> = {
         __kind: "PageInfo",
         name: page.file.name,
         ext: page.file.ext,
@@ -155,9 +167,9 @@ export function getPageInfo(p: KindModelPlugin) {
         delete info.types;
       }
 
-      return info as unknown as Returns<T>;
+      return info as unknown as Returns<T, TKindTags, TPageType, TPagePath>;
     } else {
-      return undefined as unknown as Returns<T>;
+      return undefined as unknown as Returns<T, [], PageType, undefined>;
     }
   };
 }

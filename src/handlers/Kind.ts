@@ -2,55 +2,47 @@ import { asDisplayTag } from "~/helpers";
 import { createHandler } from "./createHandler";
 
 export const Kind = createHandler("Kind")
-  .scalar(
-    "kind AS opt(string)",
-    "category AS opt(string)",
-    "subcategory AS opt(string)",
-  )
-  .options({
-    show: "array(string)",
-    hide: "array(string)",
-  })
-  .handler(async (evt) => {
-    const { createTable, page, render, getPageFromKindTag, dv } = evt;
+	.scalar(
+		"kind AS opt(string)",
+		"category AS opt(string)",
+		"subcategory AS opt(string)",
+	)
+	.options({
+		show: "array(string)",
+		hide: "array(string)",
+	})
+	.handler(async (evt) => {
+		const { createTable, page, render, getPageFromKindTag, dv, report } = evt;
 
-    const tbl = createTable("Page", "Classification", "Description", "Links")(
-      r => [
-        r.createFileLink(),
-        r.showClassifications(),
-        r.showDesc(),
-        r.showLinks(),
-      ],
-      { hideColumnIfEmpty: ["Description", "Links"] },
-    );
+		const tbl = createTable("Page", "Classification", "Description", "Links")(
+			r => [
+				r.createFileLink(),
+				r.showClassifications(),
+				r.showDesc(),
+				r.showLinks(),
+			],
+			{ hideColumnIfEmpty: ["Description", "Links"] },
+		);
 
-    const { kind, category, subcategory } = evt.scalar;
-    const kindTags = kind
-      ? [kind]
-      : page.kindTags;
+		const { kind, category, subcategory } = evt.scalar;
+		if (!kind) {
+			return report("No kind tag was specified in the Kind()")
+		}
 
-    // Iterate over Kinds
-    for (const kind of kindTags) {
-      if (kindTags.length > 1) {
-        const kindPage = getPageFromKindTag(kind);
-        if (kindPage) {
-          render.renderValue(`### ${kindPage.file.name} kind`);
-        }
-        else {
-          render.renderValue(`### ${asDisplayTag(kind)} kind`);
-        }
-      }
 
-      /** query results */
-      const pages = subcategory
-        ? dv.pages(`#${kind}/${category}/${subcategory}`)
-            .sort(c => [c.category, c.subcategory])
-        : category
-          ? dv.pages(`#${kind}/${category}`).sort(c => c.category)
-          : dv.pages(`#${kind}`).sort(c => c.file.name);
+		const queryParts: string[] = [`#${kind}`];
+		if (category) {
+			queryParts.push(`/${category}`);
+		}
+		if (category && subcategory) {
+			queryParts.push(`/${subcategory}`)
+		}
 
-      tbl(pages);
-    }
+		const pages = dv.pages(queryParts.join(""))
+			.sort(i => [i.kind, i.category, i.subcategory])
 
-    return true;
-  });
+		await tbl(pages);
+
+
+		return true;
+	});

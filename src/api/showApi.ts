@@ -647,26 +647,25 @@ export function showClassifications(p: KindModelPlugin) {
 
     const show = classifications.map(i =>
       [
+		// TYPE
+		i.type ? htmlLink(p)(i.type) : undefined,
         // KIND
         htmlLink(p)(i.kind),
-        // CATEGORY
-        i.categories.length === 0
-          ? ""
-          : i.categories && i.categories.length === 1
-            ? htmlLink(p)(
-                i.categories[0].category,
-                opt(p.api.format.as_tag(i.categories[0].category)),
-              )
-            : `<span style="opacity: 0.8">[ </span>${i.categories
-              .map(ii =>
-                htmlLink(p)(
-                  ii.category,
-                  opt(p.api.format.as_tag(ii.category)),
-                ),
-              )
-              .join(",&nbsp;")}<span style="opacity: 0.8"> ]</span>`,
-        // SUBCATEGORY
-        i.subcategory ? htmlLink(p)(i?.subcategory?.subcategory) : "",
+        // CATEGORIES
+		i.category 
+			? htmlLink(p)(i.category.page)
+			: i?.categories
+				? i.categories.map(
+					c => c?.subcategory
+						? htmlLink(p)(c.page) + `<span style="opacity: 0.8"> &gt; </span>` + htmlLink(p)(c.subcategory.page)
+						: c?.subcategories
+							? htmlLink(p)(c.page) + c.subcategories.map(
+								s => htmlLink(p)(s.page)
+							).join(` + `)
+							: htmlLink(p)(c.page)
+				)
+				: undefined
+        
       ]
         .filter(i => i && i !== "")
         .join(`<span style="opacity: 0.8"> &gt; </span>`),

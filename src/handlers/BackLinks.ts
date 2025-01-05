@@ -54,7 +54,7 @@ export const BackLinks = createHandler("BackLinks")
   .scalar()
   .options()
   .handler(async (evt) => {
-    const { plugin: p, page, createTable, dv } = evt;
+    const { plugin: p, page, createTable, dv, report } = evt;
 
     /**
      * all in-bound links for the page with the exception of self-references

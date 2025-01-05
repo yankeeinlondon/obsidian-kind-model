@@ -6,8 +6,9 @@ import type {
   ScalarDefn,
   ScalarParams,
 } from "~/types";
-import { createKindError } from "@yankeeinlondon/kind-error";
 import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
+import { InvalidParameters, ParsingError } from "~/errors";
+import { DefaultKindError } from "@yankeeinlondon/kind-error";
 
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
@@ -18,17 +19,17 @@ export function parseQueryParams(_p: KindModelPlugin) {
     scalar: TScalar,
     /** the options hash definition */
     options: TOpt,
-  ): Error | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
+  ): DefaultKindError | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
     /** the quantity of scalars that MUST be in place */
     const requiredScalar = scalar.filter(i => !i.contains("opt(")).length;
 
-    const invalid = createKindError(`InvalidQuery<${name}>`, {
+    const invalid = InvalidParameters.rebase({
       raw,
       scalar,
       options,
       requiredScalar,
     });
-    const parsingErr = createKindError(`ParsingError<${name}>`, {
+    const parsingErr = ParsingError.rebase({
       raw,
       scalar,
       options,
@@ -74,9 +75,10 @@ export function parseQueryParams(_p: KindModelPlugin) {
       );
 
       if (!optionsInTerminalPosition) {
-        return invalid(
+        const err = invalid(
           `Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`,
         );
+		return err;
       }
 
       if (notEnoughScalarParams) {

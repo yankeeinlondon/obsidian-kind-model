@@ -10,7 +10,7 @@ import type {
 	ScalarDefn,
 	ScalarParams,
 } from "~/types";
-import { createKindError } from "@yankeeinlondon/kind-error";
+import { isKindError } from "@yankeeinlondon/kind-error";
 import {
 	createFnWithProps,
 	stripParenthesis,
@@ -20,6 +20,7 @@ import { renderApi } from "~/api";
 import { createTable, parseQueryParams } from "~/helpers";
 import { getPageInfoBlock } from "~/page";
 import { getPageFromKindTag } from "~/page/getPageFromTag";
+import { HandlerError } from "~/errors";
 import { isError } from "~/type-guards";
 
 function clientHandler(p: KindModelPlugin) {
@@ -42,9 +43,11 @@ function clientHandler(p: KindModelPlugin) {
 				const re = new RegExp(`${handler}\((.*)\)`);
 				let _event: HandlerEvent<THandler, ScalarParams<S>, OptionParams<O>>;
 				/** error template */
-				const err = createKindError(`Problem in Handler::${handler}`, {
+				let err = HandlerError.rebase({
 					evt,
 					page,
+					handler,
+					workingOn: "initialization"
 				});
 
 				if (page) {
@@ -66,11 +69,8 @@ function clientHandler(p: KindModelPlugin) {
 								optionParams,
 							);
 							if (isError(result)) {
-								p.error(result)
-								// handle output
-								return err(`Problem parsing the parameters provided: ${handler}(${raw})! ${result.message}`);
-							}
-							else {
+								return result
+							} else {
 								const [scalar, options] = result;
 
 								const event: HandlerEvent<
@@ -82,6 +82,7 @@ function clientHandler(p: KindModelPlugin) {
 									info: p.info,
 									warn: p.warn,
 									error: p.error,
+									report: err,
 									getPageFromKindTag: getPageFromKindTag(p),
 									plugin: p,
 									page,
@@ -112,7 +113,7 @@ function clientHandler(p: KindModelPlugin) {
 								return true;
 							}
 						} catch (e) {
-							return err(e.msg, { e})
+							return err.proxy(e);
 						}
 					}
 					else {

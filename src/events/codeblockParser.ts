@@ -30,15 +30,18 @@ export function codeblockParser(p: KindModelPlugin) {
 		el.style.overflowX = "auto";
 
 		const event: ObsidianCodeblockEvent = { source, el, ctx };
-		const handlers = await p.api.queryHandlers(event);
+		const handlers = p.api.queryHandlers(event);
 
 		type Outcome = [handler: string, status: boolean | Error];
+		const outcomes: Outcome[] = [];
 
-		const outcomes: Outcome[] = await Promise.all(
-			handlers.map(i => i().then(r => [i.handlerName, r] as Outcome)),
-		);
+		for (const h of handlers) {
+			const outcome = await h();
+			const handler = h.handlerName;
+			outcomes.push([handler, outcome]);
+		}
 
-		p.info(`code block processed`, outcomes.reduce(
+		p.info(`code block processed against handlers`, outcomes.reduce(
 			(acc, i) => ({
 				...acc,
 				[i[0] as string]: i[1],
@@ -52,21 +55,22 @@ export function codeblockParser(p: KindModelPlugin) {
 			const err = outcomes.find((i) => isError(i[1])) as Error | undefined;
 
 			const render = renderApi(p)(el, ctx.sourcePath);
-			const { format } = p.api
+			const { format } = p.api;
 
 			if (err) {
 				render.callout(
 					"error",
-					`<div style="display:flex; flex-direction: row"><span style="display: flex">Invalid</span>&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`,
+					`<div style="display:flex; flex-direction: row"><span style="display: flex">Error running </span>&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`,
 					{
 						content: [
-							`Problems parsing parameters passed into the&nbsp;${format.bold(`${source}()`)}&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
+							`Problems parsing parameters passed into the&nbsp;${format.bold(`${source}`)}&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
 							`<span><b>Error:</b> ${err?.message || String(err)}</span>`
 						],
 						icon: ERROR_ICON,
-						toRight: format.inline_codeblock(`${source?.trim() || ""}) `)
+						toRight: format.inline_codeblock(`${source?.trim() || ""} `)
 					}
 				);
+				p.error(err);
 			} else {
 
 				render.callout(
