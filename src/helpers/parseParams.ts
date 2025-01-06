@@ -1,4 +1,3 @@
-import type { Dictionary } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
   OptionParams,
@@ -46,7 +45,7 @@ export function parseQueryParams(_p: KindModelPlugin) {
 
       if (requiredScalar > 0) {
         return invalid(
-          `The ${name} handler expects at least ${requiredScalar} scalar parameters and no parameters were passed into the handler and none were provided!`,
+          `The ${name} handler expects at least ${requiredScalar} scalar parameter(s) and no parameters were provided!`,
         );
       }
 
@@ -65,7 +64,7 @@ export function parseQueryParams(_p: KindModelPlugin) {
        * is in the last position of parameters passed in.
        */
       const optionsInTerminalPosition
-        = optionsPosition === -1 ? true : optionsPosition === length - 1;
+        = optionsPosition === -1 ? true : optionsPosition === parsed.length-1 ;
 
       const scalarParams
         = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
@@ -83,7 +82,7 @@ export function parseQueryParams(_p: KindModelPlugin) {
 
       if (notEnoughScalarParams) {
         return invalid(
-          `the ${name} query handler expects at least ${requiredScalar} scalar parameters to be passed in when using it!`,
+          `the ${name} query handler expects at least ${requiredScalar} scalar parameters to be passed in, only ${scalarParams.length} were received!`,
         );
       }
 
@@ -92,14 +91,11 @@ export function parseQueryParams(_p: KindModelPlugin) {
           i => !i.includes("opt("),
         );
 
-        const opts = parsed[optionsPosition] as Dictionary;
-        for (const key of requiredOpts) {
-          if (!(key in opts)) {
-            return invalid(
-              `The "${name}" query parser received an options hash but did not provide all of the required properties!`,
-            );
-          }
-        }
+		if (optionsPosition < parsed.length -1) {
+			return invalid(
+				`The "${name}" query parser received an options hash but did not provide all of the required scalar properties [${requiredScalar}]!`, { scalarProvided: scalarParams.length, optionsPosition, parsed}
+			  );
+		}
       }
 
       const scalar: Record<string, any> = {};

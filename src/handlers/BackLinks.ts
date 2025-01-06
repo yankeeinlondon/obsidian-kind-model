@@ -1,9 +1,10 @@
-import type { TupleToUnion } from "inferred-types";
+import { stripLeading, type TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
 
 import { createHandler } from "./createHandler";
-import { dvApi } from "~/globals";
 import { DataArray, Link } from "~/types";
+import { getPage } from "~/page";
+import KindModelPlugin from "~/main";
 
 export const COLUMN_CHOICES = [
   "when",
@@ -47,31 +48,61 @@ export interface BackLinkOptions {
   sortOrder?: "ASC" | "DESC";
 }
 
+function keepPage(p: KindModelPlugin) {
+	return (l: Link, ignore: string[]) => {
+		const page = getPage(p)(l);
+
+		if(page) {
+			const tagSegments = new Set(
+				page.file.tags.flatMap(t => t.split("/").map(i => stripLeading(i, "#")))
+			);
+			const ignoreTags = ignore.flatMap(t => t.split("/").map(i => stripLeading(i, "#")));
+
+			return ignoreTags.every(t => !tagSegments.has(t))
+		}
+
+		return false;
+	}
+}
+
 /**
  * Renders back links for any obsidian page
  */
 export const BackLinks = createHandler("BackLinks")
   .scalar()
-  .options()
+  .options({
+	ignoreTags: "array(string)"
+  })
   .handler(async (evt) => {
-    const { plugin: p, page, createTable, dv, report } = evt;
+    const { plugin: p, page, createTable, dv, options } = evt;
+
+	const { inline_codeblock, bulletPoints, light } = p.api.format;
+
+	const whereTags = (l: Link) => Array.isArray(options?.ignoreTags)
+		? keepPage(p)(l, options?.ignoreTags)
+		: true;
+
+	const exception = options?.ignoreTags
+		? light(` <i style="display:flex">(except for those pages tagged with &nbsp;${options.ignoreTags.map(inline_codeblock).join(", ")}&nbsp;)</i>`)
+		: "";
 
     /**
      * all in-bound links for the page with the exception of self-references
      */
     const links = (dv.array(page.inlinks) as DataArray<Link>)
       .sort(p => p?.path)
-      .where(p => p.path !== page.path);
+      .where(p => p.path !== page.path && whereTags(p));
 
     await createTable("Backlink", "Classification(s)", "Desc", "Links")(
       i => [
-        i.createFileLink() || i.page.name,
+        i.createFileLink(),
         i.showClassifications(),
         i.showDesc(),
         i.showLinks(),
       ],
       {
-        renderWhenNoRecords: () => `- no back links found to this page`,
+        renderWhenNoRecords: () => bulletPoints(`no back links found to this page ${exception}`),
+		hideColumnIfEmpty: ["Links", "Desc"]
       },
     )(links);
 

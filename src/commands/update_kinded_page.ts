@@ -138,9 +138,7 @@ async function updateKind(p: KindModelPlugin, page: PageView): Promise<boolean> 
 
 async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boolean> {
 	const {
-		current,
-		pageType,
-		kindTags
+		pageType
 	} = page;
 	let changed = false;
 
@@ -148,11 +146,14 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
 		case "kinded > subcategory":
 		case "kinded":
 			if (
-				page.categories.length > 0 && (
-					!page.fm.category || (isLink(page.fm.category) && page.fm.category.path !== page.path)
-				)
+				page.categories.length > 1
 			) {
-				await page.setFmKey("category", page.categories[0].page);
+				await page.setFmKey("categories", page.categories.map(
+					i => asMdLink(p)(i.page)
+				));
+				if(page.fm.category) {
+					await page.removeFmKey("category");
+				}
 				return true;
 			}
 			break;

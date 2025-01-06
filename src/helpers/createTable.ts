@@ -2,12 +2,14 @@ import type {
 	AnyObject,
 	Contains,
 	Scalar,
+	Suggest,
 	Tuple,
 	TypedFunction,
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 import {
+	createFnWithProps,
 	isDefined,
 	keysOf,
 } from "inferred-types";
@@ -50,12 +52,12 @@ export interface TableOpt<
 	/**
 	 * specify columns which should be removed from table if all records are empty
 	 */
-	hideColumnIfEmpty?: readonly (TCols[number])[] | ["all"];
+	hideColumnIfEmpty?: readonly Suggest<[...TCols, "all"]>[];
 	/**
 	 * specify a render value for a _column_ (or set of columns) to display
 	 * when a given row/page doesn't have a value for this column.
 	 */
-	valueIfEmpty?: <THideEmpty extends readonly (TCols[number])[] | ["all"]>(
+	valueIfEmpty?: <THideEmpty extends readonly Suggest<[...TCols, "all"]>[]>(
 		...hide: THideEmpty
 	) => TCols[] | ["all"];
 	/**
@@ -85,6 +87,51 @@ export interface TableOpt<
 	predicate?: string;
 }
 
+function removeColumns(
+	cols: string[], 
+	results: string[][], 
+	postRemoval: Set<string>
+): [ string[], string[][]] {
+    const indicesToRemove: number[] = [];
+
+    // Find the indices of the columns to be removed
+    for (const c of postRemoval) {
+        const idx = cols.findIndex(i => i.toLowerCase() === c.toLowerCase());
+        if (idx !== -1) {
+            indicesToRemove.push(idx);
+        }
+    }
+
+    // Sort the indices in descending order to avoid issues with splicing
+    indicesToRemove.sort((a, b) => b - a);
+
+    for (const row of results) {
+        for (const idx of indicesToRemove) {
+            row.splice(idx, 1);
+        }
+    }
+
+	for (const idx of indicesToRemove) {
+        cols.splice(idx, 1);
+    }
+
+	return [
+		cols, 
+		results
+	];
+}
+
+function colIsEmpty(col: string, cols: string[], result: string[][]) {
+	const idx = cols.findIndex(i => i.toLowerCase() === col.toLowerCase());
+	if(idx === -1) {
+		return false;
+	}
+	const data = result.map(i => i[idx]).filter(i => i.trim()); 
+
+	return data.length === 0 ? true : false
+}
+
+
 /**
  * **createTable**`(plugin, page)` -> `(...startingCols)` -> `(handler)` -> `(data, opt)` -> void
  *
@@ -109,6 +156,13 @@ export function createTable<
 	pg: PageInfoBlock,
 	baseOpt?: TBaseOpt,
 ) {
+	/** columns to remove prior to trying to generate results */
+	const preRemoval = new Set<string>();
+	/** columns to remove after generating results */
+	const postRemoval = new Set<string>();
+	/** columns to add */
+	const additional = new Set<string>(); // TODO
+
 	const partial = showApi(plugin);
 	const { render } = pg;
 	const api = <P extends PageInfo>(page: P) => keysOf(partial).reduce(
@@ -145,12 +199,13 @@ export function createTable<
 			const opt = {
 				...(baseOpt || {}),
 				...(optCallback || {}),
-			};
+			} as TableOpt<TCols>;
 
-			return async <T extends DataArray<any>>(
+			const fn = async <T extends DataArray<any>>(
 				records: T,
 			) => {
 				const recArr = Array.from(records) as PageReference[];
+
 				if (recArr?.length === 0) {
 					plugin.debug(`empty table`);
 					if (opt?.renderWhenNoRecords) {
@@ -171,19 +226,38 @@ export function createTable<
 				}
 				plugin.debug(`pre-rendering table`, recArr);
 
-				const results = recArr.map((rec) => {
+				let results = recArr.map((rec) => {
 					const page = getPageInfo(plugin)(rec) as PageInfo;
 					const surface = api(page);
 
 					return cb(surface);
 				});
+				// column removal based on empty columns
+				for (const col of opt?.hideColumnIfEmpty || []) {
+					if(colIsEmpty(col, [...cols], results)) {
+						postRemoval.add(col)
+					}
+				}
+
+
 				plugin.debug(`rendering table`, cols, results);
 
 				await render.table(
-					[...cols],
-					results,
+					...removeColumns([...cols], results, postRemoval)
 				);
+
 				return true;
-			}; // done
+			};
+
+			const props = ({
+				removeColumns(colsToRemove: string[]) {
+					colsToRemove.forEach(c => preRemoval.add(c.toLowerCase()))
+				},
+				addColumns(colsToAdd: string[]) {
+
+				}
+			})
+
+			return createFnWithProps(fn,props);
 		};
 }

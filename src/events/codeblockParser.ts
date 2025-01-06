@@ -8,6 +8,7 @@ import { isError } from "~/type-guards";
 import { createPageView } from "~/page/createPageView";
 import { renderApi } from "~/api";
 import { ERROR_ICON } from "~/constants";
+import { isKindError } from "@yankeeinlondon/kind-error";
 
 export function isPageLink(v: unknown): v is Link {
 	return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
@@ -70,7 +71,11 @@ export function codeblockParser(p: KindModelPlugin) {
 						toRight: format.inline_codeblock(`${source?.trim() || ""} `)
 					}
 				);
-				p.error(err);
+				if(isKindError(err)) {
+					p.warn(...(err?.asBrowserMessages() || []))
+
+				}
+				// p.error(err);
 			} else {
 
 				render.callout(

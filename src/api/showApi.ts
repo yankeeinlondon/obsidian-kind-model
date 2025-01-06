@@ -1,90 +1,94 @@
 import type { OptionalSpace, StripLeading } from "inferred-types";
 import type { FormattingApi } from "./formattingApi";
 import type KindModelPlugin from "~/main";
-import type { DvPage, FileLink, PageInfo, PageReference, PageType, ShowApi } from "~/types";
+import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import {
-  ensureLeading,
-  isNumber,
-  isString,
-  isToday,
-  isTomorrow,
-  isUndefined,
-  isYesterday,
-  stripTrailing,
+	ensureLeading,
+	isEmpty,
+	isNumber,
+	isString,
+	isToday,
+	isTomorrow,
+	isUndefined,
+	isYesterday,
+	stripTrailing,
 } from "inferred-types";
 import { DateTime } from "luxon";
-import { getPage } from "~/page";
+import { getPage, getPagesFromTag } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import {
-  hasFileLink,
-  isDvPage,
-  isFileLink,
-  isLink,
-  isPageInfo,
-  isPageReference,
-  isValidPath,
+	hasFileLink,
+	isDvPage,
+	isFileLink,
+	isFuturePage,
+	isLink,
+	isPageInfo,
+	isPageReference,
+	isValidPath,
 } from "~/type-guards";
 import {
-  getCategories,
-  getClassification,
-  getPageType,
-  getSubcategories,
-  isKindTag,
-} from "./classificationApi";
+	getCategories,
+	getClassification,
+	getPageType,
+	getSubcategories,
+	getTypeTag,
+	isKindTag,
+} from "~/api";
 import { createVaultLink } from "./createVaultLink";
 import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { isKeyOf } from "./renderApi";
+import { asDisplayTag, asTag } from "~/helpers";
 
 const DEFAULT_LINK = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#a3a3a3" d="M134.71 189.19a4 4 0 0 1 0 5.66l-9.94 9.94a52 52 0 0 1-73.56-73.56l24.12-24.12a52 52 0 0 1 71.32-2.1a4 4 0 1 1-5.32 6A44 44 0 0 0 81 112.77l-24.13 24.12a44 44 0 0 0 62.24 62.24l9.94-9.94a4 4 0 0 1 5.66 0Zm70.08-138a52.07 52.07 0 0 0-73.56 0l-9.94 9.94a4 4 0 1 0 5.71 5.68l9.94-9.94a44 44 0 0 1 62.24 62.24L175 143.23a44 44 0 0 1-60.33 1.77a4 4 0 1 0-5.32 6a52 52 0 0 0 71.32-2.1l24.12-24.12a52.07 52.07 0 0 0 0-73.57Z"/></svg>`;
 
 export function showCreatedDate(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, format?: string) => {
-    const page = getPage(p)(pg);
-    if (page) {
-      return format ? page.file.cday.toFormat(format) : page.file.cday;
-    }
-    return "";
-  };
+	return (pg: PageReference | undefined, format?: string) => {
+		const page = getPage(p)(pg);
+		if (page) {
+			return format ? page.file.cday.toFormat(format) : page.file.cday;
+		}
+		return "";
+	};
 }
 
 export function showModifiedDate(p: KindModelPlugin) {
-  return (pg: PageReference, format?: string) => {
-    const page = getPage(p)(pg);
-    if (page) {
-      return format ? page.file.mday.toFormat(format) : page.file.mday;
-    }
+	return (pg: PageReference, format?: string) => {
+		const page = getPage(p)(pg);
+		if (page) {
+			return format ? page.file.mday.toFormat(format) : page.file.mday;
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 export function showDueDate(p: KindModelPlugin) {
-  return (
-    page: PageReference | undefined,
-    prop: string = "due",
-    format?: string,
-  ) => {
-    const pg = getPage(p)(page);
-    if (pg && pg[prop] !== undefined) {
-      return typeof pg[prop] === "number"
-        ? format
-          ? DateTime.fromMillis(pg[prop]).toFormat(format)
-          : DateTime.fromMillis(pg[prop])
-        : typeof pg[prop] === "object" && pg[prop] instanceof DateTime
-          ? format
-            ? pg[prop].toFormat(format)
-            : pg[prop]
-          : typeof pg[prop] === "string" && DateTime.fromISO(pg[prop])
-            ? format
-              ? DateTime.fromISO(pg[prop]).toFormat(format)
-              : DateTime.fromISO(pg[prop])
-            : "";
-    }
-    else {
-      return "";
-    }
-  };
+	return (
+		page: PageReference | undefined,
+		prop: string = "due",
+		format?: string,
+	) => {
+		const pg = getPage(p)(page);
+		if (pg && pg[prop] !== undefined) {
+			return typeof pg[prop] === "number"
+				? format
+					? DateTime.fromMillis(pg[prop]).toFormat(format)
+					: DateTime.fromMillis(pg[prop])
+				: typeof pg[prop] === "object" && pg[prop] instanceof DateTime
+					? format
+						? pg[prop].toFormat(format)
+						: pg[prop]
+					: typeof pg[prop] === "string" && DateTime.fromISO(pg[prop])
+						? format
+							? DateTime.fromISO(pg[prop]).toFormat(format)
+							: DateTime.fromISO(pg[prop])
+						: "";
+		}
+		else {
+			return "";
+		}
+	};
 }
 
 /**
@@ -94,20 +98,19 @@ export function showDueDate(p: KindModelPlugin) {
  * properties
  */
 export function showDesc(p: KindModelPlugin) {
-  return (pg: PageReference) => {
-    const page = getPage(p)(pg);
-    if (page) {
-      const desc = showProp(p)(page, "about", "desc", "description");
-      if (typeof desc == "string") {
-        return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
-      }
-      else {
-        return "";
-      }
-    }
+	return (pg: PageReference) => {
+		const page = getPage(p)(pg);
+		if (page) {
+			const desc = showProp(p)(page, "about", "desc", "description");
+			if (isString(desc) && !isEmpty(desc)) {
+				return `<span style="font-weight:200; font-size: 14px">${desc}</span>`;
+			} else {
+				return "";
+			}
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 /**
@@ -117,45 +120,45 @@ export function showDesc(p: KindModelPlugin) {
  * relevant date info for a page.
  */
 export function showWhen(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, format: string = "LLL yyyy") => {
-    const page = getPage(p)(pg);
+	return (pg: PageReference | undefined, format: string = "LLL yyyy") => {
+		const page = getPage(p)(pg);
 
-    if (page) {
-      const created = page.file.cday;
-      const modified = page.file.mday;
-      const deltaCreated = Math.abs(created.diffNow("days").days);
-      const deltaModified = Math.abs(modified.diffNow("days").days);
+		if (page) {
+			const created = page.file.cday;
+			const modified = page.file.mday;
+			const deltaCreated = Math.abs(created.diffNow("days").days);
+			const deltaModified = Math.abs(modified.diffNow("days").days);
 
-      // TODO: add in linking to day page if present
-      if (deltaCreated < 14) {
-        const desc = created.toRelative();
-        return `<span style="cursor: default"><i style="font-weight: 150">created</i> ${desc}</span>`;
-      }
-      else if (deltaModified < 14) {
-        const desc = modified.toRelative();
-        return `<span style="cursor: default"><i style="font-weight: 150">modified</i> ${desc}</span>`;
-      }
-      else {
-        return `<span style="cursor: default">${modified.toFormat(format)}</span>`;
-      }
-    }
-    else {
-      return "";
-    }
+			// TODO: add in linking to day page if present
+			if (deltaCreated < 14) {
+				const desc = created.toRelative();
+				return `<span style="cursor: default"><i style="font-weight: 150">created</i> ${desc}</span>`;
+			}
+			else if (deltaModified < 14) {
+				const desc = modified.toRelative();
+				return `<span style="cursor: default"><i style="font-weight: 150">modified</i> ${desc}</span>`;
+			}
+			else {
+				return `<span style="cursor: default">${modified.toFormat(format)}</span>`;
+			}
+		}
+		else {
+			return "";
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 export function showTags(_p: KindModelPlugin) {
-  return (pg: DvPage, ...exclude: string[]) => {
-    return (
-      pg.file.etags
-        .filter(t => !exclude.some(i => !!t.startsWith(i)))
-        .map(t => `\`${t}\``)
-        .join(", ") || ""
-    );
-  };
+	return (pg: DvPage, ...exclude: string[]) => {
+		return (
+			pg.file.etags
+				.filter(t => !exclude.some(i => !!t.startsWith(i)))
+				.map(t => `\`${t}\``)
+				.join(", ") || ""
+		);
+	};
 }
 
 /**
@@ -165,127 +168,129 @@ export function showTags(_p: KindModelPlugin) {
  * passed in.
  */
 export function getInternalLinks(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, ...props: string[]) => {
-    let links: FileLink[] = [];
-    const page = getPage(p)(pg);
+	return (pg: PageReference | undefined, ...props: string[]) => {
+		let links: FileLink[] = [];
+		const page = getPage(p)(pg);
 
-    if (page) {
-      for (const prop of props) {
-        const pgProp = page[prop];
-        if (!pgProp) {
-          break;
-        }
-        if (hasFileLink(pgProp)) {
-          links = [...links, ...pgProp.filter(i => isFileLink(i))];
-        }
-        else if (isFileLink(pgProp)) {
-          links.push(pgProp);
-        }
-      }
-    }
+		if (page) {
+			for (const prop of props) {
+				const pgProp = page[prop];
+				if (!pgProp) {
+					break;
+				}
+				if (hasFileLink(pgProp)) {
+					links = [...links, ...pgProp.filter(i => isFileLink(i))];
+				}
+				else if (isFileLink(pgProp)) {
+					links.push(pgProp);
+				}
+			}
+		}
 
-    return links;
-  };
+		return links;
+	};
 }
 
 export function showLinks(p: KindModelPlugin) {
-  return (pg: PageReference | undefined) => {
-    const page = getPage(p)(pg);
-    if (page) {
-      const [_, pageIcon] = getProp(p)(
-        pg,
-        "icon",
-        "svg_icon",
-        "_icon",
-        "_svg_icon",
-      );
-      const link_props = {
-        website: "website",
-        wikipedia: "wikipedia",
-        company: "company",
-        retailer: "company",
-        docs: "documentation",
-        retail_urls: "retail",
-        retail: "retail",
-        url: "link",
-        repo: "repo",
-        review: "review",
-        reviews: "review",
-        blog: "blog",
-        api: "api",
-        map: "map",
-        place: "pin",
-        home: "home",
-        office: "office",
-        offices: "office",
-        work: "office",
-        employer: "office",
-        playground: "playground",
-        demo: "playground",
-        support: "support",
-        help: "support",
-      } as Record<string, string>;
+	return (pg: PageReference | undefined) => {
+		const page = getPage(p)(pg);
+		if (page) {
+			const [_, pageIcon] = getProp(p)(
+				pg,
+				"icon",
+				"svg_icon",
+				"_icon",
+				"_svg_icon",
+			);
+			const link_props = {
+				website: "website",
+				wikipedia: "wikipedia",
+				company: "company",
+				retailer: "company",
+				docs: "documentation",
+				retail_urls: "retail",
+				retail: "retail",
+				url: "link",
+				repo: "repo",
+				review: "review",
+				reviews: "review",
+				blog: "blog",
+				api: "api",
+				map: "map",
+				place: "pin",
+				home: "home",
+				office: "office",
+				offices: "office",
+				work: "office",
+				employer: "office",
+				playground: "playground",
+				demo: "playground",
+				support: "support",
+				help: "support",
+			} as Record<string, string>;
 
-      const create_lnk = (
-        icon: string,
-        /** the URL to the external site */
-        url: string,
-        /** the property in metadata which this URL was found in */
-        prop: string,
-      ) => {
-        icon
-          = prop === "website" && isString(pageIcon)
-            ? pageIcon
-            : /youtube.com/.test(url)
-              ? "you_tube"
-              : icon;
-        p.debug(prop, pageIcon);
-        return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
-      };
-      const links: [prop: string, link: string][] = [];
+			const create_lnk = (
+				icon: string,
+				/** the URL to the external site */
+				url: string,
+				/** the property in metadata which this URL was found in */
+				prop: string,
+			) => {
+				icon
+					= prop === "website" && isString(pageIcon)
+						? pageIcon
+						: /youtube.com/.test(url)
+							? "you_tube"
+							: icon;
+				p.debug(prop, pageIcon);
+				return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+			};
+			const links: [prop: string, link: string][] = [];
 
-      for (const prop of Object.keys(pg || {})) {
-        if (prop in page && isString(page[prop])) {
-          // check if property is a HTTP link or an array of them
-          if (Array.isArray(page[prop])) {
-            page[prop].forEach((p: unknown) => {
-              if (isString(p) && p.startsWith("http")) {
-                links.push([prop, p]);
-              }
-            });
-          }
-          else if (
-            isString(page[prop])
-            && !prop.startsWith("_")
-            && page[prop].startsWith("http")
-          ) {
-            links.push([prop, page[prop]]);
-          }
-        }
-      }
+			for (const prop of Object.keys(pg || {})) {
+				if (prop in page && isString(page[prop])) {
+					// check if property is a HTTP link or an array of them
+					if (Array.isArray(page[prop])) {
+						page[prop].forEach((p: unknown) => {
+							if (isString(p) && p.startsWith("http")) {
+								links.push([prop, p]);
+							}
+						});
+					}
+					else if (
+						isString(page[prop])
+						&& !prop.startsWith("_")
+						&& page[prop].startsWith("http")
+					) {
+						links.push([prop, page[prop]]);
+					}
+				}
+			}
 
-      const icons = p.api.linkIcons;
+			const icons = p.api.linkIcons;
 
-      const prettify = (tuple: [prop: string, url: string]) => {
-        const [prop, url] = tuple;
-        if (prop in link_props) {
-          if (link_props[prop] in icons) {
-            return create_lnk(icons[link_props[prop]], url, prop);
-          }
-          else {
-            return create_lnk(DEFAULT_LINK, url, prop);
-          }
-        }
-        else {
-          return create_lnk(DEFAULT_LINK, url, prop);
-        }
-      };
+			const prettify = (tuple: [prop: string, url: string]) => {
+				const [prop, url] = tuple;
+				if (prop in link_props) {
+					if (link_props[prop] in icons) {
+						return create_lnk(icons[link_props[prop]], url, prop);
+					}
+					else {
+						return create_lnk(DEFAULT_LINK, url, prop);
+					}
+				}
+				else {
+					return create_lnk(DEFAULT_LINK, url, prop);
+				}
+			};
 
-      return `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`;
-    }
+			return links.length > 0
+			? `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`
+			: "";
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 /**
@@ -293,46 +298,46 @@ export function showLinks(p: KindModelPlugin) {
  * - the output is displayed in the column based on the _type_ of content found
  */
 export function showProp(p: KindModelPlugin) {
-  return <
-	T extends [string, ...string[]]
-  >(pg: PageReference | undefined, ...props: T): string => {
-    const page = getPage(p)(pg);
+	return <
+		T extends [string, ...string[]]
+	>(pg: PageReference | undefined, ...props: T): string => {
+		const page = getPage(p)(pg);
 
-    if (page) {
-      if (!page?.file?.name) {
-        throw new Error(
-          `Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`,
-        );
-      }
-      const found = props.find(
-        prop => isKeyOf(page, prop) && page[prop] !== undefined,
-      ) as string | undefined;
+		if (page) {
+			if (!page?.file?.name) {
+				throw new Error(
+					`Attempt to call showProp(page, ${props.join(", ")}) with an invalid page passed in!`,
+				);
+			}
+			const found = props.find(
+				prop => isKeyOf(page, prop) && page[prop] !== undefined,
+			) as string | undefined;
 
-      if (!found) {
-        return "";
-      }
-      if (isKeyOf(page, found)) {
-        const value = page[found];
-        try {
-          return isString(value) || isNumber(value)
-            ? String(value)
-            : isPageReference(value)
-				? createVaultLink(p)(value)
-                : "";
-        }
-        catch (e) {
-          p.error(
-            `Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`,
-            e,
-          );
+			if (!found) {
+				return "";
+			}
+			if (isKeyOf(page, found)) {
+				const value = page[found];
+				try {
+					return isString(value) || isNumber(value)
+						? String(value)
+						: isPageReference(value)
+							? createVaultLink(p)(value)
+							: "";
+				}
+				catch (e) {
+					p.error(
+						`Ran into problem displaying the "${found}" property on the page "${page.file.path}" passed in while calling show_prop().`,
+						e,
+					);
 
-          return "";
-        }
-      }
-    }
+					return "";
+				}
+			}
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 /**
@@ -345,51 +350,51 @@ export function showProp(p: KindModelPlugin) {
  * will ensure it's upgraded to a `DvPage`
  */
 export function getProp(p: KindModelPlugin) {
-  return <TProps extends readonly [string, ...string[]]>(
-    pg: PageReference | undefined,
-    ...props: TProps
-  ) => {
-    const page = getPage(p)(pg);
+	return <TProps extends readonly [string, ...string[]]>(
+		pg: PageReference | undefined,
+		...props: TProps
+	) => {
+		const page = getPage(p)(pg);
 
-    if (page) {
-      const found = props.find(
-        prop => isKeyOf(page, prop) && page[prop] !== undefined,
-      ) as string | undefined;
-      if (!found) {
-        return [undefined, undefined];
-      }
-      else {
-        const value = page[found];
+		if (page) {
+			const found = props.find(
+				prop => isKeyOf(page, prop) && page[prop] !== undefined,
+			) as string | undefined;
+			if (!found) {
+				return [undefined, undefined];
+			}
+			else {
+				const value = page[found];
 
-        return [
-          found,
-          isLink(value)
-            ? p.api.getPage(value)
-            : Array.isArray(value)
-              ? value.map(i => (isLink(i) ? p.dv.page(i) : i))
-              : value,
-        ];
-      }
-    }
+				return [
+					found,
+					isLink(value)
+						? p.api.getPage(value)
+						: Array.isArray(value)
+							? value.map(i => (isLink(i) ? p.dv.page(i) : i))
+							: value,
+				];
+			}
+		}
 
-    p.error(`Call to getProp(pg) passed in an invalid DvPage`, {
-      pg,
-      props,
-    });
-    return [undefined, undefined];
-  };
+		p.error(`Call to getProp(pg) passed in an invalid DvPage`, {
+			pg,
+			props,
+		});
+		return [undefined, undefined];
+	};
 }
 
 export function showAbout(_p: KindModelPlugin) {
-  return (_pg: PageReference): FileLink[] => {
-    return [] as FileLink[];
-  };
+	return (_pg: PageReference): FileLink[] => {
+		return [] as FileLink[];
+	};
 }
 
 export function showPeers(_p: KindModelPlugin) {
-  return (_pg: PageReference): string => {
-    return "";
-  };
+	return (_pg: PageReference): string => {
+		return "";
+	};
 }
 /**
  * **getKind**
@@ -397,195 +402,232 @@ export function showPeers(_p: KindModelPlugin) {
  * returns `{kind: DvPage; kindTag: string}` if found, otherwise undefined
  */
 export function getKind(p: KindModelPlugin) {
-  return (
-    pg: PageReference | undefined,
-  ): undefined | { kind: DvPage; kindTag: string } => {
-    const page = getPage(p)(pg);
-    if (page) {
-      const [_, kind] = getProp(p)(page, "kind");
-      if (isDvPage(kind)) {
-        const kindTag = page.file.etags.find(
-          i =>
-            isKindTag(p)(i.split("/")[0])
-            && getKindPageByTag(p)(i.split("/")[0])?.path === page.file.path,
-        );
+	return (
+		pg: PageReference | undefined,
+	): undefined | { kind: DvPage; kindTag: string } => {
+		const page = getPage(p)(pg);
+		if (page) {
+			const [_, kind] = getProp(p)(page, "kind");
+			if (isDvPage(kind)) {
+				const kindTag = page.file.etags.find(
+					i =>
+						isKindTag(p)(i.split("/")[0])
+						&& getKindPageByTag(p)(i.split("/")[0])?.path === page.file.path,
+				);
 
-        p.info("getKind", { kind, kindTag: kindTag || "unknown" });
+				p.info("getKind", { kind, kindTag: kindTag || "unknown" });
 
-        return { kind, kindTag: kindTag || "unknown" };
-      }
-      else {
-        const kindTag = page.file.etags.find(i =>
-          isKindTag(p)(i.split("/")[0]),
-        );
-        if (kindTag) {
-          const kindPath = getKindPageByTag(p)(kindTag)
-            ?.path as unknown as string;
-          const kind = getPage(p)(kindPath) as DvPage;
+				return { kind, kindTag: kindTag || "unknown" };
+			}
+			else {
+				const kindTag = page.file.etags.find(i =>
+					isKindTag(p)(i.split("/")[0]),
+				);
+				if (kindTag) {
+					const kindPath = getKindPageByTag(p)(kindTag)
+						?.path as unknown as string;
+					const kind = getPage(p)(kindPath) as DvPage;
 
-          p.info("getKind", { kind, kindTag: kindTag || "unknown" });
-          return { kind, kindTag };
-        }
-      }
-    }
-    return undefined;
-  };
+					p.info("getKind", { kind, kindTag: kindTag || "unknown" });
+					return { kind, kindTag };
+				}
+			}
+		}
+		return undefined;
+	};
 }
 
 export function showKind(p: KindModelPlugin) {
-  return (
-    pg: PageReference,
-    /** show the tag name next to the link */
-    withTag?: boolean,
-  ): string => {
-    const page = p.api.getPage(pg);
-    const links: string[] = [];
-    withTag = isUndefined(withTag) ? true : withTag;
+	return (
+		pg: PageReference,
+		/** show the tag name next to the link */
+		withTag?: boolean,
+	): string => {
+		const page = p.api.getPage(pg);
+		const links: string[] = [];
+		withTag = isUndefined(withTag) ? true : withTag;
 
-    if (page) {
-      const classy = getClassification(p)(page);
+		if (page) {
+			const classy = getClassification(p)(page);
 
-      for (const k of classy) {
-        const fmt = p.api.format;
+			for (const k of classy) {
+				const fmt = p.api.format;
 
-        links.push(
-          withTag
-            ? `${links}${createMarkdownLink(p)(k.kind, { post: fmt.as_tag(k.kindTag) })}`
-            : `${links}${createMarkdownLink(p)(k.kind)}`,
-        );
-      }
-    }
+				links.push(
+					withTag
+						? `${links}${createMarkdownLink(p)(k.kind, { post: fmt.as_tag(k.kindTag) })}`
+						: `${links}${createMarkdownLink(p)(k.kind)}`,
+				);
+			}
+		}
 
-    return links.join(", ");
-  };
+		return links.join(", ");
+	};
 }
 
 // <a data-tooltip-position="top" aria-label="Aggregation Switch" data-href="Aggregation Switch" href="Aggregation Switch" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener nofollow" data-link-tags="#hardware/network/switch" data-link-path="hardware/networking/Aggregation Switch.md" style="--data-link-tags: #hardware/network/switch; --data-link-path: hardware/networking/Aggregation Switch.md;">Aggregation Switch</a>
 
 function link(name: string, path: string, display: string) {
-  return [
-    `<a data-href="${name}" href="${path}" `,
-    `class="internal-link data-link-icon data-link-icon-after data-link-text" `,
-    `target="_blank" rel="noopener">`,
-    display,
-    `</a>`,
-  ].join("");
+	return [
+		`<a data-href="${name}" href="${path}" `,
+		`class="internal-link data-link-icon data-link-icon-after data-link-text" `,
+		`target="_blank" rel="noopener">`,
+		display,
+		`</a>`,
+	].join("");
 }
 
+
+export interface HtmlLinkOpt {
+	/**
+	 * change the display text of the link to whatever you like
+	 * rather than just the name of the page
+	 */
+	display?: string;
+	/**
+	 * Add any text/html that you want _before_ the link
+	 */
+	pre?: string;
+	/**
+	 * Add any text/html that you want _after_ the link
+	 */
+	post?: string;
+
+	asCodeBlock?: boolean;
+
+	createPageWhereMissing?: boolean;
+}
+
+export function htmlConfiguredLink(p: KindModelPlugin) {
+	return (opt: HtmlLinkOpt) => {
+		return (ref: PageReference | undefined) => htmlLink(p)(ref, opt);
+	}
+}
+
+
 export function htmlLink(p: KindModelPlugin) {
-  return (
-    ref: PageReference | undefined,
-    opt?: MarkdownLinkOpt,
-  ): string => {
-    const page = getPage(p)(ref);
+	return (
+		ref: PageReference | undefined,
+		opt?: HtmlLinkOpt,
+	): string => {
+		const page = getPage(p)(ref);
 
-    if (page) {
-      const name = page.file.name;
-      const path = stripTrailing(page.file.path, ".md");
-      const display = opt?.display || page.file.name || page.file.path;
+		const block = (show: string) => opt?.asCodeBlock
+			? `<code>${show}</code>`
+			: show;
 
-      return link(name, path, display);
-    }
-    else {
-      console.log(`invalid: ${ref}`);
-    }
+		if (page) {
+			const name = page.file.name;
+			const path = stripTrailing(page.file.path, ".md");
+			const display = opt?.display || page.file.name || page.file.path;
 
-    if (opt?.createPageWhereMissing && isValidPath(ref)) {
-      const parts = ref.split("/");
-      const display = opt.display || parts.pop() || "";
+			return `<span>${opt?.pre || ""}${link(name, path, block(display))}${opt?.post || ""}</span>`;
+		}
+		else {
+			if (isFuturePage(ref)) {
+				const display = opt?.display || ref.file.name;
+				return link(ref.file.name, ref.file.name, block(display))
+			} else {
+				console.log(`invalid: ${ref}`);
+			}
+		}
 
-      return link(
-        stripTrailing(ref, ".md"),
-        ref,
-        isToday(display)
-          ? "today"
-          : isYesterday(display)
-            ? "yesterday"
-            : isTomorrow(display)
-              ? "tomorrow"
-              : display,
-      );
-    }
+		if (opt?.createPageWhereMissing && isValidPath(ref)) {
+			const parts = ref.split("/");
+			const display = opt.display || parts.pop() || "";
 
-    return isValidPath(ref)
-      ? `<!-- no link [${String(ref)}] -->`
-      : `<!-- no link [invalid path: ${String(ref)}] -->`;
-  };
+			return link(
+				stripTrailing(ref, ".md"),
+				ref,
+				isToday(display)
+					? "today"
+					: isYesterday(display)
+						? "yesterday"
+						: isTomorrow(display)
+							? "tomorrow"
+							: display,
+			);
+		}
+
+		return isValidPath(ref)
+			? `<!-- no link [${String(ref)}] -->`
+			: `<!-- no link [invalid path: ${String(ref)}] -->`;
+	};
 }
 
 export function showCategories(p: KindModelPlugin) {
-  return (pg: PageReference, opt?: CategoryOptions): string => {
-    const page = p.api.getPage(pg);
-    const links: string[] = [];
-    // const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
-    const currentPage = opt?.currentPage ? getPage(p)(opt.currentPage) : {};
+	return (pg: PageReference, opt?: CategoryOptions): string => {
+		const page = p.api.getPage(pg);
+		const links: string[] = [];
+		// const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
+		const currentPage = opt?.currentPage ? getPage(p)(opt.currentPage) : {};
 
-    if (page) {
-      const cats = getCategories(p)(page);
-      // const isMultiKind =
-      // 	new Set<string>(cats.map((i) => i.kind)).size > 1;
+		if (page) {
+			const cats = getCategories(p)(page);
+			// const isMultiKind =
+			// 	new Set<string>(cats.map((i) => i.kind)).size > 1;
 
-      for (const cat of cats) {
-        // const fmt = p.api.format;
-        // let opt: MarkdownLinkOpt = {
-        // 	pre: isMultiKind ? p.api.format.light(cat.kind + "/") : "",
-        // };
+			for (const cat of cats) {
+				// const fmt = p.api.format;
+				// let opt: MarkdownLinkOpt = {
+				// 	pre: isMultiKind ? p.api.format.light(cat.kind + "/") : "",
+				// };
 
-        links.push(
-          getPath(page) === getPath(currentPage)
-            ? "(this)"
-            : htmlLink(p)(page, { display: cat.category }),
-        );
-      }
-    }
+				links.push(
+					getPath(page) === getPath(currentPage)
+						? "(this)"
+						: htmlLink(p)(page, { display: cat.category }),
+				);
+			}
+		}
 
-    return links.join(", ");
-  };
+		return links.join(", ");
+	};
 }
 
 export interface CategoryOptions {
-  currentPage?: PageReference;
-  category?: string;
-  kind?: string;
-  /** display the tag for the subcategory next to the link */
-  withTag?: boolean;
+	currentPage?: PageReference;
+	category?: string;
+	kind?: string;
+	/** display the tag for the subcategory next to the link */
+	withTag?: boolean;
 }
 
 export function showSubcategories(p: KindModelPlugin) {
-  return (pg: PageReference | undefined, _opt?: CategoryOptions): string => {
-    const page = p.api.getPage(pg);
-    const links: string[] = [];
-    // const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
+	return (pg: PageReference | undefined, _opt?: CategoryOptions): string => {
+		const page = p.api.getPage(pg);
+		const links: string[] = [];
+		// const withTag = isUndefined(opt?.withTag) ? true : opt.withTag;
 
-    if (page) {
-      const cats = getSubcategories(p)(page);
-      // const isMultiKind =
-      // 	new Set<string>(cats.map((i) => i.kind)).size > 1;
+		if (page) {
+			const cats = getSubcategories(p)(page);
+			// const isMultiKind =
+			// 	new Set<string>(cats.map((i) => i.kind)).size > 1;
 
-      for (const cat of cats) {
-        // const fmt = p.api.format;
-        // let opt: MarkdownLinkOpt = {
-        // 	pre: isMultiKind ? p.api.format.light(cat.kind + "/") : "",
-        // };
+			for (const cat of cats) {
+				// const fmt = p.api.format;
+				// let opt: MarkdownLinkOpt = {
+				// 	pre: isMultiKind ? p.api.format.light(cat.kind + "/") : "",
+				// };
 
-        links.push(htmlLink(p)(page, { display: cat.subcategory }));
-      }
-    }
+				links.push(htmlLink(p)(page, { display: cat.subcategory }));
+			}
+		}
 
-    return links.join(", ");
-  };
+		return links.join(", ");
+	};
 }
 
 export function showMetrics(_p: KindModelPlugin) {
-  return (_pg: PageReference): string => {
-    return "";
-  };
+	return (_pg: PageReference): string => {
+		return "";
+	};
 }
 
 export function showSlider(_p: KindModelPlugin) {
-  return (_pg: PageReference): string => {
-    return "";
-  };
+	return (_pg: PageReference): string => {
+		return "";
+	};
 }
 
 type ShowClassificationOptions = {
@@ -622,66 +664,89 @@ type ShowClassificationOptions = {
  * classification(s)
  */
 export function showClassifications(p: KindModelPlugin) {
-  return (
-	pg: PageReference,
-	opt?: ShowClassificationOptions | undefined
-): string => {
-	/** classifications */
-    const classifications = isPageInfo(pg) 
-		? pg.classifications
-		: getClassification(p)(pg);
+	return (
+		pg: PageReference,
+		opt?: ShowClassificationOptions | undefined
+	): string => {
+		/** classifications */
+		const classifications = isPageInfo(pg)
+			? pg.classifications
+			: getClassification(p)(pg);
 
-	/** path to source page */
-	const sourcePath = isDvPage(opt?.source) 
-		? opt.source.file.path 
-		: isPageInfo(opt?.source) ? opt.source.path : "";
-	/** page type of source, "none" if no source */
-	const sourceType: PageType =  isDvPage(opt?.source) 
-		? getPageType(p)(opt.source)
-		: isPageInfo(opt?.source)
-			? opt.source.pageType
-			: "none"
+		/** path to source page */
+		const sourcePath = isDvPage(opt?.source)
+			? opt.source.file.path
+			: isPageInfo(opt?.source) ? opt.source.path : "";
+		/** page type of source, "none" if no source */
+		const sourceType: PageType = isDvPage(opt?.source)
+			? getPageType(p)(opt.source)
+			: isPageInfo(opt?.source)
+				? opt.source.pageType
+				: "none"
+
+		const sep = ` <span style="opacity: 0.8"> &gt; </span> `
+
+		const show = classifications.map(i => {
+			const typeTag = isDvPage(i.type)
+				? asDisplayTag(getTypeTag(p)(i.type) as string, true)
+				: "";
+
+			const showType = i.type ? "[ " + htmlLink(p)(i.type, { display: typeTag }) + " ] " : "";
+
+			const showKind = htmlLink(p)(
+				i.kind, {
+				display: `${i.kindTag}`
+			}
+			);
+
+			const startOfLine = [
+				`<div style="display:flex;">`,
+				`<div>${showType}${showKind}</div>`,
+			];
+
+			const categories = (
+				i.categories ? i.categories : i.category ? [i.category] : []
+			) as KindClassifiedCategory[];
 
 
+			const showCategories = `<div class="categories">` + categories.map(
+				c => {
+					const link = htmlLink(p)(c.page, { display: c.tag, pre: sep } );
+					const subcategories = c?.subcategories 
+						? c.subcategories
+						: c?.subcategory
+						? [ c.subcategory ]
+						: [];
 
+					const subTag = subcategories.length > 0
+						? subcategories[0].tag
+						: "";
 
-    const show = classifications.map(i =>
-      [
-		// TYPE
-		i.type ? htmlLink(p)(i.type) : undefined,
-        // KIND
-        htmlLink(p)(i.kind),
-        // CATEGORIES
-		i.category 
-			? htmlLink(p)(i.category.page)
-			: i?.categories
-				? i.categories.map(
-					c => c?.subcategory
-						? htmlLink(p)(c.page) + `<span style="opacity: 0.8"> &gt; </span>` + htmlLink(p)(c.subcategory.page)
-						: c?.subcategories
-							? htmlLink(p)(c.page) + c.subcategories.map(
-								s => htmlLink(p)(s.page)
-							).join(` + `)
-							: htmlLink(p)(c.page)
-				)
-				: undefined
-        
-      ]
-        .filter(i => i && i !== "")
-        .join(`<span style="opacity: 0.8"> &gt; </span>`),
-    );
+					return isPageReference(c.page)
+						? subcategories.length > 1
+							? `${link}${sep}[...]`
+							: subcategories.length === 1
+								? `${link}${sep}${htmlLink(p)(subcategories[0].page, {display: subTag})}`
+								: link
+						: undefined
+				}).filter(i => i).join(`\n`) + "</div>"
 
-    return show.join("<br>");
-  };
+			return [
+				...startOfLine,
+				showCategories,
+				"</div>"
+			].join("\n")
+
+			
+		}).join("<br/>\n");
+
+		p.info("show classification", show);
+
+		return show;
+	};
 }
 
-function extractTitle<T extends unknown | undefined>(s: T) {
-  return (
-    s && typeof s === "string" ? s.replace(/\d{0,4}-\d{2}-\d{2}\s*/, "") : s
-  ) as T extends string
-    ? StripLeading<T, `${number}-${number}-${number}${OptionalSpace}`>
-    : T;
-}
+
 
 /**
  * **createFileLink**`(pathLike,[embed],[display])`
@@ -694,68 +759,68 @@ function extractTitle<T extends unknown | undefined>(s: T) {
  * not easily combined into a surrounding HTML block.
  */
 export function createFileLink(p: KindModelPlugin) {
-  return (
-    pathLike: PageReference | undefined,
-    opt?: {
-      display?: string;
-      after?: string;
-      before?: string;
-    },
-  ) => {
-    const page = getPage(p)(pathLike);
+	return (
+		pathLike: PageReference | undefined,
+		opt?: {
+			display?: string;
+			after?: string;
+			before?: string;
+		},
+	) => {
+		const page = getPage(p)(pathLike);
 
-    if (page) {
-    //   return createVaultLink(p)(page, opt);
-		return htmlLink(p)(page,opt)
-    }
+		if (page) {
+			//   return createVaultLink(p)(page, opt);
+			return htmlLink(p)(page, opt)
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 export function createLinksFromTag(p: KindModelPlugin) {
-  return <T extends string>(
-    tag: T,
-    opt?: {
-      /** filter the links returned */
-      filter?: <P extends DvPage>(page: P) => boolean;
-      /** override the output when there is no result */
-      noResult?: (cb: FormattingApi) => string;
-    },
-  ) => {
-    if (tag === "") {
-      p.warn(`invalid-tag`, `A call to createLinksFromTag() passed an empty string which would result in an invalid search!`);
+	return <T extends string>(
+		tag: T,
+		opt?: {
+			/** filter the links returned */
+			filter?: <P extends DvPage>(page: P) => boolean;
+			/** override the output when there is no result */
+			noResult?: (cb: FormattingApi) => string;
+		},
+	) => {
+		if (tag === "") {
+			p.warn(`invalid-tag`, `A call to createLinksFromTag() passed an empty string which would result in an invalid search!`);
 
-      return "";
-    }
+			return "";
+		}
 
-    const t = ensureLeading(tag, "#");
-    const pages = Array.from(p.dv.pages(`${t}`).sort(p => p.file.name)) as DvPage[];
+		const t = ensureLeading(tag, "#");
+		const pages = Array.from(p.dv.pages(`${t}`).sort(p => p.file.name)) as DvPage[];
 
-    return pages.length > 0
-      ? pages.map(i => createVaultLink(p)(i)).join(", ")
-      : opt?.noResult
-        ? opt.noResult(formattingApi(p))
-        : p.api.format.italics("none");
-  };
+		return pages.length > 0
+			? pages.map(i => createVaultLink(p)(i)).join(", ")
+			: opt?.noResult
+				? opt.noResult(formattingApi(p))
+				: p.api.format.italics("none");
+	};
 }
 
 export interface MarkdownLinkOpt {
-  /**
-   * change the display text of the link to whatever you like
-   * rather than just the name of the page
-   */
-  display?: string;
-  /**
-   * Add any text/html that you want _before_ the link
-   */
-  pre?: string;
-  /**
-   * Add any text/html that you want _after_ the link
-   */
-  post?: string;
+	/**
+	 * change the display text of the link to whatever you like
+	 * rather than just the name of the page
+	 */
+	display?: string;
+	/**
+	 * Add any text/html that you want _before_ the link
+	 */
+	pre?: string;
+	/**
+	 * Add any text/html that you want _after_ the link
+	 */
+	post?: string;
 
-  createPageWhereMissing?: boolean;
+	createPageWhereMissing?: boolean;
 }
 
 /**
@@ -768,54 +833,54 @@ export interface MarkdownLinkOpt {
  * render properly because the markdown-to-html conversion will no longer take place.
  */
 export function createMarkdownLink(p: KindModelPlugin) {
-  return (
-    pathLike: PageReference | undefined,
-    opt?: MarkdownLinkOpt,
-  ): string => {
-    const page = p.api.getPage(pathLike);
+	return (
+		pathLike: PageReference | undefined,
+		opt?: MarkdownLinkOpt,
+	): string => {
+		const page = p.api.getPage(pathLike);
 
-    if (page) {
-      return opt?.display
-        ? `${opt?.pre || ""}[[${page.file.path}|${opt.display}]]${opt?.post || ""}`
-        : `${opt?.pre || ""}[[${page.file.path}|${page.file.name}]]${opt?.post || ""}`;
-    }
+		if (page) {
+			return opt?.display
+				? `${opt?.pre || ""}[[${page.file.path}|${opt.display}]]${opt?.post || ""}`
+				: `${opt?.pre || ""}[[${page.file.path}|${page.file.name}]]${opt?.post || ""}`;
+		}
 
-    return "";
-  };
+		return "";
+	};
 }
 
 /**
  * The Show API surface is for presenting a column in a tabular report.
  */
 export function showApi(p: KindModelPlugin): ShowApi {
-  return {
-    /** show the creation date */
-    showCreatedDate,
-    /** show last modified date */
-    showModifiedDate,
-    /** show _due_ date */
-    showDueDate: showDueDate(p),
-    showWhen: showWhen(p),
+	return {
+		/** show the creation date */
+		showCreatedDate,
+		/** show last modified date */
+		showModifiedDate,
+		/** show _due_ date */
+		showDueDate: showDueDate(p),
+		showWhen: showWhen(p),
 
-    showDesc: showDesc(p),
+		showDesc: showDesc(p),
 
-    showTags: showTags(p),
-    showLinks: showLinks(p),
+		showTags: showTags(p),
+		showLinks: showLinks(p),
 
-    showProp: showProp(p),
-    getProp: getProp(p),
+		showProp: showProp(p),
+		getProp: getProp(p),
 
-    showAbout: showAbout(p),
-    showPeers: showPeers(p),
-    showKind: showKind(p),
-    showCategories: showCategories(p),
-    showSubcategories: showSubcategories(p),
-    showClassifications: showClassifications(p),
-    showMetrics: showMetrics(p),
-    showSlider: showSlider(p),
+		showAbout: showAbout(p),
+		showPeers: showPeers(p),
+		showKind: showKind(p),
+		showCategories: showCategories(p),
+		showSubcategories: showSubcategories(p),
+		showClassifications: showClassifications(p),
+		showMetrics: showMetrics(p),
+		showSlider: showSlider(p),
 
-    createFileLink: createFileLink(p),
-    createMarkdownLink: createMarkdownLink(p),
-    createLinksFromTag: createLinksFromTag(p),
-  } as const;
+		createFileLink: createFileLink(p),
+		createMarkdownLink: createMarkdownLink(p),
+		createLinksFromTag: createLinksFromTag(p),
+	} as const;
 }

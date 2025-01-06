@@ -1,7 +1,11 @@
 import type {
   CssColor,
+  CssDefinition,
   EscapeFunction,
+  FixedLengthArray,
+  Length,
   TypedFunction,
+  UnionArrayToTuple
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
@@ -13,8 +17,10 @@ import type {
 } from "~/types";
 import {
   createFnWithProps,
+  cssFromDefinition,
   ensureLeading,
   isFunction,
+  isString,
 } from "inferred-types";
 import { getPage } from "~/page";
 import { listStyle, style } from "../api";
@@ -139,6 +145,97 @@ export function internalLink(p: KindModelPlugin) {
   };
 }
 
+export type Column<T extends string = string> = T | (() => [name: T, style: CssDefinition]);
+
+export type TableData<
+	T extends readonly Column[]
+> = FixedLengthArray<string, T["length"]>[];
+
+export type HtmlTable<
+	T extends readonly Column[]
+> = (<TData extends TableData<T>>(data: TData) => string) & {
+	kind: "HtmlTable",
+	columns: T,
+	style: {
+		table?: CssDefinition;	
+		headings?: CssDefinition;
+	}
+};
+
+type ToCols<
+	T extends readonly Column[]
+> = {
+	[K in keyof T]: T[K] extends string
+		? T[K]
+		: T[K] extends () => [infer Name, CssDefinition]
+			? Name
+			: never;
+}
+
+
+export function htmlTable(p: KindModelPlugin) {
+	/**
+	 * Provide the columns for an HTML table.
+	 * 
+	 * - on next call you'll be asked for the data
+	 */
+	return <
+		TCol extends readonly Column<N>[], 
+		N extends string
+	>(
+		columns: TCol, 
+		style?: {
+			table?: CssDefinition;	
+			headings?: CssDefinition;
+			highlightFirstColumn?: boolean;
+		}
+	): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
+		const take = (val: string | (() => [string, CssDefinition])) => {
+			return isString(val) 
+				? { val, style: "" }
+				: { val: val()[0], style: cssFromDefinition(val()[1], "", true) }
+		}
+		
+		const fn = <
+			TData extends TableData<UnionArrayToTuple<TCol>>
+		>(data: TData) => {
+
+			const output = [
+				`<table style="${style?.table ? cssFromDefinition(style.table, "", true): ""}">`,
+					`<thead>`,
+						`<tr>`,
+							columns.map(c => `<th scope="col" style="${take(c).style}">${take(c).val}</th>`),
+						`</tr>`,
+					`</thead>`,
+					`<tbody>`,
+						data.map(
+							(row) => [
+								`<tr>`,
+									row.map((col,idx) => 
+										idx === 0 && style?.highlightFirstColumn
+											? `<th scope="row">${col}</th>`
+											: `<td>${col}</td>`
+									).join("\n"),
+								`</tr>`
+							]
+						).join("\n"),
+					`</tbody>`,
+				`</table>`
+			]
+
+			return output.join("\n")
+		}
+
+		const props = {
+			kind: "HtmlTable",
+			columns,
+			style
+		}
+
+		return createFnWithProps(fn, props) as unknown as HtmlTable<ToCols<UnionArrayToTuple<TCol>>>;
+	}
+}
+
 /**
  * An API to help you generate HTML structures which work well
  * in Obsidian.
@@ -162,18 +259,13 @@ export function formattingApi(p: KindModelPlugin) {
       );
     },
 
-    // /**
-    //  * **renderToRight**`(text)`
-    //  *
-    //  * Takes text/html and renders it to the right.
-    //  *
-    //  * Note: use `toRight` just to wrap this text in the appropriate HTML
-    //  * to move content to right.
-    //  */
-    // renderToRight: (text: string) => p.dv.renderValue(
-    // 	`<span class="to-right" style="display: flex; flex-direction: row; width: auto;"><span class="spacer" style="display: flex; flex-grow: 1">&nbsp;</span><span class="right-text" style: "display: flex; flex-grow: 0>${text}</span></span>`,
-    // 	container,p, filePath, true
-    // ),
+	bulletPoints(...bullets: string[]) {
+		return renderListItems(
+			wrap_ul,
+			bullets.filter(i => i !== undefined).map(i => `<span style="display:inline-flex">${i}</span>`)
+		)
+	},
+
 
     toRight: (
       content: string,
@@ -189,6 +281,7 @@ export function formattingApi(p: KindModelPlugin) {
       ].join("\n");
       return html;
     },
+
 
     /**
      * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
@@ -302,6 +395,17 @@ export function formattingApi(p: KindModelPlugin) {
         return `${preamble + lines.join("\n")}\n`;
       }
     },
+
+	/**
+	 * **htmlTable**`(columns, [tableCss]) -> (data) -> HTML`
+	 * 
+	 * higher order function to create an HTML table.
+	 * 
+	 * - columns can be either a string or a tuple of:
+	 * 		- `[ name: string, css: CssDefinition ]`
+	 */
+	htmlTable: htmlTable(p)
+	
   };
 }
 

@@ -3,7 +3,7 @@ import { asDisplayTag } from "~/helpers";
 import { isDvPage, isFuturePage } from "~/type-guards";
 import { createHandler } from "./createHandler";
 import KindModelPlugin from "~/main";
-import { KindClassification, KindClassifiedCategory, PageSubcategory } from "~/types";
+import { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
 
 function showCategories(p: KindModelPlugin) {
 	return <
@@ -14,24 +14,25 @@ function showCategories(p: KindModelPlugin) {
 			: classy.categories 
 				? classy.categories as KindClassifiedCategory[]
 				: [];
+
 		if(cats.length === 0) {
-			return `nothing found for ${asDisplayTag(`#${classy.kindTag}/category/{name}`)}`;
+			return `nothing found for ${asDisplayTag(`#${classy.kindTag}/category/{name}`, true)}`;
 		}
 
 		const kindPrefix = `#${classy.kindTag}/`;
 
 		const output = cats.map(
-			i => `${htmlLink(p)(i.page)} [${asDisplayTag(kindPrefix + i.tag)}]`
+			i => `${htmlLink(p)(i.page)} [${asDisplayTag(kindPrefix + i.tag, true)}]`
 		)
 
-		return output.join("<br>\n")
+		return output.join("<br/>")
 	}
 }
 
 function showSubcategories(p: KindModelPlugin) {
 	return (subCats: PageSubcategory[]) => {
 		return subCats.map(
-			i => `${htmlLink(p)(i.page)} [${asDisplayTag(i.kindedTag)}]`
+			i => `${htmlLink(p)(i.page)} [${asDisplayTag(i.kindedTag, true)}]`
 		).join("<br>\n")
 	}
 
@@ -46,14 +47,33 @@ export const Debug = createHandler("Debug")
 
     const fmt = p.api.format;
 
-    p.info(`Page Details (${page.pageType})`, page);
+	let pageCopy = { ...page } as Partial<PageInfoBlock>;
+	delete pageCopy.categories;
+	delete pageCopy.subcategories;
+	delete pageCopy.classifications;
+	delete pageCopy.kind;
+	delete pageCopy.kinds;
+	delete pageCopy.type;
+	delete pageCopy.types;
 
-    render.render(fmt.bold(`Page Information<br/>`));
+    p.info(
+		`Page Details (${page.pageType})`, 
+		{type: page.type},
+		{types: page.types},
+		{kind: page.kind},
+		{kinds: page.kinds},
+		{categories: page.categories},
+		{subcategories: page.subcategories},
+		{classification: page.classifications},
+		pageCopy
+	);
+
+    render.render(fmt.bold(`Debug Information<br/>`));
 
     const pl = page.hasMultipleKinds ? `s` : "";
 
     const kindOfPage = [
-      fmt.bold("Kind of Page"), //
+      "Kind of Page", //
       `${page.pageType} [multi: ${page.hasMultipleKinds}]`,
     ];
     const types
@@ -72,23 +92,19 @@ export const Debug = createHandler("Debug")
           fmt.bold(`Kind${pl}`),
           page.classifications.map(
 			c => isFuturePage(c)
-				? `Future(${c.kind.file.name} [${asDisplayTag(c.kindTag)}])`
-				: `${c.kind.file.name} [${asDisplayTag(c.kindTag)}]`
-		  ).join("<br>\n")
+				? `Future(${c.kind.file.name} [${asDisplayTag(c.kindTag, true)}])`
+				: `${c.kind.file.name} [${asDisplayTag(c.kindTag, true)}]`
+		  ).join("<br/>")
             
         ]
       : undefined;
 
     const cats = page.categories?.length > 0
         ? [
-            fmt.bold(`Category(s)`),
-			page.classifications.length === 1
-				? showCategories(p)(page.classifications[0])
-				: page.classifications.length > 1
-				? page.classifications.map(
-					c => showCategories(p)(c)
-				).join("<br>\n")
-				: "none"
+			page.categories?.length > 1
+			? `Categories`
+			: `Category`,
+			showCategories(p)(page.classifications[0])
           ]
         : undefined;
 
@@ -96,16 +112,16 @@ export const Debug = createHandler("Debug")
       = page.subcategories?.length > 0
         ? [
             page.subcategories?.length > 1
-			? fmt.bold("Subcategories")
-			: fmt.bold("Subcategory"),
+			? "Subcategories"
+			: "Subcategory",
             showSubcategories(p)(page.subcategories)
           ]
         : undefined;
 		
-    const metadata
+    const frontMatter
       = Object.keys(page.frontmatterTypes).length > 0
         ? [
-            fmt.bold("Frontmatter"),
+            "Frontmatter",
             Object.keys(page.frontmatterTypes)
               .map(
 				k => `${fmt.bold(k)}: [ ${page.frontmatterTypes[k as any].join(", ")} ]`)
@@ -113,21 +129,21 @@ export const Debug = createHandler("Debug")
           ]
         : undefined;
 
-    // const classy = [
-    //   fmt.bold("Classification"),
-    //   JSON.stringify(
-    //     page.classifications.map(c => ({
-    //       kind: c.kindTag,
-    //       categories: c.categories.map(cc => cc.category),
-    //       subcategories: c.subcategory?.subcategory,
-    //     })),
-    //   ),
-    // ];
-
-    const report = [kindOfPage, types, kinds, cats, subCats, metadata].filter(
+    const report = [kindOfPage, types, kinds, cats, subCats, frontMatter].filter(
       i => i,
     ) as [left: string, right: string][];
 
-    render.render(fmt.twoColumnTable("", "Value", ...report));
+	const table = fmt.htmlTable(
+		[() => ["Page Aspect", {"width": "170px"}], () => ["Value", {}]],
+		{
+			table: { width: "100%"},
+			headings: { "text-emphasis": "800"},
+			highlightFirstColumn: true
+		}
+	);
+
+	const html = table(report);
+
+    render.render(html);
     return true;
   });
