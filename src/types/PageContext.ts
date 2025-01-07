@@ -329,14 +329,14 @@ export interface KindConditionalFlags {
  * The _category_ of page type
  */
 export type KindCategory =
-  | "Kind Definition"
-  | "Type Definition"
-  | "Kinded Page"
-  | "Category Page"
-  | "Subcategory Page"
-  | "Block Template"
-  | "Enumeration Definition"
-  | null;
+    | "Kind Definition"
+    | "Type Definition"
+    | "Kinded Page"
+    | "Category Page"
+    | "Subcategory Page"
+    | "Block Template"
+    | "Enumeration Definition"
+    | null;
 
 /**
  * **PageContext**`<K>`

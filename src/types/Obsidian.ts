@@ -167,31 +167,31 @@ export interface ObsidianSvgElement
     rect: DOMRectReadOnly,
     referenceElement: SVGElement | null,
   ) => NodeListOf<
-    | SVGCircleElement
-    | SVGEllipseElement
-    | SVGImageElement
-    | SVGLineElement
-    | SVGPathElement
-    | SVGPolygonElement
-    | SVGPolylineElement
-    | SVGRectElement
-    | SVGTextElement
-    | SVGUseElement
+      | SVGCircleElement
+      | SVGEllipseElement
+      | SVGImageElement
+      | SVGLineElement
+      | SVGPathElement
+      | SVGPolygonElement
+      | SVGPolylineElement
+      | SVGRectElement
+      | SVGTextElement
+      | SVGUseElement
   >;
   getIntersectionList: (
     rect: DOMRectReadOnly,
     referenceElement: SVGElement | null,
   ) => NodeListOf<
-    | SVGCircleElement
-    | SVGEllipseElement
-    | SVGImageElement
-    | SVGLineElement
-    | SVGPathElement
-    | SVGPolygonElement
-    | SVGPolylineElement
-    | SVGRectElement
-    | SVGTextElement
-    | SVGUseElement
+      | SVGCircleElement
+      | SVGEllipseElement
+      | SVGImageElement
+      | SVGLineElement
+      | SVGPathElement
+      | SVGPolygonElement
+      | SVGPolylineElement
+      | SVGRectElement
+      | SVGTextElement
+      | SVGUseElement
   >;
   pauseAnimations: () => void;
   setCurrentTime: (seconds: number) => void;
@@ -226,12 +226,12 @@ export interface ObsidianSvgElement
 
 export type ObsidianModifier = "Mod" | "Alt" | "";
 export type ObsidianKey =
-  | `F${NonZeroNumericChar}`
-  | "UpArrow"
-  | "DownArrow"
-  | "LeftArrow"
-  | "RightArrow"
-  | AlphaNumericChar;
+    | `F${NonZeroNumericChar}`
+    | "UpArrow"
+    | "DownArrow"
+    | "LeftArrow"
+    | "RightArrow"
+    | AlphaNumericChar;
 
 export type GetIconFromObsidian = (iconId: string) => ObsidianSvgElement | null;
 
@@ -384,19 +384,19 @@ export interface ObsidianMetaLink {
 }
 
 export type ObsidianFrontmatterValue =
-  | string
-  | string[]
-  | number[]
-  | number
-  | boolean
-  | null;
+    | string
+    | string[]
+    | number[]
+    | number
+    | boolean
+    | null;
 
 export type ObsidianSectionType =
-  | "yaml"
-  | "paragraph"
-  | "blockquote"
-  | "heading"
-  | "list";
+    | "yaml"
+    | "paragraph"
+    | "blockquote"
+    | "heading"
+    | "list";
 
 export interface ObsidianTagMeta {
   tag: Tag;
@@ -469,45 +469,45 @@ export interface ObsidianPluginInstance {
 }
 
 export type ObsidianInternalPlugins = "audio-recorder"
-  | "backlink"
-  | "bookmarks"
-  | "canvas"
-  | "command-pallette"
-  | "daily-notes"
-  | "editor-status"
-  | "file-explorer"
-  | "file-recovery"
-  | "global-search"
-  | "graph"
-  | "markdown-importer"
-  | "note-composer"
-  | "outgoing-link"
-  | "outline"
-  | "page-preview"
-  | "properties"
-  | "publish"
-  | "random-note"
-  | "slash-command"
-  | "slides"
-  | "switcher"
-  | "sync"
-  | "tag-pane"
-  | "templates"
-  | "word-count"
-  | "workspaces"
-  | "zk-prefixer";
+    | "backlink"
+    | "bookmarks"
+    | "canvas"
+    | "command-pallette"
+    | "daily-notes"
+    | "editor-status"
+    | "file-explorer"
+    | "file-recovery"
+    | "global-search"
+    | "graph"
+    | "markdown-importer"
+    | "note-composer"
+    | "outgoing-link"
+    | "outline"
+    | "page-preview"
+    | "properties"
+    | "publish"
+    | "random-note"
+    | "slash-command"
+    | "slides"
+    | "switcher"
+    | "sync"
+    | "tag-pane"
+    | "templates"
+    | "word-count"
+    | "workspaces"
+    | "zk-prefixer";
 
 export type SuggestedCommunityPlugins = Suggest<"calendar"
-  | "canvas-mindmap"
-  | "cmdr"
-  | "excalibrain"
-  | "hot-reload"
-  | "image-converter"
-  | "obsidian-advanced-uri"
-  | "obsidian-kanban"
-  | "obsidian-kind-model"
-  | "dataview"
-  | "quickadd"
+    | "canvas-mindmap"
+    | "cmdr"
+    | "excalibrain"
+    | "hot-reload"
+    | "image-converter"
+    | "obsidian-advanced-uri"
+    | "obsidian-kanban"
+    | "obsidian-kind-model"
+    | "dataview"
+    | "quickadd"
 >;
 
 /**
@@ -618,9 +618,9 @@ export interface ObsidianTypeWidget<TCore extends boolean = true> {
 }
 
 export type SuggestedExtension = Suggest<
-  "3gp" | "avif" | "bmp" | "canvas" | "excalidraw" | "flac" | "gif" | "jpeg"
-  | "jpg" | "m4a" | "md" | "mkv" | "mov" | "mp3" | "mp4" | "oga" | "ogg" | "ogv"
-  | "opus" | "pdf" | "png" | "svg" | "wav" | "webm" | "webp"
+    "3gp" | "avif" | "bmp" | "canvas" | "excalidraw" | "flac" | "gif" | "jpeg"
+    | "jpg" | "m4a" | "md" | "mkv" | "mov" | "mp3" | "mp4" | "oga" | "ogg" | "ogv"
+    | "opus" | "pdf" | "png" | "svg" | "wav" | "webm" | "webp"
 >;
 
 export type SuggestedFileType = Suggest<
@@ -628,29 +628,29 @@ export type SuggestedFileType = Suggest<
 >;
 
 export type ExampleObsidianViews = Suggest<
-  | "audio"
-  | "advanced-tables-toolbar"
-  | "backlink"
-  | "bookmarks"
-  | "calendar"
-  | "canvas"
-  | "cm-changelog-view"
-  | "copilot-chat-view"
-  | "excalidraw"
-  | "file-explorer"
-  | "markdown"
-  | "graph"
-  | "image"
-  | "kanban"
-  | "localgraph"
-  | "map"
-  | "mindmapview"
-  | "playground-view"
-  | "pdf"
-  | "search"
-  | "tag"
-  | "tool-view"
-  | "video"
+    | "audio"
+    | "advanced-tables-toolbar"
+    | "backlink"
+    | "bookmarks"
+    | "calendar"
+    | "canvas"
+    | "cm-changelog-view"
+    | "copilot-chat-view"
+    | "excalidraw"
+    | "file-explorer"
+    | "markdown"
+    | "graph"
+    | "image"
+    | "kanban"
+    | "localgraph"
+    | "map"
+    | "mindmapview"
+    | "playground-view"
+    | "pdf"
+    | "search"
+    | "tag"
+    | "tool-view"
+    | "video"
 >;
 
 export interface ObsidianViewRegistry {

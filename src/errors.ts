@@ -5,7 +5,7 @@ import { createKindError } from "@yankeeinlondon/kind-error";
  * a code block event.
  */
 export const HandlerError = createKindError("HandlerError", {
-  handler: "unknown"
+  handler: "unknown",
 });
 
 /**
@@ -13,7 +13,6 @@ export const HandlerError = createKindError("HandlerError", {
  * known query handlers.
  */
 export const UnknownHandler = createKindError("UnknownHandler");
-
 
 /**
  * The parameters which a user put into a valid Query Handler
@@ -23,7 +22,7 @@ export const ParsingError = createKindError("ParsingError");
 
 /**
  * An error which occurs when a user provides a valid handler
- * but then adds parameters which don't match those which 
+ * but then adds parameters which don't match those which
  * were specfied by the handler.
  */
 export const InvalidParameters = createKindError("InvalidParameters");

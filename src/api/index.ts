@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./classification/index";
 export * from "./classificationApi";
 export * from "./createVaultLink";
 export * from "./dateTime";
@@ -11,4 +12,3 @@ export * from "./obsidian";
 export * from "./renderApi";
 export * from "./showApi";
 export * from "./style";
-export * from "./classification/index";

@@ -1,3 +1,4 @@
+import type { DefaultKindError } from "@yankeeinlondon/kind-error";
 import type KindModelPlugin from "~/main";
 import type {
   OptionParams,
@@ -7,16 +8,15 @@ import type {
 } from "~/types";
 import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
 import { InvalidParameters, ParsingError } from "~/errors";
-import { DefaultKindError } from "@yankeeinlondon/kind-error";
 
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
     name: string,
-    /** the raw string params */
+  /** the raw string params */
     raw: string,
-    /** the scalar property definitions */
+  /** the scalar property definitions */
     scalar: TScalar,
-    /** the options hash definition */
+  /** the options hash definition */
     options: TOpt,
   ): DefaultKindError | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
     /** the quantity of scalars that MUST be in place */
@@ -64,10 +64,10 @@ export function parseQueryParams(_p: KindModelPlugin) {
        * is in the last position of parameters passed in.
        */
       const optionsInTerminalPosition
-        = optionsPosition === -1 ? true : optionsPosition === parsed.length-1 ;
+				= optionsPosition === -1 ? true : optionsPosition === parsed.length - 1;
 
       const scalarParams
-        = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
+				= optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
 
       const notEnoughScalarParams = !!(
         requiredScalar > 0 && scalarParams.length < requiredScalar
@@ -77,7 +77,7 @@ export function parseQueryParams(_p: KindModelPlugin) {
         const err = invalid(
           `Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`,
         );
-		return err;
+        return err;
       }
 
       if (notEnoughScalarParams) {
@@ -87,15 +87,12 @@ export function parseQueryParams(_p: KindModelPlugin) {
       }
 
       if (optionsPosition !== -1) {
-        const requiredOpts = Object.keys(options).filter(
-          i => !i.includes("opt("),
-        );
-
-		if (optionsPosition < parsed.length -1) {
-			return invalid(
-				`The "${name}" query parser received an options hash but did not provide all of the required scalar properties [${requiredScalar}]!`, { scalarProvided: scalarParams.length, optionsPosition, parsed}
-			  );
-		}
+        if (optionsPosition < parsed.length - 1) {
+          return invalid(
+            `The "${name}" query parser received an options hash but did not provide all of the required scalar properties [${requiredScalar}]!`,
+            { scalarProvided: scalarParams.length, optionsPosition, parsed },
+          );
+        }
       }
 
       const scalar: Record<string, any> = {};

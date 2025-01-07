@@ -2,11 +2,11 @@ import type KindModelPlugin from "~/main";
 import type { DvPage } from "~/types";
 import { isArray, stripLeading } from "inferred-types";
 import { getPageType, getTypeTag, hasTypeTag } from "~/api";
+import { getCategories } from "~/api/classification/getCategories";
 import { isPageReference } from "~/type-guards";
 import { getPage } from "./getPage";
 import { getPagesFromTag } from "./getPageFromTag";
 import { getPageKinds } from "./getPageKinds";
-import { getCategories } from "~/api/classification/getCategories";
 
 /**
  * **getTypePage**`(page, singular)`

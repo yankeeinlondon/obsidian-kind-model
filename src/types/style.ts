@@ -42,14 +42,14 @@ export interface UserStyleOptions {
    * text size
    */
   ts?:
-    | "xs"
-    | "sm"
-    | "base"
-    | "lg"
-    | "xl"
-    | "2xl"
-    | `${number}rem`
-    | `${number}rem`;
+      | "xs"
+      | "sm"
+      | "base"
+      | "lg"
+      | "xl"
+      | "2xl"
+      | `${number}rem`
+      | `${number}rem`;
 
   /** width */
   w?: string;
@@ -59,14 +59,14 @@ export interface UserStyleOptions {
   fw?: "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
   /** font style */
   fs?:
-    | "italic"
-    | "none"
-    | "oblique"
-    | `oblique ${number}deg`
-    | "unset"
-    | "inherit"
-    | "revert"
-    | "revert-layer";
+      | "italic"
+      | "none"
+      | "oblique"
+      | `oblique ${number}deg`
+      | "unset"
+      | "inherit"
+      | "revert"
+      | "revert-layer";
 
   flex?: boolean;
   display?: CssDisplay;
@@ -88,14 +88,14 @@ export interface UserStyleOptions {
    * aligns a flex container’s lines within when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis.
    */
   alignContent?:
-    | "normal"
-    | "start"
-    | "end"
-    | "center"
-    | "space-between"
-    | "space-around"
-    | "space-evenly"
-    | "stretch";
+      | "normal"
+      | "start"
+      | "end"
+      | "center"
+      | "space-between"
+      | "space-around"
+      | "space-evenly"
+      | "stretch";
   /**
    * [justify-content](https://css-tricks.com/snippets/css/a-guide-to-flexbox/#aa-justify-content)
    *
@@ -105,24 +105,24 @@ export interface UserStyleOptions {
    * control over the alignment of items when they overflow the line.
    */
   justifyContent?:
-    | "start"
-    | "end"
-    | "left"
-    | "right"
-    | "center"
-    | "space-between"
-    | "space-around"
-    | "space-evenly";
+      | "start"
+      | "end"
+      | "left"
+      | "right"
+      | "center"
+      | "space-between"
+      | "space-around"
+      | "space-evenly";
   justifyItems?: "space-around";
 
   gap?:
-    | CssSizing
-    | `${CssSizing} ${CssSizing}`
-    | "inherit"
-    | "initial"
-    | "revert"
-    | "unset"
-    | "revert-layer";
+      | CssSizing
+      | `${CssSizing} ${CssSizing}`
+      | "inherit"
+      | "initial"
+      | "revert"
+      | "unset"
+      | "revert-layer";
   cursor?: CssCursor;
 
   /** add in some other bespoke CSS key/values */

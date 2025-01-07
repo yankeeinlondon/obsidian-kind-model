@@ -64,5 +64,5 @@ export const VideoGallery = createHandler("VideoGallery")
 
     render.render(dom);
 
-	return true;
+    return true;
   });

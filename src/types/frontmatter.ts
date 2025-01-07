@@ -5,7 +5,7 @@ import type { TupleToUnion } from "../utils/type-utils";
 import type { DataArray, Link } from "./dataview_types";
 import type { Relationship } from "./settings_types";
 
-export type FmPropSuggestions = {
+export interface FmPropSuggestions {
   "kind"?: Link | string | null;
   "kinds"?: (Link | string)[];
   "type"?: Link | string | null;
@@ -47,10 +47,10 @@ export interface FmPropMetaSuggestions {
 }
 
 export type Frontmatter = ExpandDictionary<
-{
-  [key: string]: Narrowable;
-} & FmPropSuggestions &
-FmPropMetaSuggestions
+    {
+      [key: string]: Narrowable;
+    } & FmPropSuggestions &
+    FmPropMetaSuggestions
 >;
 
 export interface CommonAttrs {

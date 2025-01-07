@@ -1,5 +1,6 @@
-export * from "./asArray";
 export * from "./as_number";
+export * from "./asArray";
+export * from "./asMdLink";
 export * from "./Constants";
 export * from "./convertToPageWithArrays";
 export * from "./extract_page_reference";
@@ -14,4 +15,3 @@ export * from "./splitContent";
 export * from "./strip_page_alias";
 export * from "./type-utils";
 export * from "./wait";
-export * from "./asMdLink";

@@ -7,7 +7,7 @@ import { isObject } from "inferred-types";
  */
 export function isPageInfo(val: unknown): val is PageInfo {
   return isObject(val)
-    && "current" in val
-    && "__kind" in val
-	&& val.__kind === "PageInfo"
+      && "current" in val
+      && "__kind" in val
+      && val.__kind === "PageInfo";
 }

@@ -1,19 +1,16 @@
-import { stripLeading } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import type { FuturePage, PageType } from "~/types";
+import type { FuturePage } from "~/types";
 
-
-
-export function futurePage(p: KindModelPlugin) {
+export function futurePage(_p: KindModelPlugin) {
   return (
-   name: string,
+    name: string,
   ) => {
     return ({
-	__kind: "FuturePage",
-	  file: {
-		name: name,
-		path: undefined
-	  }
+      __kind: "FuturePage",
+      file: {
+        name,
+        path: undefined,
+      },
     }) as FuturePage;
   };
 }

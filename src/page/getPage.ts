@@ -10,22 +10,22 @@ export function getPage(p: KindModelPlugin) {
   return <T extends PageReference | undefined>(
     pg: T,
   ): T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage => {
-	if(isFuturePage(pg)) {
-		return undefined as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage ;
-	}
+    if (isFuturePage(pg)) {
+      return undefined as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage;
+    }
 
     if (isDvPage(pg)) {
-      return pg as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage 
+      return pg as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage;
     }
 
     if (isPageInfo(pg)) {
-      return pg.current as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage 
+      return pg.current as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage;
     }
 
     const path = getPath(pg);
     const page = path ? p.dv.page(path) : undefined;
 
-    return page as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage 
+    return page as unknown as T extends undefined ? undefined : T extends FuturePage ? undefined : DvPage;
   };
 }
 
@@ -34,5 +34,5 @@ export function getPage(p: KindModelPlugin) {
  * into a `DvPage`.
  */
 export function getPages(p: KindModelPlugin) {
-	return <T extends unknown[]>(arr: T) => arr.map(i => isPageReference(i) ? getPage(p)(i) : undefined).filter(i => i) as DvPage[]
+  return <T extends unknown[]>(arr: T) => arr.map(i => isPageReference(i) ? getPage(p)(i) : undefined).filter(i => i) as DvPage[];
 }

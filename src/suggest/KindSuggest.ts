@@ -59,8 +59,8 @@ export class KindSuggest extends EditorSuggest<string> {
     }
 
     const completeKindQuery = priorLine.includes("km")
-      && currentLine.length > 0
-      && commands.some(c => c.startsWith(currentLine));
+        && currentLine.length > 0
+        && commands.some(c => c.startsWith(currentLine));
 
     if (completeKindQuery) {
       return {
@@ -133,9 +133,9 @@ export class KindSuggest extends EditorSuggest<string> {
 
       const allCommands = [
         ...(page.isKindedPage
-          || page.isCategoryPage
-          || page.isSubcategoryPage
-          || page.isKindDefnPage
+            || page.isCategoryPage
+            || page.isSubcategoryPage
+            || page.isKindDefnPage
           ? ["Update Kind Page 😊"]
           : []),
       ];

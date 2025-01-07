@@ -33,7 +33,7 @@ import { getPropertyType } from "./getPropertyType";
 export function getFrontmatter(p: KindModelPlugin) {
   return (from: PageReference | Frontmatter): Frontmatter => {
     if (isDvPage(from)) {
-      let fm = { ...from } as Frontmatter;
+      const fm = { ...from } as Frontmatter;
       delete fm.file;
       return fm;
     }
@@ -50,7 +50,8 @@ export function getFrontmatter(p: KindModelPlugin) {
 
     if (page) {
       return page.file.frontmatter;
-    } else {
+    }
+    else {
       p.debug(
         `call to getFrontmatter() was unable to load a valid page so returned an empty object.`,
         { from },
@@ -65,12 +66,12 @@ export function frontmatterHasLinks(p: KindModelPlugin) {
     const meta = getPage(p)(pg);
     if (meta) {
       return (
-        Object.keys(meta).includes("link") ||
-        Object.keys(meta).includes("link_image") ||
-        Object.keys(meta).includes("link_md") ||
-        Object.keys(meta).includes("link_drawing") ||
-        Object.keys(meta).includes("link_vector") ||
-        Object.keys(meta).includes("link_unknown")
+        Object.keys(meta).includes("link")
+        || Object.keys(meta).includes("link_image")
+        || Object.keys(meta).includes("link_md")
+        || Object.keys(meta).includes("link_drawing")
+        || Object.keys(meta).includes("link_vector")
+        || Object.keys(meta).includes("link_unknown")
       );
     }
   };
@@ -81,14 +82,14 @@ export function frontmatterHasUrls(p: KindModelPlugin) {
     const meta = getPage(p)(pg);
     if (meta) {
       return (
-        Object.keys(meta).includes("url") ||
-        Object.keys(meta).includes("url_social") ||
-        Object.keys(meta).includes("url_book") ||
-        Object.keys(meta).includes("url_retail") ||
-        Object.keys(meta).includes("url_profile") ||
-        Object.keys(meta).includes("url_repo") ||
-        Object.keys(meta).includes("url_news") ||
-        Object.keys(meta).includes("url_youtube")
+        Object.keys(meta).includes("url")
+        || Object.keys(meta).includes("url_social")
+        || Object.keys(meta).includes("url_book")
+        || Object.keys(meta).includes("url_retail")
+        || Object.keys(meta).includes("url_profile")
+        || Object.keys(meta).includes("url_repo")
+        || Object.keys(meta).includes("url_news")
+        || Object.keys(meta).includes("url_youtube")
       );
     }
   };
@@ -98,11 +99,11 @@ export function frontmatterHasGeoInfo(p: KindModelPlugin) {
     const meta = getPage(p)(pg);
     if (meta) {
       return (
-        Object.keys(meta).includes("geo") ||
-        Object.keys(meta).includes("geo_country") ||
-        Object.keys(meta).includes("geo_zip") ||
-        Object.keys(meta).includes("geo_state") ||
-        Object.keys(meta).includes("geo_city")
+        Object.keys(meta).includes("geo")
+        || Object.keys(meta).includes("geo_country")
+        || Object.keys(meta).includes("geo_zip")
+        || Object.keys(meta).includes("geo_state")
+        || Object.keys(meta).includes("geo_city")
       );
     }
   };
@@ -110,7 +111,6 @@ export function frontmatterHasGeoInfo(p: KindModelPlugin) {
 
 export function getLinksFromFrontmatter(p: KindModelPlugin) {
   return (pg: PageReference | undefined) => {
-    const page = getPage(p)(pg);
     const meta = getFrontmatterMetadata(p)(pg);
     if (meta) {
       return [
@@ -139,7 +139,7 @@ export function getFirstDateFromFrontmatterProps(p: KindModelPlugin) {
         ...(meta.datetime || []),
         ...(meta.list_datetime || []),
       ] as (string | string[])[];
-      const targets = props.filter((i) => sources.includes(i));
+      const targets = props.filter(i => sources.includes(i));
       let found: Iso8601Date<"explicit"> | undefined;
       let idx = 0;
 
@@ -148,7 +148,7 @@ export function getFirstDateFromFrontmatterProps(p: KindModelPlugin) {
         if (isStringArray(prop)) {
           // property is an array of elements, take first
           const candidate = prop.find(
-            (i) => isIsoDate(i) || isIsoDateTime(i),
+            i => isIsoDate(i) || isIsoDateTime(i),
           ) as Iso8601Date | Iso8601DateTime | undefined;
           if (candidate) {
             found = asIsoDate(candidate);
@@ -169,8 +169,8 @@ export function getYouTubeVideoLinks(p: KindModelPlugin) {
     if (meta) {
       if (
         !(
-          Object.keys(meta).includes("url_youtube") ||
-          Object.keys(meta).includes("list_url_youtube")
+          Object.keys(meta).includes("url_youtube")
+          || Object.keys(meta).includes("list_url_youtube")
         )
       ) {
         return [];
@@ -183,7 +183,7 @@ export function getYouTubeVideoLinks(p: KindModelPlugin) {
         (i: string & keyof typeof meta) => meta[i],
       );
 
-      const links = [...unitLinks, ...listLinks].filter((i) =>
+      const links = [...unitLinks, ...listLinks].filter(i =>
         isYouTubeVideoUrl(i),
       );
 
@@ -222,7 +222,8 @@ export function getFrontmatterMetadata(p: KindModelPlugin) {
         if (type && !type.startsWith("other")) {
           meta[type] = meta[type] ? [...meta[type], key] : [key];
           kv[key] = [fm[key], type];
-        } else {
+        }
+        else {
           meta.other = meta.other ? [...meta.other, key] : [key];
           kv[key] = [fm[key], type];
         }
@@ -241,11 +242,11 @@ export function tasksWithPageLink(p: KindModelPlugin) {
     const page = getPage(p)(pg);
     const tasks = Array.from(page.file.tasks) as ObsidianTask[];
     const tasksWithLink = tasks
-      .filter((i) => i.text.includes("[[") && i.text.includes("]]"))
+      .filter(i => i.text.includes("[[") && i.text.includes("]]"))
       .map((t) => {
         const re = /\[\[(.+?)\]\]/g;
-        const links = Array.from(t.text.matchAll(re)).map((i) => i[1]);
-        const pages = links.map((i) => getPage(p)(i));
+        const links = Array.from(t.text.matchAll(re)).map(i => i[1]);
+        const pages = links.map(i => getPage(p)(i));
         return {
           ...t,
           withLinks: pages,
@@ -255,21 +256,23 @@ export function tasksWithPageLink(p: KindModelPlugin) {
   };
 }
 
-export function outlinksExcludingTasks(k: KindModelPlugin) {
+export function outlinksExcludingTasks(_k: KindModelPlugin) {
   return (outlinks: Link[], taskLinkPaths: string[]) => {
     const paths = new Map<string, number>();
     for (const p of taskLinkPaths) {
       if (paths.has(p)) {
         paths.set(p, (paths.get(p) as number) + 1);
-      } else {
+      }
+      else {
         paths.set(p, 1);
       }
     }
     const overlap = new Map<string, number>();
-    for (const link of outlinks.filter((i) => paths.has(i.path))) {
+    for (const link of outlinks.filter(i => paths.has(i.path))) {
       if (overlap.has(link.path)) {
         paths.set(link.path, (paths.get(link.path) as number) + 1);
-      } else {
+      }
+      else {
         paths.set(link.path, 1);
       }
     }
@@ -277,11 +280,11 @@ export function outlinksExcludingTasks(k: KindModelPlugin) {
 
     for (const [path, quantity] of overlap) {
       if (quantity > (paths.get(path) as number)) {
-        links.push(outlinks.find((i) => i.path === path) as Link);
+        links.push(outlinks.find(i => i.path === path) as Link);
       }
     }
 
-    return [...links, ...outlinks.filter((i) => !paths.has(i.path))];
+    return [...links, ...outlinks.filter(i => !paths.has(i.path))];
   };
 }
 
@@ -291,23 +294,23 @@ export function splitInlinksFromTaskReferences(k: KindModelPlugin) {
     let validInlinks: Link[] = inlinks;
     let validTasks: ObsidianTask[] = [];
 
-    const upstream = Array.from(new Set(inlinks.map((i) => i.path)))
-      .map((i) => getPage(k)(i))
-      .filter((i) => i) as DvPage[];
+    const upstream = Array.from(new Set(inlinks.map(i => i.path)))
+      .map(i => getPage(k)(i))
+      .filter(i => i) as DvPage[];
 
     for (const pg of upstream) {
       /** the tasks pointing to page */
-      const tasks = tasksWithPageLink(k)(pg).filter((t) =>
-        t.withLinks.some((l) => l?.file?.path === path),
+      const tasks = tasksWithPageLink(k)(pg).filter(t =>
+        t.withLinks.some(l => l?.file?.path === path),
       );
       const outlinks = (Array.from(pg.file.outlinks) as Link[]).filter(
-        (l) => l.path === path,
+        l => l.path === path,
       );
 
       validTasks = [...validTasks, ...tasks];
 
       if (outlinks.length <= tasks.length) {
-        validInlinks = validInlinks.filter((i) => i.path !== pg.file.path);
+        validInlinks = validInlinks.filter(i => i.path !== pg.file.path);
       }
     }
 

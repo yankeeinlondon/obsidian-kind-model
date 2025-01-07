@@ -18,10 +18,10 @@ import {
 } from "./events";
 import { on_editor_change } from "./events/on_editor_change";
 import { csv } from "./events/on_load/csv";
-import { DEFAULT_SETTINGS } from "./utils/Constants";
-import { logger } from "./utils/logging";
 import { getDefnPages, getTagLists } from "./startup";
 import { runAfterDataviewReady } from "./startup/runAfterDataviewReady";
+import { DEFAULT_SETTINGS } from "./utils/Constants";
+import { logger } from "./utils/logging";
 
 export default class KindModelPlugin extends Plugin {
   public settings: KindModelSettings;
@@ -43,7 +43,7 @@ export default class KindModelPlugin extends Plugin {
   /**
    * The status of the Dataview plugin's index/readiness
    */
-  public dvStatus: "initializing" | "ready" = "initializing"
+  public dvStatus: "initializing" | "ready" = "initializing";
 
   /** all the valid kind tags known in the vault */
   public kindTags: string[];
@@ -72,12 +72,11 @@ export default class KindModelPlugin extends Plugin {
     this.warn = warn;
     this.error = error;
 
-	this.deferQueryUntilReady = runAfterDataviewReady(this);
-	getTagLists(this);
-	getDefnPages(this);
+    this.deferQueryUntilReady = runAfterDataviewReady(this);
+    getTagLists(this);
+    getDefnPages(this);
 
     // this.registerEditorSuggest(new KindSuggest(this.app, this));
-
 
     // expose the Dataview API
     this.dv = getAPI(this.app);
@@ -102,10 +101,9 @@ export default class KindModelPlugin extends Plugin {
     kindEl.setText(`${this.kindTags.length} Kinds`);
     kindEl.addClass("clickable");
 
-	const typeEl = this.addStatusBarItem();
+    const typeEl = this.addStatusBarItem();
     typeEl.setText(`${this.typeTags.length} Types`);
     typeEl.addClass("clickable");
-
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SettingsTab(this.app, this));
@@ -113,9 +111,9 @@ export default class KindModelPlugin extends Plugin {
     log.info(`loaded plugin, dataview is ${this.dvStatus}`);
 
     this.mount();
-	if(this.dvStatus !== "ready") {
-		this.deferQueryUntilReady(() => log.info("Dataview completed indexing"))
-	}
+    if (this.dvStatus !== "ready") {
+      this.deferQueryUntilReady(() => log.info("Dataview completed indexing"));
+    }
   }
 
   mount() {

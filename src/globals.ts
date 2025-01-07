@@ -8,7 +8,7 @@ import type {
   Plugin as PluginType,
   Workspace,
 } from "obsidian";
-import type { DataViewApi, DvPageCacheEntry, ObsidianApp, ObsidianMetadataCache, TFile, TFolder } from "./types";
+import type { DvPageCacheEntry, ObsidianApp, ObsidianMetadataCache, TFile, TFolder } from "./types";
 import { isDefined } from "inferred-types";
 
 /**
@@ -230,111 +230,108 @@ export const obApp = {
 
 };
 
-type LuxonDateTime =  {
-	new (): LuxonJs["DateTime"];
-	prototype: LuxonJs["DateTime"];
-  };
+interface LuxonDateTime {
+  new (): LuxonJs["DateTime"];
+  prototype: LuxonJs["DateTime"];
+}
 
 /**
  * The **Dataview** API surface exposed to the runtime's global object
  */
 export const dvApi = (globalThis as any).DataviewAPI as {
-	evaluationContext: any;
-	func: Record<string, TypedFunction> & {
-		any: TypedFunction;
-		all: TypedFunction;
-		array: TypedFunction;
-		average: TypedFunction;
-	};
-	index: {
-		csv: any;
-		etags: any;
-		importer: any;
-		indexVersion: SemanticVersion;
-		initialized: boolean;
-		links: {
-			invMap: Map<string, Set<string>>;
-			map: Map<string,string>;
-		},
-		onChange: SyncFunction<[]>;
-		pages: Map<string, DvPageCacheEntry>;
-		/** local storage cache */
-		persister: any;
-		prefix: any;
-		starred: {
-			onUpdate: SyncFunction<[]>;
-			_loaded: boolean;
-			stars: Set<string>;
-		}
-		tags: {
-			delegate: {
-				map: Map<string,string>;
-				invMap: Map<string, Set<string>>;
-			}
-		}
-	};
-	luxon: {
-		VERSION: SemanticVersion;
-		DateTime: LuxonDateTime;
-		Duration: any;
-		FixedOffsetZone: any;
-		IANAZone: any;
-		Info: any;
-		Interval: any;
-		InvalidZone: any;
-		Settings: any;
-		SystemZone: any;
-		Zone: any;
-	};
-	settings: {
-		allowHtml: boolean;
-		/** @default "dataviewjs" */
-		dataviewJsKeyword: string;
-		/** @default "MMMM dd, yyyy" */
-		defaultDateFormat: string;
-		defaultDateTimeFormat: string;
-		enableDataviewJs: boolean;
-		enableInlineDataview: boolean;
-		enableInlineDataviewJs: boolean;
-		/** @default "$=" */
-		inlineJsQueryPrefix: string;
-		inlineQueriesInCodeblocks: boolean;
-		/** @default "=" */
-		inlineQueryPrefix: string;
-		maxRecursiveRenderDepth: number;
-		prettyRenderInlineFields: boolean;
-		recursiveSubTaskCompletion: boolean;
-		refreshEnabled: boolean;
-		refreshInterval: number;
-		renderNullAs: string;
-		showResultCount: true;
-		tableGroupColumnName: string;
-		tableIdColumnName: string;
-		taskCompletionText: string;
-		taskCompletionTracking: boolean;
-		taskCompletionUseEmojiSHorthand: boolean;
-		warnOnEmptyResult: boolean;
-	}
-	value: {
-		compareValues: SyncFunction;
-		deepCopy: SyncFunction;
-		isArray: SyncFunction<[test:unknown], boolean>;
-		isBoolean: SyncFunction<[test:unknown], boolean>;
-		isDate: SyncFunction<[test:unknown], boolean>;
-		isDuration: SyncFunction<[test:unknown], boolean>;
-		isFunction: SyncFunction<[test:unknown], boolean>;
-		isHtml: SyncFunction<[test:unknown], boolean>;
-		isLink: SyncFunction<[test:unknown], boolean>;
-		[key: string]: SyncFunction;
-	};
-	widget: {
-		externalLink: SyncFunction<[url: string, display: string]>;
-		isBuiltin: SyncFunction<[test: unknown], boolean>;
-		isExternalLink: SyncFunction<[test: unknown], boolean>;
-		listPair: SyncFunction<[key: string, value: unknown]>;
-	}
-
+  evaluationContext: any;
+  func: Record<string, TypedFunction> & {
+    any: TypedFunction;
+    all: TypedFunction;
+    array: TypedFunction;
+    average: TypedFunction;
+  };
+  index: {
+    csv: any;
+    etags: any;
+    importer: any;
+    indexVersion: SemanticVersion;
+    initialized: boolean;
+    links: {
+      invMap: Map<string, Set<string>>;
+      map: Map<string, string>;
+    };
+    onChange: SyncFunction<[]>;
+    pages: Map<string, DvPageCacheEntry>;
+    /** local storage cache */
+    persister: any;
+    prefix: any;
+    starred: {
+      onUpdate: SyncFunction<[]>;
+      _loaded: boolean;
+      stars: Set<string>;
+    };
+    tags: {
+      delegate: {
+        map: Map<string, string>;
+        invMap: Map<string, Set<string>>;
+      };
+    };
+  };
+  luxon: {
+    VERSION: SemanticVersion;
+    DateTime: LuxonDateTime;
+    Duration: any;
+    FixedOffsetZone: any;
+    IANAZone: any;
+    Info: any;
+    Interval: any;
+    InvalidZone: any;
+    Settings: any;
+    SystemZone: any;
+    Zone: any;
+  };
+  settings: {
+    allowHtml: boolean;
+    /** @default "dataviewjs" */
+    dataviewJsKeyword: string;
+    /** @default "MMMM dd, yyyy" */
+    defaultDateFormat: string;
+    defaultDateTimeFormat: string;
+    enableDataviewJs: boolean;
+    enableInlineDataview: boolean;
+    enableInlineDataviewJs: boolean;
+    /** @default "$=" */
+    inlineJsQueryPrefix: string;
+    inlineQueriesInCodeblocks: boolean;
+    /** @default "=" */
+    inlineQueryPrefix: string;
+    maxRecursiveRenderDepth: number;
+    prettyRenderInlineFields: boolean;
+    recursiveSubTaskCompletion: boolean;
+    refreshEnabled: boolean;
+    refreshInterval: number;
+    renderNullAs: string;
+    showResultCount: true;
+    tableGroupColumnName: string;
+    tableIdColumnName: string;
+    taskCompletionText: string;
+    taskCompletionTracking: boolean;
+    taskCompletionUseEmojiSHorthand: boolean;
+    warnOnEmptyResult: boolean;
+  };
+  value: {
+    compareValues: SyncFunction;
+    deepCopy: SyncFunction;
+    isArray: SyncFunction<[test: unknown], boolean>;
+    isBoolean: SyncFunction<[test: unknown], boolean>;
+    isDate: SyncFunction<[test: unknown], boolean>;
+    isDuration: SyncFunction<[test: unknown], boolean>;
+    isFunction: SyncFunction<[test: unknown], boolean>;
+    isHtml: SyncFunction<[test: unknown], boolean>;
+    isLink: SyncFunction<[test: unknown], boolean>;
+    [key: string]: SyncFunction;
+  };
+  widget: {
+    externalLink: SyncFunction<[url: string, display: string]>;
+    isBuiltin: SyncFunction<[test: unknown], boolean>;
+    isExternalLink: SyncFunction<[test: unknown], boolean>;
+    listPair: SyncFunction<[key: string, value: unknown]>;
+  };
 
 };
-
-

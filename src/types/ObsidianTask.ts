@@ -27,5 +27,5 @@ export interface ObsidianTask {
 }
 
 export interface ObsidianTaskWithLink extends ObsidianTask {
-	withLinks: DvPage[];
+  withLinks: DvPage[];
 }

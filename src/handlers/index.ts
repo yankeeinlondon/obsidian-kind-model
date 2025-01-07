@@ -4,12 +4,12 @@ import type { ObsidianCodeblockEvent } from "~/types";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
 import { Children } from "./Children";
+import { Debug } from "./Debug";
 import { IconPage } from "./IconPage";
 import { Journal } from "./Journal";
 import { Kind } from "./Kind";
-import { Tasks } from "./Tasks";
-import { Debug } from "./Debug";
 import { PageEntry } from "./PageEntry";
+import { Tasks } from "./Tasks";
 import { VideoGallery } from "./VideoGallery";
 
 export * from "./createHandler";
@@ -42,7 +42,7 @@ export function queryHandlers(p: KindModelPlugin) {
     Kind(p)(ctx),
     PageEntry(p)(ctx),
     Debug(p)(ctx),
-	Tasks(p)(ctx),
+    Tasks(p)(ctx),
     Journal(p)(ctx),
     VideoGallery(p)(ctx),
   ]);
@@ -51,12 +51,12 @@ export function queryHandlers(p: KindModelPlugin) {
 export {
   BackLinks,
   Book,
-  Tasks,
   Children,
+  Debug,
   IconPage,
   Journal,
   Kind,
-  Debug,
   PageEntry,
+  Tasks,
   VideoGallery,
 };

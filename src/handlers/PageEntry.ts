@@ -7,10 +7,10 @@ import {
   isString,
   isUrl,
 } from "inferred-types";
+import { getInternalLinks } from "~/api";
 import { MARKDOWN_PAGE_ICON } from "~/constants";
 import { find_in, isWikipediaUrl } from "~/type-guards";
 import { createHandler } from "./createHandler";
-import { getInternalLinks } from "~/api";
 
 /**
  * Renders the entry or beginning of a page (right under H1)
@@ -23,7 +23,7 @@ export const PageEntry = createHandler("PageEntry")
 
     const fmt = p.api.format;
     const api = p.api;
-    const {current, render} = page;
+    const { current, render } = page;
     // const {fmt, current} = dv;
 
     const banner_img = isUrl(page.current._banner)
@@ -125,5 +125,5 @@ export const PageEntry = createHandler("PageEntry")
       render.renderValue(`<img src="${banner_img}" style="width:100%;aspect-ratio:${banner_aspect}; object-fit: cover"> `);
     }
 
-	return true;
+    return true;
   });

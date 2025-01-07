@@ -3,9 +3,8 @@ import type {
   CssDefinition,
   EscapeFunction,
   FixedLengthArray,
-  Length,
   TypedFunction,
-  UnionArrayToTuple
+  UnionArrayToTuple,
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
@@ -148,92 +147,90 @@ export function internalLink(p: KindModelPlugin) {
 export type Column<T extends string = string> = T | (() => [name: T, style: CssDefinition]);
 
 export type TableData<
-	T extends readonly Column[]
+  T extends readonly Column[],
 > = FixedLengthArray<string, T["length"]>[];
 
 export type HtmlTable<
-	T extends readonly Column[]
+  T extends readonly Column[],
 > = (<TData extends TableData<T>>(data: TData) => string) & {
-	kind: "HtmlTable",
-	columns: T,
-	style: {
-		table?: CssDefinition;	
-		headings?: CssDefinition;
-	}
+  kind: "HtmlTable";
+  columns: T;
+  style: {
+    table?: CssDefinition;
+    headings?: CssDefinition;
+  };
 };
 
 type ToCols<
-	T extends readonly Column[]
+  T extends readonly Column[],
 > = {
-	[K in keyof T]: T[K] extends string
-		? T[K]
-		: T[K] extends () => [infer Name, CssDefinition]
-			? Name
-			: never;
-}
+  [K in keyof T]: T[K] extends string
+    ? T[K]
+    : T[K] extends () => [infer Name, CssDefinition]
+      ? Name
+      : never;
+};
 
+export function htmlTable(_p: KindModelPlugin) {
+  /**
+   * Provide the columns for an HTML table.
+   *
+   * - on next call you'll be asked for the data
+   */
+  return <
+    TCol extends readonly Column<N>[],
+    N extends string,
+  >(
+    columns: TCol,
+    style?: {
+      table?: CssDefinition;
+      headings?: CssDefinition;
+      highlightFirstColumn?: boolean;
+    },
+  ): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
+    const take = (val: string | (() => [string, CssDefinition])) => {
+      return isString(val)
+        ? { val, style: "" }
+        : { val: val()[0], style: cssFromDefinition(val()[1], "", true) };
+    };
 
-export function htmlTable(p: KindModelPlugin) {
-	/**
-	 * Provide the columns for an HTML table.
-	 * 
-	 * - on next call you'll be asked for the data
-	 */
-	return <
-		TCol extends readonly Column<N>[], 
-		N extends string
-	>(
-		columns: TCol, 
-		style?: {
-			table?: CssDefinition;	
-			headings?: CssDefinition;
-			highlightFirstColumn?: boolean;
-		}
-	): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
-		const take = (val: string | (() => [string, CssDefinition])) => {
-			return isString(val) 
-				? { val, style: "" }
-				: { val: val()[0], style: cssFromDefinition(val()[1], "", true) }
-		}
-		
-		const fn = <
-			TData extends TableData<UnionArrayToTuple<TCol>>
-		>(data: TData) => {
+    const fn = <
+      TData extends TableData<UnionArrayToTuple<TCol>>,
+    >(data: TData) => {
+      const output = [
+        `<table style="${style?.table ? cssFromDefinition(style.table, "", true) : ""}">`,
+        `<thead>`,
+        `<tr>`,
+        columns.map(c => `<th scope="col" style="${take(c).style}">${take(c).val}</th>`),
+        `</tr>`,
+        `</thead>`,
+        `<tbody>`,
+        data.map(
+          row => [
+            `<tr>`,
+            row.map((col, idx) =>
+              idx === 0 && style?.highlightFirstColumn
+                ? `<th scope="row">${col}</th>`
+                : `<td>${col}</td>`,
+            ).join("\n"),
+            `</tr>`,
+          ],
+        ).join("\n"),
+        `</tbody>`,
+        `</table>`,
+      ];
 
-			const output = [
-				`<table style="${style?.table ? cssFromDefinition(style.table, "", true): ""}">`,
-					`<thead>`,
-						`<tr>`,
-							columns.map(c => `<th scope="col" style="${take(c).style}">${take(c).val}</th>`),
-						`</tr>`,
-					`</thead>`,
-					`<tbody>`,
-						data.map(
-							(row) => [
-								`<tr>`,
-									row.map((col,idx) => 
-										idx === 0 && style?.highlightFirstColumn
-											? `<th scope="row">${col}</th>`
-											: `<td>${col}</td>`
-									).join("\n"),
-								`</tr>`
-							]
-						).join("\n"),
-					`</tbody>`,
-				`</table>`
-			]
+      return output.join("\n");
+    };
 
-			return output.join("\n")
-		}
+    const props = {
+      kind: "HtmlTable",
+      columns,
+      style,
+    };
 
-		const props = {
-			kind: "HtmlTable",
-			columns,
-			style
-		}
-
-		return createFnWithProps(fn, props) as unknown as HtmlTable<ToCols<UnionArrayToTuple<TCol>>>;
-	}
+    return createFnWithProps(fn, props) as unknown as HtmlTable<ToCols<UnionArrayToTuple<TCol>>>;
+  };
 }
 
 /**
@@ -259,13 +256,12 @@ export function formattingApi(p: KindModelPlugin) {
       );
     },
 
-	bulletPoints(...bullets: string[]) {
-		return renderListItems(
-			wrap_ul,
-			bullets.filter(i => i !== undefined).map(i => `<span style="display:inline-flex">${i}</span>`)
-		)
-	},
-
+    bulletPoints(...bullets: string[]) {
+      return renderListItems(
+        wrap_ul,
+        bullets.filter(i => i !== undefined).map(i => `<span style="display:inline-flex">${i}</span>`),
+      );
+    },
 
     toRight: (
       content: string,
@@ -281,7 +277,6 @@ export function formattingApi(p: KindModelPlugin) {
       ].join("\n");
       return html;
     },
-
 
     /**
      * Adds an HTML link tag `<a></a>` to an internal resource in the vault.
@@ -396,16 +391,16 @@ export function formattingApi(p: KindModelPlugin) {
       }
     },
 
-	/**
-	 * **htmlTable**`(columns, [tableCss]) -> (data) -> HTML`
-	 * 
-	 * higher order function to create an HTML table.
-	 * 
-	 * - columns can be either a string or a tuple of:
-	 * 		- `[ name: string, css: CssDefinition ]`
-	 */
-	htmlTable: htmlTable(p)
-	
+    /**
+     * **htmlTable**`(columns, [tableCss]) -> (data) -> HTML`
+     *
+     * higher order function to create an HTML table.
+     *
+     * - columns can be either a string or a tuple of:
+     * 		- `[ name: string, css: CssDefinition ]`
+     */
+    htmlTable: htmlTable(p),
+
   };
 }
 

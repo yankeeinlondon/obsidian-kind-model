@@ -34,7 +34,6 @@ export function getPageKindTags(p: KindModelPlugin) {
       case "multi-kinded":
       case "multi-kinded > category":
       case "multi-kinded > subcategory":
-        const tags = new Set();
         return (
           (Array.from(pg.file.tags) as string[])
             .filter((i: string) => isKindTag(p)(i))
@@ -49,9 +48,9 @@ export function getPageKindTags(p: KindModelPlugin) {
 
 export function getKindPageByTag(p: KindModelPlugin) {
   return (tag: string | undefined): DvPage | undefined => {
-	if(isUndefined(tag)) {
-		return undefined;
-	}
+    if (isUndefined(tag)) {
+      return undefined;
+    }
     const safeTag = stripLeading(
       stripLeading(tag, "#"),
       "kind",
@@ -102,18 +101,19 @@ export function getPageKinds(p: KindModelPlugin) {
       case "multi-kinded":
       case "multi-kinded > category":
       case "multi-kinded > subcategory":
-		/** kinds derived from page having `kinds` prop */
+        /** kinds derived from page having `kinds` prop */
         const kinds = (pg.file.frontmatter.kinds || [])
-			.filter(isPageReference)
-			.map(getPage(p));
-		const kindTags = getPageKindTags(p)(pg);
+          .filter(isPageReference)
+          .map(getPage(p));
+        const kindTags = getPageKindTags(p)(pg);
 
-		if(kinds.length > 0 && kinds.length >= kindTags.length) {
-			return kinds;
-		} else if (kindTags.length > 0) {
-      return filterEmpty(...kindTags.map(getKindPageByTag(p)));
-
-		} else {
+        if (kinds.length > 0 && kinds.length >= kindTags.length) {
+          return kinds;
+        }
+        else if (kindTags.length > 0) {
+          return filterEmpty(...kindTags.map(getKindPageByTag(p)));
+        }
+        else {
           return [];
         }
       case "none":

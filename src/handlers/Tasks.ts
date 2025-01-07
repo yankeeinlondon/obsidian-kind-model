@@ -1,8 +1,8 @@
 import type { TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
 
+import type { DataArray, ObsidianTask } from "~/types";
 import { createHandler } from "./createHandler";
-import { DataArray, Link, ObsidianTask } from "~/types";
 
 export const COLUMN_CHOICES = [
   "when",
@@ -53,7 +53,7 @@ export const Tasks = createHandler("Tasks")
   .scalar()
   .options()
   .handler(async (evt) => {
-    const { plugin: p, page, createTable, dv } = evt;
+    const { page, createTable, dv } = evt;
 
     /**
      * all in-bound links for the page with the exception of self-references
@@ -73,4 +73,3 @@ export const Tasks = createHandler("Tasks")
 
     return true;
   });
-

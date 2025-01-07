@@ -147,7 +147,7 @@ export type UiBuilderContext<
   TBase extends Record<PropertyKey, any>,
   TGlobalOpt extends UiBuilderOptions,
 > =
-  UiBuilderContextApi<TBase, TGlobalOpt> & (
+    UiBuilderContextApi<TBase, TGlobalOpt> & (
   <TProp extends keyof TBase | null>
   (
     name: MaybeLazy<string>,

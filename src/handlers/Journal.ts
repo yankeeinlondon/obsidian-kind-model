@@ -36,8 +36,7 @@ export const Journal = createHandler("Journal")
     fileFormat: "string",
   })
   .handler(async (evt) => {
-	const { page, plugin: p, render} = evt;
-
+    const { page, plugin: p, render } = evt;
 
     if (page) {
       const when = getWhenDate(p)(page);

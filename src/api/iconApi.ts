@@ -33,7 +33,7 @@ type LinkIcons = typeof defaultLinkIcons & Record<string, InlineSvg>;
  */
 export function iconApi(p: KindModelPlugin) {
   const linkIcons = (getPage(p)("Link Icons")
-    || defaultLinkIcons) as unknown as LinkIcons;
+      || defaultLinkIcons) as unknown as LinkIcons;
 
   return {
     /**

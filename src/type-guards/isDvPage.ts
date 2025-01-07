@@ -7,11 +7,10 @@ import { isObject } from "inferred-types";
  */
 export function isDvPage(val: unknown): val is DvPage {
   return isObject(val)
-    && "file" in val
-    && isObject(val.file)
-    && "name" in val.file
-    && "path" in val.file
-	&& val.__kind !== "FuturePage"
-	&& typeof val.file.path === "string";
-
+      && "file" in val
+      && isObject(val.file)
+      && "name" in val.file
+      && "path" in val.file
+      && val.__kind !== "FuturePage"
+      && typeof val.file.path === "string";
 }

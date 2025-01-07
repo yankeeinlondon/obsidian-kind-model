@@ -198,7 +198,6 @@ export function asExplicitIso8601Date(date: Iso8601Date | Iso8601DateTime): Iso8
 export function describeDate(date: Iso8601Date | Iso8601DateTime,	offset: number = 0,	sameYear: string = "MMM Do",	diffYear: string = "MMM Do, YYYY") {
   const d = moment(asExplicitIso8601Date(date)).add(offset, "days");
 
-
   return isToday(d)
     ? "today"
     : isYesterday(d)

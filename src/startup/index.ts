@@ -1,2 +1,2 @@
-export * from "./getTagLists";
 export * from "./getDefnPages";
+export * from "./getTagLists";

@@ -1,38 +1,35 @@
-import { isString } from "inferred-types";
 import type { LogLevel } from "~/types/settings_types";
+import { isString } from "inferred-types";
 
 function msg<T extends unknown[]>(list: T) {
   return list.find(i => typeof i === "string") || ("" as string | "");
 }
-
-
 
 function debug<TLevel extends LogLevel>(level: TLevel) {
   return (...args: unknown[]) => {
     if (level !== "debug") {
       return;
     }
-	if (args.length === 1 && isString(args[0])) {
-		console.log(`KM: ${args[0]}`)
-	} else {
-
-		console.groupCollapsed(`KM(dbg): ${msg(args)}`);
-		args.forEach((a) => {
-		  if (typeof a === "function") {
-			console.log(`fn → `, a());
-		  }
-		  else if (typeof a === "object" && a !== null) {
-			Object.keys(a).map(k =>
-			  console.log({ [k]: a[k as keyof typeof a] }),
-			);
-		  }
-		  else {
-			console.log(a);
-		  }
-		});
-		console.groupEnd();
-	}
-
+    if (args.length === 1 && isString(args[0])) {
+      console.log(`KM: ${args[0]}`);
+    }
+    else {
+      console.groupCollapsed(`KM(dbg): ${msg(args)}`);
+      args.forEach((a) => {
+        if (typeof a === "function") {
+          console.log(`fn → `, a());
+        }
+        else if (typeof a === "object" && a !== null) {
+          Object.keys(a).map(k =>
+            console.log({ [k]: a[k as keyof typeof a] }),
+          );
+        }
+        else {
+          console.log(a);
+        }
+      });
+      console.groupEnd();
+    }
   };
 }
 
@@ -41,23 +38,24 @@ function info<TLevel extends LogLevel>(level: TLevel) {
     if (["debug"].includes(level)) {
       return;
     }
-	if (args.length === 1 && isString(args[0])) {
-		console.info(`KM: ${args[0]}`)
-	} else {
-		console.groupCollapsed(`KM: ${msg(args)}`);
-		args.forEach((a) => {
-		  if (typeof a === "function") {
-			console.info(`fn → `, String(a));
-		  }
-		  else if (typeof a === "object" && a !== null) {
-			Object.keys(a).map(k => console.info({ [k]: a[k as keyof typeof a] }));
-		  }
-		  else {
-			console.info(a);
-		  }
-		});
-		console.groupEnd();
-	}
+    if (args.length === 1 && isString(args[0])) {
+      console.info(`KM: ${args[0]}`);
+    }
+    else {
+      console.groupCollapsed(`KM: ${msg(args)}`);
+      args.forEach((a) => {
+        if (typeof a === "function") {
+          console.info(`fn → `, String(a));
+        }
+        else if (typeof a === "object" && a !== null) {
+          Object.keys(a).map(k => console.info({ [k]: a[k as keyof typeof a] }));
+        }
+        else {
+          console.info(a);
+        }
+      });
+      console.groupEnd();
+    }
   };
 }
 
@@ -71,15 +69,16 @@ function warn<TLevel extends LogLevel>(level: TLevel) {
     if (["error"].includes(level)) {
       return;
     }
-	if (args.length === 1 && isString(args[0])) {
-		console.warn(`KM: ${args[0]}`);
-	} else {
-		console.group("KM(warn)");
-		args.forEach((a) => {
-		  console.warn(a);
-		});
-		console.groupEnd();
-	}
+    if (args.length === 1 && isString(args[0])) {
+      console.warn(`KM: ${args[0]}`);
+    }
+    else {
+      console.group("KM(warn)");
+      args.forEach((a) => {
+        console.warn(a);
+      });
+      console.groupEnd();
+    }
   };
 }
 function error<TLevel extends LogLevel>(_level: TLevel) {

@@ -1,7 +1,6 @@
 import type KindModelPlugin from "~/main";
 import type { DvPage, FuturePage, Tag } from "~/types";
 import { ensureLeading, isUndefined, stripLeading } from "inferred-types";
-import { obApp } from "~/globals";
 import { futurePage } from "~/helpers";
 
 /**
@@ -28,7 +27,7 @@ export function getPageFromKindTag(p: KindModelPlugin) {
 }
 
 export function getCategoryPageFromTags(p: KindModelPlugin) {
-  return (kind: string, category: string) => {
+  return (kind: string) => {
     const strippedKind = stripLeading(
       stripLeading(kind, "#"),
       "kind/",
@@ -64,17 +63,17 @@ export function getPagesFromTag(p: KindModelPlugin) {
 }
 
 export function getPageFromTagOrFuturePage(p: KindModelPlugin) {
-	return <
-		T extends string | undefined
-	>(
-		tag: T,
-		name: string
-	): DvPage | FuturePage => {
-		const page = getPagesFromTag(p)(tag);
-		if (page && page.length > 0) {
-			return page[0] as DvPage;
-		}
+  return <
+    T extends string | undefined,
+  >(
+    tag: T,
+    name: string,
+  ): DvPage | FuturePage => {
+    const page = getPagesFromTag(p)(tag);
+    if (page && page.length > 0) {
+      return page[0] as DvPage;
+    }
 
-		return futurePage(p)(name);
-	}
+    return futurePage(p)(name);
+  };
 }

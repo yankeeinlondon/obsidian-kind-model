@@ -5,10 +5,10 @@ import { isObject } from "inferred-types";
  */
 export function isObsidianComponent(val: unknown) {
   return isObject(val)
-    && "load" in val
-    && "onload" in val
-    && "unload" in val
-    && "registerEvent" in val
-    && "registerDomEvent" in val
-    && "registerInterval" in val;
+      && "load" in val
+      && "onload" in val
+      && "unload" in val
+      && "registerEvent" in val
+      && "registerDomEvent" in val
+      && "registerInterval" in val;
 }

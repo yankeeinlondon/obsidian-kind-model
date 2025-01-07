@@ -55,8 +55,8 @@ export interface DecomposedUnknownTag {
 }
 
 export type DecomposedTag =
-  | DecomposedUnknownTag
-  | DecomposedTypeTag
-  | DecomposedKindTag
-  | DecomposedCategoryTag
-  | DecomposedSubcategoryTag;
+    | DecomposedUnknownTag
+    | DecomposedTypeTag
+    | DecomposedKindTag
+    | DecomposedCategoryTag
+    | DecomposedSubcategoryTag;

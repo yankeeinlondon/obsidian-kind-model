@@ -28,48 +28,52 @@ import {
   stripSurround,
   toPascalCase,
 } from "inferred-types";
-import { getPage } from "~/page";
 import { isAliasedMdLink, isDateTime, isLink, isMdLink } from "~/type-guards";
 
 export function getPropertyType(p: KindModelPlugin) {
   return (value: unknown): PropertyType => {
-	if(isMdLink(value)) {
-		if(isAliasedMdLink(value)) {
-			const [path, link] = stripSurround("[","]")(value).split("|")
-			if(path.endsWith(".md")) {
-				return "link_md";
-			} else if (path.endsWith(".excalidraw")) {
-				return "link_drawing";
-			} else if (["webp","jpg","jpeg","png","heif","gif"].some(i => path.endsWith(i)) ) {
-				return "link_image";
-			} else if (path.endsWith(".svg")) {
-				return "link_vector";
-			} else if (path.endsWith(".canvas")) {
-				return "link_canvas";
-			} else {
-				return "link"
-			}
-		} else {
-			return "link_noAlias"
-		}
-	}
-	if(isLink(value)) {
-		if(value.path.endsWith('.md')) {
-			return "link_md"
-		} 
-		if(value.path.endsWith('.excalidraw')) {
-			return "link_drawing"
-		} 
-		if(value.path.endsWith('.svg')) {
-			return "link_vector"
-		} 
-		if(value.path.endsWith('.canvas')) {
-			return "link_canvas"
-		} 
+    if (isMdLink(value)) {
+      if (isAliasedMdLink(value)) {
+        const [path, _link] = stripSurround("[", "]")(value).split("|");
+        if (path.endsWith(".md")) {
+          return "link_md";
+        }
+        else if (path.endsWith(".excalidraw")) {
+          return "link_drawing";
+        }
+        else if (["webp", "jpg", "jpeg", "png", "heif", "gif"].some(i => path.endsWith(i))) {
+          return "link_image";
+        }
+        else if (path.endsWith(".svg")) {
+          return "link_vector";
+        }
+        else if (path.endsWith(".canvas")) {
+          return "link_canvas";
+        }
+        else {
+          return "link";
+        }
+      }
+      else {
+        return "link_noAlias";
+      }
+    }
+    if (isLink(value)) {
+      if (value.path.endsWith(".md")) {
+        return "link_md";
+      }
+      if (value.path.endsWith(".excalidraw")) {
+        return "link_drawing";
+      }
+      if (value.path.endsWith(".svg")) {
+        return "link_vector";
+      }
+      if (value.path.endsWith(".canvas")) {
+        return "link_canvas";
+      }
 
-
-		return value.display ?  "link" : "link_noAlias"
-	}
+      return value.display ? "link" : "link_noAlias";
+    }
 
     if (isYouTubeUrl(value)) {
       if (isYouTubeCreatorUrl(value)) {
@@ -80,9 +84,8 @@ export function getPropertyType(p: KindModelPlugin) {
       }
     }
 
-	// string values
+    // string values
     if (isString(value)) {
-
       if (isPhoneNumber(value)) {
         return "phoneNumber";
       }
@@ -145,8 +148,8 @@ export function getPropertyType(p: KindModelPlugin) {
         return "url";
       }
 
-      if(isCreditCard(value)) {
-        return "string_creditCard"
+      if (isCreditCard(value)) {
+        return "string_creditCard";
       }
 
       return isNumberLike(value) ? "string_numeric" : "string";
@@ -174,7 +177,7 @@ export function getPropertyType(p: KindModelPlugin) {
         return `list_mixed_${Array.from(variants).join(",")}`;
       }
     }
-	p.info(`other prop type`, value)
+    p.info(`other prop type`, value);
 
     return `other_${toPascalCase(String(typeof value))}`;
   };

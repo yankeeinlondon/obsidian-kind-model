@@ -5,9 +5,9 @@ import { isTFile } from "./isTFile";
 
 function is_valid(v: unknown) {
   return !!(isStringPageRef(v)
-    || isTFile(v)
-    || isDataviewFile(v)
-    || isDataviewPage(v));
+      || isTFile(v)
+      || isDataviewFile(v)
+      || isDataviewPage(v));
 }
 
 /**
