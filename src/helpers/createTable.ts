@@ -53,6 +53,18 @@ export interface TableOpt<
 	 * specify columns which should be removed from table if all records are empty
 	 */
 	hideColumnIfEmpty?: readonly Suggest<[...TCols, "all"]>[];
+
+	/**
+	 * hide certain columns on mobile platforms
+	 */
+	hideColumnOnMobile?: readonly Suggest<[...TCols, "all"]>[];
+
+	/**
+	 * hide certain columns on phones (or more specifically on devices
+	 * with greatly reduced horizontal real estate)
+	 */
+	hideColumnOnPhone?: readonly Suggest<[...TCols, "all"]>[];
+
 	/**
 	 * specify a render value for a _column_ (or set of columns) to display
 	 * when a given row/page doesn't have a value for this column.

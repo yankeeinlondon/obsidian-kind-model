@@ -1,6 +1,8 @@
-import { asDisplayTag } from "~/helpers";
 import { createHandler } from "./createHandler";
 import { asArray, isString } from "inferred-types";
+import { Link } from "obsidian-dataview";
+import { getPageType } from "~/api";
+import { DvPage } from "~/types";
 
 export const Kind = createHandler("Kind")
 	.scalar(
@@ -9,11 +11,22 @@ export const Kind = createHandler("Kind")
 		"subcategory AS opt(string)",
 	)
 	.options({
+		/** 
+		 * control whether all pages within scope or only true "kinded" pages 
+		 * are displayed. 
+		 */
+		noClassificationResults: "boolean",
 		show: "array(string)",
 		hide: "array(string)",
 	})
 	.handler(async (evt) => {
-		const { createTable,  dv, report, options } = evt;
+		const { createTable, plugin, dv, report, options } = evt;
+		const noClassificationResult = options.noClassificationResults || true;
+
+		const where = noClassificationResult
+			? (i: DvPage) => ["kinded","multi-kinded"].includes(getPageType(plugin)(i))
+			: () => true;
+
 
 		let tbl = createTable("Page", "Classification", "Description", "Links")(
 			r => [
@@ -40,7 +53,8 @@ export const Kind = createHandler("Kind")
 		}
 
 		const pages = dv.pages(queryParts.join(""))
-			.sort(i => [i.kind, i.category, i.subcategory]);
+			.sort(i => [i.kind, i.category, i.subcategory])
+			.where(where);
 
 		if (options.hide) {
 			const hide = asArray(options.hide);

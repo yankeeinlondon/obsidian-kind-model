@@ -154,19 +154,25 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
 				if(page.fm.category) {
 					await page.removeFmKey("category");
 				}
-				return true;
+				changed = true;
+			} else if ( page.categories.length === 1) {
+				await page.setFmKey("category", page.categories[0].page)
+
+				if(page.fm.categories) {
+					await page.removeFmKey("categories")
+				}
+
+				changed = true;
 			}
 			break;
 	}
 
-	return false;
+	return changed;
 }
 
 async function updateSubcategory(p: KindModelPlugin, page: PageView): Promise<boolean> {
 	const {
-		current,
-		pageType,
-		kindTags
+		pageType
 	} = page;
 	let changed = false;
 

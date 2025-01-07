@@ -70,7 +70,7 @@ export function getTypeForPage(p: KindModelPlugin) {
       case "multi-kinded":
       case "multi-kinded > category":
       case "multi-kinded > subcategory":
-        const kindPages = getPageKinds(p)(page).filter(i => isPageReference(i.type)) as DvPage[];
+        const kindPages = getPageKinds(p)(page).filter(i => isPageReference(i?.type)) as DvPage[];
         return isArray(page.types) && page.types.some(i => isPageReference(i))
           ? page.types.map(i => isPageReference(i) ? getPage(p)(i) : undefined).filter(i => i) as DvPage[]
           : page.file.tags.some(i => i.startsWith(`#type/`))

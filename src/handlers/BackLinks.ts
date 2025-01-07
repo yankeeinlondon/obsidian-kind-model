@@ -93,7 +93,9 @@ export const BackLinks = createHandler("BackLinks")
       .sort(p => p?.path)
       .where(p => p.path !== page.path && whereTags(p));
 
-    await createTable("Backlink", "Classification(s)", "Desc", "Links")(
+    await createTable(
+		"Backlink", "Classification", "Desc", "Links"
+	)(
       i => [
         i.createFileLink(),
         i.showClassifications(),

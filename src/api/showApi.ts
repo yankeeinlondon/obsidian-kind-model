@@ -1,8 +1,9 @@
-import type { OptionalSpace, StripLeading } from "inferred-types";
+import type { CssDefinition, OptionalSpace, StripLeading } from "inferred-types";
 import type { FormattingApi } from "./formattingApi";
 import type KindModelPlugin from "~/main";
 import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import {
+	cssFromDefinition,
 	ensureLeading,
 	isEmpty,
 	isNumber,
@@ -465,15 +466,36 @@ export function showKind(p: KindModelPlugin) {
 	};
 }
 
-// <a data-tooltip-position="top" aria-label="Aggregation Switch" data-href="Aggregation Switch" href="Aggregation Switch" class="internal-link data-link-icon data-link-icon-after data-link-text" target="_blank" rel="noopener nofollow" data-link-tags="#hardware/network/switch" data-link-path="hardware/networking/Aggregation Switch.md" style="--data-link-tags: #hardware/network/switch; --data-link-path: hardware/networking/Aggregation Switch.md;">Aggregation Switch</a>
+type InternalLinkOpt = {
+	css?: CssDefinition,
+	hoverCss?: CssDefinition,
+	klass?: string | string[],
+}
 
-function link(name: string, path: string, display: string) {
-	return [
+/**
+ * Creates a link to another page in the vault and ensures
+ * that the expected Obsidian classes are included.
+ */
+function internalLink(
+	name: string, 
+	path: string, 
+	display: string,
+	opt: InternalLinkOpt = {}
+) {
+
+
+	return isEmpty(display)
+		? ""
+		: [
+		// we need a wrapper because Obsidian may overwrite the "style" prop
+		// placed on the `<a>` node
+		`<span class="link-wrapper" style="${cssFromDefinition(opt.css || {}, "", true)}">`,
 		`<a data-href="${name}" href="${path}" `,
 		`class="internal-link data-link-icon data-link-icon-after data-link-text" `,
 		`target="_blank" rel="noopener">`,
 		display,
 		`</a>`,
+		`<\span>`
 	].join("");
 }
 
@@ -496,11 +518,21 @@ export interface HtmlLinkOpt {
 	asCodeBlock?: boolean;
 
 	createPageWhereMissing?: boolean;
+
+	/** define any additional CSS you want to be placed on the link */
+	css?: CssDefinition
 }
 
-export function htmlConfiguredLink(p: KindModelPlugin) {
+/**
+ * Allows you to configure aspects of an `htmlLink` as a template which
+ * can then be reused on multiple places.
+ */
+export function linkTemplate(p: KindModelPlugin) {
 	return (opt: HtmlLinkOpt) => {
-		return (ref: PageReference | undefined) => htmlLink(p)(ref, opt);
+		return (
+			ref: PageReference | undefined,
+			override?: HtmlLinkOpt
+		) => htmlLink(p)(ref, {...opt, ...(override || {})});
 	}
 }
 
@@ -521,12 +553,12 @@ export function htmlLink(p: KindModelPlugin) {
 			const path = stripTrailing(page.file.path, ".md");
 			const display = opt?.display || page.file.name || page.file.path;
 
-			return `<span>${opt?.pre || ""}${link(name, path, block(display))}${opt?.post || ""}</span>`;
+			return `<span>${opt?.pre || ""}${internalLink(name, path, block(display))}${opt?.post || ""}</span>`;
 		}
 		else {
 			if (isFuturePage(ref)) {
 				const display = opt?.display || ref.file.name;
-				return link(ref.file.name, ref.file.name, block(display))
+				return internalLink(ref.file.name, ref.file.name, block(display))
 			} else {
 				console.log(`invalid: ${ref}`);
 			}
@@ -536,7 +568,7 @@ export function htmlLink(p: KindModelPlugin) {
 			const parts = ref.split("/");
 			const display = opt.display || parts.pop() || "";
 
-			return link(
+			return internalLink(
 				stripTrailing(ref, ".md"),
 				ref,
 				isToday(display)
@@ -568,10 +600,7 @@ export function showCategories(p: KindModelPlugin) {
 			// 	new Set<string>(cats.map((i) => i.kind)).size > 1;
 
 			for (const cat of cats) {
-				// const fmt = p.api.format;
-				// let opt: MarkdownLinkOpt = {
-				// 	pre: isMultiKind ? p.api.format.light(cat.kind + "/") : "",
-				// };
+
 
 				links.push(
 					getPath(page) === getPath(currentPage)
@@ -684,24 +713,25 @@ export function showClassifications(p: KindModelPlugin) {
 				? opt.source.pageType
 				: "none"
 
-		const sep = ` <span style="opacity: 0.8"> &gt; </span> `
+		const sep = ` <span style="opacity: 0.8"> &gt; </span>`
 
 		const show = classifications.map(i => {
+			const link = linkTemplate(p)({ css: {"white-space": "nowrap"}})
 			const typeTag = isDvPage(i.type)
 				? asDisplayTag(getTypeTag(p)(i.type) as string, true)
 				: "";
 
-			const showType = i.type ? "[ " + htmlLink(p)(i.type, { display: typeTag }) + " ] " : "";
+			const showType = i.type ? "[ " + link(i.type, { display: typeTag }) + " ] " : "";
 
-			const showKind = htmlLink(p)(
+			const showKind = link(
 				i.kind, {
-				display: `${i.kindTag}`
-			}
+					display: `${i.kindTag}`
+				}
 			);
 
 			const startOfLine = [
-				`<div style="display:flex;">`,
-				`<div>${showType}${showKind}</div>`,
+				`<div style="display:flex; whitespace: nowrap">`,
+				`<div style="whitespace: nowrap">${showType}${showKind}</div>`,
 			];
 
 			const categories = (
@@ -709,9 +739,10 @@ export function showClassifications(p: KindModelPlugin) {
 			) as KindClassifiedCategory[];
 
 
-			const showCategories = `<div class="categories">` + categories.map(
+			const showCategories = `<div class="categories" style="whitespace: nowrap">` + categories.map(
 				c => {
-					const link = htmlLink(p)(c.page, { display: c.tag, pre: sep } );
+					
+					const catLink = link(c.page, { display: c.tag } );
 					const subcategories = c?.subcategories 
 						? c.subcategories
 						: c?.subcategory
@@ -724,10 +755,10 @@ export function showClassifications(p: KindModelPlugin) {
 
 					return isPageReference(c.page)
 						? subcategories.length > 1
-							? `${link}${sep}[...]`
+							? `${sep}${catLink}${sep}[...]`
 							: subcategories.length === 1
-								? `${link}${sep}${htmlLink(p)(subcategories[0].page, {display: subTag})}`
-								: link
+								? `${sep}${catLink}${sep}${link(subcategories[0].page, {display: subTag})}`
+								: `${sep}${catLink}`
 						: undefined
 				}).filter(i => i).join(`\n`) + "</div>"
 
@@ -738,9 +769,9 @@ export function showClassifications(p: KindModelPlugin) {
 			].join("\n")
 
 			
-		}).join("<br/>\n");
+		}).join("\n");
 
-		p.info("show classification", show);
+		p.debug("show classification", show);
 
 		return show;
 	};

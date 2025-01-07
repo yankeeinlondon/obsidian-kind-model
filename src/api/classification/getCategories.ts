@@ -10,15 +10,17 @@ function getCategorySpecs(p: KindModelPlugin) {
 
 		let kindedTags = (Array.from(page.file.tags) as string[])
 			.filter(
-				i => [2, 3].includes(i.split("/").length) && !["category", "subcategory"].includes(i.split("/")[1]),
+				i => [2, 3].includes(i.split("/").length) && 
+				!["category", "subcategory"].includes(i.split("/")[1]),
 			)
 			.map(
 				(i) => {
 					const [kind, category] = i.split("/");
+					const catDefnTag = `${ensureLeading(kind, "#")}/category/${category}`
 					return {
 						kind: stripLeading(kind, "#"),
 						page: getPageFromTagOrFuturePage(p)(
-							`${ensureLeading(kind, "#")}/category/${category}`,
+							catDefnTag,
 							`"${category}" as Category for "${stripLeading(kind, "#")}"`),
 						category,
 						kindedTag: `${ensureLeading(kind, "#")}/${category}`,
@@ -124,7 +126,7 @@ export function getCategories(p: KindModelPlugin) {
 				case "multi-kinded > subcategory":
 					return getSubcategoryDefnSpecs(p)(page);
 				case "multi-kinded":
-					return getCategoryDefnSpecs(p)(page);
+					return getCategorySpecs(p)(page).filter(i => i.category);
 				case "none":
 					return [] as PageCategory[];
 			}
