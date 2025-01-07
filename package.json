@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-kind-model",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Stronger context, linking, and lookups through Kinded types",
 	"scripts": {
 		"dev": "vite build --watch ",
