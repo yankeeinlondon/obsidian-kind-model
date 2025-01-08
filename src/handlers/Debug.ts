@@ -1,8 +1,8 @@
-import type KindModelPlugin from "~/main";
-import type { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
 import { htmlLink } from "~/api";
 import { asDisplayTag } from "~/helpers";
+import type KindModelPlugin from "~/main";
 import { isFuturePage, isPageReference } from "~/type-guards";
+import type { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
 import { createHandler } from "./createHandler";
 
 function showCategories(p: KindModelPlugin) {

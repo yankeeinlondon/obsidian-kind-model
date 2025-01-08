@@ -1,6 +1,7 @@
 import type { Component, MarkdownPostProcessorContext } from "obsidian";
 import type KindModelPlugin from "~/main";
 import type { ObsidianCodeblockEvent } from "~/types";
+import { Accounts } from "./Accounts";
 import { BackLinks } from "./BackLinks";
 import { Book } from "./Book";
 import { Children } from "./Children";
@@ -38,6 +39,7 @@ export function queryHandlers(p: KindModelPlugin) {
     IconPage(p)(ctx),
     Children(p)(ctx),
     BackLinks(p)(ctx),
+    Accounts(p)(ctx),
     Book(p)(ctx),
     Kind(p)(ctx),
     PageEntry(p)(ctx),
@@ -49,14 +51,15 @@ export function queryHandlers(p: KindModelPlugin) {
 }
 
 export {
-  BackLinks,
-  Book,
-  Children,
-  Debug,
-  IconPage,
-  Journal,
-  Kind,
-  PageEntry,
-  Tasks,
-  VideoGallery,
+	Accounts,
+	BackLinks,
+	Book,
+	Children,
+	Debug, IconPage,
+	Journal,
+	Kind,
+	PageEntry,
+	Tasks,
+	VideoGallery
 };
+

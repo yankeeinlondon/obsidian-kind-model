@@ -1,20 +1,22 @@
 import type { App } from "obsidian";
-import type { Logger } from "../utils/logging";
+
 import type KindModelPlugin from "~/main";
-import type { ClassificationMeta, KindClassification } from "~/types";
+import type { ClassificationMeta, KindClassificationConfig } from "~/types";
+import type { Logger } from "~/utils";
 import { PluginSettingTab } from "obsidian";
-import { UiBuilder } from "../helpers/UiBuilder";
+
+import { UiBuilder } from "~/helpers";
+import { logger } from "~/utils";
 import {
   CLASSIFICATION,
   DEFAULT_KIND,
   LOG_LEVELS,
   TAG_HANDLING,
-} from "../utils/Constants";
-import { logger } from "../utils/logging";
+} from "~/utils/Constants";
 import { KindModal } from "./KindModal";
 
 const ClassificationLookup: Record<
-  KindClassification,
+  KindClassificationConfig,
   [string[], Record<string, string>, string]
 > = {
   "category": [["category"], {}, "A 0:1 relationship to a category only"],
@@ -35,7 +37,7 @@ const ClassificationLookup: Record<
   ],
 };
 
-export function classification(c: KindClassification): ClassificationMeta {
+export function classification(c: KindClassificationConfig): ClassificationMeta {
   return {
     name: c,
     kind_props: ClassificationLookup[c][0],

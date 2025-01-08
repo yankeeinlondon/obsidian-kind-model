@@ -1,20 +1,21 @@
 import type {
-  AnyObject,
-  Contains,
-  Scalar,
-  Suggest,
-  Tuple,
-  TypedFunction,
+	AnyObject,
+	Contains,
+	FixedLengthArray,
+	Scalar,
+	Suggest,
+	Tuple,
+	TypedFunction,
 } from "inferred-types";
-import type KindModelPlugin from "~/main";
-import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 import {
-  createFnWithProps,
-  isDefined,
-  keysOf,
+	createFnWithProps,
+	isDefined,
+	keysOf,
 } from "inferred-types";
 import { showApi } from "~/api";
+import type KindModelPlugin from "~/main";
 import { getPageInfo } from "~/page";
+import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 
 const NO_PLUGIN = ["showCreatedDate", "showModifiedDate"] as const;
 const NO_PAGE = ["createLinksFromTag"] as const;
@@ -44,7 +45,7 @@ export type QueryRecord = {
 
 export type TableCallback<T extends readonly string[]> = <A extends QueryRecord>(
   cb: A
-) => T[];
+) => FixedLengthArray<string, T["length"]>;
 
 export interface TableOpt<
   TCols extends readonly string[],
@@ -212,7 +213,7 @@ export function createTable<
       ...(optCallback || {}),
     } as TableOpt<TCols>;
 
-    const fn = async <T extends DataArray<any>>(
+    const fn = async <T extends DataArray<any> | any[]>(
       records: T,
     ) => {
       const recArr = Array.from(records) as PageReference[];
@@ -263,11 +264,13 @@ export function createTable<
       removeColumns(colsToRemove: string[]) {
         colsToRemove.forEach(c => preRemoval.add(c.toLowerCase()));
       },
-      addColumns(colsToAdd: string[]) {
-
+      addColumns(_colsToAdd: string[]) {
+        // TODO
       },
     });
 
     return createFnWithProps(fn, props);
   };
 }
+
+

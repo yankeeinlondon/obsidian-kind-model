@@ -1,7 +1,6 @@
 import type KindModelPlugin from "~/main";
 import { toKeyValue } from "inferred-types";
-import { TFile } from "obsidian";
-import { isPageReference } from "~/type-guards";
+import { isPageReference, isTFile } from "~/type-guards";
 import { asMdLink } from "~/utils";
 
 /**
@@ -11,13 +10,13 @@ import { asMdLink } from "~/utils";
 export function removeFmKey(p: KindModelPlugin) {
   return (path: string) =>
   /**
-		 *  Removes the specified `key` from the current page.
-		 */
+   *  Removes the specified `key` from the current page.
+   */
     async (key: string) => {
       const abstractFile = p.app.vault.getAbstractFileByPath(path);
 
-      if (abstractFile instanceof TFile) {
-        const file = abstractFile as TFile;
+      if (isTFile(abstractFile)) {
+        const file = abstractFile;
         try {
           await p.app.fileManager.processFrontMatter(file, (frontmatter) => {
             delete frontmatter[key];
@@ -44,8 +43,8 @@ export function sortFmKeys(p: KindModelPlugin) {
     // TODO: add options for sorting
     return async () => {
       const abstractFile = p.app.vault.getAbstractFileByPath(path);
-      if (abstractFile instanceof TFile) {
-        const file = abstractFile as TFile;
+      if (isTFile(abstractFile)) {
+        const file = abstractFile;
         await p.app.fileManager.processFrontMatter(file, (fm) => {
           const top = [
             "type",
@@ -101,8 +100,8 @@ export function setFmKey(p: KindModelPlugin) {
     async (key: string, value: any) => {
       const abstractFile = p.app.vault.getAbstractFileByPath(path);
 
-      if (abstractFile instanceof TFile) {
-        const file = abstractFile as TFile;
+      if (isTFile(abstractFile)) {
+        const file = abstractFile;
 
         try {
           const payload = isPageReference(value)

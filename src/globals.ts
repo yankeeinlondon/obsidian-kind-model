@@ -1,15 +1,15 @@
 import type * as Electron from "electron";
 import type { AsyncFunction, LuxonJs, SemanticVersion, SyncFunction, TypedFunction } from "inferred-types";
+import { isDefined } from "inferred-types";
 import type {
-  App,
-  Command,
-  EditorCommandName,
-  PluginManifest,
-  Plugin as PluginType,
-  Workspace,
+	App,
+	Command,
+	EditorCommandName,
+	PluginManifest,
+	Plugin as PluginType,
+	Workspace,
 } from "obsidian";
 import type { DvPageCacheEntry, ObsidianApp, ObsidianMetadataCache, TFile, TFolder } from "./types";
-import { isDefined } from "inferred-types";
 
 /**
  * returns the **moment** library which Obsidian provides to the
@@ -22,7 +22,9 @@ export type Moment = ReturnType<typeof moment>;
 /**
  * The `App` instance of **Obsidian** exposed as a global
  */
-export const app = () => (globalThis as any).app as ObsidianApp;
+export function app() {
+  return (globalThis as any).app as ObsidianApp;
+}
 
 /** Scope for Obsidian's Suggestion Modals */
 export const Scope = app().scope;
@@ -335,3 +337,6 @@ export const dvApi = (globalThis as any).DataviewAPI as {
   };
 
 };
+
+
+export const obsidianCssStyle = (variable: string) =>  getComputedStyle(document.documentElement).getPropertyValue(variable);

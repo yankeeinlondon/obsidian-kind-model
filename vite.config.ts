@@ -1,7 +1,7 @@
+import vuePlugin from "@vitejs/plugin-vue";
+import { execFileSync } from "node:child_process";
 import path from "pathe";
 import { defineConfig } from "vite";
-import { execFileSync } from "node:child_process";
-import vuePlugin from "@vitejs/plugin-vue";
 
 export default defineConfig({
   resolve: {

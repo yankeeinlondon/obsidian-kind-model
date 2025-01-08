@@ -1,14 +1,27 @@
 import type { Node, RenderableTreeNode } from "@markdoc/markdoc";
-import type { As, Contains, If, IsStringLiteral, IsUnion, TypedFunction } from "inferred-types";
+import type {
+	As,
+	Contains,
+	If,
+	IsStringLiteral,
+	IsUnion,
+	TypedFunction
+} from "inferred-types";
 import type { DateTime } from "luxon";
 import type { Component, MarkdownView } from "obsidian";
 import type { DvPage, Link } from "./dataview_types";
 import type { Frontmatter, HeadingTag } from "./frontmatter";
 
+import type { FrontmatterApi, RenderApi } from "~/api";
+import type {
+	FuturePage,
+	ObsidianTask,
+	ObsidianTaskWithLink,
+	PageBlock,
+	Tag
+} from "~/types";
 import type { PageMetadataApi } from "./MetadataApi";
 import type { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
-import type { FrontmatterApi, RenderApi } from "~/api";
-import type { FuturePage, ObsidianTask, ObsidianTaskWithLink, PageBlock, Tag } from "~/types";
 
 export type PageType =
     | "kinded"

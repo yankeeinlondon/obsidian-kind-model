@@ -1,14 +1,14 @@
+import { filterEmpty, or } from "inferred-types";
 import type { Editor, MarkdownView } from "obsidian";
-import type KindModelPlugin from "../main";
-import type { DvPage, PageView } from "~/types";
-import { or } from "inferred-types";
 import { Notice } from "obsidian";
 import { getPath } from "~/api";
 import { getPageFromKindTag } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import { getTypeDefinitionPageFromTag } from "~/page/getType";
 import { isLink, isPageReference } from "~/type-guards";
+import type { DvPage, PageView } from "~/types";
 import { asMdLink } from "~/utils";
+import type KindModelPlugin from "../main";
 
 async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> {
   const {
@@ -57,6 +57,18 @@ async function updateType(p: KindModelPlugin, page: PageView): Promise<boolean> 
           changes = true;
         }
       }
+    case "multi-kinded > subcategory":
+    case "multi-kinded":
+		if(page.types) {
+			await page.setFmKey(
+				"types", 
+				filterEmpty(page.types.map(p => isPageReference(p) ? p : undefined))
+			);
+			changes = true;
+			if (page.fm.type) {
+				await page.removeFmKey("type");
+			}
+		}
   }
 
   return changes;
@@ -144,6 +156,8 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
   switch (pageType) {
     case "kinded > subcategory":
     case "kinded":
+	case "multi-kinded":
+	case "multi-kinded > subcategory":
       if (
         page.categories.length > 1
       ) {
@@ -170,42 +184,38 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
   return changed;
 }
 
-async function updateSubcategory(p: KindModelPlugin, page: PageView): Promise<boolean> {
+async function updateSubcategory(_p: KindModelPlugin, page: PageView): Promise<boolean> {
   const {
     pageType,
   } = page;
   let changed = false;
 
   switch (pageType) {
+	case "kinded": 
     case "kinded > subcategory":
+	case "multi-kinded":
       if (
-        page.subcategories.length > 0 && (
-          !page.fm.subcategory || (isLink(page.fm.subcategory) && page.fm.subcategory.path !== page.path)
-        )
+        page.subcategories.length === 1 
       ) {
         await page.setFmKey("subcategory", page.subcategories[0].page);
         changed = true;
-      }
-      break;
-    case "kinded": {
-      if (
-        page.subcategories.length > 0 && (
-          !page.fm.subcategory
-          || (
-            isLink(page.fm.subcategory)
-            && page.fm.subcategory.path !== page.subcategories[0].page.file.path
-          )
-          || !isLink(page.fm.subcategory)
-        )
-      ) {
-        await page.setFmKey(
-          "subcategory",
-          page.subcategories[0].page,
-        );
+
+		if(page.fm.subcategories) {
+			await page.removeFmKey("subcategories");
+			changed = true;
+		}
+      } else if (page.subcategories.length > 1) {
+		await page.setFmKey("subcategories", page.subcategories.map(i => i.page));
         changed = true;
-      }
+
+		if(page.fm.subcategories) {
+			await page.removeFmKey("subcategory");
+			changed = true;
+		}
+	  }
+      break;
+      
     }
-  }
 
   return changed;
 }

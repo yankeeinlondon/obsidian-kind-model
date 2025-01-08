@@ -1,27 +1,28 @@
 import type {
-  CssColor,
-  CssDefinition,
-  EscapeFunction,
-  FixedLengthArray,
-  TypedFunction,
-  UnionArrayToTuple,
+	CssColor,
+	CssDefinition,
+	EscapeFunction,
+	FixedLengthArray,
+	TypedFunction,
+	UnionArrayToTuple,
+} from "inferred-types";
+import {
+	createFnWithProps,
+	cssFromDefinition,
+	ensureLeading,
+	isFunction,
+	isString
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import type {
-  BlockQuoteOptions,
-  ListStyle,
-  ObsidianCalloutColors,
-  PageReference,
-  StyleOptions,
-} from "~/types";
-import {
-  createFnWithProps,
-  cssFromDefinition,
-  ensureLeading,
-  isFunction,
-  isString,
-} from "inferred-types";
 import { getPage } from "~/page";
+import type {
+	BlockQuoteOptions,
+	ListStyle,
+	ObsidianCalloutColors,
+	PageReference,
+	StyleOptions,
+} from "~/types";
+import { isEven, isOdd } from "~/utils";
 import { listStyle, style } from "../api";
 import { blockquote } from "./formatting/blockquote";
 
@@ -144,7 +145,9 @@ export function internalLink(p: KindModelPlugin) {
   };
 }
 
-export type Column<T extends string = string> = T | (() => [name: T, style: CssDefinition]);
+export type Column<
+	T extends string = string
+> = T | (() => [name: T, style: CssDefinition]);
 
 export type TableData<
   T extends readonly Column[],
@@ -183,41 +186,79 @@ export function htmlTable(_p: KindModelPlugin) {
   >(
     columns: TCol,
     style?: {
-      table?: CssDefinition;
-      headings?: CssDefinition;
-      highlightFirstColumn?: boolean;
+		/** CSS styling for the wrapper element of the table */
+		wrapper?: CssDefinition;
+		/** CSS styling for the <table> element */
+		table?: CssDefinition;
+    /** CSS styling for the `<tr>` tag for headings */
+		headings?: CssDefinition;
+    /** CSS styling for each individual Heading element */
+		eachHeading?: CssDefinition;
+		/** styling for _odd_ rows */
+		odd?: CssDefinition;
+		/** styling for _even_ rows */
+		even?: CssDefinition;
+
+		cell?: (content: string, col: number, row: number) => string;
+		cellStyle?: (content: string, col: number, row: number) => CssDefinition;
+		highlightFirstColumn?: boolean;
     },
   ): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
-    const take = (val: string | (() => [string, CssDefinition])) => {
+    const takeVal = (val: string | (() => [string, CssDefinition])) => {
       return isString(val)
-        ? { val, style: "" }
-        : { val: val()[0], style: cssFromDefinition(val()[1], "", true) };
+        ? val
+        : val()[0];
     };
+	const takeFmt = (
+		rowIdx: number, 
+		colIdx: number, 
+		val: string
+	) => {
+		const defn = isFunction(columns[colIdx]) 
+		  ? columns[colIdx]()[1] as CssDefinition
+		  : {} as CssDefinition;
+		const colDriven = ( Number(val.trim()) === 0) 
+			? { 
+				"opacity": "0.7"
+			} as CssDefinition
+			: {} as CssDefinition;
+
+	
+		return cssFromDefinition({
+			...defn, 
+			...colDriven, 
+			...(isOdd(rowIdx) ? style?.odd || {}: {}),
+			...(isEven(rowIdx) ? style?.even || {} : {})
+		});
+
+	};
 
     const fn = <
       TData extends TableData<UnionArrayToTuple<TCol>>,
     >(data: TData) => {
       const output = [
-        `<table style="${style?.table ? cssFromDefinition(style.table, "", true) : ""}">`,
+        `<div class="table-wrapper" style="${cssFromDefinition(style?.wrapper)}">`,
+        `<table style="${cssFromDefinition(style?.table)}">`,
         `<thead>`,
-        `<tr>`,
-        columns.map(c => `<th scope="col" style="${take(c).style}">${take(c).val}</th>`),
-        `</tr>`,
+			`<tr style="${cssFromDefinition(style?.headings)}">`,
+				columns.map(
+					c => `<th scope="col" style="${cssFromDefinition(style?.eachHeading)}">${takeVal(c)}</th>`
+				).join(""),
+			`</tr>`,
         `</thead>`,
         `<tbody>`,
-        data.map(
-          row => [
-            `<tr>`,
-            row.map((col, idx) =>
-              idx === 0 && style?.highlightFirstColumn
-                ? `<th scope="row">${col}</th>`
-                : `<td>${col}</td>`,
-            ).join("\n"),
-            `</tr>`,
-          ],
-        ).join("\n"),
+			data.map((row, rowIdx) =>
+				`<tr class="${isOdd(rowIdx) ? "odd" : "even"}">` +
+					row.map((col: string, colIdx: number) =>
+						colIdx === 0 && style?.highlightFirstColumn
+							? `<th scope="row" style="${takeFmt(rowIdx,colIdx,col)}">${col}</th>`
+							: `<td style="${takeFmt(rowIdx,colIdx,col)}">${col}</td>`
+					).join("") +
+				`</tr>`
+			).join(""),
         `</tbody>`,
         `</table>`,
+        `</div>`
       ];
 
       return output.join("\n");

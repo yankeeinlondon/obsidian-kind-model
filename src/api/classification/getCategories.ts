@@ -1,7 +1,7 @@
+import { ensureLeading, isEmpty, isNotEmpty, stripLeading } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import type { DvPage, PageCategory, PageReference } from "~/types";
-import { ensureLeading, isEmpty, stripLeading } from "inferred-types";
 import { getPage, getPageFromTagOrFuturePage } from "~/page";
+import type { DvPage, PageCategory, PageReference } from "~/types";
 import { getPageType } from "../classificationApi";
 
 function getCategorySpecs(p: KindModelPlugin) {
@@ -71,15 +71,15 @@ function getCategoryDefnSpecs(p: KindModelPlugin) {
 }
 
 function getSubcategoryDefnSpecs(p: KindModelPlugin) {
-  return (page: DvPage, kindTag?: string): PageCategory[] => {
+  return (page: DvPage): PageCategory[] => {
     return (Array.from(page.file.tags) as string[])
       .filter(
-        i => i.split("/")[1] === "category" && !isEmpty(i.split("/")[2]),
+        i => i.split("/")[1] === "subcategory" && isNotEmpty(i.split("/")[3]),
       )
       .map(
         (i) => {
           const [kind, _, category] = i.split("/");
-          const findTag = `${ensureLeading(kind, "#")}/category/${category}`;
+          const findTag = `${ensureLeading(kind, "#")}/subcategory/${category}`;
           const futureName = `"${category}" as Category for "${stripLeading(kind, "#")}"`;
           return {
             kind: stripLeading(kind, "#"),

@@ -19,6 +19,9 @@ export interface FmPropSuggestions {
   "modified"?: Date | Iso8601;
   "publish"?: boolean;
   "author"?: string;
+  "inactive"?: boolean;
+  "archived"?: boolean;
+  "closed"?: boolean;
   "title"?: string;
   "desc"?: string;
   "description"?: string;

@@ -1,22 +1,30 @@
 import type {
-  AlphaChar,
-  AlphaNumericChar,
-  Callback,
-  Dictionary,
-  HtmlElement,
-  NonZeroNumericChar,
-  SemanticVersion,
-  SpecialChar,
-  StringDelimiter,
-  Suggest,
-  SyncFunction,
-  TypedFunction,
-  UrlPath,
+	AlphaChar,
+	AlphaNumericChar,
+	Callback,
+	Dictionary,
+	HtmlElement,
+	NonZeroNumericChar,
+	SemanticVersion,
+	SpecialChar,
+	StringDelimiter,
+	Suggest,
+	SyncFunction,
+	TypedFunction,
+	UrlPath,
 } from "inferred-types";
 
-import type { App, EventRef, Plugin, PluginManifest, Stat, Vault, Workspace } from "obsidian";
-import type { Tag } from ".";
+import type {
+	App,
+	EventRef,
+	Plugin,
+	PluginManifest,
+	Stat,
+	Vault,
+	Workspace
+} from "obsidian";
 import type { Path } from "~/globals";
+import type { Tag } from ".";
 
 export interface TFile extends TAbstractFile {
   /** file `Stat` metadata */

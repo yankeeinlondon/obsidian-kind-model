@@ -1,29 +1,29 @@
-import type KindModelPlugin from "../main";
-import type { ObsidianCalloutColors } from "../types/ObsidianCallouts";
-import type {
-  BlockQuoteOptions,
-  DvPage,
-  Link,
-  ListItemsCallback,
-  ListStyle,
-  StyleOptions,
-} from "~/types";
-import { ensureLeading } from "inferred-types";
+import { CssDefinition, cssFromDefinition, ensureLeading } from "inferred-types";
 import { renderListItems, style } from "~/api";
 import { isDvPage, isLink } from "~/type-guards";
+import type {
+	BlockQuoteOptions,
+	DvPage,
+	Link,
+	ListItemsCallback,
+	ListStyle,
+	StyleOptions,
+} from "~/types";
 import {
-  BUG_ICON,
-  ERROR_ICON,
-  EXAMPLE_ICON,
-  INFO_ICON,
-  NOTE_ICON,
-  QUESTION_ICON,
-  QUOTE_ICON,
-  SUCCESS_ICON,
-  SUMMARY_ICON,
-  TIP_ICON,
-  WARN_ICON,
+	BUG_ICON,
+	ERROR_ICON,
+	EXAMPLE_ICON,
+	INFO_ICON,
+	NOTE_ICON,
+	QUESTION_ICON,
+	QUOTE_ICON,
+	SUCCESS_ICON,
+	SUMMARY_ICON,
+	TIP_ICON,
+	WARN_ICON,
 } from "../constants/obsidian-constants";
+import type KindModelPlugin from "../main";
+import type { ObsidianCalloutColors } from "../types/ObsidianCallouts";
 
 function obsidian_blockquote(
   kind: ObsidianCalloutColors,
@@ -116,8 +116,8 @@ function blockquote(
   );
 }
 
-function span(text: string | number, fmt?: StyleOptions) {
-  return `<span ${style(fmt || { fw: "400" })}>${text}</span>`;
+export function span(text: string | number, fmt?: CssDefinition) {
+  return `<span style="${cssFromDefinition({...{"font-weight": "400", ...(fmt || {})}})}">${text}</span>`;
 }
 function italics(text: string | number, fmt?: Omit<StyleOptions, "fs">) {
   return `<span ${style({ ...(fmt || { fw: "400" }), fs: "italic" } as StyleOptions)}>${text}</span>`;

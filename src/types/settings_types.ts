@@ -7,11 +7,11 @@ import type {
   TAG_HANDLING,
   UOM_TYPES,
 } from "~/utils/Constants";
-import type { Mutable, TupleToUnion } from "~/utils/type-utils";
+import type { TupleToUnion } from "~/utils/type-utils";
 
-export type KindClassification = TupleToUnion<Mutable<typeof CLASSIFICATION>>;
+export type KindClassificationConfig = typeof CLASSIFICATION[number];
 export interface ClassificationMeta {
-  name: KindClassification;
+  name: KindClassificationConfig;
   /**
    * A list of properties expected to be on a _kinded page_ and which
    * will point to pages associated with `kind`.
@@ -105,7 +105,7 @@ export interface KindModelSettings {
   /** the default folder for kind definitions */
   kind_folder?: string;
   handle_tags: TagHandler;
-  default_classification: KindClassification;
+  default_classification: KindClassificationConfig;
 
   page_blocks?: PageBlock[];
   /**

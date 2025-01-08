@@ -1,42 +1,43 @@
-import type { CssDefinition } from "inferred-types";
-import type { FormattingApi } from "./formattingApi";
-import type KindModelPlugin from "~/main";
-import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
+import type { CssDefinition, SimpleToken, SimpleType } from "inferred-types";
 import {
-  cssFromDefinition,
-  ensureLeading,
-  isEmpty,
-  isNumber,
-  isString,
-  isToday,
-  isTomorrow,
-  isUndefined,
-  isYesterday,
-  stripTrailing,
+	cssFromDefinition,
+	doesExtend,
+	ensureLeading,
+	isEmpty,
+	isNumber,
+	isString,
+	isToday,
+	isTomorrow,
+	isUndefined,
+	isYesterday,
+	stripTrailing,
 } from "inferred-types";
 import { DateTime } from "luxon";
 import {
-  getCategories,
-  getClassification,
-  getPageType,
-  getSubcategories,
-  getTypeTag,
-  isKindTag,
+	getCategories,
+	getClassification,
+	getPageType,
+	getSubcategories,
+	getTypeTag,
+	isKindTag,
 } from "~/api";
 import { asDisplayTag } from "~/helpers";
+import type KindModelPlugin from "~/main";
 import { getPage } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import {
-  hasFileLink,
-  isDvPage,
-  isFileLink,
-  isFuturePage,
-  isLink,
-  isPageInfo,
-  isPageReference,
-  isValidPath,
+	hasFileLink,
+	isDvPage,
+	isFileLink,
+	isFuturePage,
+	isLink,
+	isPageInfo,
+	isPageReference,
+	isValidPath,
 } from "~/type-guards";
+import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import { createVaultLink } from "./createVaultLink";
+import type { FormattingApi } from "./formattingApi";
 import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { isKeyOf } from "./renderApi";
@@ -349,6 +350,8 @@ export function showProp(p: KindModelPlugin) {
  *
  * - you can pass in as many property names as you like and
  * the first one which is _not_ undefined will be returned.
+ * - returns a tuple: `[value, prop]` where "prop" is the
+ * property where the value was found.
  *
  * Note: if the property value is a `PageReference` itself it
  * will ensure it's upgraded to a `DvPage`
@@ -357,7 +360,7 @@ export function getProp(p: KindModelPlugin) {
   return <TProps extends readonly [string, ...string[]]>(
     pg: PageReference | undefined,
     ...props: TProps
-  ) => {
+  ): [unknown | undefined, string | undefined ] => {
     const page = getPage(p)(pg);
 
     if (page) {
@@ -371,12 +374,12 @@ export function getProp(p: KindModelPlugin) {
         const value = page[found];
 
         return [
-          found,
           isLink(value)
             ? p.api.getPage(value)
             : Array.isArray(value)
               ? value.map(i => (isLink(i) ? p.dv.page(i) : i))
               : value,
+			found
         ];
       }
     }
@@ -388,6 +391,42 @@ export function getProp(p: KindModelPlugin) {
     return [undefined, undefined];
   };
 }
+
+export function getPropOfType(p: KindModelPlugin) {
+	return <
+		TProps extends readonly [string, ...string[]],
+		TType extends SimpleToken
+	>(
+	  pg: PageReference | undefined,
+	  findType: TType,
+	  ...props: TProps
+	): [SimpleType<TType> | undefined, string | undefined ] => {
+	  const page = getPage(p)(pg);
+  
+	  if (page) {
+		const found = props.find(
+		  prop => isKeyOf(page, prop) && doesExtend(findType)(page[prop]) ,
+		) as string | undefined;
+		if (!found) {
+		  return [undefined, undefined];
+		}
+		else {
+		  const value = page[found] as SimpleType<TType>;
+  
+		  return [
+				value,
+			  found
+		  ];
+		}
+	  }
+  
+	  p.error(`Call to getProp(pg) passed in an invalid DvPage`, {
+		pg,
+		props,
+	  });
+	  return [undefined, undefined];
+	};
+  }
 
 export function showAbout(_p: KindModelPlugin) {
   return (_pg: PageReference): FileLink[] => {

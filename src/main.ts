@@ -1,23 +1,23 @@
-import type { DataViewApi, DvPage } from "./types/dataview_types";
-import type { KindModelSettings } from "./types/settings_types";
-import type { Logger } from "./utils/logging";
 import { Plugin } from "obsidian";
 import { getAPI } from "obsidian-dataview";
 import { add_commands } from "~/commands/index";
+import type { DataViewApi, DvPage } from "./types/dataview_types";
+import type { KindModelSettings } from "./types/settings_types";
+import type { Logger } from "./utils/logging";
 // import App from "./App.vue";
 import { api } from "./api/api";
-import { SettingsTab } from "./config-ui/SettingsTab";
 
+import { SettingsTab } from "./config-ui";
 import {
-  codeblockParser,
-  on_file_created,
-  on_file_deleted,
-  on_file_modified,
-  on_layout_change,
-  on_tab_change,
+	codeblockParser,
+	on_file_created,
+	on_file_deleted,
+	on_file_modified,
+	on_layout_change,
+	on_tab_change,
 } from "./events";
 import { on_editor_change } from "./events/on_editor_change";
-import { csv } from "./events/on_load/csv";
+import { csv2 as csv } from "./events/on_load/csv";
 import { getDefnPages, getTagLists } from "./startup";
 import { runAfterDataviewReady } from "./startup/runAfterDataviewReady";
 import { DEFAULT_SETTINGS } from "./utils/Constants";

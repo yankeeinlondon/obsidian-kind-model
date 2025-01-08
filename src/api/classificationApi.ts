@@ -2,7 +2,7 @@ import type KindModelPlugin from "~/main";
 import type {
   CatSubcatTuple,
   DvPage,
-  KindClassification,
+  KindClassificationConfig,
   KindClassifiedCategory,
   KindClassifiedSubcategory,
   PageCategory,
@@ -855,7 +855,7 @@ export function getClassification(p: KindModelPlugin) {
     pg: PageReference | undefined,
     cats?: PageCategory[] | undefined,
     subCats?: PageSubcategory[] | undefined,
-  ): KindClassification[] => {
+  ): KindClassificationConfig[] => {
     const page = pg ? getPage(p)(pg) : undefined;
 
     if (page) {
@@ -879,7 +879,7 @@ export function getClassification(p: KindModelPlugin) {
 				  ? getPage(p)(kindPage.type)
 				  : undefined;
 
-				const classy: Partial<KindClassification<KindTag, CatSubcatTuple[]>> = {
+				const classy: Partial<KindClassificationConfig<KindTag, CatSubcatTuple[]>> = {
 				  type: kindType,
 				  kind: kindPage,
 				  kindTag: tag,
@@ -889,7 +889,7 @@ export function getClassification(p: KindModelPlugin) {
 				const catSpecs = categories.filter(i => i.kind === tag);
 
 				if (catSpecs.length === 0) {
-				  return classy as KindClassification<KindTag, []>;
+				  return classy as KindClassificationConfig<KindTag, []>;
 				}
 				else if (catSpecs.length === 1) {
 				  const { category, underlying } = getClassifiedCategory(p)(tag, catSpecs[0], subcategories);
@@ -917,7 +917,7 @@ export function getClassification(p: KindModelPlugin) {
 				}
       });
 
-      return classification as unknown as KindClassification[];
+      return classification as unknown as KindClassificationConfig[];
     }
 
     return [];
