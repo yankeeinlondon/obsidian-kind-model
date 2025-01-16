@@ -575,6 +575,13 @@ export function linkTemplate(p: KindModelPlugin) {
   };
 }
 
+/**
+ * Creates a link to another page in the vault using HTML.
+ * 
+ * - allows pre and post text
+ * - leverages `internalLink()`
+ * - can also create a "future link"
+ */
 export function htmlLink(p: KindModelPlugin) {
   return (
     ref: PageReference | undefined,
@@ -596,6 +603,8 @@ export function htmlLink(p: KindModelPlugin) {
     else {
       if (isFuturePage(ref)) {
         const display = opt?.display || ref.file.name;
+
+
         return internalLink(ref.file.name, ref.file.name, block(display));
       }
       else {
@@ -610,7 +619,7 @@ export function htmlLink(p: KindModelPlugin) {
       return internalLink(
         stripTrailing(ref, ".md"),
         ref,
-        isToday(display)
+        isToday(display) 
           ? "today"
           : isYesterday(display)
             ? "yesterday"

@@ -71,7 +71,9 @@ function getCategoryDefnSpecs(p: KindModelPlugin) {
 }
 
 function getSubcategoryDefnSpecs(p: KindModelPlugin) {
-  return (page: DvPage): PageCategory[] => {
+  return (
+		page: DvPage
+	): PageCategory[] => {
     return (Array.from(page.file.tags) as string[])
       .filter(
         i => i.split("/")[1] === "subcategory" && isNotEmpty(i.split("/")[3]),
@@ -79,7 +81,7 @@ function getSubcategoryDefnSpecs(p: KindModelPlugin) {
       .map(
         (i) => {
           const [kind, _, category] = i.split("/");
-          const findTag = `${ensureLeading(kind, "#")}/subcategory/${category}`;
+          const findTag = `${ensureLeading(kind, "#")}/category/${category}`;
           const futureName = `"${category}" as Category for "${stripLeading(kind, "#")}"`;
           return {
             kind: stripLeading(kind, "#"),

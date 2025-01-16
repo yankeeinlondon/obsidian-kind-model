@@ -81,6 +81,17 @@ function empty_callout(fmt?: StyleOptions) {
 }
 
 /**
+ * returns a `km` query block as string
+ */
+export function kmBlock(query: string) {
+	return `
+\`\`\`km
+${query}
+\`\`\`
+`;
+}
+
+/**
  * **blockquote**`(kind, title, opts)`
  *
  * Generates the HTML necessary to show a callout/blockquote in Obsidian.
@@ -342,17 +353,18 @@ export function fmt(p: KindModelPlugin) {
       kind: ObsidianCalloutColors,
       title: string,
       opts?: BlockQuoteOptions,
-    ) =>
-      p.dv.renderValue(
-        blockquote(kind, title, opts),
-        container,
-        p,
-        filePath,
-        false,
-      ),
+    ) => p.dv.renderValue(
+	blockquote(kind, title, opts),
+	container,
+	p,
+	filePath,
+	false,
+	),
+	kmBlock,
 
     empty_callout,
   });
+
 }
 
 /**

@@ -1,27 +1,27 @@
-import type KindModelPlugin from "~/main";
-import type {
-  CatSubcatTuple,
-  DvPage,
-  KindClassificationConfig,
-  KindClassifiedCategory,
-  KindClassifiedSubcategory,
-  PageCategory,
-  PageReference,
-  PageSubcategory,
-  PageType,
-  Tag,
-} from "~/types";
-import type { ClassificationApi } from "~/types/ClassificationApi";
 import {
-  ensureLeading,
-  isArray,
-  isDefined,
-  stripLeading,
+	isArray,
+	isDefined,
+	stripLeading
 } from "inferred-types";
 import { asDisplayTag, futurePage } from "~/helpers";
+import type KindModelPlugin from "~/main";
 import { getPage, getPageFromTagOrFuturePage } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import { isDvPage, isFileLink, isPageInfo, isPageReference } from "~/type-guards";
+import type {
+	CatSubcatTuple,
+	DvPage,
+	KindClassification,
+	KindClassificationConfig,
+	KindClassifiedCategory,
+	KindClassifiedSubcategory,
+	PageCategory,
+	PageReference,
+	PageSubcategory,
+	PageType,
+	Tag,
+} from "~/types";
+import type { ClassificationApi } from "~/types/ClassificationApi";
 import { getCategories } from "./classification/getCategories";
 import { getPropertyType } from "./getPropertyType";
 
@@ -562,93 +562,6 @@ export function isTypeDefnTag(_p: KindModelPlugin) {
 }
 
 /**
- * gets all subcategories on a page whether defined via tag or prop
- */
-export function getSubcategories(p: KindModelPlugin) {
-  return (pg: PageReference): PageSubcategory[] => {
-    const page = getPage(p)(pg);
-    const pageType = getPageType(p)(pg);
-
-    if (page && pageType) {
-      const possibleKinded = (Array.from(page.file.tags) as string[]).filter(
-        i => i.split("/").length === 3
-            && !["category", "subcategory"].includes(i.split("/")[1])
-            && isKindTag(p)(i.split("/")[0]),
-      ).map((i) => {
-        const [kind, category, subcategory] = i.split("/");
-        return {
-          kind: stripLeading(kind, "#"),
-          page: getPageFromTagOrFuturePage(p)(
-            `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-            `"${subcategory}" as Subcategory of "${category}" for "${stripLeading(kind, "#")}"`,
-          ),
-          category,
-          subcategory,
-          kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
-          defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-
-        } as PageSubcategory;
-      });
-
-      switch (pageType) {
-        case "kind-defn":
-        case "type-defn":
-        case "kinded > category":
-          return [];
-        case "kinded > subcategory":
-          const tag = page.file.tags.find(
-            i => i.split("/")[1] === "subcategory",
-          ) as string;
-          const [kind, _, category, subcategory] = tag.split("/");
-          return [{
-            kind: stripLeading(kind, "#"),
-            page: getPageFromTagOrFuturePage(p)(
-              `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-              `"${subcategory}" as Subcategory of "${category}" for "${stripLeading(kind, "#")}"`,
-            ),
-            category,
-            subcategory,
-            kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
-            defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-          } as PageSubcategory];
-        case "kinded":
-          const ttag = page.file.tags.find(
-            i =>
-              i.split("/").length === 3
-              && ["category", "subcategory"].every(c => i.split("/")[1] !== c),
-          );
-          if (ttag) {
-            const [kkind, kcategory, ksubcategory] = ttag.split("/");
-            return [{
-              kind: stripLeading(kkind, "#"),
-              page: getPageFromTagOrFuturePage(p)(
-                `${ensureLeading(kkind, "#")}/subcategory/${kcategory}/${ksubcategory}`,
-                `"${ksubcategory}" as Subcategory of "${kcategory}" for "${stripLeading(kkind, "#")}"`,
-              ),
-              category: kcategory,
-              subcategory: ksubcategory,
-              kindedTag: `${ensureLeading(kkind, "#")}/${kcategory}/${ksubcategory}`,
-              defnTag: `${ensureLeading(kkind, "#")}/subcategory/${kcategory}/${ksubcategory}`,
-            } as PageSubcategory];
-          }
-          else {
-            return [];
-          }
-        case "multi-kinded > category":
-        case "multi-kinded > subcategory":
-          return [];
-        case "multi-kinded":
-          return possibleKinded;
-        case "none":
-          return [];
-      }
-    }
-
-    return [];
-  };
-}
-
-/**
  * A page is a kinded page if:
  *
  * 1. it has a `kind` property pointing to another page in the vault
@@ -879,7 +792,7 @@ export function getClassification(p: KindModelPlugin) {
 				  ? getPage(p)(kindPage.type)
 				  : undefined;
 
-				const classy: Partial<KindClassificationConfig<KindTag, CatSubcatTuple[]>> = {
+				const classy: Partial<KindClassification<KindTag, CatSubcatTuple[]>> = {
 				  type: kindType,
 				  kind: kindPage,
 				  kindTag: tag,
@@ -889,7 +802,7 @@ export function getClassification(p: KindModelPlugin) {
 				const catSpecs = categories.filter(i => i.kind === tag);
 
 				if (catSpecs.length === 0) {
-				  return classy as KindClassificationConfig<KindTag, []>;
+				  return classy as KindClassification<KindTag, []>;
 				}
 				else if (catSpecs.length === 1) {
 				  const { category, underlying } = getClassifiedCategory(p)(tag, catSpecs[0], subcategories);

@@ -54,6 +54,14 @@ export interface TFolder extends TAbstractFile {
   isRoot: () => boolean;
 }
 
+export interface TFileForMarkdown {
+	name: string;
+	path: string;
+	basename: string;
+	extension: string;
+}
+
+
 /**
  * This can be either a `TFile` or a `TFolder`.
  */

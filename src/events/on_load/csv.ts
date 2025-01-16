@@ -1,5 +1,7 @@
-import { Column, htmlTable, renderApi } from "~/api";
+import { Column, htmlLink, htmlTable, renderApi } from "~/api";
 import type KindModelPlugin from "~/main";
+import { getPage } from "~/page";
+import { isMdLink } from "~/type-guards";
 
 /**
  * converts a code block marked as `csv` into a table
@@ -59,6 +61,17 @@ export function csv2(plugin: KindModelPlugin) {
 			table: {
 				"border-radius": "0.5rem",
 				"overflow": "hidden"
+			},
+			cell: (content) => {
+				if(isMdLink(content)) {
+					const page = getPage(plugin)(content);
+					return page
+						? htmlLink(plugin)(page)
+						: page
+					
+				} else {
+					return content;
+				}
 			}
 		});
 

@@ -154,8 +154,8 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
   let changed = false;
 
   switch (pageType) {
+	case "kinded":
     case "kinded > subcategory":
-    case "kinded":
 	case "multi-kinded":
 	case "multi-kinded > subcategory":
       if (
@@ -168,8 +168,7 @@ async function updateCategory(p: KindModelPlugin, page: PageView): Promise<boole
           await page.removeFmKey("category");
         }
         changed = true;
-      }
-      else if (page.categories.length === 1) {
+      } else if (page.categories.length === 1) {
         await page.setFmKey("category", page.categories[0].page);
 
         if (page.fm.categories) {
@@ -221,8 +220,10 @@ async function updateSubcategory(_p: KindModelPlugin, page: PageView): Promise<b
 }
 
 export function update_kinded_page(p: KindModelPlugin) {
-  return async (
-    editor: Editor,
+  return async <
+	E extends Editor | undefined
+  >(
+    _editor: E,
     view: MarkdownView,
   ) => {
     const page = p.api.createPageView(view);

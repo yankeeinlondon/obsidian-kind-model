@@ -128,6 +128,9 @@ export interface LinkOptions {
   titlePosition?: "top" | "bottom";
 }
 
+/**
+ * Creates an HTML based link to another page in the current vault
+ */
 export function internalLink(p: KindModelPlugin) {
   return (
     ref: PageReference | undefined,
@@ -199,8 +202,8 @@ export function htmlTable(_p: KindModelPlugin) {
 		/** styling for _even_ rows */
 		even?: CssDefinition;
 
-		cell?: (content: string, col: number, row: number) => string;
-		cellStyle?: (content: string, col: number, row: number) => CssDefinition;
+		cell?: (content: string, row: number, col: number) => string;
+		cellStyle?: (content: string, row: number, col: number) => CssDefinition;
 		highlightFirstColumn?: boolean;
     },
   ): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
@@ -233,6 +236,10 @@ export function htmlTable(_p: KindModelPlugin) {
 
 	};
 
+	const cell = style?.cell
+		? style.cell
+		: (content: string) => content;
+
     const fn = <
       TData extends TableData<UnionArrayToTuple<TCol>>,
     >(data: TData) => {
@@ -252,7 +259,7 @@ export function htmlTable(_p: KindModelPlugin) {
 					row.map((col: string, colIdx: number) =>
 						colIdx === 0 && style?.highlightFirstColumn
 							? `<th scope="row" style="${takeFmt(rowIdx,colIdx,col)}">${col}</th>`
-							: `<td style="${takeFmt(rowIdx,colIdx,col)}">${col}</td>`
+							: `<td style="${takeFmt(rowIdx,colIdx,col)}">${cell(col,rowIdx,colIdx)}</td>`
 					).join("") +
 				`</tr>`
 			).join(""),

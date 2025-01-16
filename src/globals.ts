@@ -9,7 +9,14 @@ import type {
 	Plugin as PluginType,
 	Workspace,
 } from "obsidian";
-import type { DvPageCacheEntry, ObsidianApp, ObsidianMetadataCache, TFile, TFolder } from "./types";
+import { isTFile, isTFolder } from "./type-guards";
+import type {
+	DvPageCacheEntry,
+	ObsidianApp,
+	ObsidianMetadataCache,
+	TFile,
+	TFolder
+} from "./types";
 
 /**
  * returns the **moment** library which Obsidian provides to the
@@ -160,6 +167,9 @@ export const obApp = {
   },
   views: app().viewRegistry,
 
+  /**
+   * Opens Obsidian's Vault Chooser dialog
+   */
   openVaultChooser: app().openVaultChooser,
   isMobile: app().isMobile,
 
@@ -173,6 +183,18 @@ export const obApp = {
    */
   getTags() {
     return app().metadataCache.getTags();
+  },
+
+  /**
+   * Returns the file for the current view if it's a FileView. 
+   * Otherwise, it will return the most recently active file.
+   */
+  getCurrentFile() {
+	return app().workspace.getActiveFile();
+  },
+
+  getMostRecentLeaf() {
+	return app().workspace.getMostRecentLeaf();
   },
 
   /**
@@ -195,6 +217,17 @@ export const obApp = {
       : [];
   },
 
+	/**
+	 * Resolves a unique path for the attachment file being saved.
+	 * Ensures that the parent directory exists and dedupes the
+	 * filename if the destination filename already exists.
+	 *
+	 * @param filename Name of the attachment being saved
+	 * @param sourcePath The path to the note associated with this attachment, defaults to the workspace's active file.
+	 * @returns Full path for where the attachment should be saved, according to the user's settings
+	 */
+	getAvailablePathForAttachment: app().fileManager.getAvailablePathForAttachment,
+
   uniqueFileLookup(filename: string): TFile[] {
     const results = app().metadataCache.uniqueFileLookup.data.get(filename);
 
@@ -202,6 +235,28 @@ export const obApp = {
       ? results.map(r => r.value)
       : [];
   },
+
+	/**
+	 * Atomically read, modify, and save the frontmatter of a note. The 
+	 * frontmatter is passed in as a JS object, and should be mutated 
+	 * directly to achieve the desired result. Remember to handle errors 
+	 * thrown by this method.
+	 * 
+	* @param file — the file to be modified. Must be a Markdown file.
+	* @param fn — a callback function which mutates the frontmatter 
+	* object synchronously.
+	* @param options — write options.
+	* @throws — YAMLParseError if the YAML parsing fails
+	* @throws — any errors that your callback function throws
+	*
+	* ```ts
+	* app.fileManager.processFrontMatter(file, (frontmatter) => {
+	*     frontmatter['key1'] = value;
+	*     delete frontmatter['key2'];
+	* });
+	* ```
+	*/
+	processFrontmatter: app().fileManager.processFrontMatter,
 
   /**
    * A key/value lookup where the _keys_ are fully qualified file paths
@@ -212,6 +267,46 @@ export const obApp = {
    * - a hash code
    */
   fileCache: app().metadataCache.fileCache,
+
+  /**
+   * A key/value store who's keys are the hash value found in fileCache; the
+   * values are a ObsidianMetadataCache entry that includes:
+   * 
+   * - frontmatter
+   * - frontmatterLinks
+   * - tags
+   * - and more.
+   */
+  metaData: app().metadataCache.metadataCache,
+
+
+  /**
+   * Gets an `TAbstractFile` representation of a _file_ or
+   * _folder_ in the current vault.
+   */
+  getAbstractFileByPath(path: string) {
+	return app().vault.getAbstractFileByPath(path);
+  },
+
+	/**
+	 * Gets an `TFile` representation in the current vault.
+	 */
+	getFileByPath(path: string) {
+		const abstract = app().vault.getAbstractFileByPath(path);
+		return isTFile(abstract)
+			? abstract
+			: null
+	},
+
+	/**
+	 * Gets an `TFolder` representation in the current vault.
+	 */
+	getFolderByPath(path: string) {
+		const abstract = app().vault.getAbstractFileByPath(path);
+		return isTFolder(abstract)
+			? abstract
+			: null
+	},
 
   /**
    * Provided a fully qualified file path, this function will
@@ -228,8 +323,7 @@ export const obApp = {
     }
 
     return undefined;
-  },
-
+  }
 };
 
 interface LuxonDateTime {

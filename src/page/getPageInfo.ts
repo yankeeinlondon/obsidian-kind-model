@@ -1,30 +1,30 @@
-import type KindModelPlugin from "~/main";
-import type {
-  DvPage,
-  Link,
-  ObsidianTask,
-  ObsidianTaskWithLink,
-  PageInfo,
-  PageReference,
-  PageType,
-  Tag,
-} from "~/types";
 import {
-  frontmatterApi,
-  getCategories,
-  getClassification,
-  getKindTagsOfPage,
-  getPageType,
-  getSubcategories,
-  getTypeTag,
-  hasProps,
-  isProps,
-  outlinksExcludingTasks,
-  pageMetadataApi,
-  splitInlinksFromTaskReferences,
-  tasksWithPageLink,
+	frontmatterApi,
+	getCategories,
+	getClassification,
+	getKindTagsOfPage,
+	getPageType,
+	getTypeTag,
+	hasProps,
+	isProps,
+	outlinksExcludingTasks,
+	pageMetadataApi,
+	splitInlinksFromTaskReferences,
+	tasksWithPageLink,
 } from "~/api";
+import { getSubcategories } from "~/api/classification/getSubcategories";
+import type KindModelPlugin from "~/main";
 import { isPageInfo } from "~/type-guards";
+import type {
+	DvPage,
+	Link,
+	ObsidianTask,
+	ObsidianTaskWithLink,
+	PageInfo,
+	PageReference,
+	PageType,
+	Tag,
+} from "~/types";
 import { getPath } from "../api/getPath";
 import { getPage } from "./getPage";
 import { getPageKinds } from "./getPageKinds";

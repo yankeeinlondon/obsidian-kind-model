@@ -1,7 +1,7 @@
-import type KindModelPlugin from "~/main";
 import { isString } from "inferred-types";
 import { Notice } from "obsidian";
 import { EventHandler } from "~/helpers/EventHandler";
+import type KindModelPlugin from "~/main";
 import { getPageInfo } from "~/page";
 import { refreshTagLists } from "~/startup/getTagLists";
 import { asMdLink } from "~/utils";
@@ -10,9 +10,9 @@ import { asMdLink } from "~/utils";
  * event handler triggered when an _existing_ file is _modified_.
  */
 export function on_file_modified(plugin: KindModelPlugin) {
-  EventHandler(plugin).onFileModified(async (evt) => {
-    if (isString(evt?.path)) {
-      const page = getPageInfo(plugin)(evt.path);
+  EventHandler(plugin).onFileModified(async (file) => {
+    if (isString(file?.path)) {
+      const page = getPageInfo(plugin)(file.path);
       if (page) {
         switch (page.pageType) {
           case "kind-defn":
