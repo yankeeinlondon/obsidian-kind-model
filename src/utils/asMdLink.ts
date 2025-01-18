@@ -2,8 +2,8 @@ import { ensureTrailing, retainUntil, stripBefore, stripLeading, type IsArray } 
 import { dirname, join } from "pathe";
 import type KindModelPlugin from "~/main";
 import { getPage } from "~/page";
-import { isDvPage, isFuturePage } from "~/type-guards";
-import type { FuturePage, PageReference } from "~/types";
+import { isDvPage, isFuturePage, isMdLink } from "~/type-guards";
+import type { DvPage, FuturePage, MdLink, PageReference } from "~/types";
 
 /**
  * Creates a MD page link to a "future page", where:
@@ -56,36 +56,51 @@ function createFuturePageLink(p: KindModelPlugin) {
 	}
 }
 
+function createCurrentPage(pg: DvPage) {
+	return `[[${pg.file.path}|${pg.file.name}]]`
+}
 
+
+
+/**
+ * Converts page references (including future pages) into a
+ * Obsidian MD link (e.g., `[[path|name]]`).
+ * 
+ * **Note:** if an array is passed in then the page links 
+ * within the array will be converted to a _list_ of links
+ */
 export function asMdLink(p: KindModelPlugin) {
   return <
     T extends PageReference | PageReference[],
   >(
     ref: T,
-  ): IsArray<T> extends true ? string[] : string => {
+  ): IsArray<T> extends true ? MdLink[] : MdLink => {
 	const o = p.api.obsidian;
 	/** the parent file */
 	const parent = o.getCurrentFile();
 
     if (Array.isArray(ref)) {
-      const links = ref.map(
-        i => isDvPage(i)
-          ? `[[${i.file.path}|${i.file.name}]]`
-          : isFuturePage(i)
-            ? createFuturePageLink(p)(i)
-            : String(i),
-      );
+      const links: string[] = ref.map(
+        i => isMdLink(i)
+			? i
+			: isDvPage(i)
+				? createCurrentPage(i)
+				: isFuturePage(i)
+					? createFuturePageLink(p)(i)
+					: undefined,
+      ).filter(i => i) as string[];
+	  p.info('links', {links, ref, t: links.map(v => [typeof v])})
 
-      return links as IsArray<T> extends true ? string[] : string;
+      return Array.from(links) as IsArray<T> extends true ? MdLink[] : MdLink;
     }
 
     const page = getPage(p)(ref);
     return (
       isDvPage(page)
-        ? `[[${page.file.path}|${page.file.name}]]`
+        ? createCurrentPage(page)
         : isFuturePage(ref)
           ? createFuturePageLink(p)(ref)
           : String(ref)
-    ) as IsArray<T> extends true ? string[] : string;
+    ) as IsArray<T> extends true ? MdLink[] : MdLink;
   };
 }

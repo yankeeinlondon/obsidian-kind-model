@@ -1,4 +1,4 @@
-import { stripSurround } from "inferred-types";
+import { isString, stripSurround } from "inferred-types";
 import { getPath } from "~/api/getPath";
 import type KindModelPlugin from "~/main";
 import { isDvPage, isFuturePage, isMdLink, isPageInfo, isPageReference } from "~/type-guards";
@@ -25,8 +25,8 @@ export function getPage(p: KindModelPlugin) {
       return pg.current as unknown as Returns<T>;
     }
 
-	if(isMdLink(pg)) {
-		const [path, alias] = stripSurround("[[","]]")(pg).split("|");
+	if(isString(pg) && isMdLink(pg.trim())) {
+		const [path, alias] = stripSurround("[[","]]")(pg.trim()).split("|");
 		return getPage(p)(path) as unknown as Returns<T>;
 	}
 
