@@ -1,11 +1,9 @@
-import type { TypeDefinition } from "inferred-types";
-import type { KindDefinition } from "./KindDefinition";
 import type {
-  CARDINALITY_TYPES,
-  CLASSIFICATION,
-  LOG_LEVELS,
-  TAG_HANDLING,
-  UOM_TYPES,
+	CARDINALITY_TYPES,
+	CLASSIFICATION,
+	LOG_LEVELS,
+	TAG_HANDLING,
+	UOM_TYPES,
 } from "~/utils/Constants";
 import type { TupleToUnion } from "~/utils/type-utils";
 
@@ -98,27 +96,28 @@ export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
  * for a given vault.
  */
 export interface KindModelSettings {
-  /** used to populate the kinds cache */
-  kinds?: KindDefinition[];
-  /** used to populate the types cache */
-  types?: TypeDefinition[];
-  /** the default folder for kind definitions */
-  kind_folder?: string;
-  handle_tags: TagHandler;
-  default_classification: KindClassificationConfig;
 
-  page_blocks?: PageBlock[];
-  /**
-   * the **log level** being reported to the developer console
-   */
-  log_level: LogLevel;
+	/**
+	 * the **log level** being reported to the developer console
+	 */
+	log_level: LogLevel;
 
-  /**
-   * to query the [World Cat](https://search.worldcat.org)
-   * service for books you need to know the _version_ of the API.
-   * Not sure the frequency of it changing but we will cache it so
-   * that we can get fast results _until_ we have to re-scrape to
-   * get a new one.
-   */
-  worldCatApiVersion?: string;
+
+	/** paths to all known Kind pages */
+	kindPaths: string[];
+	/**
+	 * the base directory which all Kind Definition pages
+	 * should be moved to. If not set then this means
+	 * that they can be stored anywhere.
+	 */
+	kindDefnBaseDir?: string;
+
+	/**
+	 * the base directory which all Type Definition pages
+	 * should be moved to. If not set then this means
+	 * that they can be stored anywhere.
+	 */
+	typeDefnBaseDir?: string;
+
 }
+  

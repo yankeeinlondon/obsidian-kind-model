@@ -17,6 +17,9 @@ import type {
 import type {
 	App,
 	EventRef,
+	TAbstractFile as OAbstractedFile,
+	TFile as OFile,
+	TFolder as OFolder,
 	Plugin,
 	PluginManifest,
 	Stat,
@@ -26,7 +29,12 @@ import type {
 import type { Path } from "~/globals";
 import type { Tag } from ".";
 
-export interface TFile extends TAbstractFile {
+export interface TFile extends TAbstractFile, OFile {
+  /**
+   * the name without the file extension
+   */
+  basename: string;
+
   /** file `Stat` metadata */
   stat: Stat;
 
@@ -42,7 +50,7 @@ export interface TFile extends TAbstractFile {
   deleted: boolean;
 }
 
-export interface TFolder extends TAbstractFile {
+export interface TFolder extends TAbstractFile, OFolder {
   /**
    * files in the directory
    */
@@ -65,7 +73,7 @@ export interface TFileForMarkdown {
 /**
  * This can be either a `TFile` or a `TFolder`.
  */
-export interface TAbstractFile {
+export interface TAbstractFile extends OAbstractedFile {
   /**
    * The name including file extension
    */
@@ -79,15 +87,13 @@ export interface TAbstractFile {
    * the full path to the file
    */
   path: string;
-  /**
-   * the name without the file extension
-   */
-  basename: string;
+
 
   /**
    * the parent folder
    */
   parent: TFolder | null;
+
 }
 
 export interface ObsidianComponent {

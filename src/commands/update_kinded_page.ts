@@ -1,5 +1,5 @@
 import { filterEmpty, or } from "inferred-types";
-import type { Editor, MarkdownView } from "obsidian";
+import type { MarkdownView } from "obsidian";
 import { Notice } from "obsidian";
 import { getPath } from "~/api";
 import { getPageFromKindTag } from "~/page";
@@ -220,10 +220,7 @@ async function updateSubcategory(_p: KindModelPlugin, page: PageView): Promise<b
 }
 
 export function update_kinded_page(p: KindModelPlugin) {
-  return async <
-	E extends Editor | undefined
-  >(
-    _editor: E,
+  return async (
     view: MarkdownView,
   ) => {
     const page = p.api.createPageView(view);

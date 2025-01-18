@@ -1,5 +1,7 @@
 import { capitalize, ensureLeading, ensureTrailing, retainUntil, stripBefore, stripLeading } from "inferred-types";
+import { MarkdownView, TFile } from "obsidian";
 import { dirname, join } from "pathe";
+import { update_kinded_page } from "~/commands";
 import { kmBlock } from "~/handlers/fmt";
 import type KindModelPlugin from "~/main";
 import { isTFile } from "~/type-guards";
@@ -42,29 +44,41 @@ export function on_file_created(plugin: KindModelPlugin) {
 				: ensureLeading(`${kind}/subcategory/${category}/${subcategory}`, "#")
 	
 			let name = handleAs === "category"
-				? `${capitalize(category as string)} as category of ${kind}`
-				: `${capitalize(subcategory as string)} as subcategory of ${`${kind}/${category}`}`
+				? `${capitalize(category as string)} ${capitalize(kind as string)}`
+				: `${capitalize(subcategory as string)} ${capitalize(category as string)} ${capitalize(kind as string)}`
+
+			const newFilepath = (name: string) => join(dirname(file.path), ensureTrailing(name, ".md"));
 			
-			const content = `${tag}\n# [[${file.basename}]]\n${kmBlock("PageEntry()")}\n`
+			const content = `${tag}\n# [[${newFilepath(name)}|${name}]]\n${kmBlock("PageEntry()")}\n`
 			
 			let basePath = dirname(file.path);
 			let newPath = join(basePath, ensureTrailing(name, ".md"));
 	
-			// let tfile = asTFileForMarkdown(file.name, file.path);
-	
+			
 			plugin.info(
 				`New Kind Page`, 
 				{ kind, category, subcategory, handleAs, tag, name}
 			);
-
+			
 			await file.vault.modify(file, content);
-
+			
 			const o = plugin.api.obsidian;
 			const leaf = o.getMostRecentLeaf();
 			const view = leaf?.view;
+			
+			
+			plugin.info(`moving file to ${newPath}`, {leaf, view})
+			if(view) {
+				// await view?.requestSave();
 
+				await update_kinded_page(plugin)(view as MarkdownView);
 
-			plugin.info(`moving file to ${newPath}`, leaf, view)
+				const current = {...file} as TFile;
+				await file.vault.rename(current, newPath);
+
+				plugin.info("renamed", {view,leaf})
+				
+			}
 
 			// await file.vault.rename(file, newPath);
 	

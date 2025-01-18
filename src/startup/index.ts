@@ -1,2 +1,5 @@
-export * from "./getDefnPages";
+
 export * from "./getTagLists";
+export * from "./kindLookups";
+export * from "./runAfterDataviewReady";
+

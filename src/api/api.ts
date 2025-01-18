@@ -1,3 +1,4 @@
+import { obApp } from "~/globals";
 import { queryHandlers } from "~/handlers";
 import type KindModelPlugin from "~/main";
 import { getPage } from "~/page";
@@ -9,7 +10,6 @@ import { frontmatterApi } from "./fm";
 import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { iconApi } from "./iconApi";
-import { obsidianApi } from "./obsidian";
 import { renderApi } from "./renderApi";
 import { showApi } from "./showApi";
 
@@ -31,7 +31,7 @@ export function api(plugin: KindModelPlugin) {
 	/**
 	 * Obsidian API's exposed via the global App object
 	 */
-    obsidian: obsidianApi(plugin),
+    obsidian: obApp,
 
     /**
      * **render**`(el, filePath) -> API`

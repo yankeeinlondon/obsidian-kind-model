@@ -82,3 +82,5 @@ export interface ListItemsApi<_W extends WrapperCallback> {
 export type ListItemsCallback = <T extends ListItemsApi<WrapperCallback>>(
   api: T,
 ) => unknown;
+
+export type Task = () => Promise<void>;

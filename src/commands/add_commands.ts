@@ -1,6 +1,6 @@
 import type { Editor, MarkdownView } from "obsidian";
-import type KindModelPlugin from "~/main";
 import { create_new_kinded_page, update_kinded_page } from "~/commands/index";
+import type KindModelPlugin from "~/main";
 
 /**
  * Adds commands for this plugin; including:
@@ -37,7 +37,7 @@ export function add_commands(plugin: KindModelPlugin) {
   plugin.addCommand({
     id: "update-kinded-page",
     name: "update this page",
-    editorCallback: update_kinded_page(plugin),
+    editorCallback: (_, view) => update_kinded_page(plugin)(view as MarkdownView),
     icon: "refresh",
   });
 }

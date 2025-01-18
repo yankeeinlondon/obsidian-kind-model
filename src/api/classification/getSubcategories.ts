@@ -58,7 +58,7 @@ export function getSubcategories(p: KindModelPlugin) {
 								defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
 							};
 						}
-					) as PageSubcategory[];
+					).filter(i => i.subcategory) as PageSubcategory[];
 
 				case "kinded":
 				case "multi-kinded":
@@ -87,7 +87,7 @@ export function getSubcategories(p: KindModelPlugin) {
 								defnTag: findTag,
 							};
 						}
-					) as PageSubcategory[];
+					).filter(i => i.subcategory) as PageSubcategory[];
 
 
 				case "multi-kinded > category":

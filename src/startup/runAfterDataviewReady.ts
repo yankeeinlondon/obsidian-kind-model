@@ -1,32 +1,52 @@
-import type KindModelPlugin from "~/main";
 import { dvApi } from "~/globals";
-import { wait } from "~/utils";
-
-type Task = () => unknown;
+import type KindModelPlugin from "~/main";
+import { Task } from "~/types";
 
 const MAX = 50;
+const TASK_QUEUE: Task[] = [];
+let watcherRunning: boolean = false;
 
-export function runAfterDataviewReady(k: KindModelPlugin) {
-  if (dvApi.index.initialized) {
-    k.dvStatus = "ready";
-  }
-  return async <T extends Task>(task: T) => {
-    let attempts = 0;
+async function watchForChange(p: KindModelPlugin, attempts: number = 0) {
 
-    while (k.dvStatus !== "ready" && attempts < MAX) {
-      await wait(200);
-      if (dvApi.index.initialized) {
-        k.dvStatus = "ready";
-      }
-      attempts++;
-    }
-    console.log("");
-    if (attempts === MAX) {
-      k.warn("timed out waiting for Dataview!");
-    }
-    else {
-      k.debug("running delayed query");
-      await task();
-    }
-  };
+	if(dvApi.index.initialized) {
+		p.dvStatus === "ready";
+		p.info(`Dataview is ready. Starting Task Queue [${p.taskQueue.length}].`);
+
+		for (const task of p.taskQueue) {
+			await task();
+		}
+		p.info(`Task Queue has completed`);
+	} else {
+		if(attempts > MAX) {
+			p.error(`Timed out waiting for Dataview API to become available!`);
+			return;
+		}
+
+		setTimeout(() => {
+			watchForChange(p, attempts + 1);
+		}, 250)
+	}
+}
+
+
+export function deferUntilDataviewReady(p: KindModelPlugin) {
+	if (dvApi.index.initialized) {
+		p.dvStatus = "ready";
+	}
+
+	return async <T extends Task>(
+		task: T
+	) => {
+		if (p.dvStatus === "ready") {
+			// execute immediately as we're already in a
+			// ready state
+			await task();
+		} else {
+			p.taskQueue.push(task);
+			if(!watcherRunning) {
+				watcherRunning = true;
+				watchForChange(p);
+			}
+		}
+	}
 }

@@ -21,8 +21,8 @@ importers:
         specifier: ^1.1.5
         version: 1.1.5
       inferred-types:
-        specifier: ^0.55.15
-        version: 0.55.15
+        specifier: ^0.55.16
+        version: 0.55.16
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.7.3)
@@ -1245,8 +1245,8 @@ packages:
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
 
-  '@types/ms@0.7.34':
-    resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
+  '@types/ms@2.1.0':
+    resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
   '@types/node@20.17.14':
     resolution: {integrity: sha512-w6qdYetNL5KRBiSClK/KWai+2IMEJuAj+EujKCumalFOwXtvOXaEan9AuwcRID2IcOIAWSIfR495hBtgKlx2zg==}
@@ -2574,8 +2574,8 @@ packages:
   inferred-types@0.45.4:
     resolution: {integrity: sha512-1rgw6HLw7zla3ITfoN345tybSThM9Uq1qB7lnm+r/73HRoJHMIWAA5/MQUX/uioIQurHIY5UlGbpvJbxZrKRBQ==}
 
-  inferred-types@0.55.15:
-    resolution: {integrity: sha512-IH1ocMG9jY86V1+CGUtAVDZO0JaUQDHtxA9AEDPbDs1liLJlkkOMtMZhAs52G+5OAP85pwKMSJFKk4TgBK2EiA==}
+  inferred-types@0.55.16:
+    resolution: {integrity: sha512-wrxfhIJQQt8AfFRqhB+kIv8TSwiVOa7+u3otXzSiiuqL5RXNzNKyBRcnXnkFJGb3emQbKi3pxyksYnETcuM/8A==}
 
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
@@ -5064,7 +5064,7 @@ snapshots:
 
   '@types/debug@4.1.12':
     dependencies:
-      '@types/ms': 0.7.34
+      '@types/ms': 2.1.0
 
   '@types/doctrine@0.0.9': {}
 
@@ -5101,7 +5101,7 @@ snapshots:
   '@types/mdurl@2.0.0':
     optional: true
 
-  '@types/ms@0.7.34': {}
+  '@types/ms@2.1.0': {}
 
   '@types/node@20.17.14':
     dependencies:
@@ -5635,7 +5635,7 @@ snapshots:
     dependencies:
       chalk: 5.4.1
       error-stack-parser-es: 0.1.5
-      inferred-types: 0.55.15
+      inferred-types: 0.55.16
       pathe: 2.0.1
 
   acorn-jsx@5.3.2(acorn@8.14.0):
@@ -6938,7 +6938,7 @@ snapshots:
 
   inferred-types@0.45.4: {}
 
-  inferred-types@0.55.15: {}
+  inferred-types@0.55.16: {}
 
   internal-slot@1.1.0:
     dependencies:

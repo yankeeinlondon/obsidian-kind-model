@@ -7,6 +7,7 @@ export * from "./frontmatter";
 export * from "./FuturePage";
 export * from "./general";
 export * from "./Handler";
+export * from "./kind-lookups";
 export * from "./KindCache";
 export * from "./KindDefinition";
 export * from "./MdLink";
@@ -25,3 +26,4 @@ export * from "./style";
 export * from "./tags";
 export * from "./ui-builder_types";
 export * from "./video-types";
+
