@@ -7,6 +7,7 @@ Understanding plugin lifecycle and event timing is critical for reliable plugins
 ### onload()
 
 Called when plugin is enabled. Use for:
+
 - Registering commands, views, settings tabs
 - Setting up event listeners
 - Adding ribbon icons, status bar items
@@ -16,6 +17,7 @@ Called when plugin is enabled. Use for:
 ### onunload()
 
 Called when plugin is disabled. Used for cleanup, but most registrations auto-cleanup:
+
 - `registerEvent()` - auto-removed
 - `registerInterval()` - auto-cleared
 - `registerEditorExtension()` - auto-removed

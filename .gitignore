@@ -29,3 +29,5 @@ eslint.config.js
 
 Icon
 IgnoreList
+.ai/draft 
+.gemini-clipboard
