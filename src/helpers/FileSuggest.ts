@@ -2,11 +2,15 @@
 
 import type { TAbstractFile, TFile } from "obsidian";
 import type KindModelPlugin from "~/main";
-import { vault } from "~/globals";
+import { getVault } from "~/globals";
 import { isTFile } from "~/type-guards";
 import { TextInputSuggest } from "./Suggest";
 
 function getFilesByPath(folder: string) {
+  const vault = getVault();
+  if (!vault) {
+    return [];
+  }
   return vault.getMarkdownFiles().filter(f => f.path.startsWith(folder));
 }
 

@@ -183,37 +183,6 @@ describe("Name", () => {
 				), ...NUMERIC_CHAR));
 		}
 
-	console.log({
-		amazonRating, 
-		goodReadsRating,
-		histogram,
-		reviews,
-		pages, 
-		books,
-		edition,
-		format,
-		numOfRatings, 
-		isKindleBook,
-		kindleVariantAvailable, 
-		weight, 
-		isbn10, 
-		isbn13, 
-		description, 
-		publisher,
-		publication_date,
-		language,
-		file_size,
-		dimensions,
-		amazonOrderLink,
-		xrayEnabled,
-		textToSpeech,
-		enhancedTypesetting,
-		screenReader,
-		editorialReview
-	});
-	
-	
-
   });
 
 });

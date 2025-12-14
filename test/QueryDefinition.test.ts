@@ -63,19 +63,26 @@ describe("Handler Types", () => {
 describe("Handler Runtime", () => {
 
   it("Global Handler", () => {
-	const Kind = createHandler("Kind")({
-		scalar: [
-			"kind AS string",
-			"category AS opt(string)",
-			"subcategory AS opt(string)",
-		],
-		options: {
-			remove_columns: "enum(when,desc,links)",
-			add_columns: "columns()"
-		}
-	});
+    // Test the fluent builder API pattern
+    const Kind = createHandler("Kind")
+      .scalar(
+        "kind AS string",
+        "category AS opt(string)",
+        "subcategory AS opt(string)",
+      )
+      .options({
+        remove_columns: "enum(when,desc,links)",
+        add_columns: "columns()",
+      })
+      .handler(async () => {
+        // Mock handler implementation
+        return true;
+      });
+
+    // The result should be a function that takes a plugin
+    // (we can't fully test without mocking the plugin)
   });
-  
+
 
 });
 

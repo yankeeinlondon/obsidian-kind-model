@@ -3,9 +3,9 @@
 import type { Instance as PopperInstance } from "@popperjs/core";
 import type { ISuggestOwner } from "obsidian";
 import { createPopper } from "@popperjs/core";
-import { app } from "~/globals";
+import { app, getScope } from "~/globals";
 
-const Scope = app().scope;
+type ScopeType = ReturnType<typeof getScope>;
 
 function wrapAround(value: number, size: number): number {
   return ((value % size) + size) % size;
@@ -21,7 +21,7 @@ class Suggest<T> {
   constructor(
     owner: ISuggestOwner<T>,
     containerEl: HTMLElement,
-    scope: typeof Scope,
+    scope: NonNullable<ScopeType>,
   ) {
     this.owner = owner;
     this.containerEl = containerEl;
@@ -114,13 +114,17 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
   protected inputEl: HTMLInputElement | HTMLTextAreaElement;
 
   private popper: PopperInstance;
-  private scope: typeof Scope;
+  private scope: NonNullable<ScopeType>;
   private suggestEl: HTMLElement;
   private suggest: Suggest<T>;
 
   constructor(inputEl: HTMLInputElement | HTMLTextAreaElement) {
     this.inputEl = inputEl;
-    this.scope = Scope;
+    const scope = getScope();
+    if (!scope) {
+      throw new Error("Cannot create TextInputSuggest: Obsidian app scope is not available");
+    }
+    this.scope = scope;
 
     this.suggestEl = createDiv("suggestion-container");
     const suggestion = this.suggestEl.createDiv("suggestion");

@@ -6,8 +6,16 @@ const MAX = 50;
 const TASK_QUEUE: Task[] = [];
 let watcherRunning: boolean = false;
 
+/**
+ * Checks if the Dataview API index is initialized.
+ * Returns false if dvApi is not available (e.g., in test environments).
+ */
+function isDataviewReady(): boolean {
+  return dvApi?.index?.initialized ?? false;
+}
+
 async function watchForChange(p: KindModelPlugin, attempts: number = 0) {
-  if (dvApi.index.initialized) {
+  if (isDataviewReady()) {
     p.dvStatus = "ready";
     p.info(`Dataview is ready. Starting Task Queue [${p.taskQueue.length}].`);
 
@@ -29,7 +37,7 @@ async function watchForChange(p: KindModelPlugin, attempts: number = 0) {
 }
 
 export function deferUntilDataviewReady(p: KindModelPlugin) {
-  if (dvApi.index.initialized) {
+  if (isDataviewReady()) {
     p.dvStatus = "ready";
   }
 
