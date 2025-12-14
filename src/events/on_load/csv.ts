@@ -1,5 +1,6 @@
-import { Column, htmlLink, htmlTable, renderApi } from "~/api";
+import type { Column } from "~/api";
 import type KindModelPlugin from "~/main";
+import { htmlLink, htmlTable, renderApi } from "~/api";
 import { getPage } from "~/page";
 import { isMdLink } from "~/type-guards";
 
@@ -9,7 +10,7 @@ import { isMdLink } from "~/type-guards";
 export function csv(plugin: KindModelPlugin) {
   plugin.registerMarkdownCodeBlockProcessor("csv", (source, el, _ctx) => {
     const rows = source.split("\n").filter(row => row.length > 0);
-	plugin.info("csv", {source,el, _ctx})
+    plugin.info("csv", { source, el, _ctx });
 
     const table = el.createEl("table");
     const body = table.createEl("tbody");
@@ -26,61 +27,60 @@ export function csv(plugin: KindModelPlugin) {
 }
 
 export function csv2(plugin: KindModelPlugin) {
-	plugin.registerMarkdownCodeBlockProcessor("csv", (source, el, ctx) => {
-		const rows = source.split("\n").filter(row => row.length > 0);
-		const data = rows.slice(1).map(i => i.split(","));
-		const cols = rows[0].split(",").map(
-			(col, idx) => {
-				const re = /.*{[#$£€]}.*/;
-				return re.test(col)
-				? (() => [
-					col.replace(/{[#$£€]}/, "").trim().split(/\s+/).join("\n"), 
-					{
-						"text-align": "end",
-						"font-family": "monospace",
-						"padding-left": "1rem",
-						"font-weight": "300"
-					}]) as Column
-				: col.trim().split(/\s+/).join("\n")
-			}
-		);
+  plugin.registerMarkdownCodeBlockProcessor("csv", (source, el, ctx) => {
+    const rows = source.split("\n").filter(row => row.length > 0);
+    const data = rows.slice(1).map(i => i.split(","));
+    const cols = rows[0].split(",").map(
+      (col, idx) => {
+        const re = /.*\{[#$£€]\}.*/;
+        return re.test(col)
+          ? (() => [
+              col.replace(/\{[#$£€]\}/, "").trim().split(/\s+/).join("\n"),
+              {
+                "text-align": "end",
+                "font-family": "monospace",
+                "padding-left": "1rem",
+                "font-weight": "300",
+              },
+            ]) as Column
+          : col.trim().split(/\s+/).join("\n");
+      },
+    );
 
-		const table = htmlTable( plugin)(cols, {
-			headings: { 
-				"background-color": "rgba(254,254,254,0.07)",
-			},
-			eachHeading: {
-				"text-align": "center",
-				"vertical-align": "bottom",
-				"padding": "0.5rem",
-				"margin-bottom": "0.25rem"
-			},
-			odd: {
-				"background-color": "rgba(255,255,255,0.02)"
-			},
-			table: {
-				"border-radius": "0.5rem",
-				"overflow": "hidden"
-			},
-			cell: (content) => {
-				if(isMdLink(content)) {
-					const page = getPage(plugin)(content);
-					return page
-						? htmlLink(plugin)(page)
-						: page
-					
-				} else {
-					return content;
-				}
-			}
-		});
+    const table = htmlTable(plugin)(cols, {
+      headings: {
+        "background-color": "rgba(254,254,254,0.07)",
+      },
+      eachHeading: {
+        "text-align": "center",
+        "vertical-align": "bottom",
+        "padding": "0.5rem",
+        "margin-bottom": "0.25rem",
+      },
+      odd: {
+        "background-color": "rgba(255,255,255,0.02)",
+      },
+      table: {
+        "border-radius": "0.5rem",
+        "overflow": "hidden",
+      },
+      cell: (content) => {
+        if (isMdLink(content)) {
+          const page = getPage(plugin)(content);
+          return page
+            ? htmlLink(plugin)(page)
+            : page;
+        }
+        else {
+          return content;
+        }
+      },
+    });
 
-		plugin.debug("csv", {cols, data})
+    plugin.debug("csv", { cols, data });
 
-		renderApi(plugin)(el, ctx.sourcePath).renderValue(
-			table(data)
-		)
-
-
-	});
+    renderApi(plugin)(el, ctx.sourcePath).renderValue(
+      table(data),
+    );
+  });
 }

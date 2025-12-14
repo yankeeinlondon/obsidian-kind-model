@@ -1,8 +1,9 @@
+import type { TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
-import type KindModelPlugin from "~/main";
 
+import type KindModelPlugin from "~/main";
 import type { DataArray, Link } from "~/types";
-import { stripLeading, type TupleToUnion } from "inferred-types";
+import { stripLeading } from "inferred-types";
 import { getPage } from "~/page";
 import { createHandler } from "./createHandler";
 

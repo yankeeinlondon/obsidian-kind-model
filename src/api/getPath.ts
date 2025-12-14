@@ -1,12 +1,12 @@
+import type { PageReference } from "~/types";
 import { isString, stripAfter, stripLeading } from "inferred-types";
 import {
-	isDvPage,
-	isLink,
-	isPageInfo,
-	isTAbstractFile,
-	isTFile,
+  isDvPage,
+  isLink,
+  isPageInfo,
+  isTAbstractFile,
+  isTFile,
 } from "~/type-guards";
-import type { PageReference } from "~/types";
 
 /**
  * Get's a page's "path" from various page reference types.
@@ -17,10 +17,10 @@ export function getPath<T extends PageReference | undefined>(pg: T): string | un
     : isDvPage(pg)
       ? pg.file.path
       : isString(pg)
-        ? stripLeading(stripAfter(pg.trim(), "|"), '[[')
+        ? stripLeading(stripAfter(pg.trim(), "|"), "[[")
         : isPageInfo(pg)
           ? typeof pg.current?.file?.path === "string"
-		  	? pg.current.file.path
-			: undefined
+            ? pg.current.file.path
+            : undefined
           : undefined;
 }

@@ -42,23 +42,23 @@ export type ColumnType = ["column", string];
 export type Columns = `columns(${string})`;
 export type ColumnsType = ["columns", string];
 
-export type TypeToken =
-    | "string"
-    | "opt(string)"
-    | "number"
-    | "opt(number)"
-    | "bool"
-    | "boolean"
-    | "opt(bool)"
-    | `array(string)`
-    | `array(number)`
-    | `array(enum(${string}))`
-    | `opt(array(string))`
-    | `opt(array(number))`
-    | Column
-    | Columns
-    | `enum(${string})`
-    | `opt(enum(${string}))`;
+export type TypeToken
+  = | "string"
+      | "opt(string)"
+      | "number"
+      | "opt(number)"
+      | "bool"
+      | "boolean"
+      | "opt(bool)"
+      | `array(string)`
+      | `array(number)`
+      | `array(enum(${string}))`
+      | `opt(array(string))`
+      | `opt(array(number))`
+      | Column
+      | Columns
+      | `enum(${string})`
+      | `opt(enum(${string}))`;
 
 export type ScalarName = string;
 /** the definition of a scalar variable */

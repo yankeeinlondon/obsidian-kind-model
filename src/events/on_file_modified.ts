@@ -1,7 +1,7 @@
+import type KindModelPlugin from "~/main";
 import { isString } from "inferred-types";
 import { Notice } from "obsidian";
 import { EventHandler } from "~/helpers/EventHandler";
-import type KindModelPlugin from "~/main";
 import { getPageInfo } from "~/page";
 import { refreshTagLists } from "~/startup/getTagLists";
 import { asMdLink } from "~/utils";

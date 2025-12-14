@@ -6,6 +6,7 @@ import type { ObsidianCodeblockEvent } from "~/types";
 import type { Link } from "~/types/dataview_types";
 import { isKindError } from "@yankeeinlondon/kind-error";
 import { isObject } from "inferred-types";
+import { Notice } from "obsidian";
 import { renderApi } from "~/api";
 import { ERROR_ICON } from "~/constants";
 import { isError } from "~/type-guards";
@@ -23,6 +24,29 @@ export function isPageLink(v: unknown): v is Link {
  * - if no handler is found, an error is raised in the UI
  */
 export function codeblockParser(p: KindModelPlugin) {
+  /**
+   * Process the km codeblock handlers
+   */
+  const processHandlers = async (
+    source: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext & Component,
+  ) => {
+    const event: ObsidianCodeblockEvent = { source, el, ctx };
+    const handlers = p.api.queryHandlers(event);
+
+    type Outcome = [handler: string, status: boolean | Error];
+    const outcomes: Outcome[] = [];
+
+    for (const h of handlers) {
+      const outcome = await h();
+      const handler = h.handlerName;
+      outcomes.push([handler, outcome]);
+    }
+
+    return outcomes;
+  };
+
   const callback = async (
     source: string,
     el: HTMLElement,
@@ -30,64 +54,109 @@ export function codeblockParser(p: KindModelPlugin) {
   ) => {
     el.style.overflowX = "auto";
 
-    const event: ObsidianCodeblockEvent = { source, el, ctx };
-    const handlers = p.api.queryHandlers(event);
+    // If Dataview isn't ready yet, defer processing until it is
+    if (p.dvStatus !== "ready") {
+      // Show loading indicator
+      const loadingEl = el.createDiv({ cls: "km-loading" });
+      loadingEl.innerHTML = `<span style="opacity: 0.6; font-style: italic;">Loading...</span>`;
 
-		type Outcome = [handler: string, status: boolean | Error];
-		const outcomes: Outcome[] = [];
+      // Defer until Dataview is ready
+      p.deferUntilDataviewReady(async () => {
+        // Clear loading indicator
+        el.empty();
+        el.style.overflowX = "auto";
 
-		for (const h of handlers) {
-		  const outcome = await h();
-		  const handler = h.handlerName;
-		  outcomes.push([handler, outcome]);
-		}
+        // Process handlers now that Dataview is ready
+        const outcomes = await processHandlers(source, el, ctx);
+        handleOutcomes(p, source, el, ctx, outcomes);
+      });
 
-		p.info(`code block processed against handlers`, outcomes.reduce(
-		  (acc, i) => ({
-		    ...acc,
-		    [i[0] as string]: i[1],
-		  }),
-		  {},
-		));
+      return;
+    }
 
-		if (!outcomes.some(i => i[1] === true)) {
-		  const err = outcomes.find(i => isError(i[1])) as Error | undefined;
-
-		  const render = renderApi(p)(el, ctx.sourcePath);
-		  const { format } = p.api;
-
-		  if (err) {
-		    if (isKindError(err)) {
-		      p.warn(...((err as BaseKindError)?.asBrowserMessages() || []));
-		    }
-
-		    render.callout(
-		      "error",
-		      `<div style="display:flex; flex-direction: row"><span style="display: flex">Error running </span>&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`,
-		      {
-		        content: [
-		          `Problems parsing parameters passed into the&nbsp;${format.bold(`${source}`)}&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
-		          `<span><b>Error:</b> ${err?.message || String(err)}</span>`,
-		        ],
-		        icon: ERROR_ICON,
-		        toRight: format.inline_codeblock(`${source?.trim() || ""} `),
-		      },
-		    );
-
-		    // p.error(err);
-		  }
-		  else {
-		    render.callout(
-		      "error",
-		      `The KM query "${source}" is not recognized!`,
-		    );
-		  }
-		}
+    // Dataview is ready, process immediately
+    const outcomes = await processHandlers(source, el, ctx);
+    handleOutcomes(p, source, el, ctx, outcomes);
   };
+
   // register callback
   const registration = p.registerMarkdownCodeBlockProcessor(
     "km",
     callback,
   );
   registration.sortOrder = -100;
+}
+
+type Outcome = [handler: string, status: boolean | Error];
+
+/**
+ * Handle the outcomes from processing km codeblock handlers
+ */
+function handleOutcomes(
+  p: KindModelPlugin,
+  source: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext & Component,
+  outcomes: Outcome[],
+) {
+  p.info(`code block processed against handlers`, outcomes.reduce(
+    (acc, i) => ({
+      ...acc,
+      [i[0] as string]: i[1],
+    }),
+    {},
+  ));
+
+  if (!outcomes.some(i => i[1] === true)) {
+    const errorOutcome = outcomes.find(i => isError(i[1]));
+    const err = errorOutcome?.[1] as Error | undefined;
+    const handlerName = errorOutcome?.[0] || "unknown";
+
+    const render = renderApi(p)(el, ctx.sourcePath);
+    const { format } = p.api;
+
+    if (err) {
+      // Use KindError's browser messages if available
+      if (isKindError(err)) {
+        p.warn(...((err as BaseKindError)?.asBrowserMessages() || []));
+      }
+
+      // Check if debug mode is enabled via log level
+      const isDebugMode = p.settings.log_level === "debug";
+
+      // Build enhanced error content with context
+      const errorContent = [
+        `<b>Handler:</b> ${format.inline_codeblock(handlerName)}`,
+        `<b>Query:</b> ${format.inline_codeblock(source?.trim() || "")}`,
+        `<b>Error:</b> ${err?.message || String(err)}`,
+        isDebugMode && err?.stack
+          ? `<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`
+          : null,
+      ].filter(Boolean) as string[];
+
+      render.callout(
+        "error",
+        `Error in ${format.inline_codeblock("km")} handler`,
+        {
+          content: errorContent,
+          icon: ERROR_ICON,
+        },
+      );
+
+      // Show Notice for critical errors to ensure visibility
+      new Notice(`Kind Model: Error in ${handlerName} handler. Check the document for details.`, 5000);
+    }
+    else {
+      render.callout(
+        "error",
+        `The KM query "${source}" is not recognized!`,
+        {
+          icon: ERROR_ICON,
+        },
+      );
+
+      // Show Notice for unrecognized handlers
+      new Notice(`Kind Model: Unknown query handler "${source}"`, 4000);
+    }
+  }
 }

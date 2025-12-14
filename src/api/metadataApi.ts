@@ -16,8 +16,8 @@ import {
   isIsoDateTime,
   isIsoExplicitDate,
   isStringArray,
-  isYouTubeVideoUrl,
 } from "inferred-types";
+import { isYouTubeVideoUrl } from "~/helpers/youtube";
 import { getPage } from "~/page";
 import { isDvPage, isFrontmatter, isPageInfo } from "~/type-guards";
 import { getPropertyType } from "./getPropertyType";

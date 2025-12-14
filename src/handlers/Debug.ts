@@ -1,8 +1,8 @@
+import type KindModelPlugin from "~/main";
+import type { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
 import { htmlLink } from "~/api";
 import { asDisplayTag } from "~/helpers";
-import type KindModelPlugin from "~/main";
 import { isFuturePage, isPageReference } from "~/type-guards";
-import type { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
 import { createHandler } from "./createHandler";
 
 function showCategories(p: KindModelPlugin) {
@@ -79,24 +79,24 @@ export const Debug = createHandler("Debug")
       `${page.pageType} [multi: ${page.hasMultipleKinds}]`,
     ];
     const types
-			= (
-			  (page.type && isPageReference(page.type))
-			  || (page.types && page.types.length > 0)
-			)
-			  ? [
-			      fmt.bold(`Type${pl}`), //
-			      page.type
-			        ? htmlLink(p)(page.type)
-			        : Array.isArray(page.types)
-			          ? page.types.map(i => htmlLink(p)(i)).join(", ")
-			          : page.typeTag
-			            ? `none (but has _type tag_ of ${asDisplayTag(page.typeTag)})`
-			            : "none",
-			    ]
-			  : [
-			      `Type${pl}`,
-			      fmt.italics("none found"),
-			    ];
+      = (
+        (page.type && isPageReference(page.type))
+        || (page.types && page.types.length > 0)
+      )
+        ? [
+            fmt.bold(`Type${pl}`), //
+            page.type
+              ? htmlLink(p)(page.type)
+              : Array.isArray(page.types)
+                ? page.types.map(i => htmlLink(p)(i)).join(", ")
+                : page.typeTag
+                  ? `none (but has _type tag_ of ${asDisplayTag(page.typeTag)})`
+                  : "none",
+          ]
+        : [
+            `Type${pl}`,
+            fmt.italics("none found"),
+          ];
     const kinds = page.kindTags?.length > 0
       ? [
           fmt.bold(`Kind${pl}`),
@@ -119,26 +119,26 @@ export const Debug = createHandler("Debug")
       : undefined;
 
     const subCats
-			= page.subcategories?.length > 0
-			  ? [
-			      page.subcategories?.length > 1
-			        ? "Subcategories"
-			        : "Subcategory",
-			      showSubcategories(p)(page.subcategories),
-			    ]
-			  : undefined;
+      = page.subcategories?.length > 0
+        ? [
+            page.subcategories?.length > 1
+              ? "Subcategories"
+              : "Subcategory",
+            showSubcategories(p)(page.subcategories),
+          ]
+        : undefined;
 
     const frontMatter
-			= Object.keys(page.frontmatterTypes).length > 0
-			  ? [
-			      "Frontmatter",
-			      Object.keys(page.frontmatterTypes)
-			        .map(
-			          k => `${fmt.bold(k)}: [ ${page.frontmatterTypes[k as any].join(", ")} ]`,
-			        )
-			        .join("<br/>"),
-			    ]
-			  : undefined;
+      = Object.keys(page.frontmatterTypes).length > 0
+        ? [
+            "Frontmatter",
+            Object.keys(page.frontmatterTypes)
+              .map(
+                k => `${fmt.bold(k)}: [ ${page.frontmatterTypes[k as any].join(", ")} ]`,
+              )
+              .join("<br/>"),
+          ]
+        : undefined;
 
     const report = [kindOfPage, types, kinds, cats, subCats, frontMatter].filter(
       i => i,

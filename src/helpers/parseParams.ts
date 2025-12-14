@@ -1,13 +1,13 @@
 import type { KindError } from "@yankeeinlondon/kind-error";
-import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
-import { InvalidParameters, ParsingError } from "~/errors";
 import type KindModelPlugin from "~/main";
 import type {
-	OptionParams,
-	OptionsDefn,
-	ScalarDefn,
-	ScalarParams,
+  OptionParams,
+  OptionsDefn,
+  ScalarDefn,
+  ScalarParams,
 } from "~/types";
+import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
+import { InvalidParameters, ParsingError } from "~/errors";
 
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
@@ -64,10 +64,10 @@ export function parseQueryParams(_p: KindModelPlugin) {
        * is in the last position of parameters passed in.
        */
       const optionsInTerminalPosition
-				= optionsPosition === -1 ? true : optionsPosition === parsed.length - 1;
+        = optionsPosition === -1 ? true : optionsPosition === parsed.length - 1;
 
       const scalarParams
-				= optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
+        = optionsPosition === -1 ? parsed : parsed.slice(0, optionsPosition);
 
       const notEnoughScalarParams = !!(
         requiredScalar > 0 && scalarParams.length < requiredScalar

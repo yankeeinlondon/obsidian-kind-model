@@ -1,21 +1,21 @@
 import type {
-	AnyObject,
-	Contains,
-	FixedLengthArray,
-	Scalar,
-	Suggest,
-	Tuple,
-	TypedFunction,
+  AnyObject,
+  Contains,
+  FixedLengthArray,
+  Scalar,
+  Suggest,
+  Tuple,
+  TypedFunction,
 } from "inferred-types";
+import type KindModelPlugin from "~/main";
+import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 import {
-	createFnWithProps,
-	isDefined,
-	keysOf,
+  createFnWithProps,
+  isDefined,
+  keysOf,
 } from "inferred-types";
 import { showApi } from "~/api";
-import type KindModelPlugin from "~/main";
 import { getPageInfo } from "~/page";
-import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from "~/types";
 
 const NO_PLUGIN = ["showCreatedDate", "showModifiedDate"] as const;
 const NO_PAGE = ["createLinksFromTag"] as const;
@@ -44,7 +44,7 @@ export type QueryRecord = {
 };
 
 export type TableCallback<T extends readonly string[]> = <A extends QueryRecord>(
-  cb: A
+  cb: A,
 ) => FixedLengthArray<string, T["length"]>;
 
 export interface TableOpt<
@@ -272,5 +272,3 @@ export function createTable<
     return createFnWithProps(fn, props);
   };
 }
-
-

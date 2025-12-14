@@ -1,5 +1,6 @@
 import type { LogLevel } from "~/types/settings_types";
 import { isString } from "inferred-types";
+import { Notice } from "obsidian";
 
 function msg<T extends unknown[]>(list: T) {
   return list.find(i => typeof i === "string") || ("" as string | "");
@@ -84,9 +85,10 @@ function warn<TLevel extends LogLevel>(level: TLevel) {
 function error<TLevel extends LogLevel>(_level: TLevel) {
   return (...args: unknown[]) => {
     console.groupEnd();
-    new Notification(`KM(err): ${msg(args) || ""}`, {
-      body: "see developer console for more details",
-    });
+
+    // Use Obsidian's Notice API for better integration
+    const errorMsg = msg(args) || "Unknown error";
+    new Notice(`Kind Model Error: ${errorMsg}. See developer console for details.`, 6000);
 
     class KindModelError extends Error {
       kind: "KindModel Error";

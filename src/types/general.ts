@@ -9,10 +9,10 @@ export type Tag = `#${string}`;
  */
 export type PagePath = string;
 
-export type ExternalLinkDomain =
-    | "youtube-video"
-    | "youtube-creator"
-    | "github-repo";
+export type ExternalLinkDomain
+  = | "youtube-video"
+      | "youtube-creator"
+      | "github-repo";
 
 /**
  * An external link found in frontmatter

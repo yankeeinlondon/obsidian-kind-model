@@ -1,6 +1,6 @@
+import type KindModelPlugin from "~/main";
 import { obApp } from "~/globals";
 import { queryHandlers } from "~/handlers";
-import type KindModelPlugin from "~/main";
 import { getPage } from "~/page";
 import { createPageView } from "../page/createPageView";
 import { getPageInfoBlock } from "../page/getPageBlock";
@@ -28,9 +28,9 @@ export function api(plugin: KindModelPlugin) {
     ...showApi(plugin),
     ...iconApi(plugin),
     fm: frontmatterApi(plugin),
-	/**
-	 * Obsidian API's exposed via the global App object
-	 */
+    /**
+     * Obsidian API's exposed via the global App object
+     */
     obsidian: obApp,
 
     /**

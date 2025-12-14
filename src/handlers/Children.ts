@@ -1,8 +1,8 @@
+import type { PageType, Tag } from "~/types";
 import { createKindError } from "@yankeeinlondon/kind-error";
 import { isString } from "inferred-types";
 import { getPageType } from "~/api";
 import { asDisplayTag, asTag } from "~/helpers";
-import type { PageType, Tag } from "~/types";
 import { createHandler } from "./createHandler";
 
 export const Children = createHandler("Children")

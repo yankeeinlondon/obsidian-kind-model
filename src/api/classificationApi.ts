@@ -1,27 +1,27 @@
+import type KindModelPlugin from "~/main";
+import type {
+  CatSubcatTuple,
+  DvPage,
+  KindClassification,
+  KindClassificationConfig,
+  KindClassifiedCategory,
+  KindClassifiedSubcategory,
+  PageCategory,
+  PageReference,
+  PageSubcategory,
+  PageType,
+  Tag,
+} from "~/types";
+import type { ClassificationApi } from "~/types/ClassificationApi";
 import {
-	isArray,
-	isDefined,
-	stripLeading
+  isArray,
+  isDefined,
+  stripLeading,
 } from "inferred-types";
 import { asDisplayTag, futurePage } from "~/helpers";
-import type KindModelPlugin from "~/main";
 import { getPage, getPageFromTagOrFuturePage } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import { isDvPage, isFileLink, isPageInfo, isPageReference } from "~/type-guards";
-import type {
-	CatSubcatTuple,
-	DvPage,
-	KindClassification,
-	KindClassificationConfig,
-	KindClassifiedCategory,
-	KindClassifiedSubcategory,
-	PageCategory,
-	PageReference,
-	PageSubcategory,
-	PageType,
-	Tag,
-} from "~/types";
-import type { ClassificationApi } from "~/types/ClassificationApi";
 import { getCategories } from "./classification/getCategories";
 import { getPropertyType } from "./getPropertyType";
 
@@ -707,51 +707,51 @@ function getClassifiedCategory(p: KindModelPlugin) {
   ) => {
     const { category: catTag, page: catPage } = spec;
 
-		type CatTag = typeof catTag;
+    type CatTag = typeof catTag;
 
-		const subCats = subcategories.filter(i => i.kind === kind && i.category === catTag);
-		const underlying: CatSubcatTuple = [catTag, subCats.map(i => i.subcategory)];
+    const subCats = subcategories.filter(i => i.kind === kind && i.category === catTag);
+    const underlying: CatSubcatTuple = [catTag, subCats.map(i => i.subcategory)];
 
-		const typeTag = isDvPage(catPage)
-		  ? catPage.file.tags.find(i => i.startsWith(`#type/`))
-		  : undefined;
-		const typeDefn = typeTag
-		  ? getPageFromTagOrFuturePage(p)(typeTag, `"${typeTag}" as Type for "${catTag}" Category of "${kind}"`)
-		  : undefined;
+    const typeTag = isDvPage(catPage)
+      ? catPage.file.tags.find(i => i.startsWith(`#type/`))
+      : undefined;
+    const typeDefn = typeTag
+      ? getPageFromTagOrFuturePage(p)(typeTag, `"${typeTag}" as Type for "${catTag}" Category of "${kind}"`)
+      : undefined;
 
-		const category: KindClassifiedCategory = {
-		  type: typeDefn,
-		  tag: catTag,
-		  page: getPageFromTagOrFuturePage(p)(
-		    spec.defnTag,
-		    `"${catTag}" as `,
-		  ),
-		  defnTag: `#${kind}/category/${catTag}`,
-		  kindedTag: `#${kind}/${catTag}`,
-		} as KindClassifiedCategory<TKind, [CatTag, []]>;
+    const category: KindClassifiedCategory = {
+      type: typeDefn,
+      tag: catTag,
+      page: getPageFromTagOrFuturePage(p)(
+        spec.defnTag,
+        `"${catTag}" as `,
+      ),
+      defnTag: `#${kind}/category/${catTag}`,
+      kindedTag: `#${kind}/${catTag}`,
+    } as KindClassifiedCategory<TKind, [CatTag, []]>;
 
-		if (subCats.length === 1) {
-		  return {
-		    category: {
-		      ...category,
-		      subcategory: getClassifiedSubcategory(p)(kind, catTag, subCats[0]),
-		    } as KindClassifiedCategory<TKind, [CatTag, [string]]>,
-		    underlying,
-		  };
-		}
-		else if (subCats.length > 1) {
-		  return {
-		    category: {
-		      ...category,
-		      subcategories: subCats.map(
-		        sc => getClassifiedSubcategory(p)(kind, catTag, sc),
-		      ),
-		    } as KindClassifiedCategory<TKind, [CatTag, [string, string, ...string[]]]>,
-		    underlying,
-		  };
-		}
+    if (subCats.length === 1) {
+      return {
+        category: {
+          ...category,
+          subcategory: getClassifiedSubcategory(p)(kind, catTag, subCats[0]),
+        } as KindClassifiedCategory<TKind, [CatTag, [string]]>,
+        underlying,
+      };
+    }
+    else if (subCats.length > 1) {
+      return {
+        category: {
+          ...category,
+          subcategories: subCats.map(
+            sc => getClassifiedSubcategory(p)(kind, catTag, sc),
+          ),
+        } as KindClassifiedCategory<TKind, [CatTag, [string, string, ...string[]]]>,
+        underlying,
+      };
+    }
 
-		return { category, underlying };
+    return { category, underlying };
   };
 }
 
@@ -780,54 +780,54 @@ export function getClassification(p: KindModelPlugin) {
 
       // ITERATE
       const classification = kindTags.map((tag) => {
-				type KindTag = typeof tag;
+        type KindTag = typeof tag;
 
-				const kindPage = (
-				  kindTags.length === 1 && kindProp
-				    ? kindProp
-				    : getKindPageByTag(p)(tag)
-				) || futurePage(p)(`Kind Page with tag of "${tag}"`);
+        const kindPage = (
+          kindTags.length === 1 && kindProp
+            ? kindProp
+            : getKindPageByTag(p)(tag)
+        ) || futurePage(p)(`Kind Page with tag of "${tag}"`);
 
-				const kindType = isDvPage(kindPage) && isPageReference(kindPage.type)
-				  ? getPage(p)(kindPage.type)
-				  : undefined;
+        const kindType = isDvPage(kindPage) && isPageReference(kindPage.type)
+          ? getPage(p)(kindPage.type)
+          : undefined;
 
-				const classy: Partial<KindClassification<KindTag, CatSubcatTuple[]>> = {
-				  type: kindType,
-				  kind: kindPage,
-				  kindTag: tag,
-				  kindDefnTag: `#kind/${tag}`,
-				};
+        const classy: Partial<KindClassification<KindTag, CatSubcatTuple[]>> = {
+          type: kindType,
+          kind: kindPage,
+          kindTag: tag,
+          kindDefnTag: `#kind/${tag}`,
+        };
 
-				const catSpecs = categories.filter(i => i.kind === tag);
+        const catSpecs = categories.filter(i => i.kind === tag);
 
-				if (catSpecs.length === 0) {
-				  return classy as KindClassification<KindTag, []>;
-				}
-				else if (catSpecs.length === 1) {
-				  const { category, underlying } = getClassifiedCategory(p)(tag, catSpecs[0], subcategories);
-				  return {
-				    ...classy,
-				    category,
-				    underlying,
-				  };
-				}
-				else {
-				  const categories = [];
-				  let underlying: CatSubcatTuple[] = [];
+        if (catSpecs.length === 0) {
+          return classy as KindClassification<KindTag, []>;
+        }
+        else if (catSpecs.length === 1) {
+          const { category, underlying } = getClassifiedCategory(p)(tag, catSpecs[0], subcategories);
+          return {
+            ...classy,
+            category,
+            underlying,
+          };
+        }
+        else {
+          const categories = [];
+          let underlying: CatSubcatTuple[] = [];
 
-				  for (const spec of catSpecs) {
-				    const { category, underlying: u } = getClassifiedCategory(p)(tag, spec, subcategories);
-				    categories.push(category);
-				    underlying = u;
-				  }
+          for (const spec of catSpecs) {
+            const { category, underlying: u } = getClassifiedCategory(p)(tag, spec, subcategories);
+            categories.push(category);
+            underlying = u;
+          }
 
-				  return {
-				    ...classy,
-				    categories,
-				    underlying,
-				  };
-				}
+          return {
+            ...classy,
+            categories,
+            underlying,
+          };
+        }
       });
 
       return classification as unknown as KindClassificationConfig[];

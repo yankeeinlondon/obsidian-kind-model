@@ -1,8 +1,8 @@
 import type { YouTubeVideoUrl } from "inferred-types";
 import type { PageContent } from "../helpers/pageContent";
 import type { PagePath } from "../types/general";
-import { youtubeEmbed } from "inferred-types";
 import { pageContent } from "../helpers/pageContent";
+import { youtubeEmbed } from "../helpers/youtube";
 import { createHandler } from "./createHandler";
 
 /**

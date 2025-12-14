@@ -1,5 +1,5 @@
-import { isString } from "inferred-types";
 import type { PageReference } from "~/types";
+import { isString } from "inferred-types";
 import { isDvPage } from "./isDvPage";
 import { isFileLink } from "./isFileLink";
 import { isFuturePage } from "./isFuturePage";
@@ -7,7 +7,6 @@ import { isMdLink } from "./isMdLink";
 import { isPageInfo } from "./isPageInfo";
 import { isTAbstractFile } from "./isTAbstractFile";
 import { isTFile } from "./isTFile";
-
 
 /**
  * checks whether passed in value is any sort of "page reference"
@@ -21,7 +20,7 @@ export function isPageReference(v: unknown): v is PageReference {
     || isFuturePage(v)
     || isTFile(v)
     || isTAbstractFile(v)
-	|| isMdLink(v)
+    || isMdLink(v)
     || isString(v)
   );
 }

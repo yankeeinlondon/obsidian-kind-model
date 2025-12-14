@@ -1,5 +1,5 @@
-import { toKeyValue } from "inferred-types";
 import type KindModelPlugin from "~/main";
+import { toKeyValue } from "inferred-types";
 import { isPageReference, isTFile } from "~/type-guards";
 import { asMdLink } from "~/utils";
 
@@ -48,7 +48,7 @@ export function sortFmKeys(p: KindModelPlugin) {
         await p.app.fileManager.processFrontMatter(file, (fm) => {
           const top = [
             "type",
-			"types",
+            "types",
             "kind",
             "kinds",
             "category",

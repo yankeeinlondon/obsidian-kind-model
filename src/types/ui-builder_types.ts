@@ -21,7 +21,7 @@ export type ChangeCallback<
   TBase extends Record<PropertyKey, any>,
   TProp extends keyof TBase,
 >(base: TBase,
-  prop: TProp
+  prop: TProp,
 ) => Callback<TArgs, TReturn>;
 
 export type AnyComponent = TextComponent | SliderComponent | ButtonComponent | ColorComponent | SearchComponent | ToggleComponent;
@@ -40,7 +40,7 @@ export type EventHandler = <
   opt?: TOpt,
   change_cb?: ChangeCallback) => <
   TComponent extends AnyComponent,
->(component_cb: ComponentCallback<TComponent>
+>(component_cb: ComponentCallback<TComponent>,
 ) => void;
 
 export type MaybeLazy<T> = T | (() => T);
@@ -93,7 +93,7 @@ export interface UiBuilderContextApi<
     /** adds an H2 header element */
     heading: THeading,
     /** optionally adds a paragraph block under the H2 heading */
-    sub_text?: string
+    sub_text?: string,
   ) => SectionBuilder<THeading, TBase, TGlobalOpt>;
 
   /**
@@ -109,7 +109,7 @@ export interface UiBuilderContextApi<
     TIterator extends keyof TBase,
     TContainer extends TBase[TIterator] & (any[] | object),
   >(prop: TIterator,
-    cb: Callback<[TContainer], Setting>
+    cb: Callback<[TContainer], Setting>,
   ) => Setting[];
 }
 
@@ -134,7 +134,7 @@ export type UiBuilderFn<
     ? never
     : TProp extends keyof TBase
       ? PropertyKey
-      : never
+      : never,
 ) => UiBuilderComponentApi<TBase, TProp, TGlobalOpt>;
 
 export type SectionBuilder<
@@ -146,13 +146,13 @@ export type SectionBuilder<
 export type UiBuilderContext<
   TBase extends Record<PropertyKey, any>,
   TGlobalOpt extends UiBuilderOptions,
-> =
-    UiBuilderContextApi<TBase, TGlobalOpt> & (
+>
+= UiBuilderContextApi<TBase, TGlobalOpt> & (
   <TProp extends keyof TBase | null>
   (
     name: MaybeLazy<string>,
     desc: MaybeLazy<string>,
-    prop: TProp
+    prop: TProp,
   ) => UiBuilderComponentApi<TBase, TProp, TGlobalOpt>
 );
 

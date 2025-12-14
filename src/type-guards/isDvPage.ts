@@ -1,5 +1,5 @@
-import { isObject } from "inferred-types";
 import type { DvPage } from "~/types";
+import { isObject } from "inferred-types";
 
 /**
  * type guard which validates whether the value passed in is a `DvPage`
@@ -11,5 +11,5 @@ export function isDvPage(val: unknown): val is DvPage {
       && isObject(val.file)
       && "name" in val.file
       && "path" in val.file
-      && val.__kind !== "FuturePage"
+      && val.__kind !== "FuturePage";
 }
