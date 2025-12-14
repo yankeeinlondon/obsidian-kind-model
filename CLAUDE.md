@@ -100,3 +100,106 @@ File and editor event handlers:
 ## Testing
 
 Tests use Vitest with `describe`/`it` blocks. Test files in `test/` directory.
+
+## Handler Development
+
+### Creating Handlers
+
+Handlers are created using the `createHandler()` factory with a fluent API:
+
+```typescript
+export const MyHandler = createHandler("MyHandler")
+  .scalar()  // or .scalar("param AS string", "opt AS opt(number)")
+  .options({
+    myOption: "opt(bool)",
+    tags: "array(string)",
+  })
+  .handler(async (evt) => {
+    const { plugin, page, options, createTable, render } = evt;
+    // Handler implementation
+    return true;
+  });
+```
+
+### TypeToken System
+
+Options use a TypeToken syntax for runtime validation:
+- `"string"`, `"number"`, `"bool"` - primitives
+- `"opt(T)"` - optional type
+- `"array(T)"` - array of type
+- `"enum(a,b,c)"` - enum values
+
+### Handler Event Object
+
+Handlers receive an event with:
+- `plugin` - KindModelPlugin instance
+- `page` - PageInfoBlock with page metadata
+- `options` - Parsed user options
+- `createTable` - Table rendering factory
+- `render` - DOM rendering API
+- `dv` - Dataview API access
+
+## Data Freshness
+
+### Two Cache Sources
+
+The plugin uses two data sources with different freshness:
+
+| Source | Access | Freshness |
+|--------|--------|-----------|
+| Obsidian MetadataCache | `obApp.resolvedLinksFor(path)` | Immediate on save |
+| Dataview Index | `page.outlinks`, `page.inlinks` | Delayed (refresh interval) |
+
+### When to Use Each
+
+- **MetadataCache** (`obApp`): For freshness-critical data like current page outlinks
+- **Dataview**: For complex queries, page metadata, classifications
+
+Example - prefer MetadataCache for dedupe:
+```typescript
+// Fresh - uses Obsidian's cache
+const outlinkPaths = new Set(obApp.resolvedLinksFor(page.path));
+
+// May be stale - from Dataview
+const outlinkPaths = new Set(page.outlinks.map(l => l.path));
+```
+
+### KM Block Re-rendering
+
+KM codeblocks only re-render when:
+- The codeblock content is edited
+- The page is reloaded/tab switched
+- Layout changes occur
+
+They do NOT auto-refresh when page content changes outside the block.
+
+See `docs/km-render-flow.md` for detailed rendering lifecycle documentation.
+
+## Key Patterns
+
+### Filter Chain Pattern
+
+When filtering data (like BackLinks), order filters by cost:
+1. Cheap Set lookups first (reduces data size)
+2. Expensive operations last (e.g., `getPageInfo` per item)
+
+```typescript
+links = filterDedupe(page)(links, options?.dedupe ?? true);        // O(1) lookup
+links = filterByClassification(p)(links, options?.exclude);        // O(n) getPageInfo
+links = filterCompletedTasks(page)(links, options?.excludeCompletedTasks ?? true);
+```
+
+### Conservative Filtering
+
+When data is unavailable, keep items rather than filter them:
+```typescript
+const pageInfo = getPageInfo(p)(link);
+if (!pageInfo) return false;  // Don't match = don't exclude = keep the link
+```
+
+## Documentation
+
+- `docs/km-render-flow.md` - KM block rendering lifecycle
+- `docs/handlers.md` - Handler reference
+- `docs/page-api.md` - Page API documentation
+- `docs/types.md` - Type system overview

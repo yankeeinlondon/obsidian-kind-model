@@ -212,6 +212,27 @@ export const obApp = {
   },
 
   /**
+   * Provides a list of pages that link TO the given filepath (inlinks/backlinks).
+   * Uses MetadataCache directly for fresh data.
+   *
+   * Note: This iterates through all resolved links which is O(n) but provides
+   * fresh data compared to Dataview's potentially stale cache.
+   */
+  inlinksFor(filepath: string): Path[] {
+    const resolvedLinks = app().metadataCache.resolvedLinks;
+    const inlinks: Path[] = [];
+
+    for (const sourcePath in resolvedLinks) {
+      const targets = resolvedLinks[sourcePath];
+      if (filepath in targets) {
+        inlinks.push(sourcePath);
+      }
+    }
+
+    return inlinks;
+  },
+
+  /**
    * Provides a list of _in-vault_ links which are "unresolved" (
    * aka, the pages they point to don't yet exist)
    */

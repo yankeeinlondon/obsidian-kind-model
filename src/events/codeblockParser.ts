@@ -10,9 +10,55 @@ import { Notice } from "obsidian";
 import { renderApi } from "~/api";
 import { ERROR_ICON } from "~/constants";
 import { isError } from "~/type-guards";
+import { getKmBlockTracker } from "./km-block-refresh";
 
 export function isPageLink(v: unknown): v is Link {
   return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
+}
+
+/**
+ * Register a KM block for auto-refresh when its host file changes.
+ * Creates a re-render callback that processes handlers fresh each time.
+ */
+function registerForAutoRefresh(
+  p: KindModelPlugin,
+  filepath: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext & Component,
+  source: string,
+): void {
+  const tracker = getKmBlockTracker(p);
+  if (!tracker) {
+    return;
+  }
+
+  // Create a refresh callback that re-processes handlers
+  const refreshCallback = async (
+    src: string,
+    element: HTMLElement,
+    context: MarkdownPostProcessorContext & Component,
+  ) => {
+    // Re-process handlers with fresh data
+    const event: ObsidianCodeblockEvent = { source: src, el: element, ctx: context };
+    const handlers = p.api.queryHandlers(event);
+
+    type Outcome = [handler: string, status: boolean | Error];
+    const outcomes: Outcome[] = [];
+
+    for (const h of handlers) {
+      const outcome = await h();
+      outcomes.push([h.handlerName, outcome]);
+    }
+
+    handleOutcomes(p, src, element, context, outcomes);
+  };
+
+  tracker.register(filepath, {
+    el,
+    ctx,
+    source,
+    callback: refreshCallback,
+  });
 }
 
 /**
@@ -69,6 +115,9 @@ export function codeblockParser(p: KindModelPlugin) {
         // Process handlers now that Dataview is ready
         const outcomes = await processHandlers(source, el, ctx);
         handleOutcomes(p, source, el, ctx, outcomes);
+
+        // Register for auto-refresh
+        registerForAutoRefresh(p, ctx.sourcePath, el, ctx, source);
       });
 
       return;
@@ -77,6 +126,9 @@ export function codeblockParser(p: KindModelPlugin) {
     // Dataview is ready, process immediately
     const outcomes = await processHandlers(source, el, ctx);
     handleOutcomes(p, source, el, ctx, outcomes);
+
+    // Register for auto-refresh
+    registerForAutoRefresh(p, ctx.sourcePath, el, ctx, source);
   };
 
   // register callback

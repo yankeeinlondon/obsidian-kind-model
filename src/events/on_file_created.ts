@@ -4,9 +4,9 @@ import { capitalize, ensureLeading, ensureTrailing, retainUntil, stripBefore, st
 import { dirname, join } from "pathe";
 import { update_kinded_page } from "~/commands";
 import { kmBlock } from "~/handlers/fmt";
+import { generateKindBlock } from "~/helpers/futurePage";
 import { isTFile } from "~/type-guards";
 import { retryWithBackoff, wait } from "~/utils";
-import { generateKindBlock } from "~/helpers/futurePage";
 
 /**
  * event handler triggered when a new file is added to the vault

@@ -816,8 +816,8 @@ export function showClassifications(p: KindModelPlugin) {
 
     // Wrap multiple classifications in a list container for proper spacing
     const show = items.length > 1
-      ? items.map(item => `<div class="km-classification-item">${item}</div>`).join('')
-      : items[0] || '';
+      ? items.map(item => `<div class="km-classification-item">${item}</div>`).join("")
+      : items[0] || "";
 
     p.debug("show classification", show);
 

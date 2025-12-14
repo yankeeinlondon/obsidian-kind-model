@@ -15,6 +15,7 @@ import {
   on_file_modified,
   on_layout_change,
   on_tab_change,
+  setupKmBlockRefresh,
 } from "./events";
 import { on_editor_change } from "./events/on_editor_change";
 import { csv2 as csv } from "./events/on_load/csv";
@@ -111,6 +112,9 @@ export default class KindModelPlugin extends Plugin {
       typeEl.setText(`${this.typeTags.length} Types`);
       typeEl.addClass("clickable");
     });
+
+    // Setup auto-refresh for KM blocks (before registering the parser)
+    setupKmBlockRefresh(this);
 
     // `km` code blocks
     codeblockParser(this);
