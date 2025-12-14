@@ -2,7 +2,7 @@ import type KindModelPlugin from "~/main";
 import type { PageReference, PageSubcategory } from "~/types";
 import { ensureLeading, stripLeading } from "inferred-types";
 import { getPage, getPageFromTagOrFuturePage } from "~/page";
-import { getPageType, isKindTag } from "../classificationApi";
+import { getPageType } from "../classificationApi";
 
 /**
  * gets all subcategories on a page whether defined via tag or prop
@@ -13,26 +13,6 @@ export function getSubcategories(p: KindModelPlugin) {
     const pageType = getPageType(p)(pg);
 
     if (page && pageType) {
-      const possibleKinded = (Array.from(page.file.tags) as string[]).filter(
-        i => i.split("/").length === 3
-            && !["category", "subcategory"].includes(i.split("/")[1])
-            && isKindTag(p)(i.split("/")[0]),
-      ).map((i) => {
-        const [kind, category, subcategory] = i.split("/");
-        return {
-          kind: stripLeading(kind, "#"),
-          page: getPageFromTagOrFuturePage(p)(
-            `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-            `"${subcategory}" as Subcategory of "${category}" for "${stripLeading(kind, "#")}"`,
-          ),
-          category,
-          subcategory,
-          kindedTag: `${ensureLeading(kind, "#")}/${category}/${subcategory}`,
-          defnTag: `${ensureLeading(kind, "#")}/subcategory/${category}/${subcategory}`,
-
-        } as PageSubcategory;
-      });
-
       switch (pageType) {
         case "kind-defn":
         case "type-defn":

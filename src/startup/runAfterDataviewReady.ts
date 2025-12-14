@@ -1,9 +1,7 @@
 import type KindModelPlugin from "~/main";
-import type { Task } from "~/types";
 import { dvApi } from "~/globals";
 
 const MAX = 50;
-const TASK_QUEUE: Task[] = [];
 let watcherRunning: boolean = false;
 
 /**

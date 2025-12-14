@@ -1,7 +1,7 @@
 import type { IsArray } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type { DvPage, FuturePage, MdLink, PageReference } from "~/types";
-import { ensureTrailing, retainUntil, stripBefore, stripLeading } from "inferred-types";
+import { ensureTrailing, retainUntil, stripBefore } from "inferred-types";
 import { dirname, join } from "pathe";
 import { getPage } from "~/page";
 import { isDvPage, isFuturePage, isMdLink } from "~/type-guards";
@@ -25,20 +25,9 @@ function createFuturePageLink(p: KindModelPlugin) {
     const o = p.api.obsidian;
 
     let kind: string | undefined;
-    let category: string | undefined;
-    let subcategory: string | undefined;
 
     if (filename.includes(`for "`)) {
       kind = retainUntil(stripBefore(filename, `for "`), `"`);
-    }
-
-    if (filename.includes(`" as Category for`)) {
-      category = retainUntil(stripLeading(filename, `"`), `"`);
-    }
-
-    if (filename.includes(`" as Subcategory of the "`)) {
-      subcategory = retainUntil(stripLeading(filename, `"`), `"`);
-      category = retainUntil(stripBefore(filename, `as Subcategory of the "`), `"`);
     }
 
     const kindLookup = kind ? p.kindTagLookup.get(kind) : undefined;
@@ -73,10 +62,6 @@ export function asMdLink(p: KindModelPlugin) {
   >(
     ref: T,
   ): IsArray<T> extends true ? MdLink[] : MdLink => {
-    const o = p.api.obsidian;
-    /** the parent file */
-    const parent = o.getCurrentFile();
-
     if (Array.isArray(ref)) {
       const links: string[] = ref.map(
         i => isMdLink(i)

@@ -31,7 +31,7 @@ export function csv2(plugin: KindModelPlugin) {
     const rows = source.split("\n").filter(row => row.length > 0);
     const data = rows.slice(1).map(i => i.split(","));
     const cols = rows[0].split(",").map(
-      (col, idx) => {
+      (col) => {
         const re = /.*\{[#$£€]\}.*/;
         return re.test(col)
           ? (() => [

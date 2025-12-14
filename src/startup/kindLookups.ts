@@ -33,7 +33,6 @@ export async function refreshKindLookups(p: KindModelPlugin) {
     p.debug(`kind lookups detected changes`);
     await p.saveSettings();
     setKindLookups(p);
-    const paths = Array.from(p.kindPathLookup.keys());
   }
 }
 

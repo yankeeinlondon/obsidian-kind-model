@@ -26,7 +26,7 @@ export function getPage(p: KindModelPlugin) {
     }
 
     if (isString(pg) && isMdLink(pg.trim())) {
-      const [path, alias] = stripSurround("[[", "]]")(pg.trim()).split("|");
+      const [path] = stripSurround("[[", "]]")(pg.trim()).split("|");
       return getPage(p)(path) as unknown as Returns<T>;
     }
 
