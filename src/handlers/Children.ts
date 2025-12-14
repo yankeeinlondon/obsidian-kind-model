@@ -1,8 +1,8 @@
-import type { PageType, Tag } from "~/types";
 import { createKindError } from "@yankeeinlondon/kind-error";
 import { isString } from "inferred-types";
 import { getPageType } from "~/api";
 import { asDisplayTag, asTag } from "~/helpers";
+import type { PageType, Tag } from "~/types";
 import { createHandler } from "./createHandler";
 
 export const Children = createHandler("Children")
@@ -14,7 +14,7 @@ export const Children = createHandler("Children")
     const kind = asTag(page?.kindTags[0]);
     const cat = page.categories[0]?.category;
 
-    p.info("Children hanlder");
+    p.info("Children handler");
 
     const tbl = (k: Tag) => page.isCategoryPage
     // Category Page

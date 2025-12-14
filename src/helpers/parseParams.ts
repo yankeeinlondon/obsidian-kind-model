@@ -1,13 +1,13 @@
-import type { DefaultKindError } from "@yankeeinlondon/kind-error";
-import type KindModelPlugin from "~/main";
-import type {
-  OptionParams,
-  OptionsDefn,
-  ScalarDefn,
-  ScalarParams,
-} from "~/types";
+import type { KindError } from "@yankeeinlondon/kind-error";
 import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
 import { InvalidParameters, ParsingError } from "~/errors";
+import type KindModelPlugin from "~/main";
+import type {
+	OptionParams,
+	OptionsDefn,
+	ScalarDefn,
+	ScalarParams,
+} from "~/types";
 
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
@@ -18,9 +18,9 @@ export function parseQueryParams(_p: KindModelPlugin) {
     scalar: TScalar,
   /** the options hash definition */
     options: TOpt,
-  ): DefaultKindError | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
+  ): KindError | [ScalarParams<TScalar>, OptionParams<TOpt>] => {
     /** the quantity of scalars that MUST be in place */
-    const requiredScalar = scalar.filter(i => !i.contains("opt(")).length;
+    const requiredScalar = scalar.filter(i => !i.includes("opt(")).length;
 
     const invalid = InvalidParameters.rebase({
       raw,

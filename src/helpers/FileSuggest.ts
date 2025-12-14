@@ -67,7 +67,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
       if (
         isTFile(file)
         && file.extension === "md"
-        && file.path.toLowerCase().contains(lower_input_str)
+        && file.path.toLowerCase().includes(lower_input_str)
       ) {
         files.push(file);
       }
