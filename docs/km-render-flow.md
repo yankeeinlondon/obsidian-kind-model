@@ -4,7 +4,7 @@ This document describes the rendering lifecycle for `km` codeblocks, including h
 
 ## Overview
 
-```
+```txt
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Obsidian Page                               │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -86,6 +86,7 @@ As of the latest update, KM blocks automatically re-render when their host file'
 5. **Cleans up** stale block references when elements are unmounted
 
 This means:
+
 - Adding/removing links in the page body will update BackLinks within ~100ms of save
 - The `dedupe` filter now correctly reflects current page state
 - No manual refresh needed for most use cases

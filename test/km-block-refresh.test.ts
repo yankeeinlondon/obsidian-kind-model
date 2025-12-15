@@ -654,3 +654,55 @@ describe("Auto-refresh integration scenarios", () => {
     expect(page2Result.refreshCount).toBe(0);
   });
 });
+
+describe("HTML comparison for skip-unnecessary-updates", () => {
+  /**
+   * Tests for the normalizeHtmlForComparison and content comparison logic
+   * that prevents unnecessary DOM updates when content hasn't changed.
+   */
+
+  const normalizeHtmlForComparison = (html: string): string => {
+    return html
+      .replace(/\s+data-[\w-]+="[^"]*"/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
+  it("should normalize whitespace differences", () => {
+    const html1 = "<div>Hello    World</div>";
+    const html2 = "<div>Hello World</div>";
+
+    expect(normalizeHtmlForComparison(html1)).toBe(normalizeHtmlForComparison(html2));
+  });
+
+  it("should normalize newline differences consistently", () => {
+    const html1 = "<div>\n  Hello\n  World\n</div>";
+    const html2 = "<div>\n    Hello\n    World\n</div>";
+
+    // Both should normalize to the same value (newlines → spaces → collapsed)
+    expect(normalizeHtmlForComparison(html1)).toBe(normalizeHtmlForComparison(html2));
+  });
+
+  it("should strip data-* attributes", () => {
+    const html1 = `<div data-task-id="123">Content</div>`;
+    const html2 = `<div data-task-id="456">Content</div>`;
+    const html3 = `<div>Content</div>`;
+
+    expect(normalizeHtmlForComparison(html1)).toBe(normalizeHtmlForComparison(html2));
+    expect(normalizeHtmlForComparison(html1)).toBe(normalizeHtmlForComparison(html3));
+  });
+
+  it("should detect actual content differences", () => {
+    const html1 = "<div>Link A, Link B</div>";
+    const html2 = "<div>Link A, Link B, Link C</div>";
+
+    expect(normalizeHtmlForComparison(html1)).not.toBe(normalizeHtmlForComparison(html2));
+  });
+
+  it("should detect structural differences", () => {
+    const html1 = "<table><tr><td>A</td></tr></table>";
+    const html2 = "<table><tr><td>A</td><td>B</td></tr></table>";
+
+    expect(normalizeHtmlForComparison(html1)).not.toBe(normalizeHtmlForComparison(html2));
+  });
+});

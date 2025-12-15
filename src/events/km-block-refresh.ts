@@ -91,6 +91,19 @@ export class KmBlockTracker {
   }
 
   /**
+   * Normalize HTML for comparison by removing transient attributes
+   * and whitespace differences that don't affect visual output
+   */
+  private normalizeHtmlForComparison(html: string): string {
+    return html
+      // Remove data-task-id and similar dynamic attributes
+      .replace(/\s+data-[\w-]+="[^"]*"/g, "")
+      // Normalize whitespace
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  /**
    * Actually perform the refresh
    */
   private async doRefresh(filepath: string): Promise<void> {
@@ -111,12 +124,34 @@ export class KmBlockTracker {
       }
 
       try {
-        // Clear existing content
-        context.el.empty();
-        context.el.style.overflowX = "auto";
+        // Capture current content for comparison
+        const previousHtml = this.normalizeHtmlForComparison(context.el.innerHTML);
 
-        // Re-execute the callback
-        await context.callback(context.source, context.el, context.ctx);
+        // Create a temporary container to render new content
+        const tempContainer = document.createElement("div");
+        tempContainer.style.overflowX = "auto";
+
+        // Re-execute the callback into the temp container
+        await context.callback(context.source, tempContainer, context.ctx);
+
+        // Compare normalized HTML
+        const newHtml = this.normalizeHtmlForComparison(tempContainer.innerHTML);
+
+        if (previousHtml !== newHtml) {
+          // Content changed - swap in the new content
+          context.el.empty();
+          context.el.style.overflowX = "auto";
+
+          // Move children from temp container to actual element
+          while (tempContainer.firstChild) {
+            context.el.appendChild(tempContainer.firstChild);
+          }
+
+          this.plugin.debug(`KM block content changed for ${filepath}, updated DOM`);
+        }
+        else {
+          this.plugin.debug(`KM block content unchanged for ${filepath}, skipped DOM update`);
+        }
       }
       catch (error) {
         this.plugin.warn(`Error refreshing KM block: ${error}`);
