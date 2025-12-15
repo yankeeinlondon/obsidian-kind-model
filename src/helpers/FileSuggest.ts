@@ -47,8 +47,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
   }
 
   getSuggestions(input_str: string): TFile[] {
-    const all_files = [
-      ...this.folders
+    const all_files = this.folders
         .map((f) => {
           try {
             return getFilesByPath(f);
@@ -61,8 +60,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
             return [];
           }
         })
-        .flat(),
-    ];
+        .flat();
 
     const files: TFile[] = [];
     const lower_input_str = input_str.toLowerCase();

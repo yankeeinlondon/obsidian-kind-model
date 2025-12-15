@@ -42,7 +42,7 @@ function obsidian_blockquote(kind: ObsidianCalloutColors,	title: string,	opts?: 
             ]
           : [
               `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
-              ...opts.content.map(c => `<div class="content-element" ${style({ flex: true, ...(opts.contentStyle || {}) })}>${c}</div>`),
+              ...opts.content.map(c => `<div class="content-element" ${style({ flex: true, ...opts.contentStyle })}>${c}</div>`),
               `</div>`,
             ]
         : []

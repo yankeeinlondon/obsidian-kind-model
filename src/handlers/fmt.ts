@@ -55,7 +55,7 @@ function obsidian_blockquote(
             `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
             ...opts.content.map(
               c =>
-                `<div class="content-element" ${style({ flex: true, ...(opts.contentStyle || {}) })}>${c}</div>`,
+                `<div class="content-element" ${style({ flex: true, ...opts.contentStyle })}>${c}</div>`,
             ),
             `</div>`,
           ]
@@ -129,29 +129,32 @@ function blockquote(
 }
 
 export function span(text: string | number, fmt?: CssDefinition) {
-  return `<span style="${cssFromDefinition({ ...{ "font-weight": "400", ...(fmt || {}) } })}">${text}</span>`;
+  return `<span style="${cssFromDefinition(({
+	'font-weight': '400',
+	...fmt || {}
+}))}">${text}</span>`;
 }
 function italics(text: string | number, fmt?: Omit<StyleOptions, "fs">) {
   return `<span ${style({ ...(fmt || { fw: "400" }), fs: "italic" } as StyleOptions)}>${text}</span>`;
 }
 
 function bold(text: string, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "700" } as StyleOptions)}>${text}</span>`;
 }
 
 function light(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "300" } as StyleOptions)}>${text}</span>`;
 }
 
 function thin(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "100" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "100" } as StyleOptions)}>${text}</span>`;
 }
 function medium(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "500" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "500" } as StyleOptions)}>${text}</span>`;
 }
 
 function normal(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "400" } as StyleOptions)}>${text}</span>`;
 }
 
 export interface LinkOptions {

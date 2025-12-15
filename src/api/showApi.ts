@@ -535,7 +535,7 @@ function internalLink(
         `target="_blank" rel="noopener">`,
         display,
         `</a>`,
-        `<\span>`,
+        `<span>`,
       ].join("");
 }
 
@@ -571,7 +571,7 @@ export function linkTemplate(p: KindModelPlugin) {
     return (
       ref: PageReference | undefined,
       override?: HtmlLinkOpt,
-    ) => htmlLink(p)(ref, { ...opt, ...(override || {}) });
+    ) => htmlLink(p)(ref, { ...opt, ...override });
   };
 }
 

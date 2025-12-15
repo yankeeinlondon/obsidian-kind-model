@@ -131,14 +131,12 @@ export class KindSuggest extends EditorSuggest<string> {
         clipboardText.startsWith(i),
       );
 
-      const allCommands = [
-        ...(page.isKindedPage
+      const allCommands = (page.isKindedPage
             || page.isCategoryPage
             || page.isSubcategoryPage
             || page.isKindDefnPage
           ? ["Update Kind Page 😊"]
-          : []),
-      ];
+          : []);
       const query = ctx.query.toLowerCase();
 
       if (file) {

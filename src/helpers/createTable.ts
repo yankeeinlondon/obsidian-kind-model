@@ -209,8 +209,8 @@ export function createTable<
     optCallback?: TableOpt<TCols> | undefined,
   ) => {
     const opt = {
-      ...(baseOpt || {}),
-      ...(optCallback || {}),
+      ...baseOpt,
+      ...optCallback,
     } as TableOpt<TCols>;
 
     const fn = async <T extends DataArray<any> | any[]>(

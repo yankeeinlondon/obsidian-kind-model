@@ -9,6 +9,83 @@ import type {
 import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
 import { InvalidParameters, ParsingError } from "~/errors";
 
+/**
+ * Convert JavaScript object literal syntax to valid JSON.
+ * Handles unquoted keys like `{foo: "bar"}` → `{"foo": "bar"}`
+ */
+function jsObjectToJson(input: string): string {
+  // Match unquoted keys that aren't already quoted
+  // Handles: {key:, , key:, { key: (with optional whitespace)
+  return input.replace(
+    /([{,]\s*)([a-z_$][\w$]*)\s*:/gi,
+    '$1"$2":',
+  );
+}
+
+/**
+ * Validate that a value matches a single type (not union).
+ * Returns true if valid, false if invalid.
+ */
+function matchesSingleType(value: unknown, type: string): boolean {
+  if (type === "bool") {
+    return typeof value === "boolean";
+  }
+  if (type === "string") {
+    return typeof value === "string";
+  }
+  if (type === "number") {
+    return typeof value === "number";
+  }
+  if (type.startsWith("array(")) {
+    return Array.isArray(value);
+  }
+  if (type.startsWith("enum(")) {
+    const enumValues = type.slice(5, -1).split(",").map(s => s.trim());
+    return enumValues.includes(String(value));
+  }
+  // Unknown type - be permissive
+  return true;
+}
+
+/**
+ * Validate that a value matches the expected TypeToken type.
+ * Returns null if valid, or an error message if invalid.
+ *
+ * Supports:
+ * - Basic types: "bool", "string", "number"
+ * - Optional: "opt(type)"
+ * - Arrays: "array(type)"
+ * - Enums: "enum(a,b,c)"
+ * - Union types: "string|array(string)" or "opt(string|array(string))"
+ */
+function validateOptionType(key: string, value: unknown, typeToken: string): string | null {
+  // Handle optional wrapper
+  const isOptional = typeToken.startsWith("opt(");
+  const innerType = isOptional
+    ? typeToken.slice(4, -1) // Remove "opt(" and ")"
+    : typeToken;
+
+  // If value is undefined/null and it's optional, that's fine
+  if ((value === undefined || value === null) && isOptional) {
+    return null;
+  }
+
+  // Handle union types (e.g., "string|array(string)")
+  const unionTypes = innerType.split("|").map(t => t.trim());
+
+  // Value is valid if it matches ANY of the union types
+  const matchesAny = unionTypes.some(type => matchesSingleType(value, type));
+
+  if (!matchesAny) {
+    const expectedDesc = unionTypes.length > 1
+      ? unionTypes.join(" or ")
+      : unionTypes[0];
+    return `Option "${key}" expects ${expectedDesc}, got ${typeof value} (${JSON.stringify(value)})`;
+  }
+
+  return null; // Valid
+}
+
 export function parseQueryParams(_p: KindModelPlugin) {
   return <TScalar extends readonly ScalarDefn[], TOpt extends OptionsDefn>(
     name: string,
@@ -53,7 +130,11 @@ export function parseQueryParams(_p: KindModelPlugin) {
     }
 
     try {
-      const parsed = JSON.parse(`[ ${raw} ]`) as any[];
+      // Convert JS object literal syntax to JSON before parsing
+      const jsonCompatible = jsObjectToJson(raw);
+
+      const parsed = JSON.parse(`[ ${jsonCompatible} ]`) as any[];
+
       const optionsPosition = parsed.findIndex(i => isObject(i));
       const hasOptionsHash = optionsPosition !== -1;
 
@@ -107,6 +188,36 @@ export function parseQueryParams(_p: KindModelPlugin) {
         scalar[key] = scalarParams[idx];
 
         idx++;
+      }
+
+      // Validate that all keys in optionsHash are defined in the options schema
+      if (hasOptionsHash) {
+        const validKeys = Object.keys(options);
+        const providedKeys = Object.keys(optionsHash);
+        const invalidKeys = providedKeys.filter(key => !validKeys.includes(key));
+
+        if (invalidKeys.length > 0) {
+          return invalid(
+            `The "${name}" handler received unknown option(s): ${invalidKeys.map(k => `"${k}"`).join(", ")}. Valid options are: ${validKeys.map(k => `"${k}"`).join(", ")}`,
+          );
+        }
+
+        // Validate types of provided options
+        const typeErrors: string[] = [];
+        for (const key of providedKeys) {
+          const typeToken = options[key];
+          const value = optionsHash[key];
+          const typeError = validateOptionType(key, value, typeToken);
+          if (typeError) {
+            typeErrors.push(typeError);
+          }
+        }
+
+        if (typeErrors.length > 0) {
+          return invalid(
+            `The "${name}" handler received invalid option value(s): ${typeErrors.join("; ")}`,
+          );
+        }
       }
 
       return [scalar, optionsHash] as [

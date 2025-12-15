@@ -39,7 +39,9 @@ function clientHandler(p: KindModelPlugin) {
       async (): Promise<boolean | Error> => {
         const page = getPageInfoBlock(p)(evt);
         /** RegExp which tests whether this handler should try to handle or not */
-        const re = new RegExp(`${handler}\((.*)\)`);
+        // Note: Need double backslash to escape parens in the regex string
+        // Use [\s\S]* instead of .* to match across newlines (multiline content)
+        const re = new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
         let _event: HandlerEvent<THandler, ScalarParams<S>, OptionParams<O>>;
         /** error template */
         const err = HandlerError.rebase({
@@ -54,11 +56,14 @@ function clientHandler(p: KindModelPlugin) {
           if (re.test(evt.source)) {
             // we'll handle this event
             try {
-              const raw = evt.source.match(re)
+              const match = evt.source.match(re);
+              const raw = match
                 ? stripParenthesis(
-                    Array.from(evt.source.match(re) as RegExpMatchArray)[1],
+                    Array.from(match as RegExpMatchArray)[1],
                   )
                 : "";
+
+              p.debug(`Handler ${handler} parsing`, { source: evt.source, match, raw });
 
               const result = parseQueryParams(p)(
                 handler,
@@ -66,7 +71,11 @@ function clientHandler(p: KindModelPlugin) {
                 scalarParams,
                 optionParams,
               );
+
+              p.debug(`Handler ${handler} parse result`, { isError: isError(result), result });
+
               if (isError(result)) {
+                p.warn(`Handler ${handler} returning error:`, result.message);
                 return result;
               }
               else {

@@ -267,7 +267,7 @@ export const BackLinks = createHandler("BackLinks")
   .options({
     ignoreTags: "array(string)",
     dedupe: "opt(bool)",
-    exclude: "opt(array(string))", // Runtime: string[], Type: Classification[] (see BackLinkOptions interface)
+    exclude: "opt(string|array(string))", // Accepts single string or array of strings
     excludeCompletedTasks: "opt(bool)",
   })
   .handler(async (evt) => {
@@ -282,39 +282,51 @@ export const BackLinks = createHandler("BackLinks")
     /**
      * all in-bound links for the page with the exception of self-references
      */
-    let links = (dv.array(page.inlinks) as DataArray<Link>)
+    const allInlinks = (dv.array(page.inlinks) as DataArray<Link>)
       .sort(p => p?.path)
-      .where(p => p.path !== page.path && whereTags(p));
+      .where(p => p.path !== page.path);
+
+    // Apply ignoreTags filter and track if it reduced the count
+    let links = allInlinks.where(whereTags);
 
     // Apply new filters in optimized order:
     // 1. dedupe - cheap Set lookup, reduces set size first
     // 2. classification - expensive (calls getPageInfo per link)
     // 3. completed tasks - cheap Set lookup
+    // Track which filters actually reduced the result set
     const filterStart = Date.now();
+    const filterDescriptions: string[] = [];
 
+    // Check if ignoreTags actually filtered anything
+    if (links.length < allInlinks.length && options?.ignoreTags) {
+      filterDescriptions.push(`tagged with ${options.ignoreTags.map(inline_codeblock).join(", ")}`);
+    }
+
+    // Apply dedupe filter
+    let beforeCount = links.length;
     links = filterDedupe(page)(links, options?.dedupe ?? true);
+    if (links.length < beforeCount) {
+      filterDescriptions.push("links which already existed on the page (dedupe)");
+    }
+
+    // Apply classification filter
+    beforeCount = links.length;
     links = filterByClassification(p)(links, options?.exclude);
+    if (links.length < beforeCount && options?.exclude) {
+      const exc = Array.isArray(options.exclude) ? options.exclude : [options.exclude];
+      filterDescriptions.push(`classified as ${exc.map(inline_codeblock).join(", ")}`);
+    }
+
+    // Apply completed tasks filter
+    beforeCount = links.length;
     links = filterCompletedTasks(page)(links, options?.excludeCompletedTasks ?? true);
+    if (links.length < beforeCount) {
+      filterDescriptions.push("completed task references");
+    }
 
     const filterTime = Date.now() - filterStart;
     if (filterTime > 100) {
       p.warn(`BackLinks filtering took ${filterTime}ms for ${links.length} remaining links`);
-    }
-
-    // Build exception message for "no results"
-    const filterDescriptions: string[] = [];
-    if (options?.ignoreTags) {
-      filterDescriptions.push(`tagged with ${options.ignoreTags.map(inline_codeblock).join(", ")}`);
-    }
-    if (options?.dedupe !== false) {
-      filterDescriptions.push("links which already existed on the page (dedupe)");
-    }
-    if (options?.exclude) {
-      const exc = Array.isArray(options.exclude) ? options.exclude : [options.exclude];
-      filterDescriptions.push(`classified as ${exc.map(inline_codeblock).join(", ")}`);
-    }
-    if (options?.excludeCompletedTasks !== false) {
-      filterDescriptions.push("completed task references");
     }
 
     // Format list with "and" before last item

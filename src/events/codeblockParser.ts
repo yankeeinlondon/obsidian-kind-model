@@ -85,9 +85,14 @@ export function codeblockParser(p: KindModelPlugin) {
     const outcomes: Outcome[] = [];
 
     for (const h of handlers) {
-      const outcome = await h();
-      const handler = h.handlerName;
-      outcomes.push([handler, outcome]);
+      try {
+        const outcome = await h();
+        const handler = h.handlerName;
+        outcomes.push([handler, outcome]);
+      }
+      catch (err) {
+        outcomes.push([h.handlerName, err as Error]);
+      }
     }
 
     return outcomes;
@@ -159,18 +164,24 @@ function handleOutcomes(
     {},
   ));
 
-  if (!outcomes.some(i => i[1] === true)) {
+  const hasSuccess = outcomes.some(i => i[1] === true);
+
+  if (!hasSuccess) {
     const errorOutcome = outcomes.find(i => isError(i[1]));
     const err = errorOutcome?.[1] as Error | undefined;
     const handlerName = errorOutcome?.[0] || "unknown";
+
+    // Add vertical padding to separate error block from surrounding content
+    el.style.paddingTop = "4px";
+    el.style.paddingBottom = "4px";
 
     const render = renderApi(p)(el, ctx.sourcePath);
     const { format } = p.api;
 
     if (err) {
       // Use KindError's browser messages if available
-      if (isKindError(err)) {
-        p.warn(...((err as BaseKindError)?.asBrowserMessages() || []));
+      if (isKindError(err) && typeof (err as BaseKindError)?.asBrowserMessages === "function") {
+        p.warn(...((err as BaseKindError).asBrowserMessages() || []));
       }
 
       // Check if debug mode is enabled via log level
@@ -178,9 +189,9 @@ function handleOutcomes(
 
       // Build enhanced error content with context
       const errorContent = [
-        `<b>Handler:</b> ${format.inline_codeblock(handlerName)}`,
-        `<b>Query:</b> ${format.inline_codeblock(source?.trim() || "")}`,
-        `<b>Error:</b> ${err?.message || String(err)}`,
+        `<b>Handler:</b>&nbsp;${format.inline_codeblock(handlerName)}`,
+        `<b>Query:</b>&nbsp;${format.inline_codeblock(source?.trim() || "")}`,
+        `<b>Error:</b>&nbsp;${err?.message || String(err)}`,
         isDebugMode && err?.stack
           ? `<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`
           : null,
@@ -188,7 +199,7 @@ function handleOutcomes(
 
       render.callout(
         "error",
-        `Error in ${format.inline_codeblock("km")} handler`,
+        `Error in&nbsp;${format.inline_codeblock("km")}&nbsp;handler`,
         {
           content: errorContent,
           icon: ERROR_ICON,

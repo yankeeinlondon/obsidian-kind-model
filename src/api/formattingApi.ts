@@ -94,22 +94,22 @@ export function italic(text: string | number, fmt?: Omit<StyleOptions, "fs">) {
 }
 
 export function bold(text: string, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "700" } as StyleOptions)}>${text}</span>`;
 }
 
 export function light(text: string | number,	fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "300" } as StyleOptions)}>${text}</span>`;
 }
 
 function thin(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "100" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "100" } as StyleOptions)}>${text}</span>`;
 }
 function medium(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "500" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "500" } as StyleOptions)}>${text}</span>`;
 }
 
 function normal(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "400" } as StyleOptions)}>${text}</span>`;
 }
 
 function emptyCallout(fmt?: StyleOptions) {
