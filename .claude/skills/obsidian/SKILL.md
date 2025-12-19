@@ -1,25 +1,25 @@
 ---
 name: obsidian
 description: Expert knowledge for developing Obsidian plugins and themes using TypeScript, CodeMirror 6, and CSS variables - covers plugin lifecycle, Vault API, Workspace API, editor extensions, and styling patterns
-hash: 5cab48275e982426
+hash: 881a7930a553c0d8
 ---
 
-# Obsidian Development
+# Obsidian Plugin & Theme Development
 
-Build plugins and themes for Obsidian, the Markdown knowledge base app. Plugins use TypeScript to extend functionality; themes use CSS variables for styling.
+Build plugins and themes for Obsidian using TypeScript, CodeMirror 6, and CSS variables.
 
 ## Core Principles
 
-- Extend the `Plugin` class; use `onload()` for setup, `onunload()` for cleanup
-- Access app via `this.app`, never the global `app` (debugging only)
-- Prefer `Vault` API over `Adapter` for file operations (handles caching, race conditions)
-- Use `onLayoutReady()` for startup tasks needing vault/files - `onload()` fires too early
-- Register events with `this.registerEvent()` for automatic cleanup on unload
-- Mark `@codemirror/*` packages as external - use Obsidian's bundled version
-- Use CSS variables (`--text-normal`, `--background-primary`) not hardcoded colors
-- Avoid `innerHTML` with user input - use DOM manipulation methods
-- Set `isDesktopOnly: true` if using Node.js/Electron APIs (unavailable on mobile)
-- Keep `onload()` lightweight - defer expensive operations
+- **Extend Plugin class** - Use `onload()` for setup, `onunload()` for cleanup
+- **Access app via `this.app`** - Never use global `window.app` (debugging only)
+- **Prefer Vault API** - Use `this.app.vault` over raw `Adapter` for file ops
+- **Wait for layout ready** - Use `app.workspace.onLayoutReady()` for startup logic
+- **Register events properly** - Use `this.registerEvent()` for auto-cleanup
+- **Mark external CM6 deps** - Never bundle `@codemirror/*`, use Obsidian's copy
+- **Use CSS variables** - Override theme variables, not hardcoded colors
+- **Avoid `!important`** - Let users override with snippets
+- **Mobile compatibility** - Check `Platform.isMobile` before Node.js APIs
+- **Security first** - Never use `innerHTML` with user input
 
 ## Quick Reference
 
@@ -29,24 +29,23 @@ import { Plugin, Notice } from 'obsidian';
 
 export default class MyPlugin extends Plugin {
   async onload() {
-    // Wait for vault ready if needed
-    this.app.workspace.onLayoutReady(() => {
-      const files = this.app.vault.getMarkdownFiles();
-    });
-
-    // Register command
+    // Add command
     this.addCommand({
       id: 'my-command',
-      name: 'Do something',
+      name: 'My Command',
       callback: () => new Notice('Hello!')
     });
 
-    // Register event (auto-cleanup)
+    // Add ribbon icon
+    this.addRibbonIcon('dice', 'My Plugin', () => {});
+
+    // Register events (auto-cleanup on unload)
     this.registerEvent(
-      this.app.vault.on('modify', (file) => {
-        console.log(`Modified: ${file.path}`);
-      })
+      this.app.vault.on('modify', (file) => {})
     );
+
+    // Register CM6 extension
+    this.registerEditorExtension(myExtension);
   }
 }
 ```
@@ -55,54 +54,58 @@ export default class MyPlugin extends Plugin {
 
 ### Plugin Development
 
-- [Plugin Lifecycle](./plugin-lifecycle.md) - onload, onunload, event timing
-- [TypeScript API](./typescript-api.md) - App, Vault, Workspace, FileManager
-- [UI Components](./ui-components.md) - Commands, Modals, Settings, Ribbon
+- [Plugin Development](./plugin-development.md) - Lifecycle, API, commands, settings, events
 
-### Editor Extensions
+### Editor Integration
 
-- [CodeMirror 6](./codemirror6.md) - StateField, ViewPlugin, decorations
+- [CodeMirror 6](./codemirror-6.md) - State, view, decorations, extensions
 
-### Theming
+### Styling
 
-- [Themes and CSS](./themes-css.md) - CSS variables, styling patterns
+- [Themes & CSS](./themes-css.md) - CSS variables, theme structure, styling patterns
+
+### Advanced APIs
+
+- [Bases API](./bases-api.md) - Custom database views (Obsidian 1.10+)
+- [Canvas API](./canvas-api.md) - Visual canvas manipulation
 
 ## Common Patterns
 
-### File Operations
+### Wait for Vault Ready
 
 ```typescript
-// Read file
-const content = await this.app.vault.read(file);
-
-// Modify file (safe read-modify-write)
-await this.app.vault.process(file, (data) => {
-  return data.replace('old', 'new');
-});
-
-// Create file
-await this.app.vault.create('path/note.md', 'content');
+async onload() {
+  this.app.workspace.onLayoutReady(() => {
+    // Safe to access vault files here
+    const files = this.app.vault.getMarkdownFiles();
+  });
+}
 ```
 
-### Markdown Processing
+### Process Frontmatter Safely
 
 ```typescript
-// Code block processor
-this.registerMarkdownCodeBlockProcessor('mylang', (source, el, ctx) => {
-  el.createEl('pre', { text: source });
+await this.app.fileManager.processFrontMatter(file, (fm) => {
+  fm.status = 'done';
 });
+```
 
-// Post-processor for rendered markdown
-this.registerMarkdownPostProcessor((el, ctx) => {
-  el.querySelectorAll('.tag').forEach(tag => {
-    // Transform tags
-  });
-});
+### Register Editor Extension
+
+```typescript
+import { ViewPlugin, DecorationSet } from '@codemirror/view';
+
+const myPlugin = ViewPlugin.fromClass(class {
+  decorations: DecorationSet;
+  // ... implementation
+}, { decorations: v => v.decorations });
+
+this.registerEditorExtension(myPlugin);
 ```
 
 ## Resources
 
-- [Official Developer Docs](https://docs.obsidian.md/Home)
+- [Official Docs](https://docs.obsidian.md/Home)
 - [Sample Plugin](https://github.com/obsidianmd/obsidian-sample-plugin)
 - [Sample Theme](https://github.com/obsidianmd/obsidian-sample-theme)
 - [CodeMirror 6 Docs](https://codemirror.net/docs/)

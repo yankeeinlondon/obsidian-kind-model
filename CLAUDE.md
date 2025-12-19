@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an **Obsidian plugin** called "Kind Model" that extends Obsidian with a "kinded model" system for organizing entities in a personal knowledge management vault. The plugin uses the Dataview plugin as a dependency and adds classification, relationships, and metrics to pages via frontmatter conventions.
 
+### Classification Hierarchy
+
+```
+Type > Kind > Category > SubCategory
+```
+
+- **Type** (`#type/product`) - Top-level grouping of related kinds
+- **Kind** (`#kind/software`) - Entity type definition
+- **Category** (`#kind/category/development`) - Classification within a kind
+- **Subcategory** (`#kind/category/subcategory/ide`) - Further refinement
+
 ## Common Commands
 
 ```bash
@@ -109,16 +120,21 @@ Handlers are created using the `createHandler()` factory with a fluent API:
 
 ```typescript
 export const MyHandler = createHandler("MyHandler")
-  .scalar()  // or .scalar("param AS string", "opt AS opt(number)")
+  .scalar("kind AS string", "category AS opt(string)")  // positional params
   .options({
     myOption: "opt(bool)",
     tags: "array(string)",
   })
   .handler(async (evt) => {
-    const { plugin, page, options, createTable, render } = evt;
+    const { plugin, page, options, scalar, createTable, render } = evt;
     // Handler implementation
     return true;
   });
+```
+
+User invocation in markdown:
+```km
+MyHandler("software", "development", {myOption: true})
 ```
 
 ### TypeToken System
@@ -128,6 +144,9 @@ Options use a TypeToken syntax for runtime validation:
 - `"opt(T)"` - optional type
 - `"array(T)"` - array of type
 - `"enum(a,b,c)"` - enum values
+- `"T1|T2"` - union types (e.g., `"opt(string|array(string))"`)
+
+See `docs/km-type-validation-and-parsing.md` for parsing internals and known limitations.
 
 ### Handler Event Object
 
@@ -166,16 +185,30 @@ const outlinkPaths = new Set(page.outlinks.map(l => l.path));
 
 ### KM Block Re-rendering
 
-KM codeblocks only re-render when:
+KM codeblocks re-render when:
 - The codeblock content is edited
 - The page is reloaded/tab switched
 - Layout changes occur
+- **Host file metadata changes** (auto-refresh via `KmBlockTracker`)
 
-They do NOT auto-refresh when page content changes outside the block.
+The auto-refresh system uses a 100ms debounce and compares normalized HTML to avoid unnecessary DOM updates.
 
 See `docs/km-render-flow.md` for detailed rendering lifecycle documentation.
 
 ## Key Patterns
+
+### Higher-Order Functions
+
+Most APIs use currying with the plugin instance as the first argument:
+
+```typescript
+// Pattern: functionName(plugin)(args)
+const page = getPage(p)(link);
+const pageInfo = getPageInfo(p)(ref);
+const handlers = queryHandlers(p)(evt);
+```
+
+This enables composition and partial application throughout the codebase.
 
 ### Filter Chain Pattern
 
@@ -199,7 +232,9 @@ if (!pageInfo) return false;  // Don't match = don't exclude = keep the link
 
 ## Documentation
 
-- `docs/km-render-flow.md` - KM block rendering lifecycle
+- `docs/km-render-flow.md` - KM block rendering lifecycle and auto-refresh system
+- `docs/km-type-validation-and-parsing.md` - TypeToken parsing, validation, and known limitations
 - `docs/handlers.md` - Handler reference
 - `docs/page-api.md` - Page API documentation
-- `docs/types.md` - Type system overview
+- `docs/types.md` - Type (not Kind) definition and inheritance
+- `docs/classification-hierarchy.md` - Type > Kind > Category > Subcategory structure
