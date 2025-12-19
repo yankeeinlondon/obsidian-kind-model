@@ -11,6 +11,7 @@ BackLinks({dedupe: false, exclude: "software"})
 ```
 
 The plugin must:
+
 1. Match the handler name (`BackLinks`)
 2. Extract the parameters (`{dedupe: false, exclude: "software"}`)
 3. Parse the parameters into structured data
@@ -61,6 +62,7 @@ Scalar parameters are positional arguments that come before any options hash:
 ```
 
 This would accept:
+
 - `Kind("software")` - one required param
 - `Kind("software", "development")` - with optional second param
 
@@ -109,6 +111,7 @@ const re = new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
 ```
 
 This matches:
+
 - `BackLinks()` → params = `""`
 - `BackLinks({dedupe: false})` → params = `"{dedupe: false}"`
 - Multiline content (via `[\s\S]*` instead of `.*`)
@@ -123,6 +126,7 @@ Users write JavaScript object literal syntax, but `JSON.parse()` requires quoted
 ```
 
 **Implementation:**
+
 ```typescript
 function jsObjectToJson(input: string): string {
   return input.replace(
@@ -133,6 +137,7 @@ function jsObjectToJson(input: string): string {
 ```
 
 **Regex breakdown:**
+
 - `[{,]` - After `{` or `,`
 - `\s*` - Optional whitespace
 - `([a-z_$][\w$]*)` - Capture unquoted key (valid JS identifier)
@@ -147,12 +152,14 @@ const parsed = JSON.parse(`[ ${jsonCompatible} ]`);
 ```
 
 Wrapping in array allows parsing both:
+
 - `"value1", "value2", {options}` → `["value1", "value2", {options}]`
 - `{options}` → `[{options}]`
 
 ### Step 4: Parameter Extraction
 
 The parsed array is split into:
+
 - **Scalar params**: All elements before the options hash (if any)
 - **Options hash**: The last element if it's an object
 
@@ -215,6 +222,7 @@ Error: The "BackLinks" handler received unknown option(s): "foo". Valid options 
 ```
 
 Error types:
+
 - **Unknown options**: Key not in schema
 - **Type mismatch**: Value doesn't match expected type
 - **Missing required**: Required scalar param not provided
@@ -265,6 +273,7 @@ pnpm test test/parseParams.test.ts
 ```
 
 Test coverage includes:
+
 - JS to JSON conversion
 - Option key validation
 - Type validation (primitives, arrays, optionals, unions)
