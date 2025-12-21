@@ -1,27 +1,27 @@
 import type {
-	CssColor,
-	CssDefinition,
-	EscapeFunction,
-	FixedLengthArray,
-	TypedFunction,
-	UnionArrayToTuple,
-} from "inferred-types";
-import {
-	createFnWithProps,
-	cssFromDefinition,
-	ensureLeading,
-	isFunction,
-	isString
+  CssColor,
+  CssDefinition,
+  EscapeFunction,
+  FixedLengthArray,
+  TypedFunction,
+  UnionArrayToTuple,
 } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import { getPage } from "~/page";
 import type {
-	BlockQuoteOptions,
-	ListStyle,
-	ObsidianCalloutColors,
-	PageReference,
-	StyleOptions,
+  BlockQuoteOptions,
+  ListStyle,
+  ObsidianCalloutColors,
+  PageReference,
+  StyleOptions,
 } from "~/types";
+import {
+  createFnWithProps,
+  cssFromDefinition,
+  ensureLeading,
+  isFunction,
+  isString,
+} from "inferred-types";
+import { getPage } from "~/page";
 import { isEven, isOdd } from "~/utils";
 import { listStyle, style } from "../api";
 import { blockquote } from "./formatting/blockquote";
@@ -94,22 +94,22 @@ export function italic(text: string | number, fmt?: Omit<StyleOptions, "fs">) {
 }
 
 export function bold(text: string, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "700" } as StyleOptions)}>${text}</span>`;
 }
 
 export function light(text: string | number,	fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "300" } as StyleOptions)}>${text}</span>`;
 }
 
 function thin(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "100" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "100" } as StyleOptions)}>${text}</span>`;
 }
 function medium(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "500" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "500" } as StyleOptions)}>${text}</span>`;
 }
 
 function normal(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "400" } as StyleOptions)}>${text}</span>`;
 }
 
 function emptyCallout(fmt?: StyleOptions) {
@@ -149,7 +149,7 @@ export function internalLink(p: KindModelPlugin) {
 }
 
 export type Column<
-	T extends string = string
+  T extends string = string,
 > = T | (() => [name: T, style: CssDefinition]);
 
 export type TableData<
@@ -189,22 +189,22 @@ export function htmlTable(_p: KindModelPlugin) {
   >(
     columns: TCol,
     style?: {
-		/** CSS styling for the wrapper element of the table */
-		wrapper?: CssDefinition;
-		/** CSS styling for the <table> element */
-		table?: CssDefinition;
-    /** CSS styling for the `<tr>` tag for headings */
-		headings?: CssDefinition;
-    /** CSS styling for each individual Heading element */
-		eachHeading?: CssDefinition;
-		/** styling for _odd_ rows */
-		odd?: CssDefinition;
-		/** styling for _even_ rows */
-		even?: CssDefinition;
+      /** CSS styling for the wrapper element of the table */
+      wrapper?: CssDefinition;
+      /** CSS styling for the <table> element */
+      table?: CssDefinition;
+      /** CSS styling for the `<tr>` tag for headings */
+      headings?: CssDefinition;
+      /** CSS styling for each individual Heading element */
+      eachHeading?: CssDefinition;
+      /** styling for _odd_ rows */
+      odd?: CssDefinition;
+      /** styling for _even_ rows */
+      even?: CssDefinition;
 
-		cell?: (content: string, row: number, col: number) => string;
-		cellStyle?: (content: string, row: number, col: number) => CssDefinition;
-		highlightFirstColumn?: boolean;
+      cell?: (content: string, row: number, col: number) => string;
+      cellStyle?: (content: string, row: number, col: number) => CssDefinition;
+      highlightFirstColumn?: boolean;
     },
   ): HtmlTable<ToCols<UnionArrayToTuple<TCol>>> => {
     const takeVal = (val: string | (() => [string, CssDefinition])) => {
@@ -212,33 +212,31 @@ export function htmlTable(_p: KindModelPlugin) {
         ? val
         : val()[0];
     };
-	const takeFmt = (
-		rowIdx: number, 
-		colIdx: number, 
-		val: string
-	) => {
-		const defn = isFunction(columns[colIdx]) 
-		  ? columns[colIdx]()[1] as CssDefinition
-		  : {} as CssDefinition;
-		const colDriven = ( Number(val.trim()) === 0) 
-			? { 
-				"opacity": "0.7"
-			} as CssDefinition
-			: {} as CssDefinition;
+    const takeFmt = (
+      rowIdx: number,
+      colIdx: number,
+      val: string,
+    ) => {
+      const defn = isFunction(columns[colIdx])
+        ? columns[colIdx]()[1] as CssDefinition
+        : {} as CssDefinition;
+      const colDriven = (Number(val.trim()) === 0)
+        ? {
+            opacity: "0.7",
+          } as CssDefinition
+        : {} as CssDefinition;
 
-	
-		return cssFromDefinition({
-			...defn, 
-			...colDriven, 
-			...(isOdd(rowIdx) ? style?.odd || {}: {}),
-			...(isEven(rowIdx) ? style?.even || {} : {})
-		});
+      return cssFromDefinition({
+        ...defn,
+        ...colDriven,
+        ...(isOdd(rowIdx) ? style?.odd || {} : {}),
+        ...(isEven(rowIdx) ? style?.even || {} : {}),
+      });
+    };
 
-	};
-
-	const cell = style?.cell
-		? style.cell
-		: (content: string) => content;
+    const cell = style?.cell
+      ? style.cell
+      : (content: string) => content;
 
     const fn = <
       TData extends TableData<UnionArrayToTuple<TCol>>,
@@ -247,25 +245,25 @@ export function htmlTable(_p: KindModelPlugin) {
         `<div class="table-wrapper" style="${cssFromDefinition(style?.wrapper)}">`,
         `<table style="${cssFromDefinition(style?.table)}">`,
         `<thead>`,
-			`<tr style="${cssFromDefinition(style?.headings)}">`,
-				columns.map(
-					c => `<th scope="col" style="${cssFromDefinition(style?.eachHeading)}">${takeVal(c)}</th>`
-				).join(""),
-			`</tr>`,
+        `<tr style="${cssFromDefinition(style?.headings)}">`,
+        columns.map(
+          c => `<th scope="col" style="${cssFromDefinition(style?.eachHeading)}">${takeVal(c)}</th>`,
+        ).join(""),
+        `</tr>`,
         `</thead>`,
         `<tbody>`,
-			data.map((row, rowIdx) =>
-				`<tr class="${isOdd(rowIdx) ? "odd" : "even"}">` +
-					row.map((col: string, colIdx: number) =>
-						colIdx === 0 && style?.highlightFirstColumn
-							? `<th scope="row" style="${takeFmt(rowIdx,colIdx,col)}">${col}</th>`
-							: `<td style="${takeFmt(rowIdx,colIdx,col)}">${cell(col,rowIdx,colIdx)}</td>`
-					).join("") +
-				`</tr>`
-			).join(""),
+        data.map((row, rowIdx) =>
+          `<tr class="${isOdd(rowIdx) ? "odd" : "even"}">${
+            row.map((col: string, colIdx: number) =>
+              colIdx === 0 && style?.highlightFirstColumn
+                ? `<th scope="row" style="${takeFmt(rowIdx, colIdx, col)}">${col}</th>`
+                : `<td style="${takeFmt(rowIdx, colIdx, col)}">${cell(col, rowIdx, colIdx)}</td>`,
+            ).join("")
+          }</tr>`,
+        ).join(""),
         `</tbody>`,
         `</table>`,
-        `</div>`
+        `</div>`,
       ];
 
       return output.join("\n");

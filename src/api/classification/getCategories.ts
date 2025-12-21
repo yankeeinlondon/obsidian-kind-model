@@ -1,7 +1,7 @@
-import { ensureLeading, isEmpty, isNotEmpty, stripLeading } from "inferred-types";
 import type KindModelPlugin from "~/main";
-import { getPage, getPageFromTagOrFuturePage } from "~/page";
 import type { DvPage, PageCategory, PageReference } from "~/types";
+import { ensureLeading, isEmpty, isNotEmpty, stripLeading } from "inferred-types";
+import { getPage, getPageFromTagOrFuturePage } from "~/page";
 import { getPageType } from "../classificationApi";
 
 function getCategorySpecs(p: KindModelPlugin) {
@@ -72,8 +72,8 @@ function getCategoryDefnSpecs(p: KindModelPlugin) {
 
 function getSubcategoryDefnSpecs(p: KindModelPlugin) {
   return (
-		page: DvPage
-	): PageCategory[] => {
+    page: DvPage,
+  ): PageCategory[] => {
     return (Array.from(page.file.tags) as string[])
       .filter(
         i => i.split("/")[1] === "subcategory" && isNotEmpty(i.split("/")[3]),

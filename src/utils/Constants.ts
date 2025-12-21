@@ -78,7 +78,6 @@ export const HEADING_LEVELS = [
   6,
 ] as const;
 
-
 export const OBSIDIAN_CSS_VARIABLES = [
-	
-]
+
+];

@@ -1,5 +1,5 @@
-import { isObject } from "inferred-types";
 import type { KindDefinitionProps } from "~/types";
+import { isObject } from "inferred-types";
 
 /**
  * type guard which validates that `val` is a KindDefinition with a `tag` specified

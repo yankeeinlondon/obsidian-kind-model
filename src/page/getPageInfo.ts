@@ -1,30 +1,30 @@
+import type KindModelPlugin from "~/main";
+import type {
+  DvPage,
+  Link,
+  ObsidianTask,
+  ObsidianTaskWithLink,
+  PageInfo,
+  PageReference,
+  PageType,
+  Tag,
+} from "~/types";
 import {
-	frontmatterApi,
-	getCategories,
-	getClassification,
-	getKindTagsOfPage,
-	getPageType,
-	getTypeTag,
-	hasProps,
-	isProps,
-	outlinksExcludingTasks,
-	pageMetadataApi,
-	splitInlinksFromTaskReferences,
-	tasksWithPageLink,
+  frontmatterApi,
+  getCategories,
+  getClassification,
+  getKindTagsOfPage,
+  getPageType,
+  getTypeTag,
+  hasProps,
+  isProps,
+  outlinksExcludingTasks,
+  pageMetadataApi,
+  splitInlinksFromTaskReferences,
+  tasksWithPageLink,
 } from "~/api";
 import { getSubcategories } from "~/api/classification/getSubcategories";
-import type KindModelPlugin from "~/main";
 import { isPageInfo } from "~/type-guards";
-import type {
-	DvPage,
-	Link,
-	ObsidianTask,
-	ObsidianTaskWithLink,
-	PageInfo,
-	PageReference,
-	PageType,
-	Tag,
-} from "~/types";
 import { getPath } from "../api/getPath";
 import { getPage } from "./getPage";
 import { getPageKinds } from "./getPageKinds";
@@ -104,71 +104,71 @@ export function getPageInfo(p: KindModelPlugin) {
       const pageType = getPageType(p)(page, isApi, kindTags);
       const hasMultipleKinds = kindTags.length > 1;
 
-			type TKindTags = typeof kindTags;
-			type TPageType = typeof pageType;
-			type TPagePath = typeof page.file.path;
+      type TKindTags = typeof kindTags;
+      type TPageType = typeof pageType;
+      type TPagePath = typeof page.file.path;
 
-			const info: Partial<PageInfo<TKindTags, TPageType, TPagePath>> = {
-			  __kind: "PageInfo",
-			  name: page.file.name,
-			  ext: page.file.ext,
-			  tags: Array.from(page.file.tags) as Tag[],
-			  etags: Array.from(page.file.etags) as Tag[],
-			  inlinks,
-			  inlinkTasks,
-			  outlinks,
-			  outlinksExcludingTasks: outlinksExcludingTasks(p)(
-			    outlinks,
-			    tasksWithLinks
-			      .map(t => t.withLinks.map(l => l?.file?.path))
-			      .flat(),
-			  ),
-			  aliases: Array.from(page.file.aliases) as string[],
+      const info: Partial<PageInfo<TKindTags, TPageType, TPagePath>> = {
+        __kind: "PageInfo",
+        name: page.file.name,
+        ext: page.file.ext,
+        tags: Array.from(page.file.tags) as Tag[],
+        etags: Array.from(page.file.etags) as Tag[],
+        inlinks,
+        inlinkTasks,
+        outlinks,
+        outlinksExcludingTasks: outlinksExcludingTasks(p)(
+          outlinks,
+          tasksWithLinks
+            .map(t => t.withLinks.map(l => l?.file?.path))
+            .flat(),
+        ),
+        aliases: Array.from(page.file.aliases) as string[],
 
-			  tasks: Array.from(page.file.tasks) as ObsidianTask[],
-			  tasksWithLinks,
+        tasks: Array.from(page.file.tasks) as ObsidianTask[],
+        tasksWithLinks,
 
-			  lists: Array.from(page.file.lists) as unknown[],
+        lists: Array.from(page.file.lists) as unknown[],
 
-			  fm: page.file.frontmatter,
+        fm: page.file.frontmatter,
 
-			  typeTag,
-			  pageType,
-			  kindTags,
-			  current: page,
-			  path,
-			  kind,
-			  kinds,
+        typeTag,
+        pageType,
+        kindTags,
+        current: page,
+        path,
+        kind,
+        kinds,
 
-			  ...fmApi,
+        ...fmApi,
 
-			  categories,
-			  subcategories,
-			  classifications,
+        categories,
+        subcategories,
+        classifications,
 
-			  ...hasApi,
-			  hasMultipleKinds,
-			  ...isApi,
+        ...hasApi,
+        hasMultipleKinds,
+        ...isApi,
 
-			  ...frontmatterApi(p, path),
-			  ...pageMetadataApi(p, page),
-			};
+        ...frontmatterApi(p, path),
+        ...pageMetadataApi(p, page),
+      };
 
-			if (info.hasMultipleKinds) {
-			  info.types = getTypeForPage(p)(page);
-			  info.kinds = getPageKinds(p)(page);
-			  delete info.kind;
-			  delete info.type;
-			}
-			else {
-			  const t = getTypeForPage(p)(page);
-			  info.type = t ? t[0] : undefined;
-			  info.kind = getPageKinds(p)(page)[0];
-			  delete info.kinds;
-			  delete info.types;
-			}
+      if (info.hasMultipleKinds) {
+        info.types = getTypeForPage(p)(page);
+        info.kinds = getPageKinds(p)(page);
+        delete info.kind;
+        delete info.type;
+      }
+      else {
+        const t = getTypeForPage(p)(page);
+        info.type = t ? t[0] : undefined;
+        info.kind = getPageKinds(p)(page)[0];
+        delete info.kinds;
+        delete info.types;
+      }
 
-			return info as unknown as Returns<T, TKindTags, TPageType, TPagePath>;
+      return info as unknown as Returns<T, TKindTags, TPageType, TPagePath>;
     }
     else {
       return undefined as unknown as Returns<T, [], PageType, undefined>;

@@ -1,33 +1,33 @@
 import type {
-	AlphaChar,
-	AlphaNumericChar,
-	Callback,
-	Dictionary,
-	HtmlElement,
-	NonZeroNumericChar,
-	SemanticVersion,
-	SpecialChar,
-	StringDelimiter,
-	Suggest,
-	SyncFunction,
-	TypedFunction,
-	UrlPath,
+  AlphaChar,
+  AlphaNumericChar,
+  Callback,
+  Dictionary,
+  HtmlElement,
+  NonZeroNumericChar,
+  SemanticVersion,
+  SpecialChar,
+  StringDelimiter,
+  Suggest,
+  SyncFunction,
+  TypedFunction,
+  UrlPath,
 } from "inferred-types";
 
 import type {
-	App,
-	EventRef,
-	TAbstractFile as OAbstractedFile,
-	TFile as OFile,
-	TFolder as OFolder,
-	Plugin,
-	PluginManifest,
-	Stat,
-	Vault,
-	Workspace
+  App,
+  EventRef,
+  TAbstractFile as OAbstractedFile,
+  TFile as OFile,
+  TFolder as OFolder,
+  Plugin,
+  PluginManifest,
+  Stat,
+  Vault,
+  Workspace,
 } from "obsidian";
-import type { Path } from "~/globals";
 import type { Tag } from ".";
+import type { Path } from "~/globals";
 
 export interface TFile extends TAbstractFile, OFile {
   /**
@@ -63,12 +63,11 @@ export interface TFolder extends TAbstractFile, OFolder {
 }
 
 export interface TFileForMarkdown {
-	name: string;
-	path: string;
-	basename: string;
-	extension: string;
+  name: string;
+  path: string;
+  basename: string;
+  extension: string;
 }
-
 
 /**
  * This can be either a `TFile` or a `TFolder`.
@@ -87,7 +86,6 @@ export interface TAbstractFile extends OAbstractedFile {
    * the full path to the file
    */
   path: string;
-
 
   /**
    * the parent folder
@@ -137,14 +135,14 @@ export interface ObsidianComponent {
     type: K,
     callback: (this: HTMLElement, ev: WindowEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) &
-  (<K extends keyof DocumentEventMap>(
+  ) => void)
+  & (<K extends keyof DocumentEventMap>(
     el: Document,
     type: K,
     callback: (this: HTMLElement, ev: DocumentEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) &
-  (<K extends keyof HTMLElementEventMap>(
+  ) => void)
+  & (<K extends keyof HTMLElementEventMap>(
     el: HTMLElement,
     type: K,
     callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
@@ -228,8 +226,8 @@ export interface ObsidianSvgElement
     type: K,
     listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
-  ) => void) &
-  ((
+  ) => void)
+  & ((
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
@@ -238,8 +236,8 @@ export interface ObsidianSvgElement
     type: K,
     listener: (this: ObsidianSvgElement, ev: SVGSVGElementEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
-  ) => void) &
-  ((
+  ) => void)
+  & ((
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
@@ -247,13 +245,13 @@ export interface ObsidianSvgElement
 }
 
 export type ObsidianModifier = "Mod" | "Alt" | "";
-export type ObsidianKey =
-    | `F${NonZeroNumericChar}`
-    | "UpArrow"
-    | "DownArrow"
-    | "LeftArrow"
-    | "RightArrow"
-    | AlphaNumericChar;
+export type ObsidianKey
+  = | `F${NonZeroNumericChar}`
+      | "UpArrow"
+      | "DownArrow"
+      | "LeftArrow"
+      | "RightArrow"
+      | AlphaNumericChar;
 
 export type GetIconFromObsidian = (iconId: string) => ObsidianSvgElement | null;
 
@@ -405,20 +403,20 @@ export interface ObsidianMetaLink {
   };
 }
 
-export type ObsidianFrontmatterValue =
-    | string
-    | string[]
-    | number[]
-    | number
-    | boolean
-    | null;
+export type ObsidianFrontmatterValue
+  = | string
+      | string[]
+      | number[]
+      | number
+      | boolean
+      | null;
 
-export type ObsidianSectionType =
-    | "yaml"
-    | "paragraph"
-    | "blockquote"
-    | "heading"
-    | "list";
+export type ObsidianSectionType
+  = | "yaml"
+      | "paragraph"
+      | "blockquote"
+      | "heading"
+      | "list";
 
 export interface ObsidianTagMeta {
   tag: Tag;

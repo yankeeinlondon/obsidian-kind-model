@@ -1,43 +1,43 @@
 import type { CssDefinition, SimpleToken, SimpleType } from "inferred-types";
+import type { FormattingApi } from "./formattingApi";
+import type KindModelPlugin from "~/main";
+import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import {
-	cssFromDefinition,
-	doesExtend,
-	ensureLeading,
-	isEmpty,
-	isNumber,
-	isString,
-	isToday,
-	isTomorrow,
-	isUndefined,
-	isYesterday,
-	stripTrailing,
+  cssFromDefinition,
+  doesExtend,
+  ensureLeading,
+  isEmpty,
+  isNumber,
+  isString,
+  isToday,
+  isTomorrow,
+  isUndefined,
+  isYesterday,
+  stripTrailing,
 } from "inferred-types";
 import { DateTime } from "luxon";
 import {
-	getCategories,
-	getClassification,
-	getPageType,
-	getSubcategories,
-	getTypeTag,
-	isKindTag,
+  getCategories,
+  getClassification,
+  getPageType,
+  getSubcategories,
+  getTypeTag,
+  isKindTag,
 } from "~/api";
 import { asDisplayTag } from "~/helpers";
-import type KindModelPlugin from "~/main";
 import { getPage } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import {
-	hasFileLink,
-	isDvPage,
-	isFileLink,
-	isFuturePage,
-	isLink,
-	isPageInfo,
-	isPageReference,
-	isValidPath,
+  hasFileLink,
+  isDvPage,
+  isFileLink,
+  isFuturePage,
+  isLink,
+  isPageInfo,
+  isPageReference,
+  isValidPath,
 } from "~/type-guards";
-import type { DvPage, FileLink, KindClassifiedCategory, PageInfo, PageReference, PageType, ShowApi } from "~/types";
 import { createVaultLink } from "./createVaultLink";
-import type { FormattingApi } from "./formattingApi";
 import { formattingApi } from "./formattingApi";
 import { getPath } from "./getPath";
 import { isKeyOf } from "./renderApi";
@@ -240,7 +240,7 @@ export function showLinks(p: KindModelPlugin) {
         prop: string,
       ) => {
         icon
-					= prop === "website" && isString(pageIcon)
+          = prop === "website" && isString(pageIcon)
             ? pageIcon
             : /youtube.com/.test(url)
               ? "you_tube"
@@ -379,7 +379,7 @@ export function getProp(p: KindModelPlugin) {
             : Array.isArray(value)
               ? value.map(i => (isLink(i) ? p.dv.page(i) : i))
               : value,
-			found
+          found,
         ];
       }
     }
@@ -393,40 +393,40 @@ export function getProp(p: KindModelPlugin) {
 }
 
 export function getPropOfType(p: KindModelPlugin) {
-	return <
-		TProps extends readonly [string, ...string[]],
-		TType extends SimpleToken
-	>(
-	  pg: PageReference | undefined,
-	  findType: TType,
-	  ...props: TProps
-	): [SimpleType<TType> | undefined, string | undefined ] => {
-	  const page = getPage(p)(pg);
-  
-	  if (page) {
-		const found = props.find(
-		  prop => isKeyOf(page, prop) && doesExtend(findType)(page[prop]) ,
-		) as string | undefined;
-		if (!found) {
-		  return [undefined, undefined];
-		}
-		else {
-		  const value = page[found] as SimpleType<TType>;
-  
-		  return [
-				value,
-			  found
-		  ];
-		}
-	  }
-  
-	  p.error(`Call to getProp(pg) passed in an invalid DvPage`, {
-		pg,
-		props,
-	  });
-	  return [undefined, undefined];
-	};
-  }
+  return <
+    TProps extends readonly [string, ...string[]],
+    TType extends SimpleToken,
+  >(
+    pg: PageReference | undefined,
+    findType: TType,
+    ...props: TProps
+  ): [SimpleType<TType> | undefined, string | undefined ] => {
+    const page = getPage(p)(pg);
+
+    if (page) {
+      const found = props.find(
+        prop => isKeyOf(page, prop) && doesExtend(findType)(page[prop]),
+      ) as string | undefined;
+      if (!found) {
+        return [undefined, undefined];
+      }
+      else {
+        const value = page[found] as SimpleType<TType>;
+
+        return [
+          value,
+          found,
+        ];
+      }
+    }
+
+    p.error(`Call to getProp(pg) passed in an invalid DvPage`, {
+      pg,
+      props,
+    });
+    return [undefined, undefined];
+  };
+}
 
 export function showAbout(_p: KindModelPlugin) {
   return (_pg: PageReference): FileLink[] => {
@@ -535,7 +535,7 @@ function internalLink(
         `target="_blank" rel="noopener">`,
         display,
         `</a>`,
-        `<\span>`,
+        `<span>`,
       ].join("");
 }
 
@@ -571,13 +571,13 @@ export function linkTemplate(p: KindModelPlugin) {
     return (
       ref: PageReference | undefined,
       override?: HtmlLinkOpt,
-    ) => htmlLink(p)(ref, { ...opt, ...(override || {}) });
+    ) => htmlLink(p)(ref, { ...opt, ...override });
   };
 }
 
 /**
  * Creates a link to another page in the vault using HTML.
- * 
+ *
  * - allows pre and post text
  * - leverages `internalLink()`
  * - can also create a "future link"
@@ -604,7 +604,6 @@ export function htmlLink(p: KindModelPlugin) {
       if (isFuturePage(ref)) {
         const display = opt?.display || ref.file.name;
 
-
         return internalLink(ref.file.name, ref.file.name, block(display));
       }
       else {
@@ -619,7 +618,7 @@ export function htmlLink(p: KindModelPlugin) {
       return internalLink(
         stripTrailing(ref, ".md"),
         ref,
-        isToday(display) 
+        isToday(display)
           ? "today"
           : isYesterday(display)
             ? "yesterday"
@@ -759,9 +758,9 @@ export function showClassifications(p: KindModelPlugin) {
         ? opt.source.pageType
         : "none";
 
-    const sep = ` <span style="opacity: 0.8"> &gt; </span>`;
+    const sep = `&nbsp;<span class="km-sep" style="opacity: 0.8">&gt;</span>&nbsp;`;
 
-    const show = classifications.map((i) => {
+    const items = classifications.map((i) => {
       const link = linkTemplate(p)({ css: { "white-space": "nowrap" } });
       const typeTag = isDvPage(i.type)
         ? asDisplayTag(getTypeTag(p)(i.type) as string, true)
@@ -777,15 +776,15 @@ export function showClassifications(p: KindModelPlugin) {
       );
 
       const startOfLine = [
-        `<div style="display:flex; whitespace: nowrap">`,
-        `<div style="whitespace: nowrap">${showType}${showKind}</div>`,
+        `<div style="display:flex; white-space: nowrap">`,
+        `<div style="white-space: nowrap">${showType}${showKind}</div>`,
       ];
 
       const categories = (
         i.categories ? i.categories : i.category ? [i.category] : []
       ) as KindClassifiedCategory[];
 
-      const showCategories = `<div class="categories" style="whitespace: nowrap">${categories.map(
+      const showCategories = `<div class="categories" style="white-space: nowrap">${categories.map(
         (c) => {
           const catLink = link(c.page, { display: c.tag });
           const subcategories = c?.subcategories
@@ -813,11 +812,18 @@ export function showClassifications(p: KindModelPlugin) {
         showCategories,
         "</div>",
       ].join("\n");
-    }).join("\n");
+    });
+
+    // Wrap multiple classifications in a list container for proper spacing
+    const show = items.length > 1
+      ? items.map(item => `<div class="km-classification-item">${item}</div>`).join("")
+      : items[0] || "";
 
     p.debug("show classification", show);
 
-    return show;
+    return items.length > 1
+      ? `<div class="km-classification-list">${show}</div>`
+      : `<span class="km-classification">${show}</span>`;
   };
 }
 

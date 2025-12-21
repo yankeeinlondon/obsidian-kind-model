@@ -22,8 +22,8 @@ import {
   isString,
   isUrl,
   isYouTubeCreatorUrl,
-  isYouTubeVideoUrl,
 } from "inferred-types";
+import { isYouTubeVideoUrl } from "~/helpers/youtube";
 import { isDvPage, isFileLink, isTFile } from "~/type-guards";
 import { splitContent } from "~/utils/splitContent";
 

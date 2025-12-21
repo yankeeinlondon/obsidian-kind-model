@@ -6,12 +6,65 @@ import type { ObsidianCodeblockEvent } from "~/types";
 import type { Link } from "~/types/dataview_types";
 import { isKindError } from "@yankeeinlondon/kind-error";
 import { isObject } from "inferred-types";
+import { Notice } from "obsidian";
 import { renderApi } from "~/api";
 import { ERROR_ICON } from "~/constants";
+import {
+  formatArkTypeErrors,
+  formatUnknownHandlerError,
+  isArkTypeError,
+} from "~/handlers/error-display";
+import { getHandlerMetadata } from "~/handlers/registry";
 import { isError } from "~/type-guards";
+import { getKmBlockTracker } from "./km-block-refresh";
 
 export function isPageLink(v: unknown): v is Link {
   return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
+}
+
+/**
+ * Register a KM block for auto-refresh when its host file changes.
+ * Creates a re-render callback that processes handlers fresh each time.
+ */
+function registerForAutoRefresh(
+  p: KindModelPlugin,
+  filepath: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext & Component,
+  source: string,
+): void {
+  const tracker = getKmBlockTracker(p);
+  if (!tracker) {
+    return;
+  }
+
+  // Create a refresh callback that re-processes handlers
+  const refreshCallback = async (
+    src: string,
+    element: HTMLElement,
+    context: MarkdownPostProcessorContext & Component,
+  ) => {
+    // Re-process handlers with fresh data
+    const event: ObsidianCodeblockEvent = { source: src, el: element, ctx: context };
+    const handlers = p.api.queryHandlers(event);
+
+    type Outcome = [handler: string, status: boolean | Error];
+    const outcomes: Outcome[] = [];
+
+    for (const h of handlers) {
+      const outcome = await h();
+      outcomes.push([h.handlerName, outcome]);
+    }
+
+    handleOutcomes(p, src, element, context, outcomes);
+  };
+
+  tracker.register(filepath, {
+    el,
+    ctx,
+    source,
+    callback: refreshCallback,
+  });
 }
 
 /**
@@ -23,6 +76,34 @@ export function isPageLink(v: unknown): v is Link {
  * - if no handler is found, an error is raised in the UI
  */
 export function codeblockParser(p: KindModelPlugin) {
+  /**
+   * Process the km codeblock handlers
+   */
+  const processHandlers = async (
+    source: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext & Component,
+  ) => {
+    const event: ObsidianCodeblockEvent = { source, el, ctx };
+    const handlers = p.api.queryHandlers(event);
+
+    type Outcome = [handler: string, status: boolean | Error];
+    const outcomes: Outcome[] = [];
+
+    for (const h of handlers) {
+      try {
+        const outcome = await h();
+        const handler = h.handlerName;
+        outcomes.push([handler, outcome]);
+      }
+      catch (err) {
+        outcomes.push([h.handlerName, err as Error]);
+      }
+    }
+
+    return outcomes;
+  };
+
   const callback = async (
     source: string,
     el: HTMLElement,
@@ -30,64 +111,149 @@ export function codeblockParser(p: KindModelPlugin) {
   ) => {
     el.style.overflowX = "auto";
 
-    const event: ObsidianCodeblockEvent = { source, el, ctx };
-    const handlers = p.api.queryHandlers(event);
+    // If Dataview isn't ready yet, defer processing until it is
+    if (p.dvStatus !== "ready") {
+      // Show loading indicator
+      const loadingEl = el.createDiv({ cls: "km-loading" });
+      loadingEl.innerHTML = `<span style="opacity: 0.6; font-style: italic;">Loading...</span>`;
 
-		type Outcome = [handler: string, status: boolean | Error];
-		const outcomes: Outcome[] = [];
+      // Defer until Dataview is ready
+      p.deferUntilDataviewReady(async () => {
+        // Clear loading indicator
+        el.empty();
+        el.style.overflowX = "auto";
 
-		for (const h of handlers) {
-		  const outcome = await h();
-		  const handler = h.handlerName;
-		  outcomes.push([handler, outcome]);
-		}
+        // Process handlers now that Dataview is ready
+        const outcomes = await processHandlers(source, el, ctx);
+        handleOutcomes(p, source, el, ctx, outcomes);
 
-		p.info(`code block processed against handlers`, outcomes.reduce(
-		  (acc, i) => ({
-		    ...acc,
-		    [i[0] as string]: i[1],
-		  }),
-		  {},
-		));
+        // Register for auto-refresh
+        registerForAutoRefresh(p, ctx.sourcePath, el, ctx, source);
+      });
 
-		if (!outcomes.some(i => i[1] === true)) {
-		  const err = outcomes.find(i => isError(i[1])) as Error | undefined;
+      return;
+    }
 
-		  const render = renderApi(p)(el, ctx.sourcePath);
-		  const { format } = p.api;
+    // Dataview is ready, process immediately
+    const outcomes = await processHandlers(source, el, ctx);
+    handleOutcomes(p, source, el, ctx, outcomes);
 
-		  if (err) {
-		    if (isKindError(err)) {
-		      p.warn(...((err as BaseKindError)?.asBrowserMessages() || []));
-		    }
-
-		    render.callout(
-		      "error",
-		      `<div style="display:flex; flex-direction: row"><span style="display: flex">Error running </span>&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">Query</span></div>`,
-		      {
-		        content: [
-		          `Problems parsing parameters passed into the&nbsp;${format.bold(`${source}`)}&nbsp;${format.inline_codeblock("km")}&nbsp;<span style="display: flex">query.`,
-		          `<span><b>Error:</b> ${err?.message || String(err)}</span>`,
-		        ],
-		        icon: ERROR_ICON,
-		        toRight: format.inline_codeblock(`${source?.trim() || ""} `),
-		      },
-		    );
-
-		    // p.error(err);
-		  }
-		  else {
-		    render.callout(
-		      "error",
-		      `The KM query "${source}" is not recognized!`,
-		    );
-		  }
-		}
+    // Register for auto-refresh
+    registerForAutoRefresh(p, ctx.sourcePath, el, ctx, source);
   };
+
   // register callback
   const registration = p.registerMarkdownCodeBlockProcessor(
     "km",
     callback,
   );
   registration.sortOrder = -100;
+}
+
+type Outcome = [handler: string, status: boolean | Error];
+
+/**
+ * Handle the outcomes from processing km codeblock handlers
+ */
+function handleOutcomes(
+  p: KindModelPlugin,
+  source: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext & Component,
+  outcomes: Outcome[],
+) {
+  p.info(`code block processed against handlers`, outcomes.reduce(
+    (acc, i) => ({
+      ...acc,
+      [i[0] as string]: i[1],
+    }),
+    {},
+  ));
+
+  const hasSuccess = outcomes.some(i => i[1] === true);
+
+  if (!hasSuccess) {
+    const errorOutcome = outcomes.find(i => isError(i[1]));
+    const err = errorOutcome?.[1] as Error | undefined;
+    const handlerName = errorOutcome?.[0] || "unknown";
+
+    // Add vertical padding to separate error block from surrounding content
+    el.style.paddingTop = "4px";
+    el.style.paddingBottom = "4px";
+
+    const render = renderApi(p)(el, ctx.sourcePath);
+    const { format } = p.api;
+
+    if (err) {
+      // Use KindError's browser messages if available
+      if (isKindError(err) && typeof (err as BaseKindError)?.asBrowserMessages === "function") {
+        p.warn(...((err as BaseKindError).asBrowserMessages() || []));
+      }
+
+      // Check if debug mode is enabled via log level
+      const isDebugMode = p.settings.log_level === "debug";
+
+      // Check if this is an ArkType validation error
+      const arkTypeErrors = isArkTypeError(err) ? err : null;
+
+      // Build enhanced error content with context
+      const errorContent: string[] = [
+        `<b>Handler:</b>&nbsp;${format.inline_codeblock(handlerName)}`,
+        `<b>Query:</b>&nbsp;${format.inline_codeblock(source?.trim() || "")}`,
+      ];
+
+      if (arkTypeErrors) {
+        // Format ArkType errors with suggestions
+        errorContent.push(...formatArkTypeErrors(arkTypeErrors, handlerName));
+      }
+      else {
+        // Regular error message
+        errorContent.push(`<b>Error:</b>&nbsp;${err?.message || String(err)}`);
+      }
+
+      // Add stack trace in debug mode
+      if (isDebugMode && err?.stack) {
+        errorContent.push(`<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`);
+      }
+
+      // Add handler documentation link if available
+      const meta = getHandlerMetadata(handlerName);
+      if (meta?.examples?.length) {
+        errorContent.push(`<br/><b>Examples:</b>`);
+        errorContent.push(`<ul style="margin-top: 4px;">`);
+        for (const example of meta.examples) {
+          errorContent.push(`<li><code>${example}</code></li>`);
+        }
+        errorContent.push(`</ul>`);
+      }
+
+      render.callout(
+        "error",
+        `Error in&nbsp;${format.inline_codeblock("km")}&nbsp;handler`,
+        {
+          content: errorContent,
+          icon: ERROR_ICON,
+        },
+      );
+
+      // Show Notice for critical errors to ensure visibility
+      new Notice(`Kind Model: Error in ${handlerName} handler. Check the document for details.`, 5000);
+    }
+    else {
+      // Unknown handler - show suggestions
+      const errorContent = formatUnknownHandlerError(source);
+
+      render.callout(
+        "error",
+        `Unknown KM Handler`,
+        {
+          content: errorContent,
+          icon: ERROR_ICON,
+        },
+      );
+
+      // Show Notice for unrecognized handlers
+      new Notice(`Kind Model: Unknown query handler "${source}"`, 4000);
+    }
+  }
 }

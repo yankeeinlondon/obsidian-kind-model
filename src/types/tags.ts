@@ -54,9 +54,9 @@ export interface DecomposedUnknownTag {
   safeTag: string;
 }
 
-export type DecomposedTag =
-    | DecomposedUnknownTag
-    | DecomposedTypeTag
-    | DecomposedKindTag
-    | DecomposedCategoryTag
-    | DecomposedSubcategoryTag;
+export type DecomposedTag
+  = | DecomposedUnknownTag
+      | DecomposedTypeTag
+      | DecomposedKindTag
+      | DecomposedCategoryTag
+      | DecomposedSubcategoryTag;

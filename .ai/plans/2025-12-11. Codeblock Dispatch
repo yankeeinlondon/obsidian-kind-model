@@ -1,0 +1,26 @@
+# Performance: Codeblock Dispatch Mechanism
+
+**Location:** `src/events/codeblockParser.ts`, `src/handlers/createHandler.ts`
+
+**Issue:** The current implementation iterates through *all* registered handlers for every `km` codeblock event. Each handler then constructs a new `RegExp` to check if it matches the source string.
+
+```typescript
+// src/events/codeblockParser.ts
+for (const h of handlers) {
+  const outcome = await h(); // logic inside h() performs regex match
+  // ...
+}
+```
+
+**Recommendation:**
+Refactor the parsing logic to be O(1) instead of O(N).
+
+1. Parse the handler name (e.g., `Kind`, `BackLinks`) from the codeblock string *once* in `codeblockParser`.
+2. Maintain a `Map<string, Handler>` of registered handlers.
+3. Dispatch directly to the matching handler or return an error if not found.
+4. Remove the regex matching logic from individual handlers' `clientHandler` wrapper.
+
+
+## Task
+
+Think harder and create a detailed plan to fix the dispatch mechanism to be more performant. 

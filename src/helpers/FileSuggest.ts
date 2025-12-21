@@ -2,11 +2,15 @@
 
 import type { TAbstractFile, TFile } from "obsidian";
 import type KindModelPlugin from "~/main";
-import { vault } from "~/globals";
+import { getVault } from "~/globals";
 import { isTFile } from "~/type-guards";
 import { TextInputSuggest } from "./Suggest";
 
 function getFilesByPath(folder: string) {
+  const vault = getVault();
+  if (!vault) {
+    return [];
+  }
   return vault.getMarkdownFiles().filter(f => f.path.startsWith(folder));
 }
 
@@ -43,8 +47,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
   }
 
   getSuggestions(input_str: string): TFile[] {
-    const all_files = [
-      ...this.folders
+    const all_files = this.folders
         .map((f) => {
           try {
             return getFilesByPath(f);
@@ -57,8 +60,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
             return [];
           }
         })
-        .flat(),
-    ];
+        .flat();
 
     const files: TFile[] = [];
     const lower_input_str = input_str.toLowerCase();
@@ -67,7 +69,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
       if (
         isTFile(file)
         && file.extension === "md"
-        && file.path.toLowerCase().contains(lower_input_str)
+        && file.path.toLowerCase().includes(lower_input_str)
       ) {
         files.push(file);
       }

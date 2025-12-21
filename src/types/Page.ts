@@ -1,38 +1,38 @@
 import type { Node, RenderableTreeNode } from "@markdoc/markdoc";
 import type {
-	As,
-	Contains,
-	If,
-	IsStringLiteral,
-	IsUnion,
-	TypedFunction
+  As,
+  Contains,
+  If,
+  IsStringLiteral,
+  IsUnion,
+  TypedFunction,
 } from "inferred-types";
 import type { DateTime } from "luxon";
 import type { Component, MarkdownView } from "obsidian";
 import type { DvPage, Link } from "./dataview_types";
 import type { Frontmatter, HeadingTag } from "./frontmatter";
 
-import type { FrontmatterApi, RenderApi } from "~/api";
-import type {
-	FuturePage,
-	ObsidianTask,
-	ObsidianTaskWithLink,
-	PageBlock,
-	Tag
-} from "~/types";
 import type { PageMetadataApi } from "./MetadataApi";
 import type { ObsidianComponent, TAbstractFile, TFile } from "./Obsidian";
+import type { FrontmatterApi, RenderApi } from "~/api";
+import type {
+  FuturePage,
+  ObsidianTask,
+  ObsidianTaskWithLink,
+  PageBlock,
+  Tag,
+} from "~/types";
 
-export type PageType =
-    | "kinded"
-    | "kinded > category"
-    | "kinded > subcategory"
-    | "multi-kinded"
-    | "multi-kinded > category"
-    | "multi-kinded > subcategory"
-    | "kind-defn"
-    | "type-defn"
-    | "none";
+export type PageType
+  = | "kinded"
+      | "kinded > category"
+      | "kinded > subcategory"
+      | "multi-kinded"
+      | "multi-kinded > category"
+      | "multi-kinded > subcategory"
+      | "kind-defn"
+      | "type-defn"
+      | "none";
 
 type IsSingular<T extends PageType> = Contains<
   T,
@@ -494,25 +494,25 @@ export interface PageBanners {
   pageBanner?: string;
 }
 
-export type PageSuggestion =
-    | "add-kind-prop"
-    | "add-kind-tag"
-    | "add-kinded-prop"
-    | "add-kinded-tag"
-    | "add-category-tag"
-    | "add-category-prop"
-    | "add-subcategory-tag"
-    | "add-subcategory-prop";
+export type PageSuggestion
+  = | "add-kind-prop"
+      | "add-kind-tag"
+      | "add-kinded-prop"
+      | "add-kinded-tag"
+      | "add-category-tag"
+      | "add-category-prop"
+      | "add-subcategory-tag"
+      | "add-subcategory-prop";
 
-export type PageReference =
-    | PageInfo
-    | PageBlock
-    | DvPage
-    | TFile
-    | TAbstractFile
-    | FuturePage
-    | Link
-    | string;
+export type PageReference
+  = | PageInfo
+      | PageBlock
+      | DvPage
+      | TFile
+      | TAbstractFile
+      | FuturePage
+      | Link
+      | string;
 
 /**
  * represents a static "kind" and the categories that a given page has of this

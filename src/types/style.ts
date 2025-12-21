@@ -136,8 +136,8 @@ export interface UserStyleOptions {
   opacity?: string | number;
 }
 
-export type StyleOptions<_TOverride extends UserStyleOptions = EmptyObject> =
-  UserStyleOptions;
+export type StyleOptions<_TOverride extends UserStyleOptions = EmptyObject>
+  = UserStyleOptions;
 
 export interface BlockQuoteOptions {
   /**

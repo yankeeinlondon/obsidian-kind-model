@@ -1,29 +1,30 @@
-import { CssDefinition, cssFromDefinition, ensureLeading } from "inferred-types";
-import { renderListItems, style } from "~/api";
-import { isDvPage, isLink } from "~/type-guards";
-import type {
-	BlockQuoteOptions,
-	DvPage,
-	Link,
-	ListItemsCallback,
-	ListStyle,
-	StyleOptions,
-} from "~/types";
-import {
-	BUG_ICON,
-	ERROR_ICON,
-	EXAMPLE_ICON,
-	INFO_ICON,
-	NOTE_ICON,
-	QUESTION_ICON,
-	QUOTE_ICON,
-	SUCCESS_ICON,
-	SUMMARY_ICON,
-	TIP_ICON,
-	WARN_ICON,
-} from "../constants/obsidian-constants";
+import type { CssDefinition } from "inferred-types";
 import type KindModelPlugin from "../main";
 import type { ObsidianCalloutColors } from "../types/ObsidianCallouts";
+import type {
+  BlockQuoteOptions,
+  DvPage,
+  Link,
+  ListItemsCallback,
+  ListStyle,
+  StyleOptions,
+} from "~/types";
+import { cssFromDefinition, ensureLeading } from "inferred-types";
+import { renderListItems, style } from "~/api";
+import { isDvPage, isLink } from "~/type-guards";
+import {
+  BUG_ICON,
+  ERROR_ICON,
+  EXAMPLE_ICON,
+  INFO_ICON,
+  NOTE_ICON,
+  QUESTION_ICON,
+  QUOTE_ICON,
+  SUCCESS_ICON,
+  SUMMARY_ICON,
+  TIP_ICON,
+  WARN_ICON,
+} from "../constants/obsidian-constants";
 
 function obsidian_blockquote(
   kind: ObsidianCalloutColors,
@@ -54,7 +55,7 @@ function obsidian_blockquote(
             `<div class="callout-content" style="display: flex; flex-direction: column; space-between: 4px;">`,
             ...opts.content.map(
               c =>
-                `<div class="content-element" ${style({ flex: true, ...(opts.contentStyle || {}) })}>${c}</div>`,
+                `<div class="content-element" ${style({ flex: true, ...opts.contentStyle })}>${c}</div>`,
             ),
             `</div>`,
           ]
@@ -84,7 +85,7 @@ function empty_callout(fmt?: StyleOptions) {
  * returns a `km` query block as string
  */
 export function kmBlock(query: string) {
-	return `
+  return `
 \`\`\`km
 ${query}
 \`\`\`
@@ -128,29 +129,32 @@ function blockquote(
 }
 
 export function span(text: string | number, fmt?: CssDefinition) {
-  return `<span style="${cssFromDefinition({...{"font-weight": "400", ...(fmt || {})}})}">${text}</span>`;
+  return `<span style="${cssFromDefinition(({
+	'font-weight': '400',
+	...fmt || {}
+}))}">${text}</span>`;
 }
 function italics(text: string | number, fmt?: Omit<StyleOptions, "fs">) {
   return `<span ${style({ ...(fmt || { fw: "400" }), fs: "italic" } as StyleOptions)}>${text}</span>`;
 }
 
 function bold(text: string, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "700" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "700" } as StyleOptions)}>${text}</span>`;
 }
 
 function light(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "300" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "300" } as StyleOptions)}>${text}</span>`;
 }
 
 function thin(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "100" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "100" } as StyleOptions)}>${text}</span>`;
 }
 function medium(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "500" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "500" } as StyleOptions)}>${text}</span>`;
 }
 
 function normal(text: string | number, fmt?: Omit<StyleOptions, "fw">) {
-  return `<span ${style({ ...(fmt || {}), fw: "400" } as StyleOptions)}>${text}</span>`;
+  return `<span ${style({ ...fmt, fw: "400" } as StyleOptions)}>${text}</span>`;
 }
 
 export interface LinkOptions {
@@ -354,17 +358,16 @@ export function fmt(p: KindModelPlugin) {
       title: string,
       opts?: BlockQuoteOptions,
     ) => p.dv.renderValue(
-	blockquote(kind, title, opts),
-	container,
-	p,
-	filePath,
-	false,
-	),
-	kmBlock,
+      blockquote(kind, title, opts),
+      container,
+      p,
+      filePath,
+      false,
+    ),
+    kmBlock,
 
     empty_callout,
   });
-
 }
 
 /**

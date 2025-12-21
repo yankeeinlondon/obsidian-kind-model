@@ -1,16 +1,41 @@
 import type { YouTubeVideoUrl } from "inferred-types";
 import type { PageContent } from "../helpers/pageContent";
 import type { PagePath } from "../types/general";
-import { youtubeEmbed } from "inferred-types";
+import { type } from "arktype";
 import { pageContent } from "../helpers/pageContent";
-import { createHandler } from "./createHandler";
+import { youtubeEmbed } from "../helpers/youtube";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 /**
- * Renders the entry or beginning of a page (right under H1)
+ * ArkType schema for VideoGallery options.
+ * Size enum: S (small), M (medium), L (large)
  */
-export const VideoGallery = createHandler("VideoGallery")
-  .scalar()
-  .options({ size: "opt(enum(S,M,L))" })
+const VideoGalleryOptionsSchema = type({
+  "+": "reject",
+  "size?": "'S' | 'M' | 'L'",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "VideoGallery",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: VideoGalleryOptionsSchema,
+  description: "Displays a gallery of YouTube videos from pages that link to this page",
+  examples: [
+    "VideoGallery()",
+    "VideoGallery({size: \"M\"})",
+    "VideoGallery({size: \"L\"})",
+  ],
+});
+
+/**
+ * Renders a gallery of YouTube videos from backlinks
+ */
+export const VideoGallery = createHandlerV2("VideoGallery")
+  .noScalar()
+  .optionsSchema(VideoGalleryOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page, render } = evt;
 
@@ -52,7 +77,7 @@ export const VideoGallery = createHandler("VideoGallery")
         const src = youtubeEmbed(v.url);
         const node = [
           `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
-          `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
+          `<iframe class="video-ref" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" frameborder="0" sandbox="allow-scripts allow-same-origin allow-modals allow-popups allow-presentation allow-forms" allowfullscreen src="${src}"></iframe>`,
           `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
           `</div>`,
         ].join("\n");

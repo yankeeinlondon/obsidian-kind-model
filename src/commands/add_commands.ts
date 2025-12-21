@@ -1,6 +1,6 @@
 import type { Editor, MarkdownView } from "obsidian";
-import { create_new_kinded_page, update_kinded_page } from "~/commands/index";
 import type KindModelPlugin from "~/main";
+import { create_new_kinded_page, update_kinded_page } from "~/commands/index";
 
 /**
  * Adds commands for this plugin; including:

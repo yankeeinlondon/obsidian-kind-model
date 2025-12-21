@@ -51,15 +51,15 @@ export function queryHandlers(p: KindModelPlugin) {
 }
 
 export {
-	Accounts,
-	BackLinks,
-	Book,
-	Children,
-	Debug, IconPage,
-	Journal,
-	Kind,
-	PageEntry,
-	Tasks,
-	VideoGallery
+  Accounts,
+  BackLinks,
+  Book,
+  Children,
+  Debug,
+  IconPage,
+  Journal,
+  Kind,
+  PageEntry,
+  Tasks,
+  VideoGallery,
 };
-

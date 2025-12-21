@@ -1,6 +1,7 @@
 import type { Date } from "inferred-types";
 import type { DateTime } from "luxon";
 import type { DvPage } from "~/types";
+import { type } from "arktype";
 import {
   AMAZON,
   BOOK_CATALOG,
@@ -11,7 +12,8 @@ import {
 } from "~/constants";
 import { AmazonBook, worldCatBookPage } from "~/helpers/scrapers";
 import { isDateTime } from "~/type-guards";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 interface BookSearchMeta {
   title?: string;
@@ -135,15 +137,34 @@ export interface BookMeta {
 }
 
 /**
+ * Empty schema for handlers with no options.
+ */
+const BookOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Book",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: BookOptionsSchema,
+  description: "Displays a formatted summary of a book from metadata provided by kindle-sync and book-search plugins",
+  examples: [
+    "Book()",
+  ],
+});
+
+/**
  * **Book**
  *
  * A formatter to product a nice looking summary of book.
  *
  * Based on metadata that is provided by [kindle-sync]() and [book-search]().
  */
-export const Book = createHandler("Book")
-  .scalar()
-  .options()
+export const Book = createHandlerV2("Book")
+  .noScalar()
+  .optionsSchema(BookOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page } = evt;
 

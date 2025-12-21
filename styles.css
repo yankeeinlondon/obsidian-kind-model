@@ -10,3 +10,64 @@ If your plugin does not need CSS, delete this file.
 .kind-model-temp {
 	font-weight: 900;
 }
+
+/* Classification display */
+.km-classification {
+	white-space: nowrap;
+}
+
+.km-sep {
+	opacity: 0.8;
+}
+
+/* Multi-classification support */
+.km-classification-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--km-classification-gap, var(--size-4-1, 4px));
+}
+
+.km-classification-item {
+	margin: 0;
+	padding: 0;
+	line-height: var(--line-height-normal, 1.5);
+	white-space: nowrap;
+}
+
+/* Table column support */
+.dataview.table-view-table td:has(.km-classification) {
+	min-width: max-content;
+	white-space: nowrap;
+}
+
+.dataview.table-view-table td:has(.km-classification-list) {
+	min-width: max-content;
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+/* CodeMirror lint tooltips for km blocks */
+.cm-tooltip.cm-tooltip-lint {
+	background-color: var(--background-primary) !important;
+	border: 1px solid var(--background-modifier-border) !important;
+	color: var(--text-normal) !important;
+	padding: 8px 12px !important;
+	max-width: 400px !important;
+	font-size: var(--font-ui-small) !important;
+	line-height: 1.5 !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnostic {
+	color: var(--text-normal) !important;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnostic-error {
+	border-left: 3px solid var(--text-error) !important;
+	padding-left: 8px !important;
+}
+
+/* Force readable text in lint tooltips */
+.cm-tooltip-lint ul li {
+	color: var(--text-normal) !important;
+}

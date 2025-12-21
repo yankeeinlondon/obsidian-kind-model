@@ -13,9 +13,9 @@ export * from "./isValidUrl";
 export * from "./logging";
 export * from "./obsidian_api";
 export * from "./query-api";
+export * from "./retryWithBackoff";
 export * from "./showQueryError";
 export * from "./splitContent";
 export * from "./strip_page_alias";
 export * from "./type-utils";
 export * from "./wait";
-

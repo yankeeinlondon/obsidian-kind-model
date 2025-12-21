@@ -1,9 +1,30 @@
+import { type } from "arktype";
 import { getFrontmatterMetadata } from "~/api";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
-export const IconPage = createHandler("IconPage")
-  .scalar()
-  .options()
+/**
+ * Empty schema for handlers with no options.
+ */
+const IconPageOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "IconPage",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: IconPageOptionsSchema,
+  description: "Displays icons defined in the current page's frontmatter",
+  examples: [
+    "IconPage()",
+  ],
+});
+
+export const IconPage = createHandlerV2("IconPage")
+  .noScalar()
+  .optionsSchema(IconPageOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page } = evt;
 

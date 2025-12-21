@@ -1,20 +1,41 @@
 import type { PageType, Tag } from "~/types";
+import { type } from "arktype";
 import { createKindError } from "@yankeeinlondon/kind-error";
 import { isString } from "inferred-types";
 import { getPageType } from "~/api";
 import { asDisplayTag, asTag } from "~/helpers";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
-export const Children = createHandler("Children")
-  .scalar()
-  .options()
+/**
+ * Empty schema for handlers with no options.
+ */
+const ChildrenOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Children",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: ChildrenOptionsSchema,
+  description: "Shows child classifications (categories/subcategories) of a kind, category, or type page",
+  examples: [
+    "Children()",
+  ],
+});
+
+export const Children = createHandlerV2("Children")
+  .noScalar()
+  .optionsSchema(ChildrenOptionsSchema)
   .handler(async (evt) => {
     const { page, plugin: p, createTable, dv } = evt;
     const { typeTag } = page;
     const kind = asTag(page?.kindTags[0]);
     const cat = page.categories[0]?.category;
 
-    p.info("Children hanlder");
+    p.info("Children handler");
 
     const tbl = (k: Tag) => page.isCategoryPage
     // Category Page

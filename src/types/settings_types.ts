@@ -1,9 +1,9 @@
 import type {
-	CARDINALITY_TYPES,
-	CLASSIFICATION,
-	LOG_LEVELS,
-	TAG_HANDLING,
-	UOM_TYPES,
+  CARDINALITY_TYPES,
+  CLASSIFICATION,
+  LOG_LEVELS,
+  TAG_HANDLING,
+  UOM_TYPES,
 } from "~/utils/Constants";
 import type { TupleToUnion } from "~/utils/type-utils";
 
@@ -97,27 +97,25 @@ export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
  */
 export interface KindModelSettings {
 
-	/**
-	 * the **log level** being reported to the developer console
-	 */
-	log_level: LogLevel;
+  /**
+   * the **log level** being reported to the developer console
+   */
+  log_level: LogLevel;
 
+  /** paths to all known Kind pages */
+  kindPaths: string[];
+  /**
+   * the base directory which all Kind Definition pages
+   * should be moved to. If not set then this means
+   * that they can be stored anywhere.
+   */
+  kindDefnBaseDir?: string;
 
-	/** paths to all known Kind pages */
-	kindPaths: string[];
-	/**
-	 * the base directory which all Kind Definition pages
-	 * should be moved to. If not set then this means
-	 * that they can be stored anywhere.
-	 */
-	kindDefnBaseDir?: string;
-
-	/**
-	 * the base directory which all Type Definition pages
-	 * should be moved to. If not set then this means
-	 * that they can be stored anywhere.
-	 */
-	typeDefnBaseDir?: string;
+  /**
+   * the base directory which all Type Definition pages
+   * should be moved to. If not set then this means
+   * that they can be stored anywhere.
+   */
+  typeDefnBaseDir?: string;
 
 }
-  

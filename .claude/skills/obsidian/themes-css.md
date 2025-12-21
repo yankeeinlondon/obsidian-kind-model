@@ -1,198 +1,318 @@
-# Themes and CSS
+# Themes & CSS Variables
 
-Customize Obsidian's appearance with themes and CSS snippets using the CSS variable system.
+Obsidian themes are CSS stylesheets that override the app's appearance using CSS variables. This ensures compatibility across plugins and updates.
 
 ## Theme Structure
 
 ```
-.obsidian/themes/my-theme/
-├── manifest.json
-└── theme.css
+my-theme/
+├── manifest.json    # Theme metadata
+└── theme.css        # All styles
 ```
 
-### manifest.json
+### Manifest
 
 ```json
 {
   "name": "My Theme",
   "version": "1.0.0",
-  "minAppVersion": "1.0.0",
   "author": "Your Name",
-  "authorUrl": "https://github.com/username"
+  "authorUrl": "https://your-site.com"
 }
 ```
 
-### Basic theme.css
+## Core Principles
 
-```css
-/* Apply to both modes */
-body {
-  --font-text-theme: Georgia, serif;
-}
+- **Use CSS variables** - Override existing variables, not raw colors
+- **Low specificity** - Simple selectors prevent breaking on updates
+- **No `!important`** - Let users override with snippets
+- **Local assets only** - No remote fonts/images (community themes)
+- **Support both modes** - Handle `.theme-light` and `.theme-dark`
 
-/* Dark mode colors */
-.theme-dark {
-  --background-primary: #1a1a2e;
-  --background-secondary: #16213e;
-  --text-normal: #e4e4e4;
-  --text-muted: #a0a0a0;
-}
-
-/* Light mode colors */
-.theme-light {
-  --background-primary: #ffffff;
-  --background-secondary: #f5f5f5;
-  --text-normal: #1a1a1a;
-  --text-muted: #666666;
-}
-```
-
-## Essential CSS Variables
+## Key CSS Variables
 
 ### Colors
 
 ```css
-/* Background */
---background-primary        /* Main content area */
---background-secondary      /* Sidebars, panels */
---background-modifier-hover /* Hover states */
---background-modifier-error /* Error states */
+body {
+  /* Background colors */
+  --background-primary: #1e1e1e;
+  --background-secondary: #262626;
+  --background-modifier-border: #363636;
 
-/* Text */
---text-normal    /* Body text */
---text-muted     /* Secondary text */
---text-faint     /* Tertiary/disabled */
---text-accent    /* Links, emphasis */
+  /* Text colors */
+  --text-normal: #dcddde;
+  --text-muted: #888888;
+  --text-faint: #666666;
+  --text-accent: #7f6df2;
 
-/* Accent (HSL for flexibility) */
---accent-h  /* Hue */
---accent-s  /* Saturation */
---accent-l  /* Lightness */
+  /* Accent (HSL for dynamic theming) */
+  --accent-h: 254;
+  --accent-s: 80%;
+  --accent-l: 68%;
 
-/* Extended colors */
---color-red
---color-orange
---color-yellow
---color-green
---color-cyan
---color-blue
---color-purple
---color-pink
-
-/* RGB variants for opacity */
---color-red-rgb  /* Usage: rgba(var(--color-red-rgb), 0.5) */
+  /* Interactive states */
+  --interactive-normal: #363636;
+  --interactive-hover: #464646;
+  --interactive-accent: var(--text-accent);
+}
 ```
 
 ### Typography
 
 ```css
---font-text-theme      /* Editor text */
---font-interface-theme /* UI elements */
---font-monospace-theme /* Code blocks */
+body {
+  /* Font families */
+  --font-text: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-interface: var(--font-text);
+  --font-monospace: "Fira Code", monospace;
 
---font-text-size       /* Base font size */
---line-height-normal   /* Line height */
+  /* Font sizes */
+  --font-text-size: 16px;
+  --font-ui-small: 13px;
+  --font-ui-medium: 15px;
+
+  /* Line height */
+  --line-height-normal: 1.5;
+  --line-height-tight: 1.3;
+}
 ```
 
 ### Spacing
 
 ```css
-/* Size scale (multiples of 4px) */
---size-4-1   /* 4px */
---size-4-2   /* 8px */
---size-4-3   /* 12px */
---size-4-4   /* 16px */
-/* ... up to --size-4-18 */
+:root {
+  /* Base spacing units */
+  --size-2-1: 2px;
+  --size-2-2: 4px;
+  --size-2-3: 6px;
+  --size-4-1: 4px;
+  --size-4-2: 8px;
+  --size-4-3: 12px;
+  --size-4-4: 16px;
 
-/* Border radius */
---radius-s   /* Small */
---radius-m   /* Medium */
---radius-l   /* Large */
+  /* Border radius */
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 12px;
+}
 ```
 
-### Code/Editor
+### Syntax Highlighting
 
 ```css
---code-background
---code-normal
---code-comment
---code-function
---code-string
---code-keyword
---code-operator
+body {
+  /* Code blocks */
+  --code-background: var(--background-secondary);
+
+  /* Syntax colors */
+  --code-comment: #6a9955;
+  --code-function: #dcdcaa;
+  --code-keyword: #569cd6;
+  --code-string: #ce9178;
+  --code-operator: #d4d4d4;
+  --code-property: #9cdcfe;
+  --code-value: #b5cea8;
+  --code-tag: #569cd6;
+}
 ```
 
 ### UI Components
 
 ```css
---ribbon-background
---tab-text-color
---status-bar-background
---input-focus-border-color
---checkbox-radius
---toggle-thumb-width
-```
+body {
+  /* Ribbon */
+  --ribbon-background: var(--background-secondary);
 
-## CSS Snippets
+  /* Tabs */
+  --tab-text-color: var(--text-muted);
+  --tab-text-color-focused: var(--text-normal);
+  --tab-background-active: var(--background-primary);
 
-For users without creating full themes, snippets go in `.obsidian/snippets/`:
+  /* Status bar */
+  --status-bar-background: var(--background-secondary);
+  --status-bar-text-color: var(--text-muted);
 
-```css
-/* .obsidian/snippets/my-snippet.css */
-.markdown-preview-view h1 {
-  color: var(--color-blue);
+  /* Sidebar */
+  --nav-item-color: var(--text-muted);
+  --nav-item-color-hover: var(--text-normal);
+  --nav-item-background-hover: var(--background-modifier-hover);
 }
 ```
 
-Enable in Settings > Appearance > CSS snippets.
-
-## Best Practices
-
-### DO
-
-- **Use CSS variables** - Changes propagate correctly across app
-- **Use low-specificity selectors** - Simple class names, avoid deep nesting
-- **Support both modes** - Always define `.theme-light` and `.theme-dark`
-- **Bundle assets locally** - No remote fonts/images (privacy, offline support)
-
-### DON'T
-
-- **Avoid `!important`** - Prevents user snippet overrides
-- **Avoid hardcoded colors** - Will clash with other themes
-- **Avoid complex selectors** - May break on Obsidian updates
-- **Don't load remote resources** - Rejected from community themes
-
-## Plugin Styling
-
-When plugins inject HTML, use Obsidian's CSS variables:
+### Editor
 
 ```css
-/* In plugin styles.css */
-.my-plugin-warning {
-  color: var(--text-normal);
-  background-color: var(--background-modifier-error);
-  padding: var(--size-4-2);
-  border-radius: var(--radius-s);
+body {
+  /* Editor line */
+  --text-selection: rgba(100, 100, 255, 0.3);
+
+  /* Headings */
+  --h1-color: var(--text-normal);
+  --h2-color: var(--text-normal);
+  --h3-color: var(--text-normal);
+  --h1-size: 2em;
+  --h2-size: 1.6em;
+  --h3-size: 1.37em;
+
+  /* Links */
+  --link-color: var(--text-accent);
+  --link-color-hover: var(--text-accent);
+  --link-external-color: var(--text-accent);
+
+  /* Lists */
+  --list-indent: 2em;
+  --list-marker-color: var(--text-muted);
+
+  /* Blockquotes */
+  --blockquote-border-color: var(--interactive-accent);
+  --blockquote-background-color: transparent;
 }
 ```
 
-```typescript
-// In plugin code - add class, not inline styles
-el.addClass('my-plugin-warning');
-```
-
-## Targeting Editor Modes
+## Dark/Light Mode
 
 ```css
-/* Source mode (raw markdown) */
-.markdown-source-view { }
+/* Light mode */
+.theme-light {
+  --background-primary: #ffffff;
+  --background-secondary: #f2f3f5;
+  --text-normal: #2e3338;
+  --text-muted: #888888;
+}
 
-/* Live Preview */
-.markdown-source-view.is-live-preview { }
+/* Dark mode */
+.theme-dark {
+  --background-primary: #1e1e1e;
+  --background-secondary: #262626;
+  --text-normal: #dcddde;
+  --text-muted: #888888;
+}
+```
+
+## Common Selectors
+
+### Workspace
+
+```css
+/* Main content area */
+.workspace-leaf-content[data-type="markdown"] {
+  /* Markdown view styles */
+}
 
 /* Reading view */
-.markdown-reading-view { }
-.markdown-preview-view { }
+.markdown-reading-view {
+  /* Reading mode styles */
+}
+
+/* Source/Live Preview */
+.markdown-source-view {
+  /* Editing mode styles */
+}
+
+/* Live Preview specifically */
+.markdown-source-view.is-live-preview {
+  /* Live preview only */
+}
+```
+
+### Editor Elements
+
+```css
+/* Headings in editor */
+.cm-header-1 { font-size: var(--h1-size); }
+.cm-header-2 { font-size: var(--h2-size); }
+.cm-header-3 { font-size: var(--h3-size); }
+
+/* Links */
+.cm-link, .cm-url { color: var(--link-color); }
+
+/* Code */
+.cm-inline-code {
+  background: var(--code-background);
+  padding: 2px 4px;
+  border-radius: var(--radius-s);
+}
+
+/* Code blocks */
+.HyperMD-codeblock {
+  background: var(--code-background);
+}
+```
+
+### Reading View
+
+```css
+/* Headings */
+.markdown-preview-view h1 { font-size: var(--h1-size); }
+.markdown-preview-view h2 { font-size: var(--h2-size); }
+
+/* Links */
+.markdown-preview-view a.internal-link { color: var(--link-color); }
+.markdown-preview-view a.external-link { color: var(--link-external-color); }
+
+/* Code blocks */
+.markdown-preview-view pre {
+  background: var(--code-background);
+  padding: var(--size-4-3);
+  border-radius: var(--radius-m);
+}
+
+/* Callouts */
+.callout {
+  background: var(--background-secondary);
+  border-left: 4px solid var(--callout-color);
+}
+```
+
+### Sidebar
+
+```css
+/* File explorer */
+.nav-file-title {
+  color: var(--nav-item-color);
+}
+
+.nav-file-title:hover {
+  background: var(--nav-item-background-hover);
+  color: var(--nav-item-color-hover);
+}
+
+/* Folder */
+.nav-folder-title {
+  font-weight: 600;
+}
+```
+
+## Plugin Styling Best Practices
+
+When styling plugins, use CSS variables for consistency:
+
+```css
+/* Plugin-specific container */
+.my-plugin-container {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-3);
+}
+
+/* Interactive elements */
+.my-plugin-button {
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  border-radius: var(--radius-s);
+}
+
+.my-plugin-button:hover {
+  background: var(--interactive-hover);
+}
+
+/* Accent elements */
+.my-plugin-highlight {
+  background: rgba(var(--accent-h), var(--accent-s), var(--accent-l), 0.2);
+  border-left: 3px solid var(--text-accent);
+}
 ```
 
 ## Publish Themes
@@ -200,18 +320,79 @@ el.addClass('my-plugin-warning');
 For Obsidian Publish sites, create `publish.css`:
 
 ```css
-/* publish.css - styles for published site only */
+/* publish.css - for public sites */
 .published-container {
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* Different styling for public consumption */
+.site-header {
+  background: var(--background-secondary);
 }
 ```
 
 ## Inspecting Variables
 
-Open Developer Tools (`Ctrl+Shift+I` / `Cmd+Opt+I`) and inspect `<body>` element to see all defined CSS variables.
+Open Developer Tools (`Ctrl+Shift+I` / `Cmd+Opt+I`) and inspect the `body` element to see all available CSS variables.
+
+```javascript
+// Console: List all CSS variables
+getComputedStyle(document.body)
+  .cssText
+  .split(';')
+  .filter(s => s.includes('--'))
+  .map(s => s.trim());
+```
+
+## Complete Variable Reference
+
+<details>
+<summary>All Standard CSS Variables</summary>
+
+### Base Colors
+- `--color-base-00` through `--color-base-100`
+- `--color-red`, `--color-orange`, `--color-yellow`
+- `--color-green`, `--color-cyan`, `--color-blue`, `--color-purple`, `--color-pink`
+
+### RGB Variants (for opacity)
+- `--color-red-rgb`, `--color-blue-rgb`, etc.
+
+### Background
+- `--background-primary`, `--background-primary-alt`
+- `--background-secondary`, `--background-secondary-alt`
+- `--background-modifier-hover`
+- `--background-modifier-active-hover`
+- `--background-modifier-border`
+- `--background-modifier-border-hover`
+- `--background-modifier-border-focus`
+- `--background-modifier-error`
+- `--background-modifier-success`
+- `--background-modifier-message`
+
+### Text
+- `--text-normal`, `--text-muted`, `--text-faint`
+- `--text-accent`, `--text-accent-hover`
+- `--text-on-accent`
+- `--text-error`, `--text-success`, `--text-warning`
+- `--text-selection`
+- `--text-highlight-bg`
+
+### Interactive
+- `--interactive-normal`, `--interactive-hover`
+- `--interactive-accent`, `--interactive-accent-hover`
+
+### Input
+- `--input-shadow`, `--input-shadow-hover`
+- `--input-border-color`, `--input-hover-border-color`
+
+### Scrollbar
+- `--scrollbar-bg`, `--scrollbar-thumb-bg`
+- `--scrollbar-active-thumb-bg`
+
+</details>
 
 ## Related
 
-- [UI Components](./ui-components.md)
-- [Sample Theme](https://github.com/obsidianmd/obsidian-sample-theme)
+- [Plugin Development](./plugin-development.md) - Using styles in plugins
+- [CodeMirror 6](./codemirror-6.md) - Editor-specific styling

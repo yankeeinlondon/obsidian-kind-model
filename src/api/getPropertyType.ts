@@ -1,34 +1,34 @@
-import {
-	isArray,
-	isBoolean,
-	isCreditCard,
-	isEmail,
-	isEmpty,
-	isInlineSvg,
-	isIso3166CountryCode,
-	isIso3166CountryName,
-	isIsoExplicitDate,
-	isIsoTime,
-	isMetric,
-	isNewsUrl,
-	isNumber,
-	isNumberLike,
-	isPhoneNumber,
-	isRepoUrl,
-	isRetailUrl,
-	isSocialMediaUrl,
-	isString,
-	isUrl,
-	isYouTubeCreatorUrl,
-	isYouTubeFeedUrl,
-	isYouTubeUrl,
-	isZipCode,
-	stripSurround,
-	toPascalCase,
-} from "inferred-types";
 import type KindModelPlugin from "~/main";
-import { isAliasedMdLink, isDateTime, isLink, isMdLink } from "~/type-guards";
 import type { PropertyType } from "~/types";
+import {
+  isArray,
+  isBoolean,
+  isCreditCard,
+  isEmail,
+  isEmpty,
+  isInlineSvg,
+  isIso3166CountryCode,
+  isIso3166CountryName,
+  isIsoExplicitDate,
+  isIsoTime,
+  isMetric,
+  isNewsUrl,
+  isNumber,
+  isNumberLike,
+  isPhoneNumber,
+  isRepoUrl,
+  isRetailUrl,
+  isSocialMediaUrl,
+  isString,
+  isUrl,
+  isYouTubeCreatorUrl,
+  isYouTubeFeedUrl,
+  isYouTubeUrl,
+  isZipCode,
+  stripSurround,
+  toPascalCase,
+} from "inferred-types";
+import { isAliasedMdLink, isDateTime, isLink, isMdLink } from "~/type-guards";
 
 export function getPropertyType(p: KindModelPlugin) {
   return (value: unknown): PropertyType => {

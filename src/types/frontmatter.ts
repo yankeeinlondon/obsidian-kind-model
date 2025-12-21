@@ -52,8 +52,8 @@ export interface FmPropMetaSuggestions {
 export type Frontmatter = ExpandDictionary<
     {
       [key: string]: Narrowable;
-    } & FmPropSuggestions &
-    FmPropMetaSuggestions
+    } & FmPropSuggestions
+    & FmPropMetaSuggestions
 >;
 
 export interface CommonAttrs {

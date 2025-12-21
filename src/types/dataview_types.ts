@@ -97,16 +97,16 @@ export interface NegatedField {
 }
 
 /** A (potentially computed) field to select or compare against. */
-export type Field =
-    | BinaryOpField
-    | VariableField
-    | LiteralField
-    | FunctionField
-    | IndexField
-    | NegatedField
-    | LambdaField
-    | ObjectField
-    | ListField;
+export type Field
+  = | BinaryOpField
+      | VariableField
+      | LiteralField
+      | FunctionField
+      | IndexField
+      | NegatedField
+      | LambdaField
+      | ObjectField
+      | ListField;
 
 /** Literal representation of some field type. */
 export interface LiteralField {
@@ -487,14 +487,14 @@ export interface DvFileProperties {
   tasks: DataArray<unknown>;
 }
 
-type DvFileDataProps =
-    | "aliases"
-    | "etags"
-    | "inlinks"
-    | "lists"
-    | "outlinks"
-    | "tags"
-    | "tasks";
+type DvFileDataProps
+  = | "aliases"
+      | "etags"
+      | "inlinks"
+      | "lists"
+      | "outlinks"
+      | "tags"
+      | "tasks";
 
 export type DvFilePropertiesAsArray = Omit<
   DvFileProperties,
@@ -527,33 +527,33 @@ export interface DataObject {
   [key: string]: Literal;
 }
 /** The literal types supported by the query engine. */
-export type LiteralType =
-    | "boolean"
-    | "number"
-    | "string"
-    | "date"
-    | "duration"
-    | "link"
-    | "array"
-    | "object"
-    | "function"
-    | "null"
-    | "html"
-    | "widget";
+export type LiteralType
+  = | "boolean"
+      | "number"
+      | "string"
+      | "date"
+      | "duration"
+      | "link"
+      | "array"
+      | "object"
+      | "function"
+      | "null"
+      | "html"
+      | "widget";
 /** The raw values that a literal can take on. */
-export type Literal =
-    | boolean
-    | number
-    | string
-    | Luxon.DateTime
-    | Luxon.Duration
-    | Link
-    | Array<Literal>
-    | DataObject
-    | TypedFunction
-    | null
-    | HTMLElement
-    | Widget;
+export type Literal
+  = | boolean
+      | number
+      | string
+      | Luxon.DateTime
+      | Luxon.Duration
+      | Link
+      | Array<Literal>
+      | DataObject
+      | TypedFunction
+      | null
+      | HTMLElement
+      | Widget;
 
 /** A grouping on a type which supports recursively-nested groups. */
 export interface GroupElement<T> {
@@ -563,9 +563,9 @@ export interface GroupElement<T> {
 export type Grouping<T> = T[] | GroupElement<T>[];
 
 /** The meaning of the 'id' field for a data row - i.e., where it came from. */
-export type IdentifierMeaning =
-    | { type: "group"; name: string; on: IdentifierMeaning }
-    | { type: "path" };
+export type IdentifierMeaning
+  = | { type: "group"; name: string; on: IdentifierMeaning }
+      | { type: "path" };
 
 /** The result of executing a table query. */
 export interface TableResult {
@@ -596,11 +596,11 @@ export interface CalendarResult {
 }
 
 /** The result of executing a query of some sort. */
-export type QueryResult =
-    | TableResult
-    | ListResult
-    | TaskResult
-    | CalendarResult;
+export type QueryResult
+  = | TableResult
+      | ListResult
+      | TaskResult
+      | CalendarResult;
 
 export class DvSuccess<T, E> {
   public successful: true;
