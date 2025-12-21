@@ -77,7 +77,7 @@ export const VideoGallery = createHandlerV2("VideoGallery")
         const src = youtubeEmbed(v.url);
         const node = [
           `<div class="video-stack" style="display: flex; flex-direction: column; aspect-ratio: 1.75 auto">`,
-          `<iframe class="video-ref" content-editable="false" aria-multiline="true" allow="fullscreen" frameborder="0" sandbox="allow-same-origin allow-modals allow-popups allow-presentation allow-forms" src="${src}"></iframe>`,
+          `<iframe class="video-ref" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" frameborder="0" sandbox="allow-scripts allow-same-origin allow-modals allow-popups allow-presentation allow-forms" allowfullscreen src="${src}"></iframe>`,
           `<a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link data-link-icon data-link-text" _target="_blank" rel="noopener" data-link-path="${v.filepath}" style="">${v.title}</a>`,
           `</div>`,
         ].join("\n");
