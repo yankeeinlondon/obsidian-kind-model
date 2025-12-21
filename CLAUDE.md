@@ -32,12 +32,20 @@ pnpm test
 # Run single test file
 pnpm test path/to/test.test.ts
 
+# Test with UI
+pnpm test:watch
+
 # Lint
 pnpm lint
 pnpm lint:fix
 
 # Push built files to Obsidian vault
 pnpm push
+# Note: Requires ~/obsidian symlink pointing to vault root
+# Push script: converts ESM → CJS via tsup, copies to plugin directory, touches .hotreload
+
+# Version bump
+pnpm release
 ```
 
 ## Architecture
@@ -52,24 +60,28 @@ pnpm push
 ### Core Systems
 
 **Caching (`src/startup/`)**
+
 - Kind/Type definitions cached from configuration file on load
 - Refreshed asynchronously after initialization
 - Lookups by tag (`lookupKindByTag`) and path (`lookupKindByPath`)
 - File monitoring via `on_xxx` event handlers updates cache
 
 **Page API (`src/page/`, `src/api/`)**
+
 - `getPage(ref)` - Returns `Page` (enhanced DvPage) from any page reference type
 - `getPageInfo(ref)` - Returns `PageInfo` with classification and relationship data
 - `getPageInfoBlock(ref, view)` - Returns `PageBlock` with DOM access and content structure
 - `createPageView(view)` - Creates `PageView` from Obsidian's MarkdownView
 
 **Query Handlers (`src/handlers/`)**
+
 - Process `km` codeblocks in markdown files
 - Each handler is a higher-order function (e.g., `Kind("software", "productivity")`)
 - Available: `BackLinks`, `VideoGallery`, `Kind`, `Book`, `PageEntry`, `IconPage`, `Accounts`, `Journal`, `Children`, `Tasks`, `Debug`
 - Created via `createHandler()` factory function
 
 **Codeblock Parser (`src/events/codeblockParser.ts`)**
+
 - Registers handler for `km` language codeblocks
 - Routes to appropriate query handler based on parsed content
 - Displays errors in UI when handler not found or parsing fails
@@ -77,6 +89,7 @@ pnpm push
 ### Type Imports
 
 Path aliases configured in `tsconfig.json`:
+
 - `~/` maps to `src/`
 - `test/` maps to `test/`
 
@@ -91,6 +104,7 @@ Path aliases configured in `tsconfig.json`:
 ### Globals (`src/globals.ts`)
 
 Exposes Obsidian runtime APIs:
+
 - `obApp` - Main API surface (vault, workspace, metadata, file operations)
 - `dvApi` - Dataview API surface
 - `moment` - Moment.js from Obsidian global
@@ -99,14 +113,27 @@ Exposes Obsidian runtime APIs:
 ### Event System (`src/events/`)
 
 File and editor event handlers:
+
 - `on_file_created`, `on_file_deleted`, `on_file_modified`
 - `on_editor_change`, `on_tab_change`, `on_layout_change`
 
-## Build Output
+## Build System
 
-- Vite builds to `dist/` with `main.mjs` entry file
-- `push` script copies built files to Obsidian vault for testing
-- External dependencies (obsidian, codemirror, etc.) not bundled
+### Build Output
+
+- Vite builds to `dist/` with `main.mjs` entry file (ESM format)
+- `push` script converts ESM → CJS using tsup, then copies to `~/obsidian/.obsidian/plugins/obsidian-kind-model/`
+- External dependencies (obsidian, codemirror, electron Node.js built-ins) not bundled
+- Source maps enabled for debugging
+- `pnpm dev` uses Vite watch mode with `push-on-update` plugin for live reload
+
+### Development Setup
+
+The `push` script requires a symlink or directory at `~/obsidian/` pointing to your test vault root. The script:
+
+1. Converts `dist/main.mjs` → `dist/main.js` using tsup
+2. Copies `main.js`, `manifest.json`, and `styles.css` to plugin directory
+3. Touches `.hotreload` to trigger Obsidian's hot-reload plugin
 
 ## Testing
 
@@ -133,6 +160,7 @@ export const MyHandler = createHandler("MyHandler")
 ```
 
 User invocation in markdown:
+
 ```km
 MyHandler("software", "development", {myOption: true})
 ```
@@ -140,6 +168,7 @@ MyHandler("software", "development", {myOption: true})
 ### TypeToken System
 
 Options use a TypeToken syntax for runtime validation:
+
 - `"string"`, `"number"`, `"bool"` - primitives
 - `"opt(T)"` - optional type
 - `"array(T)"` - array of type
@@ -151,6 +180,7 @@ See `docs/km-type-validation-and-parsing.md` for parsing internals and known lim
 ### Handler Event Object
 
 Handlers receive an event with:
+
 - `plugin` - KindModelPlugin instance
 - `page` - PageInfoBlock with page metadata
 - `options` - Parsed user options
@@ -175,6 +205,7 @@ The plugin uses two data sources with different freshness:
 - **Dataview**: For complex queries, page metadata, classifications
 
 Example - prefer MetadataCache for dedupe:
+
 ```typescript
 // Fresh - uses Obsidian's cache
 const outlinkPaths = new Set(obApp.resolvedLinksFor(page.path));
@@ -186,6 +217,7 @@ const outlinkPaths = new Set(page.outlinks.map(l => l.path));
 ### KM Block Re-rendering
 
 KM codeblocks re-render when:
+
 - The codeblock content is edited
 - The page is reloaded/tab switched
 - Layout changes occur
@@ -213,6 +245,7 @@ This enables composition and partial application throughout the codebase.
 ### Filter Chain Pattern
 
 When filtering data (like BackLinks), order filters by cost:
+
 1. Cheap Set lookups first (reduces data size)
 2. Expensive operations last (e.g., `getPageInfo` per item)
 
@@ -225,6 +258,7 @@ links = filterCompletedTasks(page)(links, options?.excludeCompletedTasks ?? true
 ### Conservative Filtering
 
 When data is unavailable, keep items rather than filter them:
+
 ```typescript
 const pageInfo = getPageInfo(p)(link);
 if (!pageInfo) return false;  // Don't match = don't exclude = keep the link
@@ -233,8 +267,18 @@ if (!pageInfo) return false;  // Don't match = don't exclude = keep the link
 ## Documentation
 
 - `docs/km-render-flow.md` - KM block rendering lifecycle and auto-refresh system
-- `docs/km-type-validation-and-parsing.md` - TypeToken parsing, validation, and known limitations
-- `docs/handlers.md` - Handler reference
+- `docs/km-handlers.md` - Handler reference and usage examples
+- `docs/km-type-guardrails.md` - TypeToken parsing, validation, and known limitations
 - `docs/page-api.md` - Page API documentation
 - `docs/types.md` - Type (not Kind) definition and inheritance
 - `docs/classification-hierarchy.md` - Type > Kind > Category > Subcategory structure
+- `docs/dependencies.md` - Project dependency documentation
+
+## Skills
+
+- you are STRONGLY ENCOURAGED to use the skills found in this repo. This includes:
+
+  - `obsidian` - detailed knowledge about how to develop an Obsidian plugin
+  - `browser` - detailed information on how to use HTML, CSS, JS, and browser API's effectively in an Obsidian plugin
+  - `electron` - information capabilities and constraints imposed by working inside of an Electron container (which Obsidian does)
+  - `arktype` - how to use the arktype library to build types which can be shared between the runtime and type systems as well as used in AI/LLM prompts to define data structures.

@@ -15,13 +15,18 @@ Before starting, ensure:
 2. You know which phase to execute
 3. All previous phases are complete (if applicable)
 
-## Step 0: Load the Testing Skill
+## Step 0: Load Required Skills
 
-Before proceeding, invoke the appropriate testing skill based on the project language:
+Before proceeding, activate the required skills for this Obsidian plugin project:
 
-- **TypeScript projects:** Invoke the `unit-testing` skill to load TDD knowledge and Vitest best practices
+**MUST LOAD (in order):**
+1. **obsidian** - Plugin development patterns, lifecycle, API usage
+2. **browser** - HTML, CSS, JS, and browser APIs in Obsidian context
+3. **electron** - Electron container capabilities and constraints
+4. **arktype** - Type sharing between runtime and type systems
+5. **unit-testing** - TDD knowledge and Vitest best practices (TypeScript projects)
 
-Use the Skill tool to activate the relevant skill.
+Read skill documentation from `.claude/skills/{skill-name}/SKILL.md` before starting implementation.
 
 ## Step 1: Identify the Phase
 
@@ -93,12 +98,13 @@ Ask the user:
    Grep: "import.*from.*types"
    ```
 
-6. **Reference Obsidian plugin patterns:**
+6. **Reference required skills:**
 
-   Read relevant Obsidian plugin development patterns:
-   - `.claude/skills/obsidian/SKILL.md` - Overview
-   - `.claude/skills/obsidian/plugin-development.md` - Plugin lifecycle and patterns
-   - `.claude/skills/obsidian/codemirror-6.md` - Editor integration (if applicable)
+   Ensure you've loaded and understood all required skills:
+   - `.claude/skills/obsidian/SKILL.md` - Plugin lifecycle, API patterns, architecture
+   - `.claude/skills/browser/SKILL.md` - DOM manipulation, events, CSS in Obsidian
+   - `.claude/skills/electron/SKILL.md` - Desktop capabilities, file system, security
+   - `.claude/skills/arktype/SKILL.md` - Type validation, runtime checks, schema design
 
 7. **Document findings in log file:**
 
@@ -374,12 +380,11 @@ Testing mistakes caught here save hours of debugging and rework later. If you're
    - Modify files specified in the plan
    - Implement key functions/classes as planned
 
-3. **Follow Obsidian plugin patterns:**
-   - Reference `.claude/skills/obsidian/` for patterns
-   - Plugin lifecycle: initialize in `onload()`, cleanup in `onunload()`
-   - Settings: use `loadData()` and `saveData()`
-   - UI: integrate with workspace API
-   - Events: use `registerEvent()` for cleanup
+3. **Follow skill patterns:**
+   - **obsidian**: Plugin lifecycle (`onload`/`onunload`), settings (`loadData`/`saveData`), workspace API
+   - **browser**: DOM manipulation, event handling, CSS best practices
+   - **electron**: File system access, IPC, security constraints
+   - **arktype**: Type validation for user inputs, schema definitions
 
 4. **Iterate rapidly:**
    - Run WIP tests frequently: `pnpm test WIP`
@@ -616,7 +621,7 @@ Testing mistakes caught here save hours of debugging and rework later. If you're
 - **TypeScript: Dual testing** - Include both runtime AND type tests where appropriate
 - **TypeScript: Integration** - NEVER separate runtime and type tests into different blocks
 - **Build verification** - Always verify `pnpm build` succeeds
-- **Obsidian patterns** - Reference `.claude/skills/obsidian/` for plugin-specific guidance
+- **Skills first** - Load and reference obsidian, browser, electron, and arktype skills before starting
 - **No hot reload** - Obsidian must be restarted to test plugin changes
 - **Markdown quality** - ALL markdown files (logs, plan updates) MUST be lint-free; linting errors make documents very hard to read
 
@@ -653,10 +658,10 @@ Testing mistakes caught here save hours of debugging and rework later. If you're
 
 Use this checklist to ensure you don't miss any steps:
 
-- [ ] Testing skill loaded (unit-testing)
+- [ ] **Required skills loaded:** obsidian, browser, electron, arktype, unit-testing
 - [ ] Plan and phase identified
 - [ ] **Blast radius extracted from plan**
-- [ ] **Existing code explored** (Obsidian patterns reviewed)
+- [ ] **Existing code explored** (skill patterns reviewed)
 - [ ] SNAPSHOT captured (baseline test state within blast radius)
 - [ ] **Starting failures documented**
 - [ ] LOG created in `.ai/logs/`

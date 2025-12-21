@@ -191,6 +191,15 @@ This is an Obsidian plugin project:
 - **Testing:** No hot reload - Obsidian must be restarted to test plugin changes
 - **Architecture patterns:** See .claude/skills/obsidian/ for Obsidian-specific patterns
 
+## Required Skills
+You MUST activate and reference these skills throughout execution:
+- **obsidian** - Plugin development patterns, lifecycle, API usage
+- **browser** - HTML, CSS, JS, and browser APIs in Obsidian context
+- **electron** - Electron container capabilities and constraints
+- **arktype** - Type sharing between runtime and type systems
+
+Read skill documentation from `.claude/skills/{skill-name}/SKILL.md` before starting work.
+
 ## Status Updates
 You MUST provide frequent status updates by outputting clear status messages:
 - When starting a sub-task
@@ -224,9 +233,11 @@ Load the guidelines for the principal owner and any supporting sub-agents:
 - .claude/agents/schema-architect.md
 - .claude/agents/feature-tester-typescript.md
 
-Also read Obsidian plugin development patterns:
-- .claude/skills/obsidian/SKILL.md
-- .claude/skills/obsidian/plugin-development.md
+Also read Obsidian plugin development skills (REQUIRED):
+- .claude/skills/obsidian/SKILL.md - Plugin patterns, lifecycle, API usage
+- .claude/skills/browser/SKILL.md - HTML, CSS, JS, browser APIs
+- .claude/skills/electron/SKILL.md - Electron capabilities and constraints
+- .claude/skills/arktype/SKILL.md - Type sharing and runtime validation
 
 ### Step 3: Execute Phase Work
 
@@ -253,10 +264,12 @@ Task({
 ## Context
 Read your expertise guidelines in: .claude/agents/[sub-agent-file].md
 
-## Obsidian Plugin Context
-Read Obsidian plugin patterns in:
-- .claude/skills/obsidian/SKILL.md
-- .claude/skills/obsidian/plugin-development.md
+## Required Skills (MUST READ)
+Before starting work, read these skills:
+- .claude/skills/obsidian/SKILL.md - Plugin patterns, lifecycle, API usage
+- .claude/skills/browser/SKILL.md - HTML, CSS, JS, browser APIs
+- .claude/skills/electron/SKILL.md - Electron capabilities and constraints
+- .claude/skills/arktype/SKILL.md - Type sharing and runtime validation
 
 ## Plan Context
 Read the full plan at: .ai/plans/[plan-file-name].md
@@ -760,11 +773,11 @@ Unlike web development, Obsidian doesn't support hot module replacement:
 - Consider this when planning manual testing steps
 
 ### Plugin Architecture
-Refer to `.claude/skills/obsidian/` for patterns:
-- Plugin lifecycle and initialization
-- Event system integration
-- Settings management
-- UI integration with Obsidian's workspace
+Reference required skills for implementation patterns:
+- **obsidian**: Plugin lifecycle, event system, settings, workspace integration
+- **browser**: DOM manipulation, CSS styling, event handling
+- **electron**: File system, IPC, security boundaries
+- **arktype**: Schema validation, runtime type checking
 
 ### No Database
 This plugin doesn't use a database:
@@ -783,4 +796,4 @@ This plugin doesn't use a database:
 5. **Validate incrementally** - Run tests after each phase, not just at the end
 6. **Keep context concise** - Sub-agents should return summaries, not full file contents
 7. **Build verification** - Always verify `pnpm build` succeeds after changes
-8. **Reference Obsidian patterns** - Use `.claude/skills/obsidian/` for plugin-specific guidance
+8. **Load skills first** - Ensure obsidian, browser, electron, and arktype skills are activated before work begins
