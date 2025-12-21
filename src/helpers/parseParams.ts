@@ -1,4 +1,6 @@
+import type { Type } from "arktype";
 import type { KindError } from "@yankeeinlondon/kind-error";
+import type { Dictionary } from "inferred-types";
 import type KindModelPlugin from "~/main";
 import type {
   OptionParams,
@@ -6,6 +8,7 @@ import type {
   ScalarDefn,
   ScalarParams,
 } from "~/types";
+import { type } from "arktype";
 import { isObject, isString, retainAfter, retainUntil } from "inferred-types";
 import { InvalidParameters, ParsingError } from "~/errors";
 
@@ -231,4 +234,211 @@ export function parseQueryParams(_p: KindModelPlugin) {
       });
     }
   };
+}
+
+/**
+ * Parse query parameters using ArkType schemas for validation.
+ *
+ * This is the new ArkType-based parser that provides:
+ * - Rich error messages with expected vs actual types
+ * - Type inference from schemas
+ * - Consistent validation across scalar and option params
+ *
+ * @param _p - The plugin instance (for logging)
+ * @returns A curried function that parses and validates query parameters
+ */
+export function parseQueryParamsWithArkType(_p: KindModelPlugin) {
+  return <TScalar extends Dictionary, TOptions extends Dictionary>(
+    name: string,
+    /** the raw string params */
+    raw: string,
+    /** ArkType schema for scalar parameters, or null if none */
+    scalarSchema: Type<TScalar> | null,
+    /** ArkType schema for options hash, or null if none */
+    optionsSchema: Type<TOptions> | null,
+  ): KindError | [TScalar, TOptions] => {
+    const invalid = InvalidParameters.rebase({
+      raw,
+      scalarSchema: scalarSchema?.expression,
+      optionsSchema: optionsSchema?.expression,
+    });
+    const parsingErr = ParsingError.rebase({
+      raw,
+      scalarSchema: scalarSchema?.expression,
+      optionsSchema: optionsSchema?.expression,
+    });
+
+    // Handle empty input
+    if (!raw || raw.trim() === "") {
+      // Validate empty input against schemas
+      const emptyScalar = {} as TScalar;
+      const emptyOptions = {} as TOptions;
+
+      if (scalarSchema) {
+        const scalarResult = scalarSchema(emptyScalar);
+        if (scalarResult instanceof type.errors) {
+          return invalid(
+            `The ${name} handler requires scalar parameters: ${scalarResult.summary}`,
+          );
+        }
+      }
+
+      if (optionsSchema) {
+        const optionsResult = optionsSchema(emptyOptions);
+        if (optionsResult instanceof type.errors) {
+          // Options schemas should typically accept empty objects (all optional)
+          // but if not, report the error
+          return invalid(
+            `The ${name} handler options validation failed: ${optionsResult.summary}`,
+          );
+        }
+      }
+
+      return [emptyScalar, emptyOptions];
+    }
+
+    try {
+      // Convert JS object literal syntax to JSON before parsing
+      const jsonCompatible = jsObjectToJson(raw);
+      const parsed = JSON.parse(`[ ${jsonCompatible} ]`) as unknown[];
+
+      // Find the options hash (if present)
+      const optionsPosition = parsed.findIndex(i => isObject(i));
+      const hasOptionsHash = optionsPosition !== -1;
+
+      const rawOptionsHash = hasOptionsHash ? parsed[optionsPosition] : {};
+      const scalarParams = optionsPosition === -1
+        ? parsed
+        : parsed.slice(0, optionsPosition);
+
+      // Validate options hash position
+      const optionsInTerminalPosition
+        = optionsPosition === -1 || optionsPosition === parsed.length - 1;
+
+      if (!optionsInTerminalPosition) {
+        return invalid(
+          `Kind Model query syntax requires that any options hash parameter provided be provided as the LAST parameter but the ${optionsPosition + 1} element was the options hash on a parameter array which had ${parsed.length} parameters.`,
+        );
+      }
+
+      // Build scalar object from positional params
+      // For ArkType schemas, we need to know the expected keys
+      // For now, we use a simple approach: if scalarSchema has keys, map params to those keys
+      let scalarObject: Record<string, unknown> = {};
+
+      if (scalarSchema) {
+        // Extract expected keys from the schema's description
+        // ArkType schemas expose their structure - we use this for mapping
+        const schemaKeys = getSchemaKeys(scalarSchema);
+
+        for (let i = 0; i < schemaKeys.length && i < scalarParams.length; i++) {
+          scalarObject[schemaKeys[i]] = scalarParams[i];
+        }
+      }
+      else if (scalarParams.length > 0) {
+        // No ArkType schema but params provided - pass through for TypeToken handlers
+        // (Hybrid handlers use TypeToken for scalars and ArkType for options)
+        scalarObject = scalarParams.reduce((acc, val, idx) => {
+          acc[`param${idx}`] = val;
+          return acc;
+        }, {} as Record<string, unknown>);
+      }
+
+      // Validate scalar params with ArkType
+      let validatedScalar: TScalar = {} as TScalar;
+      if (scalarSchema) {
+        const scalarResult = scalarSchema(scalarObject);
+        if (scalarResult instanceof type.errors) {
+          const errors = scalarResult
+            .map(err => formatArkError(err))
+            .join("; ");
+          return invalid(
+            `The "${name}" handler received invalid scalar parameter(s): ${errors}`,
+          );
+        }
+        validatedScalar = scalarResult;
+      }
+
+      // Validate options with ArkType
+      let validatedOptions: TOptions = {} as TOptions;
+      if (optionsSchema) {
+        const optionsResult = optionsSchema(rawOptionsHash);
+        if (optionsResult instanceof type.errors) {
+          const errors = optionsResult
+            .map(err => formatArkError(err))
+            .join("; ");
+          return invalid(
+            `The "${name}" handler received invalid option(s): ${errors}`,
+          );
+        }
+        validatedOptions = optionsResult;
+      }
+      else if (hasOptionsHash) {
+        // No schema but options provided - pass through
+        validatedOptions = rawOptionsHash as TOptions;
+      }
+
+      return [validatedScalar, validatedOptions];
+    }
+    catch (e) {
+      return parsingErr(`Problem parsing query parameters passed in: ${raw}!`, {
+        underlying: e,
+      });
+    }
+  };
+}
+
+/**
+ * Extract the keys from an ArkType object schema.
+ * Used to map positional scalar parameters to named keys.
+ */
+function getSchemaKeys(schema: Type<unknown>): string[] {
+  // ArkType schemas have an internal structure we can inspect
+  // The 'expression' property shows the schema definition
+  // For object schemas, we can extract keys from the structure
+
+  try {
+    // Access the schema's internal node structure
+    const expression = schema.expression;
+
+    // For simple object schemas like { kind: "string", "category?": "string" }
+    // the expression will contain key information
+
+    // Try to extract keys from the schema's description
+    if (typeof expression === "string") {
+      // Parse keys from expression like "{ kind: string, category?: string }"
+      const keyMatch = expression.match(/\{([^}]+)\}/);
+      if (keyMatch) {
+        const content = keyMatch[1];
+        // Match key names (with optional ?)
+        const keys = content.match(/(\w+)\??:/g);
+        if (keys) {
+          return keys.map(k => k.replace(/\??:$/, ""));
+        }
+      }
+    }
+
+    // Fallback: try to get keys from the schema's internal structure
+    // @ts-expect-error - accessing internal ArkType structure
+    const internal = schema.internal ?? schema.t ?? schema;
+    if (internal && typeof internal === "object" && "props" in internal) {
+      // @ts-expect-error - accessing internal structure
+      return Object.keys(internal.props);
+    }
+  }
+  catch {
+    // If we can't extract keys, return empty array
+  }
+
+  return [];
+}
+
+/**
+ * Format an ArkType error for display.
+ */
+function formatArkError(err: { message: string; path: (string | number)[]; expected: string; actual?: string }): string {
+  const path = err.path.length > 0 ? ` at "${err.path.join(".")}"` : "";
+  const expected = err.expected ? ` (expected ${err.expected}` : "";
+  const actual = err.actual ? `, got ${err.actual})` : expected ? ")" : "";
+  return `${err.message}${path}${expected}${actual}`;
 }

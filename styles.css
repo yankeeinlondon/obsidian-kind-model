@@ -45,3 +45,29 @@ If your plugin does not need CSS, delete this file.
 	white-space: nowrap;
 	vertical-align: top;
 }
+
+/* CodeMirror lint tooltips for km blocks */
+.cm-tooltip.cm-tooltip-lint {
+	background-color: var(--background-primary) !important;
+	border: 1px solid var(--background-modifier-border) !important;
+	color: var(--text-normal) !important;
+	padding: 8px 12px !important;
+	max-width: 400px !important;
+	font-size: var(--font-ui-small) !important;
+	line-height: 1.5 !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnostic {
+	color: var(--text-normal) !important;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnostic-error {
+	border-left: 3px solid var(--text-error) !important;
+	padding-left: 8px !important;
+}
+
+/* Force readable text in lint tooltips */
+.cm-tooltip-lint ul li {
+	color: var(--text-normal) !important;
+}

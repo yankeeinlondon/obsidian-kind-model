@@ -1,5 +1,5 @@
 import type { DvPage } from "~/types";
-
+import { type } from "arktype";
 import {
   isThisYear,
   isToday,
@@ -26,15 +26,35 @@ import {
 import { blockquote } from "~/api/formatting/blockquote";
 import { CALENDAR_DATE } from "~/constants";
 import { moment } from "~/globals";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
-export const Journal = createHandler("Journal")
-  .scalar()
-  .options({
-    thisYearFormat: "string",
-    otherYearFormat: "string",
-    fileFormat: "string",
-  })
+/**
+ * ArkType schema for Journal options.
+ */
+const JournalOptionsSchema = type({
+  "+": "reject",
+  "thisYearFormat?": "string",
+  "otherYearFormat?": "string",
+  "fileFormat?": "string",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Journal",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: JournalOptionsSchema,
+  description: "Displays a journal page header with date navigation and related events/meetings",
+  examples: [
+    "Journal()",
+    "Journal({fileFormat: \"journal/YYYY/YYYY-MM-DD\"})",
+  ],
+});
+
+export const Journal = createHandlerV2("Journal")
+  .noScalar()
+  .optionsSchema(JournalOptionsSchema)
   .handler(async (evt) => {
     const { page, plugin: p, render } = evt;
 

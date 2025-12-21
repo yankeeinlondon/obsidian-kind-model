@@ -2,7 +2,9 @@ import type { TupleToUnion } from "inferred-types";
 import type { Tag } from "../types/general";
 
 import type { DataArray, ObsidianTask } from "~/types";
-import { createHandler } from "./createHandler";
+import { type } from "arktype";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 export const COLUMN_CHOICES = [
   "when",
@@ -47,11 +49,30 @@ export interface BackLinkOptions {
 }
 
 /**
- * Renders any tasks on other pages which refernce the given page
+ * Empty schema for handlers with no options.
  */
-export const Tasks = createHandler("Tasks")
-  .scalar()
-  .options()
+const TasksOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Tasks",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: TasksOptionsSchema,
+  description: "Shows tasks from other pages that reference the current page",
+  examples: [
+    "Tasks()",
+  ],
+});
+
+/**
+ * Renders any tasks on other pages which reference the given page
+ */
+export const Tasks = createHandlerV2("Tasks")
+  .noScalar()
+  .optionsSchema(TasksOptionsSchema)
   .handler(async (evt) => {
     const { page, createTable, dv } = evt;
 

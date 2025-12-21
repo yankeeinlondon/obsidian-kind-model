@@ -1,9 +1,11 @@
 import type KindModelPlugin from "~/main";
 import type { KindClassification, KindClassifiedCategory, PageInfoBlock, PageSubcategory } from "~/types";
+import { type } from "arktype";
 import { htmlLink } from "~/api";
 import { asDisplayTag } from "~/helpers";
 import { isFuturePage, isPageReference } from "~/type-guards";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 function showCategories(p: KindModelPlugin) {
   return <
@@ -41,9 +43,29 @@ function showSubcategories(p: KindModelPlugin) {
   };
 }
 
-export const Debug = createHandler("Debug")
-  .scalar()
-  .options()
+/**
+ * Empty schema for handlers with no options.
+ * Uses strict mode to reject any unknown keys.
+ */
+const DebugOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Debug",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: DebugOptionsSchema,
+  description: "Shows debug information about the current page",
+  examples: [
+    "Debug()",
+  ],
+});
+
+export const Debug = createHandlerV2("Debug")
+  .noScalar()
+  .optionsSchema(DebugOptionsSchema)
   .handler(async (evt) => {
     const { page, render, plugin: p } = evt;
 

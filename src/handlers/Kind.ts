@@ -1,23 +1,51 @@
 import type { DvPage } from "~/types";
+import { type } from "arktype";
 import { asArray, isString } from "inferred-types";
 import { getPageType } from "~/api";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
-export const Kind = createHandler("Kind")
-  .scalar(
-    "kind AS string",
-    "category AS opt(string)",
-    "subcategory AS opt(string)",
-  )
-  .options({
-    /**
-     * control whether all pages within scope or only true "kinded" pages
-     * are displayed.
-     */
-    noClassificationResults: "boolean",
-    show: "array(string)",
-    hide: "array(string)",
-  })
+/**
+ * ArkType schema for Kind scalar parameters.
+ * Represents: Kind(kind, category?, subcategory?)
+ */
+const KindScalarSchema = type({
+  kind: "string",
+  "category?": "string",
+  "subcategory?": "string",
+});
+
+/**
+ * ArkType schema for Kind options.
+ */
+const KindOptionsSchema = type({
+  "+": "reject",
+  /**
+   * Control whether all pages within scope or only true "kinded" pages are displayed.
+   */
+  "noClassificationResults?": "boolean",
+  "show?": "string[]",
+  "hide?": "string[]",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Kind",
+  scalarSchema: KindScalarSchema,
+  optionsSchema: KindOptionsSchema,
+  acceptsScalars: true,
+  description: "Displays pages matching a kind/category/subcategory classification",
+  examples: [
+    "Kind(\"software\")",
+    "Kind(\"software\", \"development\")",
+    "Kind(\"software\", \"development\", \"ide\")",
+    "Kind(\"software\", {hide: [\"Links\"]})",
+  ],
+});
+
+export const Kind = createHandlerV2("Kind")
+  .scalarSchema(KindScalarSchema)
+  .optionsSchema(KindOptionsSchema)
   .handler(async (evt) => {
     const { createTable, plugin, dv, report, options } = evt;
     const noClassificationResult = options.noClassificationResults || true;

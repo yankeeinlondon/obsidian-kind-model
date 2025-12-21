@@ -1,16 +1,41 @@
 import type { YouTubeVideoUrl } from "inferred-types";
 import type { PageContent } from "../helpers/pageContent";
 import type { PagePath } from "../types/general";
+import { type } from "arktype";
 import { pageContent } from "../helpers/pageContent";
 import { youtubeEmbed } from "../helpers/youtube";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 /**
- * Renders the entry or beginning of a page (right under H1)
+ * ArkType schema for VideoGallery options.
+ * Size enum: S (small), M (medium), L (large)
  */
-export const VideoGallery = createHandler("VideoGallery")
-  .scalar()
-  .options({ size: "opt(enum(S,M,L))" })
+const VideoGalleryOptionsSchema = type({
+  "+": "reject",
+  "size?": "'S' | 'M' | 'L'",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "VideoGallery",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: VideoGalleryOptionsSchema,
+  description: "Displays a gallery of YouTube videos from pages that link to this page",
+  examples: [
+    "VideoGallery()",
+    "VideoGallery({size: \"M\"})",
+    "VideoGallery({size: \"L\"})",
+  ],
+});
+
+/**
+ * Renders a gallery of YouTube videos from backlinks
+ */
+export const VideoGallery = createHandlerV2("VideoGallery")
+  .noScalar()
+  .optionsSchema(VideoGalleryOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page, render } = evt;
 

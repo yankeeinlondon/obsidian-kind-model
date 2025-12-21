@@ -9,6 +9,12 @@ import { isObject } from "inferred-types";
 import { Notice } from "obsidian";
 import { renderApi } from "~/api";
 import { ERROR_ICON } from "~/constants";
+import {
+  formatArkTypeErrors,
+  formatUnknownHandlerError,
+  isArkTypeError,
+} from "~/handlers/error-display";
+import { getHandlerMetadata } from "~/handlers/registry";
 import { isError } from "~/type-guards";
 import { getKmBlockTracker } from "./km-block-refresh";
 
@@ -187,15 +193,39 @@ function handleOutcomes(
       // Check if debug mode is enabled via log level
       const isDebugMode = p.settings.log_level === "debug";
 
+      // Check if this is an ArkType validation error
+      const arkTypeErrors = isArkTypeError(err) ? err : null;
+
       // Build enhanced error content with context
-      const errorContent = [
+      const errorContent: string[] = [
         `<b>Handler:</b>&nbsp;${format.inline_codeblock(handlerName)}`,
         `<b>Query:</b>&nbsp;${format.inline_codeblock(source?.trim() || "")}`,
-        `<b>Error:</b>&nbsp;${err?.message || String(err)}`,
-        isDebugMode && err?.stack
-          ? `<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`
-          : null,
-      ].filter(Boolean) as string[];
+      ];
+
+      if (arkTypeErrors) {
+        // Format ArkType errors with suggestions
+        errorContent.push(...formatArkTypeErrors(arkTypeErrors, handlerName));
+      }
+      else {
+        // Regular error message
+        errorContent.push(`<b>Error:</b>&nbsp;${err?.message || String(err)}`);
+      }
+
+      // Add stack trace in debug mode
+      if (isDebugMode && err?.stack) {
+        errorContent.push(`<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`);
+      }
+
+      // Add handler documentation link if available
+      const meta = getHandlerMetadata(handlerName);
+      if (meta?.examples?.length) {
+        errorContent.push(`<br/><b>Examples:</b>`);
+        errorContent.push(`<ul style="margin-top: 4px;">`);
+        for (const example of meta.examples) {
+          errorContent.push(`<li><code>${example}</code></li>`);
+        }
+        errorContent.push(`</ul>`);
+      }
 
       render.callout(
         "error",
@@ -210,10 +240,14 @@ function handleOutcomes(
       new Notice(`Kind Model: Error in ${handlerName} handler. Check the document for details.`, 5000);
     }
     else {
+      // Unknown handler - show suggestions
+      const errorContent = formatUnknownHandlerError(source);
+
       render.callout(
         "error",
-        `The KM query "${source}" is not recognized!`,
+        `Unknown KM Handler`,
         {
+          content: errorContent,
           icon: ERROR_ICON,
         },
       );

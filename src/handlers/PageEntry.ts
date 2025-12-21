@@ -1,4 +1,5 @@
 import type { DvPage } from "~/types";
+import { type } from "arktype";
 import {
   ensureTrailing,
   isCssAspectRatio,
@@ -10,14 +11,36 @@ import {
 import { getInternalLinks } from "~/api";
 import { MARKDOWN_PAGE_ICON } from "~/constants";
 import { find_in, isWikipediaUrl } from "~/type-guards";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
+
+/**
+ * ArkType schema for PageEntry options.
+ */
+const PageEntryOptionsSchema = type({
+  "+": "reject",
+  "verbose?": "boolean",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "PageEntry",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: PageEntryOptionsSchema,
+  description: "Renders the entry/header section of a page with classification and description",
+  examples: [
+    "PageEntry()",
+    "PageEntry({verbose: true})",
+  ],
+});
 
 /**
  * Renders the entry or beginning of a page (right under H1)
  */
-export const PageEntry = createHandler("PageEntry")
-  .scalar()
-  .options({ verbose: "opt(bool)" })
+export const PageEntry = createHandlerV2("PageEntry")
+  .noScalar()
+  .optionsSchema(PageEntryOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page } = evt;
 

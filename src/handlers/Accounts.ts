@@ -1,15 +1,36 @@
 import type { CssDefinition } from "inferred-types";
 import type { DvPage } from "~/types";
+import { type } from "arktype";
 import { isArray } from "inferred-types";
 import { getPropOfType } from "~/api";
 import { getPage } from "~/page";
 import { isPageReference } from "~/type-guards";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
 import { span } from "./fmt";
+import { registerHandler } from "./registry";
 
-export const Accounts = createHandler("Accounts")
-  .scalar()
-  .options()
+/**
+ * Empty schema for handlers with no options.
+ */
+const AccountsOptionsSchema = type({
+  "+": "reject",
+});
+
+// Register the handler with the registry
+registerHandler({
+  name: "Accounts",
+  scalarSchema: null,
+  acceptsScalars: false,
+  optionsSchema: AccountsOptionsSchema,
+  description: "Displays account information from the current page's accounts property",
+  examples: [
+    "Accounts()",
+  ],
+});
+
+export const Accounts = createHandlerV2("Accounts")
+  .noScalar()
+  .optionsSchema(AccountsOptionsSchema)
   .handler(async (evt) => {
     const { page, plugin, createTable } = evt;
     function sortDvPages(pages: DvPage[]): DvPage[] {

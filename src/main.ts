@@ -5,6 +5,7 @@ import type { Logger } from "./utils/logging";
 import { Plugin } from "obsidian";
 import { getAPI } from "obsidian-dataview";
 import { add_commands } from "~/commands/index";
+import { km_lang } from "~/utils/language/km_lang";
 
 import { api } from "./api/api";
 import { SettingsTab } from "./config-ui";
@@ -115,6 +116,9 @@ export default class KindModelPlugin extends Plugin {
 
     // Setup auto-refresh for KM blocks (before registering the parser)
     setupKmBlockRefresh(this);
+
+    // Register CodeMirror extension for `km` blocks autocomplete
+    this.registerEditorExtension(km_lang(this));
 
     // `km` code blocks
     codeblockParser(this);

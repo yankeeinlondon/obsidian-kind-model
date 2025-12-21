@@ -69,6 +69,7 @@
 		"@popperjs/core": "^2.11.8",
 		"@yankeeinlondon/happy-wrapper": "^3.5.7",
 		"@yankeeinlondon/kind-error": "^1.4.1",
+		"arktype": "^2.1.29",
 		"inferred-types": "^1.4.5",
 		"vue": "^3.5.25",
 		"xxhash-wasm": "^1.1.0",

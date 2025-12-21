@@ -3,10 +3,12 @@ import type { Tag } from "../types/general";
 
 import type KindModelPlugin from "~/main";
 import type { DataArray, Link, PageInfoBlock } from "~/types";
+import { type } from "arktype";
 import { stripLeading } from "inferred-types";
 import { obApp } from "~/globals";
 import { getPage, getPageInfo } from "~/page";
-import { createHandler } from "./createHandler";
+import { createHandlerV2 } from "./createHandler";
+import { registerHandler } from "./registry";
 
 export const COLUMN_CHOICES = [
   "when",
@@ -260,16 +262,46 @@ function keepPage(p: KindModelPlugin) {
 }
 
 /**
+ * ArkType schema for BackLinks options.
+ * This is the single source of truth for both runtime validation and TypeScript types.
+ *
+ * Translation from TypeToken:
+ * - "array(string)" → "string[]"
+ * - "opt(bool)" → "boolean" with optional key "?"
+ * - "opt(string|array(string))" → "string | string[]" with optional key "?"
+ */
+export const BackLinksOptionsSchema = type({
+  "+": "reject", // Reject unknown keys (matches TypeToken behavior)
+  "ignoreTags?": "string[]",
+  "dedupe?": "boolean",
+  "exclude?": "string | string[]",
+  "excludeCompletedTasks?": "boolean",
+});
+
+/** Inferred type from the schema */
+export type BackLinksSchemaOptions = typeof BackLinksOptionsSchema.infer;
+
+// Register the handler with the registry
+registerHandler({
+  name: "BackLinks",
+  scalarSchema: null,
+  optionsSchema: BackLinksOptionsSchema,
+  acceptsScalars: false,
+  description: "Shows pages that link to the current page",
+  examples: [
+    "BackLinks()",
+    "BackLinks({dedupe: false})",
+    "BackLinks({exclude: \"software\"})",
+    "BackLinks({exclude: [\"software\", \"hardware/automation\"]})",
+  ],
+});
+
+/**
  * Renders back links for any obsidian page
  */
-export const BackLinks = createHandler("BackLinks")
-  .scalar()
-  .options({
-    ignoreTags: "array(string)",
-    dedupe: "opt(bool)",
-    exclude: "opt(string|array(string))", // Accepts single string or array of strings
-    excludeCompletedTasks: "opt(bool)",
-  })
+export const BackLinks = createHandlerV2("BackLinks")
+  .noScalar()
+  .optionsSchema(BackLinksOptionsSchema)
   .handler(async (evt) => {
     const { plugin: p, page, createTable, dv, options } = evt;
 

@@ -42,12 +42,10 @@ export default defineConfig({
       },
       external: [
         "obsidian",
-        "luxon",
         "@codemirror/autocomplete",
         "@codemirror/collab",
         "@codemirror/commands",
         "@codemirror/language",
-        "@codemirror/lint",
         "@codemirror/search",
         "@codemirror/state",
         "@codemirror/view",
