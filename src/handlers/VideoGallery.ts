@@ -50,10 +50,15 @@ function openVideo(card: HTMLElement, videoUrl: string): void {
     height: `${initialRect.height}px`,
   });
 
-  // Add HD thumbnail for smooth transition (positioned absolutely for crossfade)
+  // Add HD thumbnail and play overlay for smooth transition
   const hdThumbUrl = getYouTubeThumbnailHD(videoUrl);
   if (hdThumbUrl) {
-    clone.innerHTML = `<img src="${hdThumbUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1;">`;
+    clone.innerHTML = `
+      <img src="${hdThumbUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1;">
+      <div class="km-clone-play-overlay">
+        <div class="km-play-icon km-play-icon-hovered"></div>
+      </div>
+    `;
   }
 
   document.body.appendChild(clone);
@@ -94,6 +99,12 @@ function openVideo(card: HTMLElement, videoUrl: string): void {
       width: `${targetW}px`,
       height: `${targetH}px`,
     });
+
+    // Keep play icon visible for 400ms, then fade out
+    setTimeout(() => {
+      if (activeClone)
+        activeClone.classList.add("km-expanding");
+    }, 400);
   });
 
   // Load iframe after animation completes
@@ -138,6 +149,12 @@ function closeVideo(): void {
     width: `${initialRect.width}px`,
     height: `${initialRect.height}px`,
   });
+
+  // Fade play icon back in after 100ms (reverse of expansion)
+  setTimeout(() => {
+    if (activeClone)
+      activeClone.classList.remove("km-expanding");
+  }, 100);
 
   // Hide overlay
   document.body.classList.remove("km-video-active");
@@ -237,7 +254,7 @@ export const VideoGallery = createHandlerV2("VideoGallery")
       // Build DOM with thumbnails
       const dom = [
         `<div class="km-video-gallery" data-gallery-id="${galleryId}">`,
-        `  <div class="km-video-grid" style="grid-template-columns: repeat(${grid_cols}, 1fr);">`,
+        `  <div class="km-video-grid" style="grid-template-columns: repeat(${grid_cols}, minmax(0, 1fr));">`,
         ...videos.map((v, index) => {
           const thumbUrl = getYouTubeThumbnail(v.url);
           if (!thumbUrl)
@@ -251,7 +268,7 @@ export const VideoGallery = createHandlerV2("VideoGallery")
             `          <div class="km-play-icon"></div>`,
             `        </div>`,
             `      </div>`,
-            `      <a data-tooltip-position="top" aria-label="${v.filepath}" data-href="${v.filepath}" class="internal-link km-video-title" target="_blank" rel="noopener" data-link-path="${v.filepath}">${v.title}</a>`,
+            `      <a aria-label="${v.filepath}" data-href="${v.filepath}" class="km-video-title" data-link-path="${v.filepath}">${v.title}</a>`,
             `    </div>`,
           ].join("\n");
         }),
@@ -278,9 +295,27 @@ export const VideoGallery = createHandlerV2("VideoGallery")
         if (!videoUrl)
           return;
 
-        card.addEventListener("click", () => {
+        // Click handler for video expansion
+        card.addEventListener("click", (e) => {
+          // Don't expand if clicking the title link
+          if ((e.target as HTMLElement).classList.contains("km-video-title"))
+            return;
+
           openVideo(card as HTMLElement, videoUrl);
         });
+
+        // Click handler for title link navigation
+        const titleLink = card.querySelector(".km-video-title");
+        if (titleLink) {
+          titleLink.addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent video expansion
+            const linkPath = titleLink.getAttribute("data-link-path");
+            if (linkPath) {
+              // Use Obsidian's API to open the link
+              p.app.workspace.openLinkText(linkPath, "", false);
+            }
+          });
+        }
       });
 
       return true;

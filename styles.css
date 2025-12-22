@@ -115,19 +115,15 @@ body.km-video-active .km-video-gallery {
 /* Video card */
 .km-video-card {
 	cursor: pointer;
-	border-radius: 8px;
+	/* Allow grid items to shrink smaller than their content */
+	min-width: 0;
+	/* Prevent card from growing due to content */
 	overflow: hidden;
-	background: var(--background-secondary);
-	transition: transform 0.3s ease;
 }
 
 .km-video-card.km-hidden {
 	opacity: 0;
 	pointer-events: none;
-}
-
-.km-video-card:hover {
-	transform: scale(1.05);
 }
 
 /* Thumbnail container */
@@ -136,6 +132,14 @@ body.km-video-active .km-video-gallery {
 	aspect-ratio: 16 / 9;
 	width: 100%;
 	overflow: hidden;
+	border-radius: 8px;
+	background: var(--background-secondary);
+	transition: transform 0.3s ease;
+}
+
+/* Only scale the thumbnail on hover, not the title */
+.km-video-card:hover .km-thumbnail-container {
+	transform: scale(1.05);
 }
 
 .km-thumbnail-container img {
@@ -143,11 +147,6 @@ body.km-video-active .km-video-gallery {
 	height: 100%;
 	object-fit: cover;
 	display: block;
-	transition: transform 0.3s ease;
-}
-
-.km-video-card:hover .km-thumbnail-container img {
-	transform: scale(1.05);
 }
 
 /* Play button overlay */
@@ -165,32 +164,65 @@ body.km-video-active .km-video-gallery {
 	background: rgba(0, 0, 0, 0.4);
 }
 
-/* CSS play button triangle */
+/* Circular backdrop behind play icon */
 .km-play-icon {
+	position: relative;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.km-video-card:hover .km-play-icon,
+.km-play-icon-hovered {
+	background: rgba(255, 255, 255, 0.3);
+	transform: scale(1.15);
+}
+
+/* Play button triangle inside the circle */
+.km-play-icon::after {
+	content: '';
 	width: 0;
 	height: 0;
 	border-style: solid;
-	border-width: 15px 0 15px 25px;
-	border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
-	filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+	border-width: 10px 0 10px 16px;
+	border-color: transparent transparent transparent rgba(255, 255, 255, 0.95);
+	margin-left: 3px; /* Slight offset to center visually */
 	transition: transform 0.2s ease;
+	filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
 }
 
-.km-video-card:hover .km-play-icon {
+.km-video-card:hover .km-play-icon::after,
+.km-play-icon-hovered::after {
 	transform: scale(1.2);
 }
 
 /* Video title link */
 .km-video-title {
 	display: block;
-	padding: 8px 12px;
-	font-size: 0.9em;
+	padding: 6px 0;
+	font-size: 0.85em;
 	text-decoration: none;
 	color: var(--text-normal);
+	cursor: pointer;
+	/* Single-line truncation - important to override Obsidian internal-link styles */
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	max-width: 100%;
+	/* Prevent the link from wrapping */
+	word-wrap: normal;
 }
 
 .km-video-title:hover {
 	color: var(--text-accent);
+	text-decoration: underline;
 }
 
 /* The animated clone (fixed position) */
@@ -202,6 +234,24 @@ body.km-video-active .km-video-gallery {
 	overflow: hidden;
 	transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Play overlay on the clone (fades out during expansion) */
+.km-clone-play-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2;
+	opacity: 1;
+	transition: opacity 0.5s ease;
+	pointer-events: none;
+}
+
+/* Fade out the play icon during expansion */
+.km-video-clone.km-expanding .km-clone-play-overlay {
+	opacity: 0;
 }
 
 /* Overlay/backdrop for click-to-close */
