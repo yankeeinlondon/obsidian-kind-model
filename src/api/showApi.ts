@@ -246,12 +246,13 @@ export function showLinks(p: KindModelPlugin) {
               ? "you_tube"
               : icon;
         p.debug(prop, pageIcon);
-        return `<a href="${url}" data-href="${url}" alt="${prop}" style="display: flex; align-items: baseline; padding-right: 2px" data-tooltip-position="top"><span class="link-icon" style="display: flex;width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+
+        return `<a href="${url}" data-href="${url}" alt="${prop}" class="km-external-link" style="display: inline-flex; align-items: baseline; padding-right: 2px;"><span class="link-icon" style="display: flex; width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
       };
       const links: [prop: string, link: string][] = [];
 
-      for (const prop of Object.keys(pg || {})) {
-        if (prop in page && isString(page[prop])) {
+      for (const prop of Object.keys(page || {})) {
+        if (prop in page) {
           // check if property is a HTTP link or an array of them
           if (Array.isArray(page[prop])) {
             page[prop].forEach((p: unknown) => {

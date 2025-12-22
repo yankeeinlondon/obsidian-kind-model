@@ -73,6 +73,18 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* ============================================
+   External Links
+   ============================================ */
+.km-external-link {
+	opacity: 0.7;
+	transition: opacity 0.2s ease-in-out;
+}
+
+.km-external-link:hover {
+	opacity: 1;
+}
+
+/* ============================================
    Accessibility - Screen Reader Only
    ============================================ */
 .sr-only {
