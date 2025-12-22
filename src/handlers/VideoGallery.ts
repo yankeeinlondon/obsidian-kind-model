@@ -3,7 +3,7 @@ import type { PageContent } from "../helpers/pageContent";
 import type { PagePath } from "../types/general";
 import { type } from "arktype";
 import { pageContent } from "../helpers/pageContent";
-import { getYouTubeThumbnail, getYouTubeThumbnailHD, youtubeEmbedWithApi } from "../helpers/youtube";
+import { extractVideoId, getYouTubeThumbnail, getYouTubeThumbnailHD } from "../helpers/youtube";
 import { createHandlerV2 } from "./createHandler";
 import { registerHandler } from "./registry";
 
@@ -16,6 +16,19 @@ let sourceCard: HTMLElement | null = null;
 let initialRect: DOMRect | null = null;
 let overlayElement: HTMLElement | null = null;
 let escHandler: ((e: KeyboardEvent) => void) | null = null;
+let activeIframe: HTMLIFrameElement | null = null;
+let messageListener: ((e: MessageEvent) => void) | null = null;
+let cachedPlayerState: YouTubePlayerState = {};
+
+/**
+ * YouTube player state tracking via postMessage API
+ */
+interface YouTubePlayerState {
+  currentTime?: number;
+  duration?: number;
+  playerState?: number; // -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+  videoId?: string;
+}
 
 /**
  * Get or create the global overlay element
@@ -28,6 +41,95 @@ function getOverlay(): HTMLElement {
     document.body.appendChild(overlayElement);
   }
   return overlayElement;
+}
+
+/**
+ * Set up YouTube IFrame API message listener for tracking player state
+ */
+function setupYouTubeMessageListener(iframe: HTMLIFrameElement): void {
+  // Clean up any existing listener
+  if (messageListener) {
+    window.removeEventListener("message", messageListener);
+  }
+
+  messageListener = (event: MessageEvent) => {
+    // Verify message is from YouTube
+    if (event.origin !== "https://www.youtube.com" && event.origin !== "https://releases.obsidian.md") {
+      return;
+    }
+
+    try {
+      const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+
+      // Cache player state changes
+      if (data.event === "onStateChange") {
+        cachedPlayerState.playerState = data.info;
+        console.log("[VideoGallery] Player state:", data.info);
+      }
+
+      // Cache time updates (happens frequently during playback)
+      if (data.event === "infoDelivery" && data.info) {
+        if (data.info.currentTime !== undefined) {
+          cachedPlayerState.currentTime = data.info.currentTime;
+        }
+        if (data.info.duration !== undefined) {
+          cachedPlayerState.duration = data.info.duration;
+        }
+        if (data.info.videoData?.video_id) {
+          cachedPlayerState.videoId = data.info.videoData.video_id;
+        }
+        console.log("[VideoGallery] Current time:", cachedPlayerState.currentTime, "Duration:", cachedPlayerState.duration);
+      }
+    }
+    catch (e) {
+      // Ignore parse errors from non-YouTube messages
+    }
+  };
+
+  window.addEventListener("message", messageListener);
+
+  // Request initial info from the player
+  iframe.onload = () => {
+    const existingOnload = iframe.onload;
+    if (iframe.contentWindow) {
+      // Tell YouTube we're listening
+      iframe.contentWindow.postMessage('{"event":"listening"}', "*");
+    }
+    // Call the existing onload if it was set
+    if (existingOnload && existingOnload !== iframe.onload) {
+      (existingOnload as any)();
+    }
+  };
+}
+
+/**
+ * Get current playhead position from active video (last known position from cache)
+ * @returns Current time in seconds, or null if no video is active or no data available
+ */
+export function getCurrentPlayheadPosition(): number | null {
+  return cachedPlayerState.currentTime ?? null;
+}
+
+/**
+ * Get the last known player state from message listener cache
+ * @returns YouTubePlayerState object with currentTime, duration, playerState, and videoId
+ */
+export function getPlayerState(): YouTubePlayerState {
+  return { ...cachedPlayerState };
+}
+
+/**
+ * Request fresh player info from YouTube (updates cache asynchronously)
+ * Use this before calling getPlayerState() if you need the most current data
+ */
+export function requestPlayerUpdate(): void {
+  if (!activeIframe?.contentWindow) {
+    return;
+  }
+  // Request current player info - results come back via postMessage and update cache
+  activeIframe.contentWindow.postMessage('{"event":"command","func":"getCurrentTime","args":""}', "*");
+  activeIframe.contentWindow.postMessage('{"event":"command","func":"getPlayerState","args":""}', "*");
+  activeIframe.contentWindow.postMessage('{"event":"command","func":"getDuration","args":""}', "*");
 }
 
 /**
@@ -113,14 +215,28 @@ function openVideo(card: HTMLElement, videoUrl: string): void {
       return;
 
     const iframe = document.createElement("iframe");
-    const embedUrl = youtubeEmbedWithApi(videoUrl as YouTubeVideoUrl);
-    iframe.src = `${embedUrl}&autoplay=1`;
-    iframe.allow = "autoplay; encrypted-media; fullscreen";
-    iframe.setAttribute("allowfullscreen", "true");
+    // Use Obsidian's YouTube proxy for iOS compatibility (same as native embeds)
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) {
+      console.error("[VideoGallery] Could not extract video ID from:", videoUrl);
+      return;
+    }
+    // Enable YouTube IFrame API for playhead tracking and metadata access
+    iframe.src = `https://releases.obsidian.md/youtube?v=${videoId}&autoplay=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+    // Allow necessary features for YouTube playback (no allowfullscreen attribute - it's deprecated)
+    iframe.allow = "autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture; clipboard-write";
     iframe.setAttribute("frameborder", "0");
+    // Match Obsidian's native embed attributes for iOS compatibility
+    iframe.setAttribute("sandbox", "allow-forms allow-presentation allow-same-origin allow-popups-to-escape-sandbox allow-scripts allow-modals allow-popups");
+    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    iframe.className = "external-embed mod-receives-events";
     iframe.style.cssText = "width:100%; height:100%; border:none; position:absolute; top:0; left:0; opacity:0; transition:opacity 0.5s ease; z-index:2;";
 
     clone.appendChild(iframe);
+    activeIframe = iframe;
+
+    // Set up YouTube API message listener for playhead tracking
+    setupYouTubeMessageListener(iframe);
 
     // Crossfade from thumbnail to iframe once loaded
     iframe.onload = () => {
@@ -165,6 +281,14 @@ function closeVideo(): void {
     document.removeEventListener("keydown", escHandler, { capture: true });
     escHandler = null;
   }
+
+  // Clean up YouTube API message listener
+  if (messageListener) {
+    window.removeEventListener("message", messageListener);
+    messageListener = null;
+  }
+  activeIframe = null;
+  cachedPlayerState = {}; // Reset cached state
 
   // After animation, cleanup
   setTimeout(() => {

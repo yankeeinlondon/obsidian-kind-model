@@ -56,7 +56,8 @@ export function youtubeEmbed(url: YouTubeVideoUrl): YouTubeEmbedUrl {
     const videoId = parts[parts.length - 1]?.split("?")[0]; // Remove any query params
 
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}` as YouTubeEmbedUrl;
+      // Use youtube-nocookie.com for better iOS/mobile compatibility
+      return `https://www.youtube-nocookie.com/embed/${videoId}` as YouTubeEmbedUrl;
     }
     else {
       throw new Error(
@@ -66,7 +67,9 @@ export function youtubeEmbed(url: YouTubeVideoUrl): YouTubeEmbedUrl {
   }
 
   // Fall back to the inferred-types implementation for standard URLs
-  return inferredYoutubeEmbed(url);
+  // but replace youtube.com with youtube-nocookie.com for iOS compatibility
+  const baseEmbed = inferredYoutubeEmbed(url);
+  return baseEmbed.replace("youtube.com", "youtube-nocookie.com") as YouTubeEmbedUrl;
 }
 
 /**
