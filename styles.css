@@ -71,3 +71,174 @@ If your plugin does not need CSS, delete this file.
 .cm-tooltip-lint ul li {
 	color: var(--text-normal) !important;
 }
+
+/* ============================================
+   Accessibility - Screen Reader Only
+   ============================================ */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+/* ============================================
+   VideoGallery - Simple Clone-Based Approach
+   ============================================ */
+
+/* Gallery container */
+.km-video-gallery {
+	width: 100%;
+	max-width: 1400px;
+	margin: 0 auto;
+	transition: filter 0.4s ease, opacity 0.4s ease;
+}
+
+/* Blur gallery when video is active */
+body.km-video-active .km-video-gallery {
+	filter: blur(10px);
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+/* Grid layout */
+.km-video-grid {
+	display: grid;
+	gap: 15px;
+}
+
+/* Video card */
+.km-video-card {
+	cursor: pointer;
+	border-radius: 8px;
+	overflow: hidden;
+	background: var(--background-secondary);
+	transition: transform 0.3s ease;
+}
+
+.km-video-card.km-hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.km-video-card:hover {
+	transform: scale(1.05);
+}
+
+/* Thumbnail container */
+.km-thumbnail-container {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	width: 100%;
+	overflow: hidden;
+}
+
+.km-thumbnail-container img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.3s ease;
+}
+
+.km-video-card:hover .km-thumbnail-container img {
+	transform: scale(1.05);
+}
+
+/* Play button overlay */
+.km-play-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.2);
+	transition: background 0.3s ease;
+}
+
+.km-video-card:hover .km-play-overlay {
+	background: rgba(0, 0, 0, 0.4);
+}
+
+/* CSS play button triangle */
+.km-play-icon {
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 15px 0 15px 25px;
+	border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
+	filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+	transition: transform 0.2s ease;
+}
+
+.km-video-card:hover .km-play-icon {
+	transform: scale(1.2);
+}
+
+/* Video title link */
+.km-video-title {
+	display: block;
+	padding: 8px 12px;
+	font-size: 0.9em;
+	text-decoration: none;
+	color: var(--text-normal);
+}
+
+.km-video-title:hover {
+	color: var(--text-accent);
+}
+
+/* The animated clone (fixed position) */
+.km-video-clone {
+	position: fixed;
+	z-index: 9999;
+	background: #000;
+	border-radius: 8px;
+	overflow: hidden;
+	transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Overlay/backdrop for click-to-close */
+.km-video-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.4s;
+	z-index: 9000;
+}
+
+.km-video-overlay.km-show {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+	.km-video-grid {
+		grid-template-columns: repeat(2, 1fr) !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.km-video-grid {
+		grid-template-columns: 1fr !important;
+	}
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.km-video-gallery,
+	.km-video-card,
+	.km-video-clone,
+	.km-video-overlay {
+		transition-duration: 0.01ms !important;
+	}
+}

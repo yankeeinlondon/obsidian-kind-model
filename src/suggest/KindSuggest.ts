@@ -1,19 +1,19 @@
 import type {
-  App,
-  Editor,
-  EditorPosition,
-  EditorSuggestContext,
-  EditorSuggestTriggerInfo,
+	App,
+	Editor,
+	EditorPosition,
+	EditorSuggestContext,
+	EditorSuggestTriggerInfo,
 } from "obsidian";
 import type KindModelPlugin from "~/main";
 
-import type { PageInfo } from "~/types";
 import {
-  EditorSuggest,
-  MarkdownView,
+	EditorSuggest,
+	MarkdownView,
 } from "obsidian";
 import { app } from "~/globals";
 import { getPageInfo } from "~/page";
+import type { PageInfo } from "~/types";
 import { isValidURL } from "~/utils";
 
 const electron = (window as any).require("electron");
@@ -44,7 +44,7 @@ export class KindSuggest extends EditorSuggest<string> {
     const beforeCursor = currentLine.substring(0, cursor.ch);
     const words = currentLine.split(/\s+/);
     const lastWord = words.pop() || "";
-    const lastWordLoc = currentLine.indexOf(lastWord);
+    const lastWordLoc = currentLine?.indexOf(lastWord);
     this.plugin.info(`lastWord: ${lastWord}`, isValidURL(lastWord));
 
     if (isValidURL(lastWord)) {

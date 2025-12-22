@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Gallery with Play Buttons</title>
+    <style>
+        :root { 
+            --bg: #0f0f0f; 
+            --play-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        body { 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 20px; 
+            font-family: sans-serif; 
+            overflow-x: hidden; 
+        }
+
+        /* 5x5 Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+            transition: filter 0.4s ease, opacity 0.4s ease;
+        }
+
+        body.active-mode .gallery { 
+            filter: blur(10px); 
+            opacity: 0.4; 
+            pointer-events: none; 
+        }
+
+        /* The Card Container */
+        .card {
+            background: #222;
+            aspect-ratio: 16/9;
+            cursor: pointer;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card.hidden { opacity: 0; pointer-events: none; }
+
+        .card img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover img { transform: scale(1.05); }
+
+        /* CSS Play Button Overlay */
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            transition: background 0.3s ease;
+        }
+
+        .card:hover .play-overlay { background: rgba(0,0,0,0.4); }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 15px 0 15px 25px;
+            border-color: transparent transparent transparent var(--play-color);
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover .play-icon { transform: scale(1.2); }
+
+        /* The Animated Clone */
+        .video-clone {
+            position: fixed;
+            z-index: 9999;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            opacity: 0; 
+            transition: opacity 0.5s; 
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .video-clone.ready iframe { opacity: 1; }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+            z-index: 9000;
+        }
+        #overlay.show { opacity: 1; pointer-events: auto; }
+    </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div class="gallery" id="gallery"></div>
+
+<script>
+    const gallery = document.getElementById('gallery');
+    const overlay = document.getElementById('overlay');
+    const VIDEO_ID = 'dQw4w9WgXcQ'; 
+
+    let activeClone = null;
+    let sourceCard = null;
+    let initialRect = null;
+
+    // Create 25 cards with Play Overlays
+    for (let i = 0; i < 25; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <img src="https://img.youtube.com/vi/${VIDEO_ID}/mqdefault.jpg">
+            <div class="play-overlay">
+                <div class="play-icon"></div>
+            </div>
+        `;
+        card.onclick = () => openVideo(card);
+        gallery.appendChild(card);
+    }
+
+    function openVideo(card) {
+        if (activeClone) return;
+
+        sourceCard = card;
+        initialRect = card.getBoundingClientRect();
+
+        const clone = document.createElement('div');
+        clone.className = 'video-clone';
+        
+        // Match initial card position
+        Object.assign(clone.style, {
+            top: initialRect.top + 'px',
+            left: initialRect.left + 'px',
+            width: initialRect.width + 'px',
+            height: initialRect.height + 'px'
+        });
+        
+        // Load the hi-res thumbnail for the transition
+        clone.innerHTML = `<img src="https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg" style="width:100%; height:100%; object-fit:cover;">`;
+        document.body.appendChild(clone);
+        activeClone = clone;
+
+        sourceCard.classList.add('hidden');
+        document.body.classList.add('active-mode');
+        overlay.classList.add('show');
+
+        void clone.offsetWidth; // Trigger transition
+
+        // Target: 95% width, centered
+        const targetW = window.innerWidth * 0.95;
+        const targetH = targetW * (9/16);
+        const targetTop = (window.innerHeight - targetH) / 2;
+        const targetLeft = (window.innerWidth - targetW) / 2;
+
+        Object.assign(clone.style, {
+            top: targetTop + 'px',
+            left: targetLeft + 'px',
+            width: targetW + 'px',
+            height: targetH + 'px'
+        });
+
+        // Initialize YouTube Player
+        setTimeout(() => {
+            if (!activeClone) return;
+            const iframe = document.createElement('iframe');
+            // 'origin' fix for local server hosting
+            const currentOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+            iframe.src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(currentOrigin)}`;
+            iframe.allow = "autoplay; encrypted-media";
+            iframe.allowFullscreen = true;
+            clone.appendChild(iframe);
+            iframe.onload = () => clone.classList.add('ready');
+        }, 500);
+    }
+
+    function closeVideo() {
+        if (!activeClone) return;
+        
+        activeClone.querySelector('iframe')?.remove();
+        activeClone.classList.remove('ready');
+
+        // Snap back to grid coordinates
+        Object.assign(activeClone.style, {
+            top: initialRect.top + 'px',
+            left: initialRect.left + 'px',
+            width: initialRect.width + 'px',
+            height: initialRect.height + 'px'
+        });
+
+        document.body.classList.remove('active-mode');
+        overlay.classList.remove('show');
+
+        setTimeout(() => {
+            if (activeClone) {
+                activeClone.remove();
+                activeClone = null;
+            }
+            if (sourceCard) sourceCard.classList.remove('hidden');
+        }, 500);
+    }
+
+    overlay.onclick = closeVideo;
+    window.onkeydown = (e) => { if (e.key === 'Escape') closeVideo(); };
+</script>
+
+</body>
+</html>

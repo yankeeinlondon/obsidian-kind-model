@@ -6,10 +6,10 @@
  * It detects codeblock boundaries and skips all other content.
  */
 import type { Diagnostic } from "@codemirror/lint";
-import type { EditorView } from "@codemirror/view";
 import { linter } from "@codemirror/lint";
+import type { EditorView } from "@codemirror/view";
 import { getAllHandlers, getHandlerMetadata } from "~/handlers/registry";
-import { getHandlerFromContext, parseKmContext } from "./km-parser";
+import { getHandlerFromContext } from "./km-parser";
 
 /**
  * Represents a km codeblock found in the document.
@@ -37,16 +37,18 @@ function findKmCodeblocks(doc: string): KmCodeblock[] {
 
   while ((match = regex.exec(doc)) !== null) {
     const fullMatch = match[0];
-    const content = match[1];
-    // Content starts after ```km\n
-    const contentStart = match.index + fullMatch.indexOf(content);
-    const contentEnd = contentStart + content.length;
-
-    blocks.push({
-      contentStart,
-      contentEnd,
-      content,
-    });
+	if(fullMatch) {
+		const content = match[1];
+		// Content starts after ```km\n
+		const contentStart = match.index + fullMatch?.indexOf(content);
+		const contentEnd = contentStart + content.length;
+	
+		blocks.push({
+		  contentStart,
+		  contentEnd,
+		  content,
+		});
+	}
   }
 
   return blocks;
@@ -285,7 +287,7 @@ function validateOptionKeys(text: string): ParseError[] {
     return errors;
   }
 
-  const optionsStart = text.indexOf("{") + 1;
+  const optionsStart = text?.indexOf("{") + 1;
   const optionsContent = optionsMatch[1];
 
   // Parse option keys
@@ -345,9 +347,9 @@ function validateScalarParams(text: string): ParseError[] {
   // If handler doesn't accept scalars, validate that none are provided
   if (!meta.acceptsScalars && paramsText && paramsText !== ")") {
     // Find the start and end of the scalar params
-    const openParenPos = text.indexOf("(");
-    const firstBracePos = text.indexOf("{");
-    const closeParenPos = text.indexOf(")");
+    const openParenPos = text?.indexOf("(");
+    const firstBracePos = text?.indexOf("{");
+    const closeParenPos = text?.indexOf(")");
 
     let paramsEnd = closeParenPos;
     if (firstBracePos !== -1 && (firstBracePos < closeParenPos || closeParenPos === -1)) {

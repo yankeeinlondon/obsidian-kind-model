@@ -1,8 +1,8 @@
 // Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
 
 import type { Instance as PopperInstance } from "@popperjs/core";
-import type { ISuggestOwner } from "obsidian";
 import { createPopper } from "@popperjs/core";
+import type { ISuggestOwner } from "obsidian";
 import { app, getScope } from "~/globals";
 
 type ScopeType = ReturnType<typeof getScope>;
@@ -62,14 +62,18 @@ class Suggest<T> {
   onSuggestionClick(event: MouseEvent, el: HTMLDivElement): void {
     event.preventDefault();
 
-    const item = this.suggestions.indexOf(el);
-    this.setSelectedItem(item, false);
-    this.useSelectedItem(event);
+    const item = this.suggestions?.indexOf(el);
+	if (item) {
+		this.setSelectedItem(item, false);
+		this.useSelectedItem(event);
+	}
   }
 
   onSuggestionMouseover(_event: MouseEvent, el: HTMLDivElement): void {
-    const item = this.suggestions.indexOf(el);
-    this.setSelectedItem(item, false);
+    const item = this.suggestions?.indexOf(el);
+	if (item) {
+		this.setSelectedItem(item, false);
+	}
   }
 
   setSuggestions(values: T[]) {

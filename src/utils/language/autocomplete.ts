@@ -1,15 +1,15 @@
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
-import type { Type } from "arktype";
-import type KindModelPlugin from "~/main";
 import { autocompletion } from "@codemirror/autocomplete";
+import type { Type } from "arktype";
 import { getAllHandlers, getHandlerMetadata } from "~/handlers/registry";
+import type KindModelPlugin from "~/main";
 import {
-  getHandlerFromContext,
-  getOptionStart,
-  isExpectingValue,
-  isInsideOptionsHash,
-  parseKmContext,
-  shouldShowHandlerCompletions,
+	getHandlerFromContext,
+	getOptionStart,
+	isExpectingValue,
+	isInsideOptionsHash,
+	parseKmContext,
+	shouldShowHandlerCompletions,
 } from "./km-parser";
 
 /**
@@ -30,7 +30,7 @@ function findKmCodeblockAtPosition(
     const fullMatch = match[0];
     const content = match[1];
     // Content starts after ```km\n
-    const contentStart = match.index + fullMatch.indexOf(content);
+    const contentStart = match.index + fullMatch?.indexOf(content);
     const contentEnd = contentStart + content.length;
 
     // Check if position is within this codeblock's content

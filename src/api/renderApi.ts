@@ -1,26 +1,26 @@
 import type { AsArray, Container, TypedFunction } from "inferred-types";
+import {
+	createFnWithProps,
+	isArray,
+	isContainer,
+	isFunction,
+	isNumber,
+	isString,
+} from "inferred-types";
 import type { DateTime, Duration } from "luxon";
 import type KindModelPlugin from "~/main";
 import type {
-  BlockQuoteOptions,
-  DataArray,
-  DvPage,
-  Grouping,
-  Link,
-  ListItemsCallback,
-  ObsidianCalloutColors,
-  SListItem,
-  UlApi,
-  UlCallback,
+	BlockQuoteOptions,
+	DataArray,
+	DvPage,
+	Grouping,
+	Link,
+	ListItemsCallback,
+	ObsidianCalloutColors,
+	SListItem,
+	UlApi,
+	UlCallback,
 } from "~/types";
-import {
-  createFnWithProps,
-  isArray,
-  isContainer,
-  isFunction,
-  isNumber,
-  isString,
-} from "inferred-types";
 
 import { getPage } from "~/page";
 import { isDvPage, isLink } from "~/type-guards";
@@ -95,7 +95,9 @@ export function renderApi(p: KindModelPlugin) {
        * dataview to render data to the page.
        */
       async render(data: unknown): Promise<void> {
-        await p.dv.renderValue(data, el, p, filePath, false);
+		if(p.dv) {
+			await p.dv.renderValue(data, el, p, filePath, false);
+		}
       },
 
       /** the current page represented as a `DvPage` */
