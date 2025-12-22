@@ -46,6 +46,31 @@ If your plugin does not need CSS, delete this file.
 	vertical-align: top;
 }
 
+/* Prevent text cursor in tables - use default cursor instead */
+.dataview.table-view-table {
+	cursor: default;
+}
+
+.dataview.table-view-table td,
+.dataview.table-view-table th {
+	cursor: default;
+}
+
+/* Ensure links still show pointer cursor */
+.dataview.table-view-table a {
+	cursor: pointer;
+}
+
+/* Optimize column widths - give first column more room before wrapping */
+.dataview.table-view-table td:first-child {
+	min-width: 120px;
+	max-width: 250px;
+}
+
+.dataview.table-view-table th:first-child {
+	min-width: 120px;
+}
+
 /* CodeMirror lint tooltips for km blocks */
 .cm-tooltip.cm-tooltip-lint {
 	background-color: var(--background-primary) !important;
@@ -75,13 +100,29 @@ If your plugin does not need CSS, delete this file.
 /* ============================================
    External Links
    ============================================ */
+.km-link-icons {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.25em;
+}
+
 .km-external-link {
+	display: inline-flex;
+	align-items: baseline;
+	line-height: 1;
 	opacity: 0.7;
 	transition: opacity 0.2s ease-in-out;
 }
 
 .km-external-link:hover {
 	opacity: 1;
+}
+
+.km-external-link svg {
+	width: 1em;
+	height: 1em;
+	display: inline-block;
+	vertical-align: -0.125em;
 }
 
 /* ============================================

@@ -247,7 +247,7 @@ export function showLinks(p: KindModelPlugin) {
               : icon;
         p.debug(prop, pageIcon);
 
-        return `<a href="${url}" data-href="${url}" alt="${prop}" class="km-external-link" style="display: inline-flex; align-items: baseline; padding-right: 2px;"><span class="link-icon" style="display: flex; width: auto; max-width: 24px; max-height: 24px; height: 24px">${icon}</span></a>`;
+        return `<a href="${url}" data-href="${url}" alt="${prop}" class="km-external-link">${icon}</a>`;
       };
       const links: [prop: string, link: string][] = [];
 
@@ -289,7 +289,7 @@ export function showLinks(p: KindModelPlugin) {
       };
 
       return links.length > 0
-        ? `<span style='display: flex; flex-direction: row;'>${links.map(prettify).join(" ")}</span>`
+        ? `<span class="km-link-icons">${links.map(prettify).join("")}</span>`
         : "";
     }
 
