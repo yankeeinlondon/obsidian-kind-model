@@ -13,9 +13,9 @@ function wrapAround(value: number, size: number): number {
 
 class Suggest<T> {
   private owner: ISuggestOwner<T>;
-  private values: T[];
-  private suggestions: HTMLDivElement[];
-  private selectedItem: number;
+  private values: T[] = [];
+  private suggestions: HTMLDivElement[] = [];
+  private selectedItem: number = 0;
   private containerEl: HTMLElement;
 
   constructor(
@@ -63,17 +63,17 @@ class Suggest<T> {
     event.preventDefault();
 
     const item = this.suggestions?.indexOf(el);
-	if (item) {
-		this.setSelectedItem(item, false);
-		this.useSelectedItem(event);
-	}
+    if (item !== undefined && item >= 0) {
+      this.setSelectedItem(item, false);
+      this.useSelectedItem(event);
+    }
   }
 
   onSuggestionMouseover(_event: MouseEvent, el: HTMLDivElement): void {
     const item = this.suggestions?.indexOf(el);
-	if (item) {
-		this.setSelectedItem(item, false);
-	}
+    if (item !== undefined && item >= 0) {
+      this.setSelectedItem(item, false);
+    }
   }
 
   setSuggestions(values: T[]) {
@@ -92,6 +92,9 @@ class Suggest<T> {
   }
 
   useSelectedItem(event: MouseEvent | KeyboardEvent) {
+    if (!this.values || this.values.length === 0) {
+      return;
+    }
     const currentValue = this.values[this.selectedItem];
     if (currentValue) {
       this.owner.selectSuggestion(currentValue, event);
@@ -99,6 +102,9 @@ class Suggest<T> {
   }
 
   setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
+    if (!this.suggestions || this.suggestions.length === 0) {
+      return;
+    }
     const normalizedIndex = wrapAround(selectedIndex, this.suggestions.length);
     const prevSelectedSuggestion = this.suggestions[this.selectedItem];
     const selectedSuggestion = this.suggestions[normalizedIndex];
@@ -109,7 +115,7 @@ class Suggest<T> {
     this.selectedItem = normalizedIndex;
 
     if (scrollIntoView) {
-      selectedSuggestion.scrollIntoView(false);
+      selectedSuggestion?.scrollIntoView(false);
     }
   }
 }

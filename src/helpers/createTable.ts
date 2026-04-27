@@ -109,7 +109,12 @@ function removeColumns<R extends string[][]>(
 
   // Find the indices of the columns to be removed
   for (const c of postRemoval) {
-    const idx = cols.findIndex(i => i.toLowerCase() === c.toLowerCase());
+    if (typeof c !== "string") {
+      continue;
+    }
+    const idx = cols.findIndex(
+      i => typeof i === "string" && i.toLowerCase() === c.toLowerCase(),
+    );
     if (idx !== -1) {
       indicesToRemove.push(idx);
     }
@@ -135,7 +140,12 @@ function removeColumns<R extends string[][]>(
 }
 
 function colIsEmpty(col: string, cols: string[], result: string[][]) {
-  const idx = cols.findIndex(i => i.toLowerCase() === col.toLowerCase());
+  if (typeof col !== "string") {
+    return false;
+  }
+  const idx = cols.findIndex(
+    i => typeof i === "string" && i.toLowerCase() === col.toLowerCase(),
+  );
   if (idx === -1) {
     return false;
   }
@@ -177,26 +187,27 @@ export function createTable<
 
   const partial = showApi(plugin);
   const { render } = pg;
-  const api = <P extends PageInfo>(page: P) => keysOf(partial).reduce(
-    (acc, key) => NO_PLUGIN.includes(key as any)
-      ? ({
-          ...acc,
-          [key]: (...args: any[]) => {
-            return NO_PAGE.includes(key as any)
-              ? (partial[key] as TypedFunction)(...args)
-              : (partial[key] as TypedFunction)(page, ...args);
-          },
-        })
-      : ({
-          ...acc,
-          [key]: (...args: any[]) => {
-            return NO_PAGE.includes(key as any)
-              ? (partial[key] as TypedFunction)(...args)
-              : (partial[key] as TypedFunction)(page, ...args);
-          },
-        }),
-    { page },
-  ) as unknown as QueryRecord;
+  const api = <P extends PageInfo>(page: P) =>
+    (Object.keys(partial) as Array<keyof ShowApi>).reduce(
+      (acc, key) => NO_PLUGIN.includes(key as any)
+        ? ({
+            ...acc,
+            [key]: (...args: any[]) => {
+              return NO_PAGE.includes(key as any)
+                ? (partial[key] as TypedFunction)(...args)
+                : (partial[key] as TypedFunction)(page, ...args);
+            },
+          })
+        : ({
+            ...acc,
+            [key]: (...args: any[]) => {
+              return NO_PAGE.includes(key as any)
+                ? (partial[key] as TypedFunction)(...args)
+                : (partial[key] as TypedFunction)(page, ...args);
+            },
+          }),
+      { page },
+    ) as unknown as QueryRecord;
 
   return <
     TCols extends readonly string[],
