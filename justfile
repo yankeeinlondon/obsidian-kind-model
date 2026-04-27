@@ -1,8 +1,11 @@
-set dotenv-load := true
-set positional-arguments := true
+set dotenv-load
+set positional-arguments
 
-BOLD := '\033[1m'
-RESET := '\033[0m'
+import "./just/devops.just"
+import "./just/ai.just"
+# import "./just/util.just"
+
+
 
 default:
     #!/usr/bin/env bash
@@ -31,19 +34,9 @@ watch:
     @echo ""
     pnpm test:watch
 
-# Start Claude Code in Yolo mode
-cc *args="":
-    @echo ""
-    @echo "Staring Claude Code (in yolo mode)"
-    @echo ""
-    @claude --dangerously-skip-permissions {{ args }}
+# run a comprehensive review 
+comprehensive-review: 
+	@claudine compose prompts/comprehensive-review.md -y
 
-# Start Opencode in Yolo mode
-oc *args="":
-    @echo ""
-    @echo "Staring Opencode CLI (in yolo mode)"
-    @echo ""
-    @OPENCODE_YOLO=true opencode {{ args }}
-
-commit:
-    @claudine compose "prompts/commit.md" --opencode -y
+plan:
+	target="$(just _choose_plan_target)"

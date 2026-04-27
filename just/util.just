@@ -139,6 +139,16 @@ _choose_plan filter="":
     fi
     echo "${file}"
 
+_choose_plan_target filter="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -z "{{filter}}" ]]; then
+        file="$(fd -g '*{review,spec,tech-design}*\.md' --exclude '_completed' | fzf --height=15 --border --border-label 'Choose a review file' )"
+    else
+        file="$(fd -g '*{review,spec,tech-design}*\.md' --exclude '_completed' | rg "{{filter}}" | fzf --height=15 --border --border-label 'Choose the review file' )"
+    fi
+    echo "${file}"
+
 _has_spec_file dir:
     #!/usr/bin/env bash
     set -euo pipefail
