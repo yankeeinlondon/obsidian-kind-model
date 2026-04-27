@@ -78,7 +78,11 @@ export const Kind = createHandlerV2("Kind")
     }
 
     const pages = dv.pages(queryParts.join(""))
-      .sort(i => [i.kind, i.category, i.subcategory])
+      .sort(i => [
+        typeof i.kind === "string" ? i.kind : "",
+        typeof i.category === "string" ? i.category : "",
+        typeof i.subcategory === "string" ? i.subcategory : "",
+      ])
       .where(where);
 
     if (options.hide) {
