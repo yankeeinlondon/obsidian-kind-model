@@ -32,6 +32,9 @@ import { isAliasedMdLink, isDateTime, isLink, isMdLink } from "~/type-guards";
 
 export function getPropertyType(p: KindModelPlugin) {
   return (value: unknown): PropertyType => {
+    if (value === undefined || value === null) {
+      return "empty";
+    }
     if (isMdLink(value)) {
       if (isAliasedMdLink(value)) {
         const [path, _link] = stripSurround("[", "]")(value).split("|");

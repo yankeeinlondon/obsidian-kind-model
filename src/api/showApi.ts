@@ -7,6 +7,7 @@ import {
   doesExtend,
   ensureLeading,
   isEmpty,
+  isIsoExplicitDate,
   isNumber,
   isString,
   isToday,
@@ -615,17 +616,24 @@ export function htmlLink(p: KindModelPlugin) {
     if (opt?.createPageWhereMissing && isValidPath(ref)) {
       const parts = ref.split("/");
       const display = opt.display || parts.pop() || "";
+      const normalizedDisplay = isString(display)
+        ? stripTrailing(display, ".md")
+        : display;
+      const relativeDisplay = isString(normalizedDisplay)
+          && isIsoExplicitDate(normalizedDisplay)
+        ? isToday(normalizedDisplay)
+          ? "today"
+          : isYesterday(normalizedDisplay)
+            ? "yesterday"
+            : isTomorrow(normalizedDisplay)
+              ? "tomorrow"
+              : display
+        : display;
 
       return internalLink(
         stripTrailing(ref, ".md"),
         ref,
-        isToday(display)
-          ? "today"
-          : isYesterday(display)
-            ? "yesterday"
-            : isTomorrow(display)
-              ? "tomorrow"
-              : display,
+        relativeDisplay,
       );
     }
 
