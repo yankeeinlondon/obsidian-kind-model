@@ -1,11 +1,12 @@
 import type KindModelPlugin from "~/main";
 import { Notice } from "obsidian";
 import { EventHandler } from "~/helpers/EventHandler";
+import { escapeRegExp } from "~/utils/html";
 
 export function on_file_deleted(plugin: KindModelPlugin) {
   EventHandler(plugin).onFileDeleted((evt) => {
     const kind_folder = plugin.settings.kind_folder;
-    const find = new RegExp(`^${kind_folder}$`);
+    const find = new RegExp(`^${escapeRegExp(kind_folder)}$`);
     if (find.test(evt?.path)) {
       new Notice("Kind file deleted");
     }

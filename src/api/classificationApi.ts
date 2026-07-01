@@ -23,6 +23,7 @@ import { getPage, getPageFromTagOrFuturePage } from "~/page";
 import { getKindPageByTag } from "~/page/getPageKinds";
 import { isDvPage, isFileLink, isPageInfo, isPageReference } from "~/type-guards";
 import { getCategories } from "./classification/getCategories";
+import { getSubcategories } from "./classification/getSubcategories";
 import { getPropertyType } from "./getPropertyType";
 
 /**

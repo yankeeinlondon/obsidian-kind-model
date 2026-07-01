@@ -131,7 +131,7 @@ function blockquote(
 export function span(text: string | number, fmt?: CssDefinition) {
   return `<span style="${cssFromDefinition(({
 	'font-weight': '400',
-	...fmt || {}
+	...fmt,
 }))}">${text}</span>`;
 }
 function italics(text: string | number, fmt?: Omit<StyleOptions, "fs">) {

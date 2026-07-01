@@ -12,7 +12,6 @@ import type { DataArray, PageInfo, PageInfoBlock, PageReference, ShowApi } from 
 import {
   createFnWithProps,
   isDefined,
-  keysOf,
 } from "inferred-types";
 import { showApi } from "~/api";
 import { getPageInfo } from "~/page";

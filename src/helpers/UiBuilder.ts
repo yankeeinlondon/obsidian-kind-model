@@ -100,6 +100,7 @@ function contextApi<
   };
 }
 function componentApi<TBase extends Record<string, any>, TGlobalOpt extends UiBuilderOptions>(el: HTMLElement, base: TBase, global_opt: TGlobalOpt, log_level: LogLevel) {
+  void el;
   return <TProp extends keyof TBase | null>(
     name: MaybeLazy<string>,
     desc: MaybeLazy<string>,

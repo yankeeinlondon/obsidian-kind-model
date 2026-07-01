@@ -81,7 +81,7 @@ function setupYouTubeMessageListener(iframe: HTMLIFrameElement): void {
         console.log("[VideoGallery] Current time:", cachedPlayerState.currentTime, "Duration:", cachedPlayerState.duration);
       }
     }
-    catch (e) {
+    catch {
       // Ignore parse errors from non-YouTube messages
     }
   };

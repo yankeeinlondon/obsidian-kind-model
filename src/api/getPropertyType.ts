@@ -31,6 +31,7 @@ import {
 import { isAliasedMdLink, isDateTime, isLink, isMdLink } from "~/type-guards";
 
 export function getPropertyType(p: KindModelPlugin) {
+  void p;
   return (value: unknown): PropertyType => {
     if (value === undefined || value === null) {
       return "empty";

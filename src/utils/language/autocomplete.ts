@@ -138,7 +138,7 @@ function createHandlerInfo(handler: {
 /**
  * Get completions for handler names.
  */
-function getHandlerCompletions(from: number): Completion[] {
+function getHandlerCompletions(_from: number): Completion[] {
   const handlers = getAllHandlers();
   return handlers.map(h => ({
     label: h.name,

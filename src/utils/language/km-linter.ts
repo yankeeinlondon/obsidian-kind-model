@@ -433,20 +433,11 @@ export const kmLinter = linter(
           const errors = validateKmBlock(line);
           // Adjust error positions to be relative to the document
           for (const error of errors) {
-            diagnostics.push({
-              from: block.contentStart + lineOffset + error.start,
-              to: block.contentStart + lineOffset + error.end,
-              severity: error.severity,
-              message: error.message,
-              actions: error.quickFixes?.map(fix => ({
-                name: fix.label,
-                apply: (v: EditorView, from: number, to: number) => {
-                  v.dispatch({
-                    changes: { from, to, insert: fix.replacement },
-                  });
-                },
-              })),
-            });
+            diagnostics.push(toCodeMirrorDiagnostic({
+              ...error,
+              start: block.contentStart + lineOffset + error.start,
+              end: block.contentStart + lineOffset + error.end,
+            }));
           }
         }
         lineOffset += line.length + 1; // +1 for newline
