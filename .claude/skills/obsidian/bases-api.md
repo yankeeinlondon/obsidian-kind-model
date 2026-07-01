@@ -1,388 +1,302 @@
 # Bases API
 
-The Bases API (Obsidian 1.10+) enables plugins to create custom database views that integrate with Obsidian's built-in Bases core plugin.
+The Bases plugin API enables plugins to register custom database views for Obsidian's built-in **Bases** core plugin.
+
+> Bases shipped as a core plugin in Obsidian **1.9.0**. The plugin-facing view API (`registerBasesView`, `BasesView`, etc.) is versioned **1.10.0** in the TypeScript definitions. Verified against the stable 1.12.x line (June 2026). The API is still young and has had breaking changes between minor releases (e.g. `shouldHide` lost its config argument in 1.12), so pin the `obsidian` types and re-check signatures after upgrades. Bases custom views are **desktop-focused**; some view options and plugins are desktop-only.
 
 ## Overview
 
-Bases lets users query vault metadata and display results in various layouts. The API allows plugins to register custom view types beyond the built-in table, list, cards, and map views.
+Bases queries vault metadata (frontmatter, file metadata, computed formulas) and displays results in configurable layouts. Built-in view types are **table**, **cards**, **list**, and **map** (map requires the Maps plugin). The API lets plugins register additional view types.
 
-## Architecture
+## Putting a Base in a Note
 
+Two mechanisms, both core (no plugin needed):
+
+- Embed a standalone `.base` file: `![[Tasks.base]]` or a specific view `![[Tasks.base#Open]]` (first view is used by default).
+- Inline a base directly in a note with a ` ```base ` code block containing `.base` YAML.
+
+## The `.base` File Format
+
+A `.base` file is YAML with up to five top-level keys:
+
+```yaml
+filters:               # dataset-wide conditions (also per-view; ANDed together)
+  and:
+    - file.hasTag("book")
+    - 'price > 0'
+formulas:              # computed properties, referenced as formula.<name>
+  formatted_price: 'if(price, price.toFixed(2) + " dollars")'
+properties:            # per-property config (display names, etc.)
+  note.price:
+    displayName: Price
+views:
+  - type: table        # table | cards | list | map | <plugin view type>
+    name: "Library"
+    limit: 50
+    filters: { ... }   # view-specific filters
+    order: [file.name, note.price]
+    groupBy:
+      property: note.author
+      direction: ASC
+    summaries:
+      formula.ppu: Average
 ```
-QueryController     # Manages queries, filtering, sorting
-    |
-BasesView           # Abstract class for custom views
-    |
-BasesQueryResult    # Filtered/sorted note entries
-```
+
+Property references use one of three prefixes (an unprefixed name implies `note.`):
+
+| Prefix     | Source               | Example                  |
+| ---------- | -------------------- | ------------------------ |
+| `note.`    | Frontmatter property | `note.price`             |
+| `file.`    | File metadata        | `file.name`, `file.mtime`, `file.tags`, `file.links`, `file.backlinks`, `file.size`, `file.ext`, `file.ctime` |
+| `formula.` | Another formula      | `formula.formatted_price`|
+
+Filter/formula statements are functions and operators evaluated as truthy/falsey (e.g. `file.hasTag(...)`, `file.hasLink(...)`, `.toFixed(...)`). See the official function reference for the full list, which expands frequently.
 
 ## Registering a Custom View
 
+`registerBasesView(type, registration)` takes a view-type id and a `BasesViewRegistration`. It returns a falsy value if Bases is not enabled in the vault.
+
 ```typescript
-import { Plugin } from 'obsidian';
+import { Plugin, BasesView, QueryController, IconName } from 'obsidian';
+
+export const ExampleViewType = 'example-view';
 
 export default class MyPlugin extends Plugin {
   async onload() {
-    this.registerBasesView('timeline-view', {
-      name: 'Timeline',
-      icon: 'lucide-calendar',
-      factory: (controller, containerEl) => {
-        return new TimelineView(controller, containerEl);
-      },
-      options: () => this.getViewOptions()
+    const registered = this.registerBasesView(ExampleViewType, {
+      name: 'Example',
+      icon: 'lucide-graduation-cap',
+      factory: (controller, containerEl) => new MyBasesView(controller, containerEl),
+      // Optional: user-configurable options shown in the view menu.
+      options: (config) => ([
+        {
+          type: 'text',
+          key: 'separator',
+          displayName: 'Property separator',
+          default: ' - ',
+        },
+      ]),
     });
-  }
 
-  getViewOptions(): ViewOption[] {
-    return [
-      {
-        type: 'dropdown',
-        displayName: 'Group By',
-        key: 'groupBy',
-        default: 'month',
-        options: [
-          { label: 'Day', value: 'day' },
-          { label: 'Month', value: 'month' },
-          { label: 'Year', value: 'year' }
-        ]
-      }
-    ];
+    if (!registered) {
+      console.warn('Bases is not enabled; custom view not registered.');
+    }
   }
 }
 ```
 
-## Creating a Custom View
+`BasesViewRegistration`:
 
 ```typescript
-import { BasesView, QueryController, BasesEntry } from 'obsidian';
+interface BasesViewRegistration {
+  name: string;                                            // label in the view selector
+  icon: IconName;                                          // Lucide icon
+  factory: (controller: QueryController, containerEl: HTMLElement) => BasesView;
+  options?: (config: BasesViewConfig) => BasesAllOptions[]; // optional view-config controls
+}
+```
 
-export class TimelineView extends BasesView {
-  readonly type = 'timeline-view';
+> Note: there is no per-view unregister API. Toggling a view off typically requires disabling/re-enabling the plugin or restarting Obsidian.
+
+## Creating a Custom View
+
+`BasesView` extends `Component` (not `ItemView`). The constructor is `protected` and takes the `QueryController`; call `super(controller)` and create your container from the `containerEl` passed to the factory. The only required override is `onDataUpdated()`.
+
+```typescript
+import {
+  BasesView, QueryController, BasesEntry,
+  HoverParent, HoverPopover, parsePropertyId,
+} from 'obsidian';
+
+export class MyBasesView extends BasesView implements HoverParent {
+  readonly type = ExampleViewType;
+  hoverPopover: HoverPopover | null = null;
   private containerEl: HTMLElement;
 
   constructor(controller: QueryController, parentEl: HTMLElement) {
     super(controller);
-    this.containerEl = parentEl.createDiv('timeline-container');
+    this.containerEl = parentEl.createDiv('bases-example-view-container');
   }
 
-  // Called when data changes
+  // Abstract: called whenever the query is re-executed (config or vault change).
+  // Treat the view as a thin renderer; do not retain references to results.
   public onDataUpdated(): void {
-    this.render();
-  }
-
-  private render(): void {
     this.containerEl.empty();
 
-    const data = this.controller.data;
-    if (!data?.entries) return;
+    const separator = String(this.config.get('separator') ?? ' - ');
+    const order = this.config.getOrder(); // BasesPropertyId[]
 
-    data.entries.forEach(entry => {
-      this.renderEntry(entry);
-    });
-  }
-
-  private renderEntry(entry: BasesEntry): void {
-    const entryEl = this.containerEl.createDiv('timeline-entry');
-
-    // File metadata
-    const title = entry.file?.name || 'Untitled';
-    const modified = entry.file?.mtime?.toLocaleDateString();
-
-    entryEl.createEl('h3', { text: title });
-    entryEl.createEl('small', { text: `Modified: ${modified}` });
-
-    // Access frontmatter properties
-    const status = entry.properties?.['status']?.value;
-    const priority = entry.properties?.['priority']?.value;
-
-    if (status) {
-      entryEl.createEl('span', {
-        cls: `status-badge status-${status.toLowerCase()}`,
-        text: status
-      });
-    }
-
-    // Access computed formulas
-    const daysLeft = entry.formulas?.['days-until-due']?.value;
-  }
-}
-```
-
-## View Configuration Options
-
-```typescript
-getViewOptions(): ViewOption[] {
-  return [
-    // Text input
-    {
-      type: 'text',
-      displayName: 'Title Property',
-      key: 'titleProperty',
-      default: 'file.name'
-    },
-
-    // Dropdown
-    {
-      type: 'dropdown',
-      displayName: 'Layout',
-      key: 'layout',
-      default: 'grid',
-      options: [
-        { label: 'Grid', value: 'grid' },
-        { label: 'List', value: 'list' }
-      ]
-    },
-
-    // Toggle
-    {
-      type: 'toggle',
-      displayName: 'Show Preview',
-      key: 'showPreview',
-      default: true
-    },
-
-    // Slider
-    {
-      type: 'slider',
-      displayName: 'Card Width',
-      key: 'cardWidth',
-      default: 300,
-      min: 200,
-      max: 600
-    }
-  ];
-}
-
-// Access config values
-private getConfigValue<T>(key: string, defaultValue: T): T {
-  return this.config?.options?.[key] ?? defaultValue;
-}
-```
-
-## Working with Entry Data
-
-### File Properties
-
-```typescript
-private renderEntry(entry: BasesEntry): void {
-  // File system metadata
-  const fileName = entry.file.name;
-  const filePath = entry.file.path;
-  const basename = entry.file.basename;
-  const extension = entry.file.extension;
-  const created = entry.file.ctime;
-  const modified = entry.file.mtime;
-
-  // Frontmatter properties
-  const tags = entry.properties?.['tags']?.value;
-  const status = entry.properties?.['status']?.value;
-  const dueDate = entry.properties?.['due-date']?.value;
-
-  // Formula results
-  const computed = entry.formulas?.['my-formula']?.value;
-}
-```
-
-### Opening Notes
-
-```typescript
-private async openNote(path: string): Promise<void> {
-  const file = this.app.vault.getAbstractFileByPath(path);
-  if (file instanceof TFile) {
-    await this.app.workspace.getLeaf().openFile(file);
-  }
-}
-```
-
-### Updating Properties
-
-```typescript
-private async updateProperty(
-  path: string,
-  property: string,
-  value: any
-): Promise<void> {
-  const file = this.app.vault.getAbstractFileByPath(path);
-  if (file instanceof TFile) {
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
-      fm[property] = value;
-    });
-  }
-}
-```
-
-## Advanced Patterns
-
-### Grouping Entries
-
-```typescript
-private groupBy(
-  entries: BasesEntry[],
-  property: string
-): Record<string, BasesEntry[]> {
-  return entries.reduce((acc, entry) => {
-    const key = entry.properties?.[property]?.value || 'Uncategorized';
-    (acc[key] ||= []).push(entry);
-    return acc;
-  }, {} as Record<string, BasesEntry[]>);
-}
-```
-
-### Virtual Scrolling
-
-For large datasets, render only visible items:
-
-```typescript
-private renderVirtualList(): void {
-  const itemHeight = 50;
-  const visibleCount = Math.ceil(this.containerEl.clientHeight / itemHeight);
-  const scrollTop = this.containerEl.scrollTop;
-  const startIndex = Math.floor(scrollTop / itemHeight);
-
-  const visibleEntries = this.controller.data?.entries.slice(
-    startIndex,
-    startIndex + visibleCount
-  ) || [];
-
-  this.contentEl.style.transform = `translateY(${startIndex * itemHeight}px)`;
-
-  visibleEntries.forEach(entry => this.renderEntry(entry));
-}
-```
-
-### Context Menus
-
-```typescript
-private setupContextMenu(element: HTMLElement, entry: BasesEntry): void {
-  element.addEventListener('contextmenu', (e) => {
-    const menu = new Menu();
-
-    menu.addItem(item =>
-      item.setTitle('Open Note')
-        .setIcon('lucide-file')
-        .onClick(() => this.openNote(entry.file.path))
-    );
-
-    menu.addItem(item =>
-      item.setTitle('Copy Path')
-        .setIcon('lucide-copy')
-        .onClick(() => navigator.clipboard.writeText(entry.file.path))
-    );
-
-    menu.showAtMouseEvent(e);
-  });
-}
-```
-
-### Hover Previews
-
-```typescript
-private setupHoverPreview(element: HTMLElement, path: string): void {
-  element.addEventListener('mouseover', (e) => {
-    this.app.workspace.trigger('hover-link', {
-      event: e,
-      source: this.type,
-      hoverParent: this.containerEl,
-      targetEl: element,
-      linktext: path
-    });
-  });
-}
-```
-
-## Example: Kanban View
-
-```typescript
-export class KanbanView extends BasesView {
-  readonly type = 'kanban-view';
-  private columns = ['To Do', 'In Progress', 'Done'];
-
-  public onDataUpdated(): void {
-    this.renderBoard();
-  }
-
-  private renderBoard(): void {
-    const board = this.containerEl.createDiv('kanban-board');
-
-    this.columns.forEach(column => {
-      const columnEl = board.createDiv('kanban-column');
-      columnEl.createEl('h3', { text: column });
-
-      const items = this.getItemsForColumn(column);
-      items.forEach(item => this.renderCard(columnEl, item));
-
-      // Drop zone
-      this.setupDropZone(columnEl, column);
-    });
-  }
-
-  private getItemsForColumn(column: string): BasesEntry[] {
-    return this.controller.data?.entries.filter(entry =>
-      entry.properties?.['status']?.value === column
-    ) || [];
-  }
-
-  private renderCard(container: HTMLElement, entry: BasesEntry): void {
-    const card = container.createDiv('kanban-card');
-    card.draggable = true;
-    card.createEl('h4', { text: entry.file.basename });
-
-    card.addEventListener('dragstart', (e) => {
-      e.dataTransfer?.setData('text/plain', entry.file.path);
-    });
-  }
-
-  private setupDropZone(columnEl: HTMLElement, status: string): void {
-    columnEl.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      columnEl.addClass('drag-over');
-    });
-
-    columnEl.addEventListener('dragleave', () => {
-      columnEl.removeClass('drag-over');
-    });
-
-    columnEl.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      columnEl.removeClass('drag-over');
-
-      const path = e.dataTransfer?.getData('text/plain');
-      if (path) {
-        await this.updateProperty(path, 'status', status);
+    for (const group of this.data.groupedData) {
+      if (group.hasKey()) {
+        this.containerEl.createEl('h3', { text: group.key?.toString() });
       }
-    });
+      for (const entry of group.entries) {
+        this.renderEntry(entry, order, separator);
+      }
+    }
+  }
+
+  private renderEntry(entry: BasesEntry, order: string[], separator: string): void {
+    const el = this.containerEl.createDiv('entry');
+
+    // File metadata (entry.file is a TFile).
+    el.createEl('strong', { text: entry.file.basename });
+
+    // Property values are wrapped Value objects; getValue may return null.
+    const parts: string[] = [];
+    for (const propertyId of order) {
+      const value = entry.getValue(propertyId as any);
+      if (!value || value.isEmpty()) continue;
+      const { type, name } = parsePropertyId(propertyId);
+      parts.push(value.toString());
+    }
+    el.createEl('span', { text: parts.join(separator) });
   }
 }
 ```
 
-## Performance Tips
+### Key surfaces on `BasesView`
 
-1. **Debounce updates** - Throttle rapid data changes
-2. **Use DocumentFragment** - Batch DOM operations
-3. **Limit decorations** - Only render visible entries
-4. **Cache computations** - Avoid recalculating on every render
+| Member                                              | Notes                                                        |
+| --------------------------------------------------- | ----------------------------------------------------------- |
+| `app: App`                                          | App instance.                                                |
+| `data: BasesQueryResult`                            | Latest query output (filtered + formulas evaluated).         |
+| `config: BasesViewConfig`                           | This view's config object.                                   |
+| `allProperties: BasesPropertyId[]`                  | All properties available in the dataset.                    |
+| `abstract type: string`                             | This view's type id.                                         |
+| `abstract onDataUpdated(): void`                    | Re-render here. Takes no arguments — read `this.data`.       |
+| `createFileForView(baseFileName?, frontmatterProcessor?)` | Helper to create a new file in the base's context.    |
+
+Inherited from `Component`: `onload()`, `onunload()`, `registerDomEvent()`, `registerEvent()`, `register()`, `addChild()`, etc. Use these for setup/teardown instead of ad-hoc listeners.
+
+## Query Result Shape
 
 ```typescript
-private debouncedRender = debounce(() => this.render(), 100);
-
-public onDataUpdated(): void {
-  this.debouncedRender();
+class BasesQueryResult {
+  data: BasesEntry[];                  // flat list of entries
+  get groupedData(): BasesEntryGroup[]; // grouped per the view's groupBy
+  get properties(): BasesPropertyId[];
+  getSummaryValue(/* ... */): Value;
 }
 
-private render(): void {
-  const fragment = new DocumentFragment();
+class BasesEntryGroup {
+  key?: Value;            // group key (absent when ungrouped)
+  entries: BasesEntry[];
+  hasKey(): boolean;
+}
 
-  this.controller.data?.entries.forEach(entry => {
-    const el = this.createEntryElement(entry);
-    fragment.appendChild(el);
-  });
-
-  this.containerEl.empty();
-  this.containerEl.appendChild(fragment);
+class BasesEntry {
+  file: TFile;
+  getValue(propertyId: BasesPropertyId): Value | null; // note.*, file.*, formula.*
 }
 ```
+
+`BasesPropertyId` is the template-literal type `` `${'note' | 'file' | 'formula'}.${string}` ``. Use `parsePropertyId(id)` to split it into `{ type, name }`.
+
+### Working with `Value`
+
+Property values are wrapped in `Value` subclasses (e.g. `StringValue`, `NumberValue`, `DateValue`, `BooleanValue`, `ListValue`, `LinkValue`, `DurationValue`). Common operations:
+
+- `value.isEmpty()` — whether the value is empty.
+- `value.toString()` — string rendering.
+
+> The exact full `Value` method surface (beyond `isEmpty`/`toString`) is not fully enumerated in the public docs. Prefer `toString()` plus narrowing by concrete subclass; verify any other method against the installed `obsidian.d.ts`.
+
+## View Config (`BasesViewConfig`)
+
+```typescript
+class BasesViewConfig {
+  name: string;
+  get(key: string): unknown;                              // read a view option
+  set(key: string, value: any | null): void;             // persist a view option
+  getAsPropertyId(key: string): BasesPropertyId | null;
+  getEvaluatedFormula(view: BasesView, key: string): Value;
+  getOrder(): BasesPropertyId[];                          // configured column order
+  getSort(): BasesSortConfig[];
+  getDisplayName(propertyId: BasesPropertyId): string;    // honors user renames
+}
+```
+
+## View Options
+
+`options` returns `BasesAllOptions[]` — controls rendered into the view's config menu; user input is applied automatically and read back via `this.config.get(key)`. Available option kinds (`BasesOptions`): `text`, `multitext`, `dropdown`, `slider`, `toggle`, `property`, `file`, `folder`, `formula`, plus a `group` wrapper (`BasesOptionGroup`) for nested, collapsible sections.
+
+```typescript
+options: (config) => ([
+  { type: 'text',     key: 'titleProperty', displayName: 'Title property', placeholder: 'file.name' },
+  { type: 'toggle',   key: 'showPreview',   displayName: 'Show preview',   default: true },
+  { type: 'slider',   key: 'cardWidth',     displayName: 'Card width', min: 200, max: 600, step: 10, default: 300 },
+  {
+    type: 'dropdown', key: 'layout', displayName: 'Layout', default: 'grid',
+    options: { grid: 'Grid', list: 'List' },
+  },
+  { type: 'property', key: 'groupProperty', displayName: 'Group by' },
+])
+```
+
+> The exact field set per option kind is not exhaustively documented; inspect the `ViewOption`/`BasesOptions` types in your `obsidian.d.ts`. Breaking change to watch: in 1.12, `BaseOption#shouldHide` no longer receives the config argument — read options from the registration's `options` callback instead.
+
+## Common Patterns
+
+### Opening notes
+
+```typescript
+await this.app.workspace.getLeaf().openFile(entry.file);
+```
+
+### Updating a property
+
+```typescript
+await this.app.fileManager.processFrontMatter(entry.file, (fm) => {
+  fm.status = 'Done';
+});
+```
+
+### Hover previews
+
+Implement `HoverParent` and trigger `hover-link` with `this` as `hoverParent`:
+
+```typescript
+el.addEventListener('mouseover', (e) => {
+  this.app.workspace.trigger('hover-link', {
+    event: e,
+    source: this.type,
+    hoverParent: this,
+    targetEl: el,
+    linktext: entry.file.path,
+    sourcePath: entry.file.path,
+  });
+});
+```
+
+### Context menus
+
+```typescript
+el.addEventListener('contextmenu', (e) => {
+  const menu = new Menu();
+  menu.addItem((i) => i.setTitle('Open').setIcon('lucide-file')
+    .onClick(() => this.app.workspace.getLeaf().openFile(entry.file)));
+  menu.showAtMouseEvent(e);
+});
+```
+
+## Performance
+
+An unfiltered base yields one entry per file in the vault, so views must scale to thousands of entries:
+
+1. Render only what's visible (virtualize long lists).
+2. Reuse DOM nodes across `onDataUpdated` calls instead of full rebuilds where possible.
+3. Batch DOM writes (e.g. `DocumentFragment`).
+4. Keep `onDataUpdated` cheap; it can fire frequently.
+
+## Caveats / Unverified
+
+- `QueryController`'s public shape is not documented beyond being the value passed to your factory/constructor; treat it as opaque.
+- The `Value` subclass hierarchy and per-option `ViewOption` fields are only partially documented publicly — verify against the installed `obsidian.d.ts` (`obsidianmd/obsidian-api`).
+- No public per-view unregister API.
 
 ## Related
 
-- [Plugin Development](./plugin-development.md) - Plugin basics
-- [Canvas API](./canvas-api.md) - Visual canvas views
+- [Plugin Development](./plugin-development.md) — Plugin basics
+- Official tutorial: `docs.obsidian.md/plugins/guides/bases-view`
+- Bases user docs: `help.obsidian.md/bases`

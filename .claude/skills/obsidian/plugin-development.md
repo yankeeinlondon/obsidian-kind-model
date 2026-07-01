@@ -21,7 +21,7 @@ my-plugin/
   "id": "my-plugin",
   "name": "My Plugin",
   "version": "1.0.0",
-  "minAppVersion": "0.15.0",
+  "minAppVersion": "1.0.0",
   "description": "What this plugin does",
   "author": "Your Name",
   "authorUrl": "https://your-site.com",
@@ -32,7 +32,7 @@ my-plugin/
 **Key Fields:**
 
 - `id` must be unique and match folder name
-- `minAppVersion` ensures compatibility
+- `minAppVersion` ensures compatibility (sample plugin uses `1.0.0`)
 - `isDesktopOnly: true` if using Node.js/Electron APIs
 
 ## Plugin Lifecycle
@@ -79,6 +79,18 @@ onunload() {
 }
 ```
 
+### onUserEnable() (1.7.2+)
+
+Called once, the first time the user enables the plugin. Use it for one-time
+setup such as opening a custom view, rather than recreating views in `onload()`.
+
+```typescript
+async onUserEnable() {
+  // e.g. reveal/initialize a custom view on first enable
+  this.activateView();
+}
+```
+
 ## Core API Classes
 
 ### App
@@ -116,7 +128,16 @@ await this.app.vault.process(file, (content) => {
 
 // Get all markdown files
 const files = this.app.vault.getMarkdownFiles();
+
+// Typed path lookups (prefer over getAbstractFileByPath)
+const file = this.app.vault.getFileByPath('path/to/file.md');     // TFile | null
+const folder = this.app.vault.getFolderByPath('path/to/folder');  // TFolder | null
+// getAbstractFileByPath still works but returns TAbstractFile | null (needs instanceof)
 ```
+
+> Prefer `vault.process(file, fn)` over a manual `read` then `modify`: it reads,
+> transforms, and writes atomically, avoiding the data-loss race when other code
+> touches the file in between.
 
 ### Workspace API
 
@@ -133,8 +154,49 @@ await leaf.openFile(file);
 // Open in new tab
 const newLeaf = this.app.workspace.getLeaf(true);
 
-// Register custom view
+// Register custom view (factory may be called multiple times —
+// never cache the returned view instance in your plugin)
 this.registerView('my-view', (leaf) => new MyView(leaf));
+
+// Find leaves of a custom view type
+this.app.workspace.getLeavesOfType('my-view');
+
+// Create a sidebar leaf if one does not exist (1.7.2+)
+this.app.workspace.ensureSideLeaf('my-view', 'right');
+```
+
+### Deferred Views (1.7.2+)
+
+Since 1.7.2 Obsidian defers tabs by default: a view in a background/inactive tab
+may exist as a *deferred* placeholder rather than a fully-loaded view. This means
+`getActiveViewOfType()` / `leaf.view` may return a view whose contents are not yet
+built.
+
+```typescript
+// Always narrow with instanceof, not getViewType() string comparison —
+// a deferred leaf.view will not be your view class.
+this.app.workspace.iterateAllLeaves((leaf) => {
+  if (leaf.view instanceof MyView) {
+    // safe to use
+  }
+});
+
+// To communicate with a view, make it visible first (this loads it):
+const leaf = this.app.workspace.getLeavesOfType('my-view').first();
+if (leaf) {
+  await this.app.workspace.revealLeaf(leaf);
+  if (leaf.view instanceof MyView) {
+    // fully loaded
+  }
+}
+
+// Advanced: force-load a deferred leaf without revealing it.
+// Guard for older versions and use sparingly — it defeats the optimization.
+for (const leaf of this.app.workspace.getLeavesOfType('my-view')) {
+  if (requireApiVersion('1.7.2') && leaf.isDeferred) {
+    await leaf.loadIfDeferred();
+  }
+}
 ```
 
 ### FileManager API
@@ -150,6 +212,36 @@ await this.app.fileManager.processFrontMatter(file, (fm) => {
 
 // Rename with link updates
 await this.app.fileManager.renameFile(file, 'new-name.md');
+```
+
+For read-only inspection of raw frontmatter (offsets + text) without parsing,
+use the standalone `getFrontMatterInfo(content)`:
+
+```typescript
+import { getFrontMatterInfo } from 'obsidian';
+
+const info = getFrontMatterInfo(content);
+// info.exists, info.frontmatter, info.from, info.to, info.contentStart
+```
+
+### Network Requests
+
+Use `requestUrl` instead of `fetch` — it bypasses CORS and works on mobile.
+
+```typescript
+import { requestUrl } from 'obsidian';
+
+const res = await requestUrl({
+  url: 'https://api.example.com/data',
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  contentType: 'application/json',
+  body: JSON.stringify({ q: 'hello' }),
+  throw: true, // throws on status >= 400 (default true)
+});
+
+res.status;       // number
+const data = res.json;   // parsed JSON (also: res.text, res.arrayBuffer)
 ```
 
 ## Commands
@@ -321,6 +413,12 @@ export default class MyPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
+
+  // Called when data.json is changed externally (e.g. Obsidian Sync).
+  // Reload so in-memory settings don't go stale.
+  async onExternalSettingsChange() {
+    await this.loadSettings();
+  }
 }
 ```
 
@@ -448,12 +546,23 @@ async onload() {
 }
 ```
 
+### Deferred Views
+
+```typescript
+// DON'T - background-tab views may be deferred (1.7.2+); the cast lies
+const view = leaf.view as MyView; // may be a deferred placeholder
+
+// DO - narrow with instanceof; reveal/loadIfDeferred if you must touch it
+if (leaf.view instanceof MyView) { /* ... */ }
+```
+
 ### Mobile Compatibility
 
 ```typescript
 import { Platform } from 'obsidian';
 
-if (!Platform.isMobile) {
+// Set "isDesktopOnly": true in manifest if you rely on Node/Electron at all.
+if (Platform.isDesktopApp) {
   // Node.js / Electron APIs safe here
   const { shell } = require('electron');
   shell.openExternal('https://example.com');

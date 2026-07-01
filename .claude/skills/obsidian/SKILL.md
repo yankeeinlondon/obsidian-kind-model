@@ -1,6 +1,6 @@
 ---
 name: obsidian
-description: Expert knowledge for developing Obsidian plugins and themes using TypeScript, CodeMirror 6, and CSS variables - covers plugin lifecycle, Vault API, Workspace API, editor extensions, and styling patterns
+description: Expert knowledge for developing Obsidian plugins and themes using TypeScript, CodeMirror 6, and CSS variables - covers plugin lifecycle, Vault API, Workspace API, editor extensions, styling patterns, and the official Obsidian CLI (obsidian command, plugin:reload, eval, dev tools)
 hash: 881a7930a553c0d8
 ---
 
@@ -13,7 +13,8 @@ Build plugins and themes for Obsidian using TypeScript, CodeMirror 6, and CSS va
 - **Extend Plugin class** - Use `onload()` for setup, `onunload()` for cleanup
 - **Access app via `this.app`** - Never use global `window.app` (debugging only)
 - **Prefer Vault API** - Use `this.app.vault` over raw `Adapter` for file ops
-- **Wait for layout ready** - Use `app.workspace.onLayoutReady()` for startup logic
+- **Wait for layout ready** - Use `app.workspace.onLayoutReady()` for startup logic (and to register vault events, so you skip the initial `create` burst)
+- **Guard deferred views** - Since 1.7.2 leaves start as `DeferredView`; `instanceof`-check `leaf.view` before use, call `loadIfDeferred()` (behind `requireApiVersion('1.7.2')`) only if truly needed
 - **Register events properly** - Use `this.registerEvent()` for auto-cleanup
 - **Mark external CM6 deps** - Never bundle `@codemirror/*`, use Obsidian's copy
 - **Use CSS variables** - Override theme variables, not hardcoded colors
@@ -68,6 +69,10 @@ export default class MyPlugin extends Plugin {
 
 - [Bases API](./bases-api.md) - Custom database views (Obsidian 1.10+)
 - [Canvas API](./canvas-api.md) - Visual canvas manipulation
+
+### Tooling
+
+- [Obsidian CLI](./cli.md) - Official `obsidian-cli` command: vault ops, `plugin:reload`, `eval`, dev/screenshot/DOM/CSS inspection
 
 ## Common Patterns
 

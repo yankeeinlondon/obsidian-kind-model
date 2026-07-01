@@ -1,42 +1,40 @@
 # CodeMirror 6 Integration
 
-Obsidian's Live Preview editor uses CodeMirror 6. Plugins can register custom extensions for syntax highlighting, decorations, and editor behavior.
+Obsidian's editor (both Live Preview and source mode) uses CodeMirror 6. Plugins register custom extensions for syntax highlighting, decorations, and editor behavior.
+
+> **Editing vs reading view.** Editor extensions only affect the *editing* view (Live Preview + source mode). To change the rendered *reading* view, use `registerMarkdownPostProcessor` / `registerMarkdownCodeBlockProcessor` instead — these operate on the HTML output and never run in the editor. Live Preview is the editing view, not the reading view, so it is driven by CM6 extensions (often `Decoration.replace`), not post-processors.
 
 ## Critical Setup
 
-**Never bundle your own `@codemirror/*` packages.** Mark them as external in your build config:
+**Never bundle your own `@codemirror/*` or `@lezer/*` packages.** Obsidian ships its own CM6 instance; a second copy causes "two CodeMirrors" type/runtime conflicts. Mark them external, exactly as the official sample plugin does:
 
 ```javascript
 // esbuild.config.mjs
-esbuild.build({
+import builtins from 'builtin-modules';
+
+esbuild.context({
+  format: 'cjs',
+  target: 'es2021',
   external: [
     'obsidian',
+    'electron',
     '@codemirror/autocomplete',
-    '@codemirror/closebrackets',
     '@codemirror/collab',
     '@codemirror/commands',
-    '@codemirror/comment',
-    '@codemirror/fold',
-    '@codemirror/gutter',
-    '@codemirror/highlight',
-    '@codemirror/history',
     '@codemirror/language',
     '@codemirror/lint',
-    '@codemirror/matchbrackets',
-    '@codemirror/panel',
-    '@codemirror/rangeset',
-    '@codemirror/rectangular-selection',
     '@codemirror/search',
     '@codemirror/state',
-    '@codemirror/stream-parser',
-    '@codemirror/text',
-    '@codemirror/tooltip',
     '@codemirror/view',
-  ]
+    '@lezer/common',
+    '@lezer/highlight',
+    '@lezer/lr',
+    ...builtins,
+  ],
 });
 ```
 
-Obsidian provides its own CM6 instance. Using a separate copy causes version conflicts.
+The granular CM6 packages (`closebrackets`, `comment`, `fold`, `gutter`, `highlight`, `history`, `matchbrackets`, `panel`, `rangeset`, `rectangular-selection`, `stream-parser`, `text`, `tooltip`) from the CM6 beta were **consolidated into `@codemirror/{view,state,commands,language}`** before the stable release. Do not list them.
 
 ## Core Concepts
 
@@ -59,7 +57,38 @@ const transaction = state.update({
 const newState = transaction.state;
 ```
 
+### Transaction & change filters
+
+Intercept or veto edits before they apply (both facets live in `@codemirror/state`):
+
+```typescript
+import { EditorState } from '@codemirror/state';
+
+// Inspect/replace whole transactions
+const txFilter = EditorState.transactionFilter.of(tr => tr);
+
+// Veto/modify individual changes (e.g. block edits in a region)
+const noEdits = EditorState.changeFilter.of(() => false);
+```
+
+### Reacting to updates
+
+```typescript
+import { EditorView } from '@codemirror/view';
+
+const onChange = EditorView.updateListener.of(update => {
+  if (update.docChanged) {
+    // react to edits; do NOT dispatch synchronously from here
+  }
+});
+```
+
 ## Extension Types
+
+The two most common Obsidian extensions are **View plugins** and **State fields**. Choosing between them:
+
+- **ViewPlugin** — decorations derivable from the current viewport. Runs *after* the viewport is computed, so it **cannot make changes that alter the viewport** (inserting block widgets, line breaks, replacements that change height). Generally the better-performing choice when either works.
+- **StateField** — needed when decorations live outside the viewport, must persist across transactions, or change content/height (e.g. Live Preview-style `replace` that hides syntax). Processes the whole document, not just visible ranges.
 
 ### StateField
 
@@ -256,17 +285,72 @@ export default class MyPlugin extends Plugin {
 }
 ```
 
-## Accessing Obsidian Context
+### Reconfiguring at runtime (settings changes)
 
-Obsidian provides special StateFields to access the MarkdownView from within extensions.
+`registerEditorExtension()` snapshots its argument, so changing a setting won't update open editors on its own. Register a **stable array reference**, mutate it in place, then call `app.workspace.updateOptions()` to reconfigure every open editor.
 
 ```typescript
-import { editorViewField, editorInfoField } from 'obsidian';
+export default class MyPlugin extends Plugin {
+  private extensions: Extension[] = [];
 
-// Inside a ViewPlugin
-const markdownView = view.state.field(editorViewField);
-const editorInfo = view.state.field(editorInfoField);
-const file = editorInfo.file; // Current TFile
+  async onload() {
+    this.buildExtensions();
+    this.registerEditorExtension(this.extensions); // same array, kept by Obsidian
+  }
+
+  buildExtensions() {
+    this.extensions.length = 0; // mutate; never reassign
+    if (this.settings.enabled) this.extensions.push(lineHighlighter);
+  }
+
+  onSettingChange() {
+    this.buildExtensions();
+    this.app.workspace.updateOptions(); // push new config to live editors
+  }
+}
+```
+
+Use a `Compartment` (below) only when you need to swap one extension inside a config you control directly; for plugin-registered extensions the mutable-array + `updateOptions()` pattern is the idiomatic path.
+
+### Controlling precedence
+
+When your extension must out-rank or under-rank others (e.g. a keymap that should win over defaults), wrap it with `Prec` from `@codemirror/state`:
+
+```typescript
+import { Prec } from '@codemirror/state';
+
+this.registerEditorExtension(Prec.highest(myKeymap));
+```
+
+## Accessing Obsidian Context
+
+CM6's `EditorState` is isolated from the view, so a StateField/ViewPlugin has no built-in way to know which note it belongs to. Obsidian injects StateFields for this.
+
+```typescript
+import { editorInfoField } from 'obsidian';
+
+// Inside a ViewPlugin or StateField (state = view.state)
+const info = view.state.field(editorInfoField); // MarkdownFileInfo
+const file = info.file; // Current TFile (may be null)
+```
+
+`editorInfoField` returns a `MarkdownFileInfo`, which is **not always** a full `MarkdownView` (e.g. embedded/popover editors). Narrow with `instanceof MarkdownView` before using view-only members.
+
+> `editorViewField` is **deprecated** — it assumed a `MarkdownView` and is now just an alias for `editorInfoField`. Use `editorInfoField`.
+
+## Reaching the EditorView from Obsidian
+
+The Obsidian API does not type the underlying `EditorView`. From a `MarkdownView` / `Editor`:
+
+```typescript
+// @ts-expect-error - cm is not in the public types
+const editorView = view.editor.cm as EditorView;
+
+// Read a registered ViewPlugin instance:
+const instance = editorView.plugin(myViewPlugin);
+
+// Dispatch effects/changes directly:
+editorView.dispatch({ effects: [myEffect.of(value)] });
 ```
 
 ## Event Handling
