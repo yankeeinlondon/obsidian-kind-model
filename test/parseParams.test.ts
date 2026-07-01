@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { type } from "arktype";
+import { parseQueryParams, parseQueryParamsWithArkType } from "../src/helpers/parseParams";
 
 /**
  * Test the jsObjectToJson conversion that was added to parseParams.ts
@@ -268,5 +270,214 @@ describe("Option type validation", () => {
 
   it("should accept undefined for opt(string|array(string))", () => {
     expect(validateOptionType("exclude", undefined, "opt(string|array(string))")).toBeNull();
+  });
+});
+
+describe("real parseQueryParams exports", () => {
+  const plugin = {} as any;
+
+  it("rejects extra legacy scalar arguments", () => {
+    const result = parseQueryParams(plugin)(
+      "Kind",
+      '"software", "development", "ide"',
+      ["kind AS string", "category AS opt(string)"],
+      {},
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("expects at most 2 scalar");
+  });
+
+  it("validates array element types for TypeToken options", () => {
+    const result = parseQueryParams(plugin)(
+      "BackLinks",
+      "{ignoreTags: [1, 2, 3]}",
+      [],
+      { ignoreTags: "array(string)" },
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("invalid option value");
+    expect(String((result as Error).message)).toContain("array(string)");
+  });
+
+  it("preserves explicit false options for the Kind handler regression", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Kind",
+      '"software", {noClassificationResults: false}',
+      type({
+        kind: "string",
+        "category?": "string",
+        "subcategory?": "string",
+      }),
+      type({
+        "+": "reject",
+        "noClassificationResults?": "boolean",
+      }),
+      ["kind", "category", "subcategory"],
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    const [, options] = result as [Record<string, unknown>, Record<string, unknown>];
+    expect(options.noClassificationResults).toBe(false);
+  });
+
+  it("rejects extra ArkType scalar arguments when explicit scalar keys are provided", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Kind",
+      '"software", "development", "ide"',
+      type({
+        kind: "string",
+        "category?": "string",
+      }),
+      null,
+      ["kind", "category"],
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("expects at most 2 scalar");
+  });
+
+  it("rejects scalar arguments for no-scalar ArkType handlers", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Accounts",
+      '"unexpected"',
+      null,
+      type({
+        "show?": "string[]",
+      }),
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("does not accept scalar");
+  });
+
+  it("requires explicit scalar keys for ArkType scalar schemas", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "TestHandler",
+      '"value"',
+      type({ kind: "string" }),
+      null,
+      null,
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("no explicit scalar keys");
+  });
+});
+
+describe("Kind handler noClassificationResults regression", () => {
+  const plugin = {} as any;
+
+  it("preserves explicit false for noClassificationResults", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Kind",
+      '"software", {noClassificationResults: false}',
+      type({
+        kind: "string",
+        "category?": "string",
+        "subcategory?": "string",
+      }),
+      type({
+        "+": "reject",
+        "noClassificationResults?": "boolean",
+      }),
+      ["kind", "category", "subcategory"],
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    const [, options] = result as [Record<string, unknown>, Record<string, unknown>];
+    expect(options.noClassificationResults).toBe(false);
+  });
+
+  it("defaults noClassificationResults to undefined when not provided", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Kind",
+      '"software"',
+      type({
+        kind: "string",
+        "category?": "string",
+      }),
+      type({
+        "+": "reject",
+        "noClassificationResults?": "boolean",
+      }),
+      ["kind", "category"],
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    const [, options] = result as [Record<string, unknown>, Record<string, unknown>];
+    expect(options.noClassificationResults).toBeUndefined();
+  });
+
+  it("preserves explicit true for noClassificationResults", () => {
+    const result = parseQueryParamsWithArkType(plugin)(
+      "Kind",
+      '"software", {noClassificationResults: true}',
+      type({
+        kind: "string",
+        "category?": "string",
+      }),
+      type({
+        "+": "reject",
+        "noClassificationResults?": "boolean",
+      }),
+      ["kind", "category"],
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    const [, options] = result as [Record<string, unknown>, Record<string, unknown>];
+    expect(options.noClassificationResults).toBe(true);
+  });
+});
+
+describe("Malformed KM query handling", () => {
+  const plugin = {} as any;
+
+  it("rejects nested objects as scalar values", () => {
+    const result = parseQueryParams(plugin)(
+      "Kind",
+      '{nested: true}',
+      ["kind AS string"],
+      {},
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("scalar");
+  });
+
+  it("rejects arrays with wrong element types in options", () => {
+    const result = parseQueryParams(plugin)(
+      "Test",
+      '{tags: [1, 2, 3]}',
+      [],
+      { tags: "array(string)" },
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("invalid option");
+  });
+
+  it("rejects extra positional arguments", () => {
+    const result = parseQueryParams(plugin)(
+      "Kind",
+      '"a", "b", "c", "d"',
+      ["kind AS string"],
+      {},
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    expect(String((result as Error).message)).toContain("at most");
+  });
+
+  it("handles deeply nested invalid JSON gracefully", () => {
+    const result = parseQueryParams(plugin)(
+      "Kind",
+      '"software", {a: {b: {c: true}}}',
+      ["kind AS string"],
+      {},
+    );
+
+    expect(Array.isArray(result)).toBe(false);
   });
 });

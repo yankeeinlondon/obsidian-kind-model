@@ -1,12 +1,40 @@
 import { describe, expect, it } from "vitest";
+import { escapeRegExp } from "../src/utils/html";
 
-/**
- * Test the handler regex pattern used in createHandler.ts
- * The regex must properly match literal parentheses in handler calls.
- */
+function handlerInvocationRegex(handler: string): RegExp {
+  return new RegExp(`^\\s*${escapeRegExp(handler)}\\s*\\(([\\s\\S]*)\\)\\s*$`);
+}
+
+const HANDLER_NAME_RE = /[A-Z][a-zA-Z]*\(/g;
+function countHandlerInvocations(source: string): number {
+  const matches = source.match(HANDLER_NAME_RE);
+  return matches ? matches.length : 0;
+}
+
+describe("Multi-invocation detection", () => {
+  it("returns 0 for empty source", () => {
+    expect(countHandlerInvocations("")).toBe(0);
+  });
+
+  it("returns 1 for single handler", () => {
+    expect(countHandlerInvocations("Kind(\"software\")")).toBe(1);
+  });
+
+  it("detects multiple invocations", () => {
+    expect(countHandlerInvocations("Kind(\"software\")\nKind(\"hardware\")")).toBe(2);
+  });
+
+  it("detects different handlers", () => {
+    expect(countHandlerInvocations("Kind(\"software\")\nBackLinks()")).toBe(2);
+  });
+
+  it("does not count lowercase words", () => {
+    expect(countHandlerInvocations("some text with lowercase()")).toBe(0);
+  });
+});
+
 describe("Handler regex pattern", () => {
-  // This is the pattern from createHandler.ts - uses [\s\S]* to match across newlines
-  const createHandlerRegex = (handler: string) => new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
+  const createHandlerRegex = handlerInvocationRegex;
 
   describe("BackLinks handler", () => {
     const re = createHandlerRegex("BackLinks");
@@ -85,6 +113,39 @@ describe("Handler regex pattern", () => {
       expect(re.test(source)).toBe(true);
       const match = source.match(re);
       expect(match?.[1]).toBe('"software", {limit: 10}');
+    });
+  });
+
+  describe("Anchoring and escaping", () => {
+    it("should NOT match handler text in the middle of content", () => {
+      const re = createHandlerRegex("Kind");
+      expect(re.test("some text Kind(\"software\")")).toBe(false);
+    });
+
+    it("should NOT match handler text with trailing content", () => {
+      const re = createHandlerRegex("Kind");
+      expect(re.test("Kind(\"software\") extra")).toBe(false);
+    });
+
+    it("should match with leading/trailing whitespace", () => {
+      const re = createHandlerRegex("Kind");
+      expect(re.test("  Kind(\"software\")  ")).toBe(true);
+    });
+
+    it("should NOT match handler-like text embedded in content", () => {
+      const re = createHandlerRegex("BackLinks");
+      expect(re.test("see BackLinks() for more")).toBe(false);
+    });
+
+    it("should handle handler names with regex special chars", () => {
+      const re = createHandlerRegex("My.Handler");
+      expect(re.test("My.Handler()")).toBe(true);
+    });
+
+    it("matches multiple invocations due to greedy capture (rejected at parser level)", () => {
+      const re = createHandlerRegex("Kind");
+      const source = "Kind(\"software\")\nKind(\"hardware\")";
+      expect(re.test(source)).toBe(true);
     });
   });
 
