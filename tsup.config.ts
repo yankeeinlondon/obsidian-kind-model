@@ -18,8 +18,6 @@ export default defineConfig({
     "@lezer/common",
     "@lezer/highlight",
     "@lezer/lr",
-    // Node.js built-ins used by dependencies (available in Electron)
-    "node:util",
   ],
   sourcemap: true,
   clean: false,
