@@ -16,6 +16,7 @@ import {
   on_file_modified,
   on_layout_change,
   on_tab_change,
+  type KmBlockTracker,
   setupKmBlockRefresh,
 } from "./events";
 import { on_editor_change } from "./events/on_editor_change";
@@ -58,6 +59,9 @@ export default class KindModelPlugin extends Plugin {
    * tasks delayed until Dataview is in a ready state
    */
   public taskQueue: Task[] = [];
+  public dataviewWatcherRunning = false;
+  public dataviewReadyTimers: Set<ReturnType<typeof setTimeout>> = new Set();
+  public kmBlockTracker: KmBlockTracker | undefined;
 
   /**
    * allows a Task to be run with a guarentee that the Dataview
@@ -137,7 +141,14 @@ export default class KindModelPlugin extends Plugin {
   }
 
   onunload() {
-    //
+    for (const timer of this.dataviewReadyTimers) {
+      clearTimeout(timer);
+    }
+    this.dataviewReadyTimers.clear();
+    this.taskQueue.length = 0;
+    this.dataviewWatcherRunning = false;
+    this.kmBlockTracker?.clear();
+    this.kmBlockTracker = undefined;
   }
 
   async loadSettings() {

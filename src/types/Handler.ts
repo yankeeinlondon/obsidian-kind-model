@@ -8,7 +8,7 @@ import type {
   ExpandDictionary,
   First,
 } from "inferred-types";
-import type { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { MarkdownPostProcessorContext } from "obsidian";
 import type { createTable } from "src/helpers";
 import type { DataViewApi } from "./dataview_types";
 import type { PageInfoBlock } from "./Page";
@@ -142,7 +142,7 @@ export interface HandlerApi {
 export interface ObsidianCodeblockEvent {
   source: string;
   el: HTMLElement;
-  ctx: MarkdownPostProcessorContext & Component;
+  ctx: MarkdownPostProcessorContext;
 }
 
 /**
@@ -195,7 +195,7 @@ export interface HandlerEvent<
   /**
    * Context about the Markdown
    */
-  ctx: Component & MarkdownPostProcessorContext;
+  ctx: MarkdownPostProcessorContext;
 
   /**
    * **createTable**`(...startingCols)` -> `(handler, opt)` -> `(data)` -> void

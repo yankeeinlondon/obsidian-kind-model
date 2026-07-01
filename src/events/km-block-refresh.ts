@@ -1,14 +1,15 @@
-import type { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { MarkdownPostProcessorContext } from "obsidian";
 import type KindModelPlugin from "~/main";
+import { MarkdownRenderChild } from "obsidian";
 
 /**
  * Context for a registered KM block that can be refreshed
  */
 export interface KmBlockContext {
   el: HTMLElement;
-  ctx: MarkdownPostProcessorContext & Component;
+  ctx: MarkdownPostProcessorContext;
   source: string;
-  callback: (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext & Component) => Promise<void>;
+  callback: (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => Promise<void>;
 }
 
 /**
@@ -38,6 +39,15 @@ export class KmBlockTracker {
       this.blocks.set(filepath, new Set());
     }
     this.blocks.get(filepath)!.add(context);
+
+    // Tie cleanup to the rendered element's lifecycle. A MarkdownRenderChild
+    // unloads when its containerEl is detached (e.g. the source was edited or
+    // the leaf closed), which is the canonical way to get an unmount hook for
+    // a codeblock post-processor. (MarkdownPostProcessorContext itself has no
+    // `register` method — only Component does.)
+    const child = new MarkdownRenderChild(context.el);
+    child.register(() => this.unregister(filepath, context));
+    context.ctx.addChild(child);
 
     this.plugin.debug(`KM block registered for ${filepath}, total: ${this.blocks.get(filepath)!.size}`);
   }
@@ -197,8 +207,7 @@ export class KmBlockTracker {
 export function setupKmBlockRefresh(plugin: KindModelPlugin): KmBlockTracker {
   const tracker = new KmBlockTracker(plugin);
 
-  // Store on plugin for access from codeblock parser
-  (plugin as any).kmBlockTracker = tracker;
+  plugin.kmBlockTracker = tracker;
 
   // Listen for metadata changes
   plugin.registerEvent(
@@ -217,5 +226,5 @@ export function setupKmBlockRefresh(plugin: KindModelPlugin): KmBlockTracker {
  * Get the KM block tracker from the plugin
  */
 export function getKmBlockTracker(plugin: KindModelPlugin): KmBlockTracker | undefined {
-  return (plugin as any).kmBlockTracker;
+  return plugin.kmBlockTracker;
 }
