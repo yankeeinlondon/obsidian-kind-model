@@ -23,7 +23,11 @@ import { createTable, parseQueryParams, parseQueryParamsWithArkType } from "~/he
 import { getPageInfoBlock } from "~/page";
 import { getPageFromKindTag } from "~/page/getPageFromTag";
 import { isError } from "~/type-guards";
-import type { InferOptions, InferScalar } from "./schema";
+import { escapeRegExp } from "~/utils/html";
+
+function handlerInvocationRegex(handler: string): RegExp {
+  return new RegExp(`^\\s*${escapeRegExp(handler)}\\s*\\(([\\s\\S]*)\\)\\s*$`);
+}
 
 function clientHandler(p: KindModelPlugin) {
   return <
@@ -44,7 +48,7 @@ function clientHandler(p: KindModelPlugin) {
         /** RegExp which tests whether this handler should try to handle or not */
         // Note: Need double backslash to escape parens in the regex string
         // Use [\s\S]* instead of .* to match across newlines (multiline content)
-        const re = new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
+        const re = handlerInvocationRegex(handler);
         let _event: HandlerEvent<THandler, ScalarParams<S>, OptionParams<O>>;
         /** error template */
         const err = HandlerError.rebase({
@@ -168,7 +172,7 @@ function clientHandlerHybrid(p: KindModelPlugin) {
     createFnWithProps(
       async (): Promise<boolean | Error> => {
         const page = getPageInfoBlock(p)(evt);
-        const re = new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
+        const re = handlerInvocationRegex(handler);
         const err = HandlerError.rebase({
           evt,
           page,
@@ -274,12 +278,13 @@ function clientHandlerWithArkType(p: KindModelPlugin) {
     handlerFn: THandlerFn,
     scalarSchema: Type<TScalar> | null,
     optionsSchema: Type<TOptions> | null,
+    scalarKeys: readonly string[] | null,
     evt: ObsidianCodeblockEvent,
   ) =>
     createFnWithProps(
       async (): Promise<boolean | Error> => {
         const page = getPageInfoBlock(p)(evt);
-        const re = new RegExp(`${handler}\\(([\\s\\S]*)\\)`);
+        const re = handlerInvocationRegex(handler);
 
         const err = HandlerError.rebase({
           evt,
@@ -305,6 +310,7 @@ function clientHandlerWithArkType(p: KindModelPlugin) {
                 raw,
                 scalarSchema,
                 optionsSchema,
+                scalarKeys,
               );
 
               p.debug(`Handler ${handler} parse result (ArkType)`, { isError: isError(result), result });
@@ -488,7 +494,14 @@ function addParamsWithArkType<THandler extends string>(handler: THandler) {
      * Define scalar parameters using an ArkType schema.
      * For handlers that want ArkType validation for positional params.
      */
-    scalarSchema: <TScalar>(scalarSchema: Type<TScalar>) => ({
+    scalarSchema: <TScalar>(
+      keysOrSchema: readonly (keyof TScalar & string)[] | Type<TScalar>,
+      maybeSchema?: Type<TScalar>,
+    ) => {
+      const scalarKeys = Array.isArray(keysOrSchema) ? keysOrSchema : null;
+      const scalarSchema = Array.isArray(keysOrSchema) ? maybeSchema! : keysOrSchema;
+
+      return {
       /**
        * Define options using an ArkType schema.
        */
@@ -503,6 +516,7 @@ function addParamsWithArkType<THandler extends string>(handler: THandler) {
                 handlerFn,
                 scalarSchema,
                 optionsSchema,
+                scalarKeys,
                 evt,
               );
           },
@@ -522,11 +536,13 @@ function addParamsWithArkType<THandler extends string>(handler: THandler) {
                 handlerFn,
                 scalarSchema,
                 null,
+                scalarKeys,
                 evt,
               );
           },
       }),
-    }),
+    };
+    },
 
     /**
      * No scalar parameters, define options with ArkType schema.
@@ -543,6 +559,7 @@ function addParamsWithArkType<THandler extends string>(handler: THandler) {
                 handlerFn,
                 null,
                 schema,
+                null,
                 evt,
               );
           },

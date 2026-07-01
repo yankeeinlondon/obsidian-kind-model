@@ -40,7 +40,11 @@ function matchesSingleType(value: unknown, type: string): boolean {
     return typeof value === "number";
   }
   if (type.startsWith("array(")) {
-    return Array.isArray(value);
+    if (!Array.isArray(value)) {
+      return false;
+    }
+    const elementType = type.slice(6, -1).trim();
+    return value.every(item => matchesSingleType(item, elementType));
   }
   if (type.startsWith("enum(")) {
     const enumValues = type.slice(5, -1).split(",").map(s => s.trim());
@@ -170,6 +174,12 @@ export function parseQueryParams(_p: KindModelPlugin) {
         );
       }
 
+      if (scalarParams.length > scalarOrder.length) {
+        return invalid(
+          `the ${name} query handler expects at most ${scalarOrder.length} scalar parameter(s), ${scalarParams.length} were received!`,
+        );
+      }
+
       if (optionsPosition !== -1) {
         if (optionsPosition < parsed.length - 1) {
           return invalid(
@@ -256,6 +266,8 @@ export function parseQueryParamsWithArkType(_p: KindModelPlugin) {
     scalarSchema: Type<TScalar> | null,
     /** ArkType schema for options hash, or null if none */
     optionsSchema: Type<TOptions> | null,
+    /** Explicit scalar keys used to map positional parameters */
+    scalarKeys: readonly string[] | null = null,
   ): KindError | [TScalar, TOptions] => {
     const invalid = InvalidParameters.rebase({
       raw,
@@ -327,21 +339,27 @@ export function parseQueryParamsWithArkType(_p: KindModelPlugin) {
       let scalarObject: Record<string, unknown> = {};
 
       if (scalarSchema) {
-        // Extract expected keys from the schema's description
-        // ArkType schemas expose their structure - we use this for mapping
-        const schemaKeys = getSchemaKeys(scalarSchema);
+        if (!scalarKeys || scalarKeys.length === 0) {
+          return invalid(
+            `The "${name}" handler uses ArkType scalar validation but no explicit scalar keys were provided. Use .scalarSchema(["key1", "key2"], schema) to define positional parameter names.`,
+          );
+        }
+        const schemaKeys = scalarKeys;
+
+        if (scalarParams.length > schemaKeys.length) {
+          return invalid(
+            `the ${name} query handler expects at most ${schemaKeys.length} scalar parameter(s), ${scalarParams.length} were received!`,
+          );
+        }
 
         for (let i = 0; i < schemaKeys.length && i < scalarParams.length; i++) {
           scalarObject[schemaKeys[i]] = scalarParams[i];
         }
       }
       else if (scalarParams.length > 0) {
-        // No ArkType schema but params provided - pass through for TypeToken handlers
-        // (Hybrid handlers use TypeToken for scalars and ArkType for options)
-        scalarObject = scalarParams.reduce((acc, val, idx) => {
-          acc[`param${idx}`] = val;
-          return acc;
-        }, {} as Record<string, unknown>);
+        return invalid(
+          `the ${name} query handler does not accept scalar parameter(s), ${scalarParams.length} were received!`,
+        );
       }
 
       // Validate scalar params with ArkType
@@ -386,51 +404,6 @@ export function parseQueryParamsWithArkType(_p: KindModelPlugin) {
       });
     }
   };
-}
-
-/**
- * Extract the keys from an ArkType object schema.
- * Used to map positional scalar parameters to named keys.
- */
-function getSchemaKeys(schema: Type<unknown>): string[] {
-  // ArkType schemas have an internal structure we can inspect
-  // The 'expression' property shows the schema definition
-  // For object schemas, we can extract keys from the structure
-
-  try {
-    // Access the schema's internal node structure
-    const expression = schema.expression;
-
-    // For simple object schemas like { kind: "string", "category?": "string" }
-    // the expression will contain key information
-
-    // Try to extract keys from the schema's description
-    if (typeof expression === "string") {
-      // Parse keys from expression like "{ kind: string, category?: string }"
-      const keyMatch = expression.match(/\{([^}]+)\}/);
-      if (keyMatch) {
-        const content = keyMatch[1];
-        // Match key names (with optional ?)
-        const keys = content.match(/(\w+)\??:/g);
-        if (keys) {
-          return keys.map(k => k.replace(/\??:$/, ""));
-        }
-      }
-    }
-
-    // Fallback: try to get keys from the schema's internal structure
-    // @ts-expect-error - accessing internal ArkType structure
-    const internal = schema.internal ?? schema.t ?? schema;
-    if (internal && typeof internal === "object" && "props" in internal) {
-      // @ts-expect-error - accessing internal structure
-      return Object.keys(internal.props);
-    }
-  }
-  catch {
-    // If we can't extract keys, return empty array
-  }
-
-  return [];
 }
 
 /**

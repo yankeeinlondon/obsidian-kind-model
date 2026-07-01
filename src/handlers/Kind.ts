@@ -44,11 +44,11 @@ registerHandler({
 });
 
 export const Kind = createHandlerV2("Kind")
-  .scalarSchema(KindScalarSchema)
+  .scalarSchema(["kind", "category", "subcategory"], KindScalarSchema)
   .optionsSchema(KindOptionsSchema)
   .handler(async (evt) => {
     const { createTable, plugin, dv, report, options } = evt;
-    const noClassificationResult = options.noClassificationResults || true;
+    const noClassificationResult = options.noClassificationResults ?? true;
 
     const where = noClassificationResult
       ? (i: DvPage) => ["kinded", "multi-kinded"].includes(getPageType(plugin)(i))
