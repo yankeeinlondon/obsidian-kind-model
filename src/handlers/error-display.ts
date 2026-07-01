@@ -3,6 +3,7 @@
  * Provides rich error messages with suggestions and documentation links.
  */
 import type { ArkErrors } from "arktype";
+import { escapeHtml } from "~/utils/html";
 import { getAllHandlers, getHandlerMetadata } from "./registry";
 
 /**
@@ -105,21 +106,21 @@ export function formatArkTypeErrors(
     const path = error.path?.length ? error.path.join(".") : "value";
 
     content.push(`<div class="km-error-item" style="margin-bottom: 8px;">`);
-    content.push(`<b>Problem:</b> ${error.message}`);
+    content.push(`<b>Problem:</b> ${escapeHtml(error.message)}`);
 
     if (error.expected) {
-      content.push(`<br/><b>Expected:</b> <code>${error.expected}</code>`);
+      content.push(`<br/><b>Expected:</b> <code>${escapeHtml(error.expected)}</code>`);
     }
     if (error.actual !== undefined) {
-      content.push(`<br/><b>Received:</b> <code>${String(error.actual)}</code>`);
+      content.push(`<br/><b>Received:</b> <code>${escapeHtml(String(error.actual))}</code>`);
     }
     if (path !== "value") {
-      content.push(`<br/><b>At:</b> <code>${path}</code>`);
+      content.push(`<br/><b>At:</b> <code>${escapeHtml(path)}</code>`);
 
       // Check if this is an unknown key error and suggest closest match
       const suggestion = suggestClosestOption(path, validKeys);
       if (suggestion) {
-        content.push(`<br/><b>Did you mean:</b> <code>${suggestion}</code>`);
+        content.push(`<br/><b>Did you mean:</b> <code>${escapeHtml(suggestion)}</code>`);
       }
     }
     content.push(`</div>`);
@@ -143,16 +144,16 @@ export function formatUnknownHandlerError(
 
   const suggestion = suggestClosestOption(handlerName, validHandlers);
 
-  content.push(`<b>Unknown handler:</b> <code>${handlerName}</code>`);
+  content.push(`<b>Unknown handler:</b> <code>${escapeHtml(handlerName)}</code>`);
 
   if (suggestion) {
-    content.push(`<br/><b>Did you mean:</b> <code>${suggestion}()</code>`);
+    content.push(`<br/><b>Did you mean:</b> <code>${escapeHtml(suggestion)}()</code>`);
   }
 
   content.push(`<br/><br/><b>Available handlers:</b>`);
   content.push(`<ul style="margin-top: 4px;">`);
   for (const handler of getAllHandlers()) {
-    content.push(`<li><code>${handler.name}</code> - ${handler.description}</li>`);
+    content.push(`<li><code>${escapeHtml(handler.name)}</code> - ${escapeHtml(handler.description)}</li>`);
   }
   content.push(`</ul>`);
 
@@ -169,23 +170,23 @@ export function formatUnknownOptionError(
   const content: string[] = [];
   const validKeys = getValidOptionKeys(handlerName);
 
-  content.push(`<b>Unknown option:</b> <code>${unknownKey}</code>`);
+  content.push(`<b>Unknown option:</b> <code>${escapeHtml(unknownKey)}</code>`);
 
   const suggestion = suggestClosestOption(unknownKey, validKeys);
   if (suggestion) {
-    content.push(`<br/><b>Did you mean:</b> <code>${suggestion}</code>`);
+    content.push(`<br/><b>Did you mean:</b> <code>${escapeHtml(suggestion)}</code>`);
   }
 
   if (validKeys.length > 0) {
-    content.push(`<br/><br/><b>Valid options for ${handlerName}:</b>`);
+    content.push(`<br/><br/><b>Valid options for ${escapeHtml(handlerName)}:</b>`);
     content.push(`<ul style="margin-top: 4px;">`);
     for (const key of validKeys) {
-      content.push(`<li><code>${key}</code></li>`);
+      content.push(`<li><code>${escapeHtml(key)}</code></li>`);
     }
     content.push(`</ul>`);
   }
   else {
-    content.push(`<br/><i>${handlerName} does not accept any options.</i>`);
+    content.push(`<br/><i>${escapeHtml(handlerName)} does not accept any options.</i>`);
   }
 
   return content;
@@ -201,9 +202,9 @@ export function formatTypeMismatchError(
   actual: string,
 ): string[] {
   return [
-    `<b>Type mismatch for option:</b> <code>${optionKey}</code>`,
-    `<br/><b>Expected:</b> <code>${expected}</code>`,
-    `<br/><b>Received:</b> <code>${actual}</code>`,
+    `<b>Type mismatch for option:</b> <code>${escapeHtml(optionKey)}</code>`,
+    `<br/><b>Expected:</b> <code>${escapeHtml(expected)}</code>`,
+    `<br/><b>Received:</b> <code>${escapeHtml(actual)}</code>`,
   ];
 }
 

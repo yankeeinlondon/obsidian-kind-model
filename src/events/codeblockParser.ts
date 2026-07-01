@@ -1,5 +1,5 @@
 import type { BaseKindError } from "@yankeeinlondon/kind-error";
-import type { Component, MarkdownPostProcessorContext } from "obsidian";
+import type { MarkdownPostProcessorContext } from "obsidian";
 import type KindModelPlugin from "~/main";
 import type { ObsidianCodeblockEvent } from "~/types";
 
@@ -16,7 +16,15 @@ import {
 } from "~/handlers/error-display";
 import { getHandlerMetadata } from "~/handlers/registry";
 import { isError } from "~/type-guards";
+import { escapeHtml } from "~/utils/html";
 import { getKmBlockTracker } from "./km-block-refresh";
+
+const HANDLER_NAME_RE = /[A-Z][a-zA-Z]*\(/g;
+
+function countHandlerInvocations(source: string): number {
+  const matches = source.match(HANDLER_NAME_RE);
+  return matches ? matches.length : 0;
+}
 
 export function isPageLink(v: unknown): v is Link {
   return !!(isObject(v) && "file" in v && isObject(v.file) && "path" in v.file);
@@ -30,7 +38,7 @@ function registerForAutoRefresh(
   p: KindModelPlugin,
   filepath: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext & Component,
+  ctx: MarkdownPostProcessorContext,
   source: string,
 ): void {
   const tracker = getKmBlockTracker(p);
@@ -42,7 +50,7 @@ function registerForAutoRefresh(
   const refreshCallback = async (
     src: string,
     element: HTMLElement,
-    context: MarkdownPostProcessorContext & Component,
+    context: MarkdownPostProcessorContext,
   ) => {
     // Re-process handlers with fresh data
     const event: ObsidianCodeblockEvent = { source: src, el: element, ctx: context };
@@ -82,7 +90,7 @@ export function codeblockParser(p: KindModelPlugin) {
   const processHandlers = async (
     source: string,
     el: HTMLElement,
-    ctx: MarkdownPostProcessorContext & Component,
+    ctx: MarkdownPostProcessorContext,
   ) => {
     const event: ObsidianCodeblockEvent = { source, el, ctx };
     const handlers = p.api.queryHandlers(event);
@@ -107,9 +115,26 @@ export function codeblockParser(p: KindModelPlugin) {
   const callback = async (
     source: string,
     el: HTMLElement,
-    ctx: MarkdownPostProcessorContext & Component,
+    ctx: MarkdownPostProcessorContext,
   ) => {
     el.style.overflowX = "auto";
+
+    if (countHandlerInvocations(source) > 1) {
+      const render = renderApi(p)(el, ctx.sourcePath);
+      render.callout(
+        "error",
+        `Invalid KM Block`,
+        {
+          content: [
+            `<b>Multiple handler invocations are not allowed in a single <code>km</code> block.</b>`,
+            `Each <code>km</code> block should contain exactly one handler call.`,
+            `<br/><b>Source:</b>&nbsp;<code>${escapeHtml(source.trim())}</code>`,
+          ],
+          icon: ERROR_ICON,
+        },
+      );
+      return;
+    }
 
     // If Dataview isn't ready yet, defer processing until it is
     if (p.dvStatus !== "ready") {
@@ -159,7 +184,7 @@ function handleOutcomes(
   p: KindModelPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext & Component,
+  ctx: MarkdownPostProcessorContext,
   outcomes: Outcome[],
 ) {
   p.info(`code block processed against handlers`, outcomes.reduce(
@@ -182,7 +207,6 @@ function handleOutcomes(
     el.style.paddingBottom = "4px";
 
     const render = renderApi(p)(el, ctx.sourcePath);
-    const { format } = p.api;
 
     if (err) {
       // Use KindError's browser messages if available
@@ -198,8 +222,8 @@ function handleOutcomes(
 
       // Build enhanced error content with context
       const errorContent: string[] = [
-        `<b>Handler:</b>&nbsp;${format.inline_codeblock(handlerName)}`,
-        `<b>Query:</b>&nbsp;${format.inline_codeblock(source?.trim() || "")}`,
+        `<b>Handler:</b>&nbsp;<code>${escapeHtml(handlerName)}</code>`,
+        `<b>Query:</b>&nbsp;<code>${escapeHtml(source?.trim() || "")}</code>`,
       ];
 
       if (arkTypeErrors) {
@@ -208,12 +232,12 @@ function handleOutcomes(
       }
       else {
         // Regular error message
-        errorContent.push(`<b>Error:</b>&nbsp;${err?.message || String(err)}`);
+        errorContent.push(`<b>Error:</b>&nbsp;${escapeHtml(err?.message || String(err))}`);
       }
 
       // Add stack trace in debug mode
       if (isDebugMode && err?.stack) {
-        errorContent.push(`<details><summary>Stack Trace</summary><pre>${err.stack}</pre></details>`);
+        errorContent.push(`<details><summary>Stack Trace</summary><pre>${escapeHtml(err.stack)}</pre></details>`);
       }
 
       // Add handler documentation link if available
@@ -222,14 +246,14 @@ function handleOutcomes(
         errorContent.push(`<br/><b>Examples:</b>`);
         errorContent.push(`<ul style="margin-top: 4px;">`);
         for (const example of meta.examples) {
-          errorContent.push(`<li><code>${example}</code></li>`);
+          errorContent.push(`<li><code>${escapeHtml(example)}</code></li>`);
         }
         errorContent.push(`</ul>`);
       }
 
       render.callout(
         "error",
-        `Error in&nbsp;${format.inline_codeblock("km")}&nbsp;handler`,
+        `Error in&nbsp;<code>km</code>&nbsp;handler`,
         {
           content: errorContent,
           icon: ERROR_ICON,
