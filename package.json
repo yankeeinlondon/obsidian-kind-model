@@ -3,12 +3,13 @@
 	"version": "0.3.0",
 	"description": "Stronger context, linking, and lookups through Kinded types",
 	"scripts": {
-		"dev": "vite build --watch ",
+		"dev": "KM_PUSH_ON_BUILD=1 vite build --watch ",
 		"build": " vite build",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"lint": "oxlint -c oxlint.json src",
 		"lint:fix": "oxlint -c oxlint.json --fix src",
+		"typecheck": "tsc --noEmit",
 		"push": "echo 'pushing new build to vault' && cp ./main.js \"/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model\" && cp ./manifest.json '/Users/ken/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian/.obsidian/plugins/obsidian-kind-model'",
 		"release": "bumpp"
 	},
@@ -70,7 +71,7 @@
 		"@yankeeinlondon/happy-wrapper": "^3.5.7",
 		"@yankeeinlondon/kind-error": "^1.4.1",
 		"arktype": "^2.1.29",
-		"inferred-types": "^1.4.5",
+		"inferred-types": "^1.4.6",
 		"vue": "^3.5.25",
 		"xxhash-wasm": "^1.1.0",
 		"yaml": "^2.8.2"

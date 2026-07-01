@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an **Obsidian plugin** called "Kind Model" that extends Obsidian with a "kinded model" system for organizing entities in a personal knowledge management vault. The plugin uses the Dataview plugin as a dependency and adds classification, relationships, and metrics to pages via frontmatter conventions.
 
+
+**IMPORTANT:** use the 'obsidian' agent skill when working with Obsidian development tasks
+
 ### Classification Hierarchy
 
 ```

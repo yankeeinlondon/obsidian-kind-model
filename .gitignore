@@ -31,3 +31,4 @@ Icon
 IgnoreList
 .ai/draft 
 .gemini-clipboard
+.claudine/tmp/
