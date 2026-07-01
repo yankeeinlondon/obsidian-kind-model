@@ -91,6 +91,21 @@ export interface PageBlock {
 
 export type LogLevel = TupleToUnion<typeof LOG_LEVELS>;
 
+export interface Kind {
+  name: string;
+  _classification_type: KindClassificationConfig;
+  _filename_date_prefix: boolean;
+  _folder_include_cwd: boolean;
+  _folder_choices_sub_dirs: boolean;
+  _folder_favorite: string;
+  _show_sub_dirs: boolean;
+  _relationships: Relationship[];
+  tag: string;
+  _metric_props: Metric[];
+  _aliases_lowercase: boolean;
+  _aliases_plural: boolean;
+}
+
 /**
  * The settings which get saved for mobile and desktop configurations
  * for a given vault.
@@ -102,8 +117,33 @@ export interface KindModelSettings {
    */
   log_level: LogLevel;
 
+  /**
+   * how to manage tags between page body and frontmatter
+   */
+  handle_tags: TagHandler;
+
+  /**
+   * legacy/default folder used by existing event handlers and settings UI
+   */
+  kind_folder: string;
+
+  /**
+   * default classification model for newly created kind definitions
+   */
+  default_classification: KindClassificationConfig;
+
   /** paths to all known Kind pages */
   kindPaths: string[];
+
+  /**
+   * page template blocks available to kinds
+   */
+  page_blocks: PageBlock[];
+
+  kinds: Kind[];
+  types: TypeGrouping[];
+  url_props: UrlProp[];
+  url_patterns: UrlPattern[];
   /**
    * the base directory which all Kind Definition pages
    * should be moved to. If not set then this means

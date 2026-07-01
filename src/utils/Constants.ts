@@ -28,7 +28,12 @@ export const DEFAULT_SETTINGS: KindModelSettings = {
   kind_folder: "kind",
   handle_tags: "Do not Change",
   default_classification: "category and subcategory",
+  kindPaths: [],
   page_blocks: [],
+  kinds: [],
+  types: [],
+  url_props: [],
+  url_patterns: [],
   log_level: "warn",
 };
 
