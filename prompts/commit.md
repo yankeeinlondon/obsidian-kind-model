@@ -1,5 +1,5 @@
 ---
-lessons_learned: "@claudine/memory/commits.md"
+lessons_learned: ".claudine/memory/commits.md"
 timeout: 10m
 step_timeout: 7m
 show_system_prompt: false
@@ -73,7 +73,7 @@ Your task is to:
             - Bullet points describing WHAT changed, WHY it changed, and any NOTABLE ASPECTS (each bullet starts with `-`)
             - Example:
 
-                ```
+                ```txt
                 feat(biscuit-clip): add initial clipboard package structure
 
                 - add README.md documenting package purpose and usage
