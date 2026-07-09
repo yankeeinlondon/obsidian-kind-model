@@ -1,4 +1,4 @@
-import { Expect, Equal } from "@type-challenges/utils";
+import type { Equal, Expect } from "@type-challenges/utils";
 import { describe, it } from "vitest";
 import { PageId } from "../src/types/PageId";
 

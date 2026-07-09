@@ -1,4 +1,3 @@
-import { } from "@type-challenges/utils";
 import { isMetric } from "inferred-types";
 import { describe, expect, it } from "vitest";
 import { getPropertyType } from "../src/api/getPropertyType";
