@@ -36,3 +36,13 @@ Operational lessons for orchestrating parallel group commits in this repo.
   re-staging one group at a time. Developers may be working in the tree
   concurrently, so staging/unstaging can have unexpected consequences. Commit
   each group's files explicitly with `git commit --only …` instead.
+
+## Keep `onlyBuiltDependencies` with the bump that needs it
+
+- When a dependency bump introduces a package that has a native build step
+  (e.g. `@codemirror/language`), the matching `onlyBuiltDependencies` entry in
+  `pnpm-workspace.yaml` MUST land in the same commit as the `package.json`
+  bump. Splitting them leaves an intermediate commit where `pnpm install`
+  can fail or skip the required build. Treat `package.json`,
+  `pnpm-workspace.yaml`, and `pnpm-lock.yaml` as one logical unit for
+  dependency-update groups.
