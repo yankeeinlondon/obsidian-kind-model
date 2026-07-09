@@ -25,6 +25,9 @@ build:
     @echo "-------------------"
     pnpm build
 
+test:
+    @pnpm test
+
 # run the codebase in "dev" mode
 dev:
     @pnpm dev
