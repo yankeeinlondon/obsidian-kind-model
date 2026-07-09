@@ -50,7 +50,13 @@ function has_command() {
 function copy_files() {
 	if file_exists "${MJS_FILE}"; then
 		echo " - converting ESM to CJS using tsup"
-		if tsup; then
+		if [ -x "${PWD}/node_modules/.bin/tsup" ]; then
+			TSUP="${PWD}/node_modules/.bin/tsup"
+		else
+			TSUP="tsup"
+		fi
+
+		if "${TSUP}"; then
 			echo " - CJS file created locally in dist folder"
 		else
 			echo " - problem transpiling ESM to CJS!"

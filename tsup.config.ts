@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["dist/main.mjs"],
   format: ["cjs"],
-  dts: true,
+  dts: false,
   splitting: false,
   external: [
     "obsidian",
