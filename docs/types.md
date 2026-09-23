@@ -1,92 +1,97 @@
 # Types
 
-**Types** are defined to create a _grouping_ of related **Kinds**.
+A **Type** groups related **Kinds**, or a selected **Category** within a Kind. For example, a `product` Type can group the `software`, `hardware`, and `service` Kinds. A Type can also group only AI-related pages from several Kinds by assigning the Type to their AI categories.
 
-## Characteristics
+Types are represented by tagged Markdown pages. Kind Model uses the tag and frontmatter links to find a page's Type and, when there is a single Kind, expose it through the `type` property. See [Kinded pages](./page-types/kinded-page.md) for how Kind tags classify individual pages.
 
-### Defining a Type
+## Define a Type
 
-- a **Type** page (also referred to as a _type definition page_) is defined by a page which uses the tag: 
+Create a dedicated page and add a tag in the form `#type/<name>`. The tag identifies the Type; the page title can be more readable than the tag.
 
-	```md
-	#type/[NAME]
-	```
+For example, `Product.md` can contain:
 
-### Expressing Membership to a Type
+```md
+# Product
 
-#### Kind Membership
+Groups products tracked in this vault.
 
-- the most obvious means to associate to a **Type** -- and the recommended way unless you like living on the edge -- is to associate at the `Kind` level.
-  - You can can define a kind's membership on a [Kind Definition Page](./kind-defn-page.md) by adding the Kind tag's identifier along with the type's tag identifer:
+#type/product
+```
 
-    ```md
-    #kind/software #type/product
-    ```
+Use a distinct Type page for each Type. Keep Type definition pages separate from Kind and Category definition pages, since those classification tags determine how Kind Model interprets a page.
 
-  - when a [kind definition page](./kind-defn-page.md) is _updated_ ([command](./command-update.md)) then it will ensure that the `kind` and `type` properties are both set.
-  - when you associate a **Type** to a **Kind** then every [kinded page](./kinded-page.md) will _inherit_ this **Type** as well. 
-    - Not as a "tagged representation", but rather ...
-    - the property `type` will be populated when running the [update command](./command-update.md) on these pages allowing you to jump to the top of the [classification stack](./classification.md).
+## Assign a Type to a Kind
 
-#### Associating to a Category
+To make every page of a Kind belong to a Type, put both definition tags on the Kind definition page. For example, the `Software` Kind can use:
 
-- In cases where you want only one (or a few) [_categories_](./categories.md) of a **Kind** to a Type rather than the whole Kind, you can now associate to a [category page](./categories.md)
-- Structurally I suspect the use-cases where you'll want to do this will arise in situations where the category dimensions of one Kind are orthogonal to another's
-- Here's a simple example of how you'd tag this relationship:
+```md
+# Software
 
-  ```md
-  #concept/category/ai #type/ai
-  ```
+#kind/software #type/product
+```
 
-> this expresses that the given page is a [Category page](./categories.md) for  `concept` (a Kind).
+You can also store the Type page as a `type` frontmatter link:
 
-#### What about Subcategories?
+```yaml
+type: "[[Product]]"
+```
 
-- Ok now you're pushing boundaries. :)
-- In a few places in code I have added some _future_ support to make this work but for now you should consider this not supported at the moment
+Run the plugin's [Update command](./commands/update-command.md) on the Kind definition page to write the resolved Type link into frontmatter. Kinded pages can then inherit that link from their Kind. When reading a page, an existing `type` link takes precedence over a local Type tag. On Kind and Category definition pages, Update also processes a local Type tag and can replace the frontmatter link with the Type named by that tag, so keep both values aligned.
 
-#### Kinded Pages
+The `#type/...` tag also lets the Type page's `Children()` query find this Kind definition. A frontmatter link alone sets the relationship used by the page API, but the current `Children()` query discovers definitions by their Type tag.
 
-- As was stated above, a [kinded-page](./kinded-page.md) should never add the `#type/[NAME]` tags to their pages. 
-- Instead, the [kinded page](./kinded-page.md) _inherits_ it's **Type** from it's **Kind** (most commonly) or occationally it's **Category**.
-- When you run the [update command](./command-update.md) the `type` property will be set via this inheritance
-- **The multi-Kinded page**
-  - Unlike [Kind Definition pages](./kind-defn-page.md), a [kinded page](./kinded-page.md) _can_ have multiple Kind's associated with it.
-  - I'd recommend **not** doing this to start but when you find _you need to_ then _you're allowed to_. You're welcome.
-  - That said, as soon as you have more than one kind, the `type` property (which connotates a singular entity) no longer is used; in it's place we will set the `types` property with a list of `Kind` links
-    - **Note:** if you have multiple kind's but only one of your Kind definitions has a Type then you'll find that you have the `types` property set but with only a single entity. That is expected behavior.
+## Assign a Type to selected Categories
 
+To assign a Type through a Category, put its Type tag on the Category definition page. Pages inherit that Type when their Kind does not already have a Type link. For example, an AI category in the `software` Kind can use:
 
-## Possible Examples
+```md
+# AI software
 
-### Using Products as an Example
+#software/category/ai #type/ai
+```
 
-In my own vaults I tend use `product` as a **Type**. Underneath that I have the following `Kind`'s:
+Run Update on the Category definition page to store its Type link. A page classified under that Category can inherit this Type if its Kind has no Type link. When both the Kind and Category definitions have Type links, the Kind's Type takes precedence for ordinary pages in the Category. A direct `#type/...` tag or `type` link on an individual page takes precedence over either inherited value.
 
-- `software`
-- `hardware`
-- `service`
-- `purchase`
+This is useful when one Type spans categories from several Kinds that do not already have their own Type links. For example, an `ai` Type might include the `ai` Categories of `software`, `concept`, and `standard`, without assigning every page in those Kinds to AI.
 
-This allows for each of the _kinds_ to be further segmented using [categories](./categories.md) and [subcategories](./subcategories.md). Of course there are lots of ways you can model the world so please view this as just a _possible_ example.
+## How pages resolve their Type
 
-Overall I don't use **Type**'s a ton because `Kind` provides me enough flexibility most of the time. Another example of where I'm experimenting with **Type** is with `AI`:
+For a page with one Kind, Kind Model checks these sources in order:
 
-### Using AI as an Example
+1. Its own `type` frontmatter link.
+2. A `#type/...` tag on the page.
+3. The Type link on its Kind definition.
+4. The Type link on its Category definition, when the page is associated with a Category.
 
-- I have a **Type** who's tag is `ai`
-- And for kind's I have:
-  - `#kind/ai-family #type/ai` - a kind to hold all model types
-  - `#concept/ai #type/ai` - I have Kind called `concept` but I only want the concepts related to AI to be a part of the type
-  - `#standard/ai #type/ai` - the same idea applies to standards
-  - `#software/ai #type/ai` - and again to software
+The Update command writes the resolved Type as a frontmatter link. A direct `#type/...` tag on an individual page is supported, but putting the tag on a Kind or Category definition usually makes the relationship easier to maintain across pages.
 
-When I run the `Children()` handler on my AI Type page by putting this block on the page:
+A page with multiple Kinds uses the `types` property, which contains links to Type pages. Kind Model resolves it from an existing `types` frontmatter property, direct Type tags, or the Types linked from the page's Kinds. Update writes the result to `types` and removes a singular `type` property. If only one of the page's Kinds has a Type, `types` can contain just that one Type.
 
+Example for a page assigned to two Kinds whose definitions belong to Product and Service:
+
+```yaml
+kinds:
+  - "[[Software]]"
+  - "[[Consulting]]"
+types:
+  - "[[Product]]"
+  - "[[Service]]"
+```
+
+## View a Type's definitions
+
+On a Type definition page, add this `km` code block:
+
+````md
 ```km
 Children()
 ```
+````
 
-It returns this:
+`Children()` lists Kind definition pages and Category definition pages carrying that Type's `#type/...` tag. It does not list every ordinary page that inherits the Type, and Type tags stored only as frontmatter links are not used by this query.
 
-![type classification](../images/type-classification.png)
+For example, if `#type/ai` appears on the `AI Family` Kind definition and on Category definitions for `concept`, `research`, and `software`, the table lists those four definitions:
+
+![Example Type classifications shown by Children](../images/type-classification.png)
+
+The current `Children()` query does not list subcategory definitions. Pages can resolve a Type from a direct `#type/...` tag, including on a subcategory-classified page, but they do not inherit a Type from a subcategory definition. Assign a Type to a Kind or Category when you want its classified pages to inherit that Type.

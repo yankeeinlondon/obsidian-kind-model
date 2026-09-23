@@ -32,9 +32,7 @@ function createFuturePageLink(p: KindModelPlugin) {
 
     const kindLookup = kind ? p.kindTagLookup.get(kind) : undefined;
 
-    const kindDir = kindLookup
-      ? kindLookup.fm.__default_dir
-      : undefined;
+    const kindDir = kindLookup?.fm?.__default_dir;
     const currentDir = dirname(o.getCurrentFile().path);
     const dir = kindDir || currentDir;
 

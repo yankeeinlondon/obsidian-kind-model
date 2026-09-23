@@ -1,278 +1,157 @@
-# KM Block Type Guardrails
+# KM Parsing and Validation
 
-This document covers the type validation and autocomplete system for `km` codeblocks in the Kind Model plugin.
+This guide explains how a `km` query is parsed, what feedback the editor provides, and how handler developers define valid arguments. It is useful when a query is rejected or when adding a handler.
 
-## For Plugin Users
+## Query syntax
 
-### Autocomplete
+Write one handler call in each fenced `km` block. The handler name is case-sensitive. Positional arguments come first; an options object, when present, must be the final argument. Strings use double quotes, and values follow JSON syntax. Option keys may be unquoted because the parser converts them to JSON keys.
 
-The `km` codeblock editor provides intelligent autocomplete to help you write queries faster and with fewer errors.
+````markdown
+```km
+Kind("software", "development", { hide: ["Links"] })
+```
+````
 
-#### Handler Name Completion
-
-When you start typing in a `km` block, you'll see suggestions for available handlers:
+This call asks `Kind` for the `software/development` classification and hides its Links column. `Kind` requires its first positional argument; its category and subcategory are optional.
 
 ```km
-Ba  <- typing this will suggest "BackLinks"
+BackLinks({ dedupe: false, exclude: ["software", "hardware/automation"] })
 ```
 
-Press `Tab` or `Enter` to accept a suggestion.
-
-#### Option Completion
-
-Inside the options hash `{}`, you'll get suggestions for valid options:
+This is a valid `BackLinks` call. Each `km` block must contain one handler call, so try invalid cases in separate blocks. The first uses an unknown key; the second supplies a string where `dedupe` requires a boolean.
 
 ```km
-BackLinks({de  <- typing this will suggest "dedupe"
+BackLinks({ dedup: true })
 ```
-
-#### Boolean Value Completion
-
-After typing an option key followed by `:`, you'll see `true` and `false` suggestions:
 
 ```km
-BackLinks({dedupe:   <- will suggest true/false
+BackLinks({ dedupe: "false" })
 ```
 
-#### Manual Trigger
+The argument text is parsed as JSON after unquoted option keys are converted. It is not evaluated as JavaScript: use double-quoted strings, and do not use comments, expressions, or trailing commas.
 
-Autocomplete triggers automatically as you type. You can also press `Ctrl+Space` (or `Cmd+Space` on Mac) to manually trigger suggestions.
+## Feedback while editing
 
-### Understanding Errors
+The plugin adds CodeMirror autocomplete and a linter to the editor. They operate inside `km` code fences.
 
-#### Inline Errors (While Editing)
+Autocomplete can suggest:
 
-While editing a `km` block, errors appear as red underlines:
+- Registered handler names, with a description and example usages.
+- Option keys declared by the handler's ArkType options schema, including their types and whether the key is optional.
+- `true` and `false` after an option colon. These value suggestions are generic; they appear even when the option expects a string or array.
+- Kind names for the first positional argument of `Kind`, from the cached `#kind/...` tags. Category and subcategory completions are also implemented, but they read that same cache; ordinary entity tags such as `#software/development` are not included in it, so those suggestions are usually empty.
 
-- **Red squiggle**: Indicates a problem at that location
-- **Hover**: Place your cursor over the underline to see error details
-- **Quick fixes**: Some errors offer automatic fixes you can apply
+Suggestions appear as you type. Use the editor's completion keybinding (usually `Ctrl-Space`, or `Cmd-Space` on macOS) to request them manually. Accept a selected suggestion with the editor's completion keys, commonly `Tab` or `Enter`.
 
-Common inline errors:
+The linter runs after a short delay and can underline unbalanced brackets, unrecognized handler names, unknown option keys, and positional arguments passed to a handler that declares it accepts none. Close misspellings of handler names and option keys can include a quick fix.
 
-| Error | Meaning | Fix |
-|-------|---------|-----|
-| `Unknown handler 'BackLink'` | Handler name is misspelled | Use the suggested spelling or check available handlers |
-| `Unknown option 'dedup'` | Option key is misspelled | Use the suggested spelling |
-| `Unclosed '('` | Missing closing parenthesis | Add the missing `)` |
+The linter is an editing aid, not the runtime validator. It does not currently check option value types, required positional arguments, or all query syntax. For example, `Kind()` may have no inline diagnostic even though rendering reports the missing required kind. A wrong option value such as `BackLinks({ dedupe: "false" })` is also checked when the block renders.
 
-#### Rendered Errors (After Exiting Editor)
+## Validation when the block renders
 
-When you leave the editor, the `km` block renders. If there are errors, you'll see a detailed error callout:
+At render time, the plugin parses the argument text, separates positional values from the final options object, and validates those values using the handler's configured parser and schemas. A validation failure is shown in an error callout in place of the handler output.
 
-```
-┌─────────────────────────────────────────────┐
-│ ⚠️ Error in `km` handler                    │
-│                                             │
-│ Handler: BackLinks                          │
-│ Query: BackLinks({dedup: true})             │
-│                                             │
-│ Unknown option: dedup                       │
-│ Did you mean: dedupe                        │
-│                                             │
-│ Valid options for BackLinks:                │
-│ • ignoreTags                                │
-│ • dedupe                                    │
-│ • exclude                                   │
-│ • excludeCompletedTasks                     │
-│                                             │
-│ Examples:                                   │
-│ • BackLinks()                               │
-│ • BackLinks({dedupe: false})                │
-└─────────────────────────────────────────────┘
+For schema-backed handlers, errors can identify the invalid property, expected type, and received value. An unknown option may include a spelling suggestion; callouts can also show examples registered for the handler. An unknown handler gets a list of available handlers and, for close spellings, a suggestion.
+
+The current `Kind` and `BackLinks` handlers demonstrate the schema-backed behavior. Each example goes in its own `km` block:
+
+```km
+Kind("software", { hide: ["Links"] })
 ```
 
-### Handler Reference
+```km
+BackLinks({ dedupe: false })
+```
 
-| Handler | Description | Example |
-|---------|-------------|---------|
-| `BackLinks` | Shows pages that link to the current page | `BackLinks({dedupe: true})` |
-| `Kind` | Displays pages matching a classification | `Kind("software", "development")` |
-| `Children` | Shows child classifications | `Children()` |
-| `Tasks` | Shows tasks referencing the current page | `Tasks()` |
-| `VideoGallery` | Displays videos from page metadata | `VideoGallery({size: "M"})` |
-| `PageEntry` | Renders page header with classification | `PageEntry()` |
-| `IconPage` | Displays icons defined in frontmatter | `IconPage()` |
-| `Accounts` | Shows account information | `Accounts()` |
-| `Book` | Formatted book summary | `Book()` |
-| `Journal` | Journal page header with navigation | `Journal()` |
-| `Debug` | Debug information for development | `Debug()` |
+`Kind` uses ArkType schemas for positional arguments and options. `BackLinks` uses ArkType for options and accepts no positional arguments. See [KM Query Handlers](km-handlers.md) for the handlers' current options and examples.
 
----
+## Schema conventions for handler developers
 
-## For Handler Developers
+New handlers should use ArkType schemas. One schema defines both runtime validation and the TypeScript type available to the handler implementation. In an object schema, a key without `?` is required; a key with `?` is optional. ArkType accepts undeclared object keys by default, so add `"+": "reject"` when unknown options should be errors. Current handlers use this strict form.
 
-### Creating a Handler
+For example, this schema requires `kind`, allows an optional `category`, and rejects undeclared option keys:
 
-Handlers are created using the `createHandlerV2` fluent API with ArkType schemas:
-
-```typescript
+```ts
 import { type } from "arktype";
+
+const ExampleScalarSchema = type({
+  kind: "string",
+  "category?": "string",
+});
+
+const ExampleOptionsSchema = type({
+  "+": "reject",
+  "includeArchived?": "boolean",
+  "tags?": "string[]",
+});
+```
+
+Use the scalar key list to map positional arguments to the object keys in the scalar schema. Register the handler metadata for autocomplete and diagnostics, and make the handler available through `src/handlers/index.ts` so the runtime can dispatch to it.
+
+```ts
 import { createHandlerV2 } from "./createHandler";
 import { registerHandler } from "./registry";
 
-// 1. Define the options schema
-const MyHandlerOptionsSchema = type({
-  "+": "reject",  // Reject unknown keys
-  "optionA?": "string",
-  "optionB?": "boolean",
-  "tags?": "string[]",
-});
-
-// 2. Register the handler with metadata
 registerHandler({
-  name: "MyHandler",
-  scalarSchema: null,  // or your scalar schema
-  optionsSchema: MyHandlerOptionsSchema,
-  description: "What this handler does",
+  name: "Example",
+  scalarSchema: ExampleScalarSchema,
+  optionsSchema: ExampleOptionsSchema,
+  acceptsScalars: true,
+  description: "Shows an example query with typed arguments",
   examples: [
-    "MyHandler()",
-    "MyHandler({optionA: \"value\"})",
+    'Example("software")',
+    'Example("software", { includeArchived: true })',
   ],
 });
 
-// 3. Create the handler
-export const MyHandler = createHandlerV2("MyHandler")
-  .noScalar()  // or .scalar("name AS string", "count AS opt(number)")
-  .optionsSchema(MyHandlerOptionsSchema)
-  .handler(async (evt) => {
-    const { plugin, page, options } = evt;
-
-    // Your handler logic here
-
-    return true;  // Return true on success
+export const Example = createHandlerV2("Example")
+  .scalarSchema(["kind", "category"], ExampleScalarSchema)
+  .optionsSchema(ExampleOptionsSchema)
+  .handler(async ({ scalar, options }) => {
+    // scalar.kind is a string; scalar.category and options.includeArchived are optional.
+    console.log(scalar.kind, scalar.category, options.includeArchived, options.tags);
+    return true;
   });
 ```
 
-### Schema Design
+If a handler takes no positional arguments, use `.noScalar()` and register `scalarSchema: null` with `acceptsScalars: false`. The registry metadata is consumed by editor tooling; creating the handler alone does not add it to that registry.
 
-#### TypeToken to ArkType Translation
+### ArkType equivalents for TypeToken definitions
 
-| TypeToken | ArkType | Example |
-|-----------|---------|---------|
-| `"string"` | `"string"` | `name: "string"` |
-| `"number"` | `"number"` | `count: "number"` |
-| `"bool"` | `"boolean"` | `enabled: "boolean"` |
-| `"opt(bool)"` | Key with `?` | `"enabled?": "boolean"` |
-| `"array(string)"` | `"string[]"` | `tags: "string[]"` |
-| `"opt(string)"` | `"string?"` | `"name?": "string"` |
-| `"enum(a,b,c)"` | `"'a' \| 'b' \| 'c'"` | `size: "'S' \| 'M' \| 'L'"` |
-| `"string\|array(string)"` | `"string \| string[]"` | `exclude: "string \| string[]"` |
+Some older handlers use TypeToken strings. These are the common type mappings when converting a value definition to ArkType:
 
-#### Rejecting Unknown Keys
+| TypeToken value | ArkType value schema | Example |
+| --- | --- | --- |
+| `string` | `string` | `name: "string"` |
+| `number` | `number` | `count: "number"` |
+| `bool` or `boolean` | `boolean` | `"enabled?": "boolean"` |
+| `opt(string)` | `string` on an optional key | `"name?": "string"` |
+| `array(string)` | `string[]` | `"tags?": "string[]"` |
+| `enum(S,M,L)` | `'S' | 'M' | 'L'` | `"size?": "'S' | 'M' | 'L'"` |
 
-Always include `"+": "reject"` in your schema to match legacy TypeToken behavior:
+For example, the optional TypeToken option `dedupe: "opt(bool)"` becomes `"dedupe?": "boolean"` in an ArkType object schema. The optional marker moves to the key. A union can be expressed directly in ArkType, such as `"exclude?": "string | string[]"`.
 
-```typescript
-const MySchema = type({
-  "+": "reject",  // Unknown keys will cause validation errors
-  "validOption?": "string",
-});
+## TypeToken compatibility and limits
+
+`createHandlerV2` still supports the TypeToken API for compatibility:
+
+```ts
+createHandlerV2("LegacyExample")
+  .scalar("kind AS string")
+  .options({ dedupe: "opt(bool)" })
+  .handler(async ({ scalar, options }) => {
+    console.log(scalar.kind, options.dedupe);
+    return true;
+  });
 ```
 
-#### Type Inference
+The deprecated `createHandler` API also uses this parser. A hybrid handler can keep TypeToken positional parameters and validate its options with ArkType by combining `.scalar(...)` with `.optionsSchema(...)`.
 
-ArkType automatically infers TypeScript types from your schema:
+The legacy parser accepts basic types, optional wrappers, arrays, enums, and simple `|` unions for option values at runtime. Its TypeScript `TypeToken` definition does not admit union strings, however, so callers may need a cast to use those unions. The parser also checks scalar count, requires the options object to be last, rejects undeclared option keys, and validates option values. Its scalar value checking is limited: it checks plain `string` scalar tokens, but does not type-check `opt(string)`, numbers, booleans, or enums. Missing legacy option keys are allowed even when their TypeToken is not wrapped in `opt(...)`. Prefer ArkType when adding or tightening validation.
 
-```typescript
-const OptionsSchema = type({
-  "+": "reject",
-  "name?": "string",
-  "count?": "number",
-  "tags?": "string[]",
-});
+`TypeToken` has compile-time forms for some additional values, including `column(...)` and `columns(...)`, but the legacy runtime option validator does not validate those forms. It treats unrecognized token types permissively. Do not rely on a TypeToken declaration alone to enforce a value unless the runtime parser explicitly supports that token.
 
-// Type is automatically inferred:
-type Options = typeof OptionsSchema.infer;
-// { name?: string; count?: number; tags?: string[] }
-```
+## Related documentation
 
-### Handler Registration
-
-Handlers self-register when their module is loaded. The registry is used for:
-
-1. **Autocomplete**: Provides handler names and option suggestions
-2. **Validation**: Validates options against the schema
-3. **Error messages**: Shows valid options in error messages
-4. **Documentation**: Examples are shown in error callouts
-
-### Best Practices
-
-1. **Always register your handler** - This enables autocomplete and better error messages
-2. **Provide examples** - They appear in error messages to help users
-3. **Write clear descriptions** - Shown in autocomplete tooltips
-4. **Use strict schemas** - Include `"+": "reject"` to catch typos
-5. **Test your handler** - Verify it works with valid and invalid inputs
-
-### Handler Event Object
-
-The handler receives an event object with:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `plugin` | `KindModelPlugin` | Plugin instance |
-| `page` | `PageInfoBlock` | Current page with metadata |
-| `options` | `T` | Validated options (typed from schema) |
-| `scalar` | `S` | Scalar parameters (if defined) |
-| `createTable` | Function | Table rendering factory |
-| `render` | `RenderApi` | DOM rendering utilities |
-| `dv` | `DataviewAPI` | Dataview API access |
-| `report` | Function | Error reporting utility |
-
-### Error Handling
-
-Return errors to display them in the rendered block:
-
-```typescript
-.handler(async (evt) => {
-  if (!evt.page.current.requiredField) {
-    return evt.report("Missing required field");
-  }
-
-  // Normal processing
-  return true;
-});
-```
-
----
-
-## Architecture
-
-### Validation Flow
-
-```
-User types in km block
-        │
-        ▼
-┌───────────────────┐
-│ CodeMirror Linter │  ← Real-time validation (300ms debounce)
-│  km-linter.ts     │
-└───────────────────┘
-        │
-        ▼
-┌───────────────────┐
-│ Handler Registry  │  ← Schema lookup
-│  registry.ts      │
-└───────────────────┘
-        │
-        ▼
-┌───────────────────┐
-│ ArkType Validate  │  ← Type validation
-│  schema.ts        │
-└───────────────────┘
-        │
-        ▼
-    Diagnostics shown as red underlines
-```
-
-### Files
-
-| File | Purpose |
-|------|---------|
-| `src/handlers/registry.ts` | Handler registration and metadata |
-| `src/handlers/schema.ts` | ArkType validation utilities |
-| `src/handlers/error-display.ts` | Enhanced error formatting |
-| `src/utils/language/km-parser.ts` | Parsing utilities for context detection |
-| `src/utils/language/autocomplete.ts` | CodeMirror autocomplete source |
-| `src/utils/language/km-linter.ts` | CodeMirror linter extension |
-| `src/utils/language/km_lang.ts` | Language support combining extensions |
+- [KM Query Handlers](km-handlers.md) describes handler arguments and current user-facing options.
+- [Handler reference: VideoGallery](handlers/VideoGallery.md) documents that handler's player behavior and controls.

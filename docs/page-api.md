@@ -1,73 +1,126 @@
-
 # Page API
 
-## Overview
+The Kind Model Page API turns a page reference into either the page data Dataview indexed or a richer Kind Model view of that data. Use the richer result only when you need classification, task, or frontmatter helpers.
 
-The core methods we'll be talking about are:
+The plugin exposes these methods on `plugin.api`, where `plugin` is the `KindModelPlugin` instance:
 
-- `getPage()`
-- `getPageInfo()`
-- and `getPageBlock()`
+| Method | Use it for | Result |
+| --- | --- | --- |
+| `getPage(ref)` | Read Dataview page data | `DvPage` or `undefined` |
+| `getPageInfo(ref)` | Read page data plus Kind Model metadata | `PageInfo` or `undefined` |
+| `getPageInfoBlock(evt)` | Get the page and render helpers for a `km` code block | `PageInfoBlock` or `undefined` |
+| `createPageView(view)` | Combine page metadata with an open Markdown view | `PageView` or `undefined` |
+| `getPath(ref)` | Extract a path from a page reference | `string` or `undefined` |
 
-but we'll also touch on:
+Page resolution uses the Dataview index. The plugin defers its own startup work until Dataview is ready; when calling the API from another plugin, wait until Kind Model and Dataview have loaded. `getPath()` only extracts a path and does not query Dataview.
 
-- `getPath()`
-- `getFrontmatter()`
-- `setFrontmatter()`
+## Page references
 
-## Details of the Page API
+The lookup methods accept common page references: a Dataview page, an Obsidian file, a Dataview file link, a `PageInfo`, or a string. A `FuturePage` represents a page that does not exist yet, so `getPage()` returns `undefined` for it. For strings, pass a vault path such as `Projects/Obsidian.md`. `getPage()` also unwraps an Obsidian wikilink string such as `[[Projects/Obsidian.md|Obsidian]]`. Ordinary strings are passed to Dataview as page paths; a tag string such as `#kind/software` is not treated as a tag query.
 
-### `getPage(ref) → Page` 
+`getPath(ref)` extracts a path without looking up the page or checking that it exists. A future page, or an unsupported value, has no path and returns `undefined`.
 
-The most common, least expensive, and first call you should understand is `getPage()`. It takes a variety of input types which "reference" a page and returns a `Page` object. Inputs allowed include:
+## Look up a Dataview page
 
-- `string` which is a "path" to a file in the vault
-- `string` which is a "tag" reference
-- `string` which is a "name" of a file in the vault (note: because this is not fully qualified obsidian will just lookup the _first_ file with this name)
-- `DvPage` which is a page object returned by the [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/)
-- `TFile` an Obsidian representation of a file
-- `Link` is a format provided by the [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/) which provides simple metadata that allows for building a _link_ to another page in the vault
-- `Page`'s passed in will simply be proxied back
+`getPage(ref)` returns Dataview's `DvPage`, not a Kind Model wrapper. It preserves the page's Dataview fields, including `file.path` and `file.frontmatter`. It returns `undefined` when the reference cannot be resolved.
 
-This method returns a `Page` object which closely resembles the `DvPage` you may be familiar with if you're fluent with **Dataview Queries** but adds on many helper methods. In many regards this is just a slightly enhanced version of the `page(name)` query that [Dataview Plugin](https://blacksmithgu.github.io/obsidian-dataview/) that you'll probably already know but it should be preferred over using the **DataView** variant in all use-cases where you're working inside this repo.
+```ts
+const page = plugin.api.getPage("Projects/Obsidian.md");
 
-#### Resolving `string` references
+if (!page) {
+  return;
+}
 
-For `string` types passed in we must resolve multiple _reference types_ and we will do it in the following order:
+console.log(page.file.path);
+console.log(page.file.frontmatter.status);
+```
 
-- any string with `/` but not starting with `/` will be treated as a path only
-  - note: this will miss files who live in the root folder of a vault
-- any string leading with a leading `#` will be treated only as a "tag reference"
-- all other variants will use the following logic:
-  - try lookup as both a "path" and using the cache's `lookupByTag` method
-  - return the short circuited value (with preference for `lookupByTag` when found)
-  - if nothing found then try to lookup as the "name"
+Use this method for simple page lookups. If you need Kind Model classifications or helper methods, use `getPageInfo()`.
 
-### `getPageInfo(ref) → PageInfo`
+## Read Kind Model metadata
 
-The `getPageInfo(ref)` endpoint allows the same document reference types that `getPage(ref)` does but rather than resolving to a `Page` type it resolves to `PageInfo` which is a superset.
+`getPageInfo(ref)` returns a `PageInfo`. Its `current` property is the underlying `DvPage`; `fm` is that page's frontmatter. The result also includes the page path and name, tags and aliases, incoming and outgoing links, task data, classification data, and metadata helpers.
 
-To understand the full delta's between `Page` and `PageInfo` it's always best to just rely on the types themselves as they self document this and are guaranteed to be up-to-date but here are a few characteristics of `PageInfo`:
+`pageType` identifies the page's role in the model. Values include `kinded`, `kinded > category`, `kinded > subcategory`, their `multi-kinded` forms, `kind-defn`, `type-defn`, and `none`. An ordinary page with no recognized Kind Model classification can still produce a `PageInfo` with `pageType: "none"`.
 
-- the `page` property on a `PageInfo` dictionary is in fact the `Page` api
-- there are relational properties like:
-  - `categories`
-  - `subcategories`
-  - and a complete structured view via `classifications`
-- there are many _conditional properties_ to help identify characteristics about the referenced page, including:
-  - `hasCategoryProp`
-  - `hasCategoryTag`
-  - `hasMultipleKinds`
-  - etc.
+For a page with one kind, `kind` and `type` contain the related Dataview pages (the type can be `undefined`). For a page with multiple kinds, `kinds` and `types` contain arrays instead. `categories`, `subcategories`, and `classifications` provide the page's category data.
 
-There isn't a ton of "cost" in producing the additional attributes that a `PageInfo` adds beyond a `Page` but there will be plenty of times where all you need is provided by `Page` so there's no need to add this incremental cost to your render or calculation.
+```ts
+const info = plugin.api.getPageInfo("Projects/Obsidian.md");
 
-### `getPageBlock(ref, view) → PageBlock`
+if (!info) {
+  return;
+}
 
-This method provides quite a bit more than `PageInfo` but it requires that an Obsidian `View` be passed in along with the page reference.
+console.log(info.pageType); // for example, "kinded"
+console.log(info.current.file.path);
+console.log(info.fm.status);
+console.log(info.classifications);
 
-## Other Documentation
+for (const category of info.categories) {
+  console.log(category.category, category.kind);
+}
+```
 
-- [Overview Docs](../README.md)
-- [Caching](./caching.md)
-- [Query Handlers](./handlers.md)
+`getPageInfo()` computes the additional metadata from the Dataview page and Kind Model's classification helpers. Use `getPage()` when those fields are not needed.
+
+## Update frontmatter
+
+The Page API does not expose methods named `getFrontmatter()` or `setFrontmatter()`. Read frontmatter from `info.fm` (or `info.current.file.frontmatter`). `PageInfo` also includes path-bound asynchronous methods for common edits:
+
+```ts
+const info = plugin.api.getPageInfo("Projects/Obsidian.md");
+
+if (info) {
+  await info.setFmKey("status", "active");
+  await info.removeFmKey("draft");
+  await info.sortFmKeys();
+}
+```
+
+The same operations are available through `plugin.api.fm` when you have only a path. The API is curried: first pass the path, then the property arguments.
+
+```ts
+await plugin.api.fm.setFmKey("Projects/Obsidian.md")("status", "active");
+```
+
+When the value passed to `setFmKey` is a page reference, it is converted to a wikilink; an array consisting entirely of page references is converted to an array of wikilinks. These methods use Obsidian's `processFrontMatter` API.
+
+## Work with a `km` code block
+
+`getPageInfoBlock(evt)` builds a `PageInfoBlock` from an Obsidian code block event. The event's `ctx.sourcePath` determines the containing note. The result adds the code block's source text as `content`, its HTML element as `container`, the Obsidian component as `component`, and a `render` API. Here `content` is the `km` block's source, not the full Markdown note.
+
+```ts
+const block = plugin.api.getPageInfoBlock(evt);
+
+if (!block) {
+  return;
+}
+
+await block.render.render(`## ${block.current.file.name}`);
+```
+
+Kind Model handlers already receive the containing page as `event.page` and a render API as `event.render`, so a handler usually does not need to call `getPageInfoBlock()` itself.
+
+## Work with an open Markdown view
+
+`createPageView(view)` accepts an Obsidian `MarkdownView`. It returns `undefined` if the view has no file or the file cannot be resolved through Dataview. Otherwise, it combines `PageInfo` fields with `dom` references to the view's elements and a `view` snapshot. The snapshot includes the current content and `contentStructure`, which separates frontmatter and body and includes heading sections and a Markdoc syntax tree.
+
+```ts
+const pageView = plugin.api.createPageView(markdownView);
+
+if (pageView) {
+  console.log(pageView.path);
+  console.log(pageView.view.contentStructure.blocks);
+  pageView.dom.content.addClass("kind-model-inspected");
+}
+```
+
+The `view` data and DOM references come from the specific open view, so they are not stored in `PageInfo`. The `PageView` type currently declares a `component` property that `createPageView()` does not add at runtime. Likewise, `getPageInfoBlock()` currently adds `sectionInfo` at runtime, but `PageInfoBlock` does not declare that property.
+
+## Related documentation
+
+- [Kind Model handlers](./km-handlers.md)
+- [KM block rendering flow](./km-render-flow.md)
+- [Classification hierarchy](./classification-hierarchy.md)
+- [Page and classification types](./types.md)

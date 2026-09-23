@@ -53,7 +53,7 @@ function setKindLookups(p: KindModelPlugin) {
       return {
         path: k.path,
         name: k.basename,
-        fm: cache?.frontmatter as KindFrontmatter,
+        fm: (cache?.frontmatter ?? {}) as KindFrontmatter,
         defnTag,
         tag: defnTag.split("/")[1],
       } as KindLookup;

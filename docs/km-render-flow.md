@@ -1,229 +1,105 @@
-# KM Codeblock Rendering Flow
+# How `km` Code Blocks Render
 
-This document describes the rendering lifecycle for `km` codeblocks, including how they are processed, when they re-render, and how data freshness is managed.
+Kind Model (KM) handles fenced Markdown code blocks whose language is `km`. A block contains one KM handler call, such as `BackLinks()`. Obsidian passes the block to the plugin, the plugin builds page context and runs the matching handler, and the handler renders into the block's container. The file containing the block is called its **host file** below. KM uses Dataview to look up indexed page metadata.
 
-## Overview
+This document describes the current render path, automatic refresh behavior, and where the data comes from.
 
-```txt
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Obsidian Page                               │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │  ```km                                                        │  │
-│  │  BackLinks()                                                  │  │
-│  │  ```                                                          │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                    codeblockParser.ts                               │
-│  - Registered via registerMarkdownCodeBlockProcessor("km", ...)     │
-│  - Waits for Dataview ready state                                   │
-│  - Routes to appropriate handler                                    │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                     createHandler.ts                                │
-│  - Parses query parameters                                          │
-│  - Creates PageInfoBlock via getPageInfoBlock()                     │
-│  - Invokes handler function with event object                       │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                    Handler (e.g., BackLinks)                        │
-│  - Receives event with page data, options, render API               │
-│  - Processes data and renders output to container element           │
-└─────────────────────────────────────────────────────────────────────┘
+## A Typical Block
+
+For example, this block lists pages that link to the page containing it:
+
+````md
+```km
+BackLinks({ exclude: "software", dedupe: true })
+```
+````
+
+`exclude` removes backlinks whose pages have the `software` kind. `dedupe` removes backlinks that the current page already links to. Both options are validated by the `BackLinks` handler; its defaults also enable both deduplication and exclusion of backlinks found only in completed tasks.
+
+## Render Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant O as Obsidian Markdown renderer
+    participant P as KM codeblock processor
+    participant D as Dataview index
+    participant H as Matching handler
+    participant T as KM block tracker
+
+    O->>P: source, container element, render context
+    P->>P: Reject blocks with multiple handler calls
+    alt Dataview index is not ready
+        P->>O: Show Loading...
+        P->>D: Wait until index is initialized
+        D-->>P: Ready
+    end
+    P->>H: Build page context and run handlers
+    H-->>P: Render output or return an error
+    P->>T: Track block by host file path
+    Note over T: metadataCache changed for host file
+    T->>T: Debounce 100 ms, then run handlers again
+    T->>H: Render into a temporary container
+    H-->>T: New HTML
+    T->>T: Replace block DOM only if normalized HTML changed
 ```
 
-## Registration
+### Initial processing
 
-The `km` codeblock processor is registered in `codeblockParser.ts`:
+1. During plugin startup, `codeblockParser` registers an Obsidian Markdown code block processor for the `km` language. It sets the processor sort order to `-100`.
+2. Obsidian calls the processor with the block's source text, an HTML container, and a `MarkdownPostProcessorContext`. The context identifies the source file and exposes section information.
+3. The processor sets horizontal overflow on the container. If it detects more than one handler invocation in the source, it renders an error callout and stops.
+4. If Dataview's index is not initialized, the processor shows `Loading...` and queues the block until the plugin detects that Dataview is ready. Otherwise it continues immediately.
+5. The plugin creates the handler functions for the block and calls them in sequence. Each handler checks whether its name matches the block. The matching handler uses `getPageInfoBlock()` to look up the host page and adds the block source, container, Obsidian context, section information, and render API to that page data.
+6. The matching handler renders its result. If no handler succeeds, KM renders an error callout; an unknown handler also gets suggestions. After processing, KM registers the block with `KmBlockTracker` for refreshes.
 
-```typescript
-const registration = p.registerMarkdownCodeBlockProcessor("km", callback);
-registration.sortOrder = -100;
-```
+### Automatic refresh
 
-The `sortOrder = -100` ensures the KM processor runs before other processors.
+At startup, the plugin subscribes to Obsidian's `metadataCache` `changed` event. When Obsidian emits this event for a file, the tracker schedules refreshes for KM blocks registered to that same file path:
 
-## Dataview Dependency
+1. A new event for the same path resets that path's 100 ms debounce timer.
+2. The tracker skips blocks whose container has been detached from the document.
+3. It runs each remaining block's saved source again into a temporary container.
+4. It normalizes both HTML strings by removing `data-*` attributes and collapsing whitespace. If the normalized strings differ, it replaces the block's children with the newly rendered children. Otherwise it leaves the existing DOM in place.
+5. A `MarkdownRenderChild` registered with the block's Obsidian context removes the block from tracking when that rendered element is unloaded. Plugin unload also clears the tracker and pending timers.
 
-KM blocks depend on Dataview for page metadata. Processing is deferred until Dataview is ready:
+The tracker refreshes blocks in the file named by the `changed` event. It does not subscribe to every file that might link to a block's host page. Therefore, a change to another page can affect backlink data without directly triggering refresh of the current page's block.
 
-```typescript
-if (p.dvStatus !== "ready") {
-  // Show loading indicator
-  p.deferUntilDataviewReady(async () => {
-    // Process handlers once ready
-  });
-  return;
-}
-```
+## Data Freshness
 
-## When KM Blocks Re-render
+KM combines Obsidian's metadata cache with Dataview's page index. These sources update on their own schedules:
 
-KM codeblocks re-render when:
+| Source | Used for | Freshness behavior |
+| --- | --- | --- |
+| Obsidian `MetadataCache` | Resolved links from a file, through `obApp.resolvedLinksFor(path)` | The tracker reacts to Obsidian's `changed` event for that file and waits 100 ms before rendering again. |
+| Dataview page index | Page fields such as `inlinks`, `outlinks`, and task references used to build `PageInfo` | Dataview maintains this index independently; it may not reflect a recent edit as soon as Obsidian's metadata cache does. |
 
-| Trigger | Description |
-|---------|-------------|
-| **Codeblock edit** | Editing the content inside the `km` fence triggers re-render |
-| **Page reload** | Closing and reopening the page, or switching tabs |
-| **Layout change** | Obsidian layout changes (split panes, etc.) |
-| **Plugin reload** | Disabling/enabling the plugin |
-| **Host file metadata change** | When the file containing the KM block is saved (auto-refresh) |
+For `BackLinks`, `page.inlinks` supplies the list of backlinks, so that list follows Dataview's index freshness. The default `dedupe` filter separately reads `obApp.resolvedLinksFor(page.path)` and removes backlinks that are already outgoing links from the current page. This direct MetadataCache lookup avoids using Dataview's potentially older outgoing-link list for that filter.
 
-### Auto-Refresh System
+For example, if the current page already links to `Projects/Atlas`, `BackLinks()` can omit `Projects/Atlas` from the backlink results when `dedupe` is enabled. If a different file is edited to link to the current page, Dataview must first update its `inlinks` data; the tracker does not refresh this page's block solely because that other file changed.
 
-As of the latest update, KM blocks automatically re-render when their host file's metadata changes. This is implemented via `KmBlockTracker` which:
+## BackLinks Filter Order
 
-1. **Registers** each KM block when it renders, tracking the element and source
-2. **Listens** to `metadataCache.on('changed')` events from Obsidian
-3. **Re-renders** all KM blocks for a file when that file's metadata changes
-4. **Debounces** refreshes (100ms) to avoid excessive re-renders
-5. **Cleans up** stale block references when elements are unmounted
+The `BackLinks` handler applies these filters in order before rendering its table:
 
-This means:
+1. Remove self-references.
+2. Apply `ignoreTags`, if supplied.
+3. Apply `dedupe` (enabled by default), using the current page's resolved links from Obsidian's MetadataCache.
+4. Apply `exclude` classifications, if supplied. Each candidate page is inspected through Kind Model's page-info API.
+5. Apply `excludeCompletedTasks` (enabled by default), using task references from the page data.
 
-- Adding/removing links in the page body will update BackLinks within ~100ms of save
-- The `dedupe` filter now correctly reflects current page state
-- No manual refresh needed for most use cases
+If all backlinks are filtered out, the no-results message can list which filters removed links. If filtering takes longer than 100 ms, the handler also writes a warning to the plugin log.
 
-## Data Sources and Freshness
+## Practical Notes
 
-### Two Data Sources
+- A KM block is processed when Obsidian invokes its Markdown code block processor, and it is reprocessed when Obsidian emits `metadataCache.changed` for its host file.
+- The 100 ms delay is a debounce, not a guarantee that Dataview has finished refreshing its index.
+- Re-rendering a block does not guarantee fresh backlinks if the relevant Dataview index has not updated yet.
+- If a block shows an error, check the handler name and options in the rendered callout. In debug log mode, KM also includes a stack trace for handler errors.
 
-KM blocks pull data from two sources with different freshness characteristics:
+## Implementation References
 
-| Source | Description | Freshness |
-|--------|-------------|-----------|
-| **Obsidian MetadataCache** | Native Obsidian cache (`app().metadataCache`) | Updated immediately on file save |
-| **Dataview Index** | Dataview's processed index (`p.dv`) | Updated on Dataview refresh interval |
-
-### Freshness Strategy
-
-With auto-refresh enabled, KM blocks now re-render when their host file is saved. For critical freshness (like `dedupe` filter), we also use Obsidian's MetadataCache directly:
-
-```typescript
-// Uses fresh data from Obsidian's MetadataCache
-const outlinkPaths = new Set(obApp.resolvedLinksFor(page.path));
-```
-
-vs.
-
-```typescript
-// May be stale - comes from Dataview's cache
-const outlinkPaths = new Set(page.outlinks.map(l => l.path));
-```
-
-## Data Flow Detail
-
-### 1. Page Info Creation
-
-When a KM block renders, `getPageInfoBlock()` creates a `PageInfoBlock`:
-
-```
-getPageInfoBlock(p)(evt)
-    │
-    ├── getPageInfo(p)(filePath)
-    │       │
-    │       ├── getPage(p)(pg)           → DvPage from Dataview
-    │       ├── page.file.outlinks       → Links (from Dataview cache)
-    │       ├── page.file.inlinks        → Backlinks (from Dataview cache)
-    │       └── ... other metadata
-    │
-    └── Add codeblock context (el, ctx, sectionInfo)
-```
-
-### 2. Handler Execution
-
-The handler receives an event object with:
-
-```typescript
-{
-  plugin: KindModelPlugin,
-  page: PageInfoBlock,        // Contains cached page data
-  dv: DataviewApi,            // Direct Dataview access
-  options: ParsedOptions,     // User-provided options
-  createTable: TableFactory,  // Table rendering helper
-  render: RenderApi,          // DOM rendering utilities
-  // ... other utilities
-}
-```
-
-### 3. Filter Chain (BackLinks Example)
-
-```
-page.inlinks (from Dataview)
-        │
-        ▼
-┌───────────────────────────────────┐
-│  1. Self-reference filter         │  Remove links to current page
-└───────────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────────┐
-│  2. ignoreTags filter             │  Remove by tag (existing)
-└───────────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────────┐
-│  3. dedupe filter                 │  Uses MetadataCache (fresh!)
-│     obApp.resolvedLinksFor()      │
-└───────────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────────┐
-│  4. classification filter         │  Uses getPageInfo (Dataview)
-└───────────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────────┐
-│  5. completedTasks filter         │  Uses page.inlinkTasks (Dataview)
-└───────────────────────────────────┘
-        │
-        ▼
-    Render Table
-```
-
-## File Event Handlers
-
-The plugin listens to file events for cache management and KM block refresh:
-
-| Event | Handler | Purpose |
-|-------|---------|---------|
-| `on_file_created` | `on_file_created.ts` | Update kind/type tag lists |
-| `on_file_modified` | `on_file_modified.ts` | Refresh tag lists, auto-add frontmatter |
-| `on_file_deleted` | `on_file_deleted.ts` | Clean up references |
-| `on_editor_change` | `on_editor_change.ts` | Track editor state |
-| `on_layout_change` | `on_layout_change.ts` | Handle workspace changes |
-| `metadataCache.changed` | `km-block-refresh.ts` | **Auto-refresh KM blocks** in the changed file |
-
-The `metadataCache.changed` event triggers KM block re-renders when files are saved.
-
-## Best Practices
-
-### For Users
-
-1. **Auto-refresh**: KM blocks automatically update when you save the page
-2. **Manual refresh**: If needed, edit the KM block (add/remove a space) to force re-render
-3. **Page reload**: Close and reopen the tab for fresh data from linked files
-4. **Understand defaults**: `dedupe: true` and `excludeCompletedTasks: true` are defaults
-
-### For Developers
-
-1. **Use MetadataCache for freshness-critical data**: `obApp.resolvedLinksFor()` over `page.outlinks`
-2. **Keep filters efficient**: Cheap operations first (Set lookups), expensive last (getPageInfo calls)
-3. **Add performance monitoring**: Warn if filter chain exceeds 100ms
-4. **Handle missing data gracefully**: Return conservative results when data unavailable
-
-## Future Considerations
-
-Potential improvements for data freshness:
-
-1. ~~**Auto-refresh on file change**: Listen to `metadataCache.on('changed')` for the current file~~ ✅ Implemented
-2. ~~**Debounced refresh**: Re-render KM blocks after a short delay when page content changes~~ ✅ Implemented (100ms debounce)
-3. **Selective invalidation**: Only refresh blocks affected by specific changes (currently refreshes all blocks in file)
-4. **Cross-file refresh**: Refresh KM blocks when linked files change (e.g., update BackLinks when a linking page is modified)
+- [`src/events/codeblockParser.ts`](../src/events/codeblockParser.ts) registers and processes `km` blocks.
+- [`src/events/km-block-refresh.ts`](../src/events/km-block-refresh.ts) tracks block containers and handles debounced refresh.
+- [`src/page/getPageBlock.ts`](../src/page/getPageBlock.ts) builds the page context supplied to a handler.
+- [`src/handlers/BackLinks.ts`](../src/handlers/BackLinks.ts) shows the backlink filters and their data sources.
+- [`src/main.ts`](../src/main.ts) sets up the tracker and parser during plugin startup and clears the tracker on unload.
